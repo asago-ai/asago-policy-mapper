@@ -54,3 +54,57 @@ def end_tracking(ctx: TrackingContext) -> None:
         mlflow.end_run()
     except Exception:
         logger.warning("MLflow end_run failed", exc_info=True)
+
+
+def log_params(ctx: TrackingContext, params: dict[str, str]) -> None:
+    if not ctx.enabled:
+        return
+    try:
+        mlflow.log_params(params)
+    except Exception:
+        logger.warning("MLflow log_params failed", exc_info=True)
+
+
+def log_metrics(ctx: TrackingContext, metrics: dict[str, float]) -> None:
+    if not ctx.enabled:
+        return
+    try:
+        mlflow.log_metrics(metrics)
+    except Exception:
+        logger.warning("MLflow log_metrics failed", exc_info=True)
+
+
+def log_artifact(ctx: TrackingContext, path: Path) -> None:
+    if not ctx.enabled:
+        return
+    try:
+        mlflow.log_artifact(str(path))
+    except Exception:
+        logger.warning("MLflow log_artifact failed for %s", path, exc_info=True)
+
+
+def log_child_run(
+    ctx: TrackingContext,
+    *,
+    name: str,
+    params: dict[str, str],
+    metrics: dict[str, float],
+    tags: dict[str, str],
+    artifacts: list[Path],
+) -> None:
+    if not ctx.enabled:
+        return
+    try:
+        with mlflow.start_run(run_name=name, nested=True) as child:
+            ctx.child_run_ids[name] = child.info.run_id
+            if params:
+                mlflow.log_params(params)
+            if metrics:
+                mlflow.log_metrics(metrics)
+            for key, value in tags.items():
+                mlflow.set_tag(key, value)
+            for artifact_path in artifacts:
+                if artifact_path.exists():
+                    mlflow.log_artifact(str(artifact_path))
+    except Exception:
+        logger.warning("MLflow child run failed for %s", name, exc_info=True)
