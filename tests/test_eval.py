@@ -1,0 +1,226 @@
+import json
+import pytest
+from pathlib import Path
+
+from concorde_policy_mapper.evals.eval import evaluate_extraction, _infer_taxonomy
+
+
+@pytest.fixture
+def tmp_ground_truth(tmp_path):
+    gt = tmp_path / "test-policy.yaml"
+    gt.write_text(
+        "risk_ids:\n"
+        "  - atlas-bias\n"
+        "  - atlas-privacy\n"
+        "  - atlas-transparency\n"
+        "  - atlas-accountability\n"
+    )
+    return gt
+
+
+@pytest.fixture
+def tmp_extraction(tmp_path):
+    data = {
+        "version": "0.2",
+        "risks": [
+            {"risk_id": "atlas-bias", "risk_name": "Bias", "risk_description": "", "confidence": 0.9, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 1, "embedding_distance": 0.1, "cross_encoder_score": 0.9, "rrf_score": 0.5}},
+            {"risk_id": "atlas-privacy", "risk_name": "Privacy", "risk_description": "", "confidence": 0.8, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 2, "embedding_distance": 0.2, "cross_encoder_score": 0.8, "rrf_score": 0.4}},
+            {"risk_id": "atlas-hallucination", "risk_name": "Hallucination", "risk_description": "", "confidence": 0.7, "grounding_confidence": "medium", "accepted_by": "llm_judge", "evidence": [], "scores": {"bm25_rank": 3, "embedding_distance": 0.3, "cross_encoder_score": 0.7, "rrf_score": 0.3}},
+        ],
+        "source_documents": ["policy.md"],
+        "retrieval_stats": {"total_chunks": 10, "total_candidates_retrieved": 50, "auto_accepted": 2, "llm_judged": 1, "grounding_filtered": 0},
+    }
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps(data))
+    return ext
+
+
+def test_evaluate_extraction_metrics(tmp_ground_truth, tmp_extraction):
+    result = evaluate_extraction(tmp_ground_truth, tmp_extraction, policy_name="test-policy")
+
+    assert result["policy"] == "test-policy"
+    assert result["total_expected"] == 4
+    assert result["total_extracted"] == 3
+    assert result["matched"] == 2
+    assert set(result["matched_ids"]) == {"atlas-bias", "atlas-privacy"}
+    assert set(result["missing"]) == {"atlas-transparency", "atlas-accountability"}
+    assert result["spurious"] == ["atlas-hallucination"]
+    assert result["precision"] == pytest.approx(2 / 3, abs=0.001)
+    assert result["recall"] == pytest.approx(2 / 4, abs=0.001)
+
+
+def test_evaluate_extraction_pass_fail(tmp_ground_truth, tmp_extraction):
+    result = evaluate_extraction(tmp_ground_truth, tmp_extraction)
+    # recall=0.5 < 0.80, so should fail
+    assert result["pass"] is False
+
+
+def test_evaluate_extraction_perfect_match(tmp_path):
+    gt = tmp_path / "perfect.yaml"
+    gt.write_text("risk_ids:\n  - atlas-bias\n  - atlas-privacy\n")
+    data = {
+        "version": "0.2",
+        "risks": [
+            {"risk_id": "atlas-bias", "risk_name": "Bias", "risk_description": "", "confidence": 0.9, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 1, "embedding_distance": 0.1, "cross_encoder_score": 0.9, "rrf_score": 0.5}},
+            {"risk_id": "atlas-privacy", "risk_name": "Privacy", "risk_description": "", "confidence": 0.8, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 2, "embedding_distance": 0.2, "cross_encoder_score": 0.8, "rrf_score": 0.4}},
+        ],
+        "source_documents": ["policy.md"],
+        "retrieval_stats": {"total_chunks": 10, "total_candidates_retrieved": 50, "auto_accepted": 2, "llm_judged": 0, "grounding_filtered": 0},
+    }
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps(data))
+
+    result = evaluate_extraction(gt, ext)
+    assert result["precision"] == 1.0
+    assert result["recall"] == 1.0
+    assert result["f1"] == 1.0
+    assert result["pass"] is True
+    assert result["missing"] == []
+    assert result["spurious"] == []
+
+
+def test_evaluate_extraction_strips_whitespace(tmp_path):
+    gt = tmp_path / "ws.yaml"
+    gt.write_text("risk_ids:\n  - atlas-bias\n")
+    data = {
+        "version": "0.2",
+        "risks": [
+            {"risk_id": "atlas-bias ", "risk_name": "Bias", "risk_description": "", "confidence": 0.9, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 1, "embedding_distance": 0.1, "cross_encoder_score": 0.9, "rrf_score": 0.5}},
+        ],
+        "source_documents": ["policy.md"],
+        "retrieval_stats": {"total_chunks": 10, "total_candidates_retrieved": 50, "auto_accepted": 1, "llm_judged": 0, "grounding_filtered": 0},
+    }
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps(data))
+
+    result = evaluate_extraction(gt, ext)
+    assert result["matched"] == 1
+    assert result["recall"] == 1.0
+
+
+def test_evaluate_extraction_custom_thresholds(tmp_ground_truth, tmp_extraction):
+    # recall=0.5, precision=0.667 — passes with relaxed thresholds
+    result = evaluate_extraction(
+        tmp_ground_truth, tmp_extraction,
+        min_recall=0.4, min_precision=0.5,
+    )
+    assert result["pass"] is True
+
+
+def test_infer_taxonomy():
+    assert _infer_taxonomy("atlas-bias") == "ibm-risk-atlas"
+    assert _infer_taxonomy("atlas-hallucination") == "ibm-risk-atlas"
+    assert _infer_taxonomy("credo-risk-021") == "credo-ucf"
+    assert _infer_taxonomy("mit-ai-risk-subdomain-3.1") == "mit-ai-risk-repository"
+    assert _infer_taxonomy("nist-data-privacy") == "nist-ai-rmf"
+    assert _infer_taxonomy("ai-risk-taxonomy-profiling") == "ai-risk-taxonomy"
+    assert _infer_taxonomy("ail-child-exploitation") == "ailuminate-v1.0"
+    assert _infer_taxonomy("granite-guardian-harm") == "ibm-granite-guardian"
+    assert _infer_taxonomy("llm01-prompt-injection") == "owasp-llm-2.0"
+    assert _infer_taxonomy("shieldgemma-dangerous-content") == "shieldgemma-taxonomy"
+    assert _infer_taxonomy("unknown-risk-id") == "unknown"
+
+
+def test_evaluate_extraction_per_taxonomy(tmp_path):
+    gt = tmp_path / "multi-tax.yaml"
+    gt.write_text(
+        "risk_ids:\n"
+        "  - atlas-bias\n"
+        "  - atlas-privacy\n"
+        "  - nist-data-privacy\n"
+        "  - credo-risk-021\n"
+    )
+    data = {
+        "version": "0.3",
+        "risks": [
+            {"risk_id": "atlas-bias", "taxonomy": "ibm-risk-atlas", "risk_name": "Bias", "risk_description": "", "confidence": 0.9, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 1, "embedding_distance": 0.1, "cross_encoder_score": 0.9, "rrf_score": 0.5}},
+            {"risk_id": "atlas-privacy", "taxonomy": "ibm-risk-atlas", "risk_name": "Privacy", "risk_description": "", "confidence": 0.8, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 2, "embedding_distance": 0.2, "cross_encoder_score": 0.8, "rrf_score": 0.4}},
+            {"risk_id": "atlas-hallucination", "taxonomy": "ibm-risk-atlas", "risk_name": "Hallucination", "risk_description": "", "confidence": 0.7, "grounding_confidence": "medium", "accepted_by": "llm_judge", "evidence": [], "scores": {"bm25_rank": 3, "embedding_distance": 0.3, "cross_encoder_score": 0.7, "rrf_score": 0.3}},
+            {"risk_id": "nist-data-privacy", "taxonomy": "nist-ai-rmf", "risk_name": "Data Privacy", "risk_description": "", "confidence": 0.85, "grounding_confidence": "high", "accepted_by": "threshold", "evidence": [], "scores": {"bm25_rank": 1, "embedding_distance": 0.1, "cross_encoder_score": 0.85, "rrf_score": 0.5}},
+        ],
+        "source_documents": ["policy.md"],
+        "retrieval_stats": {"total_chunks": 10, "total_candidates_retrieved": 50, "auto_accepted": 3, "llm_judged": 1, "grounding_filtered": 0},
+    }
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps(data))
+
+    result = evaluate_extraction(gt, ext, policy_name="multi-tax")
+    assert "per_taxonomy" in result
+    pt = result["per_taxonomy"]
+
+    assert "ibm-risk-atlas" in pt
+    atlas = pt["ibm-risk-atlas"]
+    assert atlas["expected"] == 2
+    assert atlas["matched"] == 2
+    assert atlas["extracted"] == 3
+    assert atlas["precision"] == pytest.approx(2 / 3, abs=0.001)
+    assert atlas["recall"] == 1.0
+
+    assert "nist-ai-rmf" in pt
+    nist = pt["nist-ai-rmf"]
+    assert nist["expected"] == 1
+    assert nist["matched"] == 1
+    assert nist["precision"] == 1.0
+    assert nist["recall"] == 1.0
+
+    assert "credo-ucf" in pt
+    credo = pt["credo-ucf"]
+    assert credo["expected"] == 1
+    assert credo["matched"] == 0
+    assert credo["recall"] == 0.0
+
+
+def test_evaluate_extraction_per_taxonomy_from_filtered(tmp_path):
+    """Taxonomy map also reads from grounding_filtered_candidates."""
+    gt = tmp_path / "filtered.yaml"
+    gt.write_text("risk_ids:\n  - atlas-bias\n")
+    data = {
+        "version": "0.3",
+        "risks": [],
+        "grounding_filtered_candidates": [
+            {"risk_id": "atlas-bias", "taxonomy": "ibm-risk-atlas", "risk_name": "Bias", "cross_encoder_score": 0.5, "accepted_by": "threshold", "chunk_index": 0},
+        ],
+        "source_documents": ["policy.md"],
+        "retrieval_stats": {"total_chunks": 1, "total_candidates_retrieved": 1, "auto_accepted": 1, "llm_judged": 0, "grounding_filtered": 1},
+    }
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps(data))
+
+    result = evaluate_extraction(gt, ext)
+    pt = result["per_taxonomy"]
+    assert "ibm-risk-atlas" in pt
+    assert pt["ibm-risk-atlas"]["expected"] == 1
+    assert pt["ibm-risk-atlas"]["matched"] == 0
+
+
+def test_per_taxonomy_in_existing_eval(tmp_ground_truth, tmp_extraction):
+    """Existing test fixtures now produce per_taxonomy in result."""
+    result = evaluate_extraction(tmp_ground_truth, tmp_extraction)
+    assert "per_taxonomy" in result
+    assert len(result["per_taxonomy"]) > 0
+
+
+def test_evaluate_extraction_enriched_gt_format(tmp_path, tmp_extraction):
+    """Enriched GT format with risks[].id and evidence is parsed correctly."""
+    gt = tmp_path / "enriched.yaml"
+    gt.write_text(
+        "risks:\n"
+        "  - id: atlas-bias\n"
+        "    name: Bias\n"
+        "    evidence:\n"
+        '      - text: "The system must avoid bias."\n'
+        '        section: "Fairness"\n'
+        "  - id: atlas-privacy\n"
+        "    name: Privacy\n"
+        "    evidence: []\n"
+        "  - id: atlas-transparency\n"
+        "    name: Transparency\n"
+        "    evidence: []\n"
+        "  - id: atlas-accountability\n"
+        "    name: Accountability\n"
+        "    evidence: []\n"
+    )
+    result = evaluate_extraction(gt, tmp_extraction, policy_name="enriched")
+    assert result["total_expected"] == 4
+    assert result["matched"] == 2
+    assert set(result["matched_ids"]) == {"atlas-bias", "atlas-privacy"}

@@ -1,0 +1,11 @@
+## Text Passage
+
+{{ chunk_text }}
+
+## Candidate Risks
+
+{% for risk in risks %}
+- **{{ risk.risk_id }}**: {{ risk.risk_name }} — {{ risk.risk_description }}
+{% endfor %}
+
+For each candidate risk, determine if it is relevant to the text passage. Respond with the risk_id, whether it is relevant (true/false), and a brief justification.

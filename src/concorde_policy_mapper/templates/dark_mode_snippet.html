@@ -1,0 +1,219 @@
+<!-- Dark mode: Tailwind config + CSS overrides + toggle -->
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
+<style>
+  /* --- Dark mode color overrides --- */
+  .dark body,
+  .dark .bg-gray-50,
+  .dark .bg-gray-100 { background-color: #111827 !important; }
+  .dark .bg-white { background-color: #1f2937 !important; }
+  .dark .bg-gray-200 { background-color: #374151 !important; }
+  .dark .bg-gray-800 { background-color: #1f2937 !important; }
+  .dark .bg-gray-900 { background-color: #030712 !important; }
+
+  /* Text */
+  .dark .text-gray-900,
+  .dark .text-gray-800 { color: #f3f4f6 !important; }
+  .dark .text-gray-700 { color: #e5e7eb !important; }
+  .dark .text-gray-600 { color: #d1d5db !important; }
+  .dark .text-gray-500 { color: #9ca3af !important; }
+  .dark .text-gray-400 { color: #9ca3af !important; }
+  .dark .text-white { color: #f9fafb !important; }
+
+  /* Borders */
+  .dark .border-gray-100,
+  .dark .border-gray-200 { border-color: #374151 !important; }
+  .dark .border-gray-300 { border-color: #4b5563 !important; }
+  .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+  .dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #374151 !important; }
+
+  /* Accent backgrounds — muted for dark */
+  .dark .bg-blue-50,
+  .dark .bg-blue-100 { background-color: #1e3a5f !important; }
+  .dark .bg-blue-200 { background-color: #1e4070 !important; }
+  .dark .bg-blue-400,
+  .dark .bg-blue-500 { background-color: #2563eb !important; }
+  .dark .bg-green-50,
+  .dark .bg-green-100 { background-color: #14532d !important; }
+  .dark .bg-green-200 { background-color: #166534 !important; }
+  .dark .bg-green-500 { background-color: #16a34a !important; }
+  .dark .bg-red-50,
+  .dark .bg-red-100 { background-color: #7f1d1d !important; }
+  .dark .bg-red-200 { background-color: #991b1b !important; }
+  .dark .bg-red-400 { background-color: #dc2626 !important; }
+  .dark .bg-amber-50,
+  .dark .bg-amber-100,
+  .dark .bg-yellow-50,
+  .dark .bg-yellow-100 { background-color: #78350f !important; }
+  .dark .bg-amber-200,
+  .dark .bg-yellow-200 { background-color: #854d0e !important; }
+  .dark .bg-amber-500 { background-color: #d97706 !important; }
+  .dark .bg-purple-50,
+  .dark .bg-purple-100 { background-color: #3b0764 !important; }
+  .dark .bg-purple-200 { background-color: #581c87 !important; }
+  .dark .bg-purple-500 { background-color: #9333ea !important; }
+  .dark .bg-indigo-50,
+  .dark .bg-indigo-100 { background-color: #312e81 !important; }
+  .dark .bg-indigo-400,
+  .dark .bg-indigo-500,
+  .dark .bg-indigo-600 { background-color: #4f46e5 !important; }
+  .dark .bg-indigo-900 { background-color: #1e1b4b !important; }
+  .dark .bg-orange-50,
+  .dark .bg-orange-100 { background-color: #7c2d12 !important; }
+  .dark .bg-orange-200 { background-color: #9a3412 !important; }
+  .dark .bg-emerald-50,
+  .dark .bg-emerald-100 { background-color: #064e3b !important; }
+  .dark .bg-cyan-50,
+  .dark .bg-cyan-100 { background-color: #164e63 !important; }
+  .dark .bg-teal-100,
+  .dark .bg-teal-500 { background-color: #115e59 !important; }
+  .dark .bg-sky-100 { background-color: #0c4a6e !important; }
+  .dark .bg-pink-100 { background-color: #831843 !important; }
+  .dark .bg-violet-100 { background-color: #4c1d95 !important; }
+  .dark .bg-slate-100,
+  .dark .bg-slate-200 { background-color: #334155 !important; }
+  .dark .bg-slate-400,
+  .dark .bg-slate-500 { background-color: #475569 !important; }
+
+  /* Accent text — lighten for dark */
+  .dark .text-blue-500,
+  .dark .text-blue-600,
+  .dark .text-blue-700,
+  .dark .text-blue-800,
+  .dark .text-blue-900 { color: #93c5fd !important; }
+  .dark .text-green-500,
+  .dark .text-green-600,
+  .dark .text-green-700,
+  .dark .text-green-800,
+  .dark .text-green-900 { color: #86efac !important; }
+  .dark .text-red-400 { color: #fca5a5 !important; }
+  .dark .text-red-500,
+  .dark .text-red-600,
+  .dark .text-red-700,
+  .dark .text-red-800,
+  .dark .text-red-900 { color: #fca5a5 !important; }
+  .dark .text-amber-500,
+  .dark .text-amber-600,
+  .dark .text-amber-700,
+  .dark .text-amber-800,
+  .dark .text-amber-900 { color: #fcd34d !important; }
+  .dark .text-yellow-600,
+  .dark .text-yellow-700,
+  .dark .text-yellow-800,
+  .dark .text-yellow-900 { color: #fde047 !important; }
+  .dark .text-purple-600,
+  .dark .text-purple-700,
+  .dark .text-purple-800,
+  .dark .text-purple-900 { color: #d8b4fe !important; }
+  .dark .text-indigo-200,
+  .dark .text-indigo-300 { color: #c7d2fe !important; }
+  .dark .text-indigo-600,
+  .dark .text-indigo-700,
+  .dark .text-indigo-800 { color: #a5b4fc !important; }
+  .dark .text-orange-600,
+  .dark .text-orange-700,
+  .dark .text-orange-800 { color: #fdba74 !important; }
+  .dark .text-emerald-700,
+  .dark .text-emerald-800 { color: #6ee7b7 !important; }
+  .dark .text-cyan-600,
+  .dark .text-cyan-700,
+  .dark .text-cyan-800 { color: #67e8f9 !important; }
+  .dark .text-teal-600,
+  .dark .text-teal-700,
+  .dark .text-teal-800 { color: #5eead4 !important; }
+  .dark .text-sky-800 { color: #7dd3fc !important; }
+  .dark .text-pink-700 { color: #f9a8d4 !important; }
+  .dark .text-violet-600,
+  .dark .text-violet-800 { color: #c4b5fd !important; }
+  .dark .text-slate-600,
+  .dark .text-slate-700,
+  .dark .text-slate-800 { color: #cbd5e1 !important; }
+
+  /* Accent borders */
+  .dark .border-blue-200,
+  .dark .border-blue-500,
+  .dark .border-blue-600 { border-color: #1e3a5f !important; }
+  .dark .border-green-200,
+  .dark .border-green-500,
+  .dark .border-green-600 { border-color: #14532d !important; }
+  .dark .border-red-200,
+  .dark .border-red-300,
+  .dark .border-red-600 { border-color: #991b1b !important; }
+  .dark .border-amber-100,
+  .dark .border-amber-200,
+  .dark .border-amber-300,
+  .dark .border-yellow-200 { border-color: #78350f !important; }
+  .dark .border-purple-100,
+  .dark .border-purple-200,
+  .dark .border-purple-500 { border-color: #3b0764 !important; }
+  .dark .border-indigo-200,
+  .dark .border-indigo-500,
+  .dark .border-indigo-600 { border-color: #312e81 !important; }
+  .dark .border-orange-200 { border-color: #7c2d12 !important; }
+  .dark .border-emerald-500 { border-color: #064e3b !important; }
+  .dark .border-teal-200 { border-color: #115e59 !important; }
+  .dark .border-slate-200 { border-color: #475569 !important; }
+
+  /* Shadows — subtle in dark */
+  .dark .shadow,
+  .dark .shadow-md,
+  .dark .shadow-lg,
+  .dark .shadow-sm { box-shadow: 0 1px 3px 0 rgba(0,0,0,.5), 0 1px 2px -1px rgba(0,0,0,.5) !important; }
+
+  /* Rings */
+  .dark .ring-gray-200,
+  .dark .ring-gray-300 { --tw-ring-color: #374151 !important; }
+
+  /* Code/pre blocks */
+  .dark pre,
+  .dark code { background-color: #1e293b !important; color: #e2e8f0 !important; }
+
+  /* Inputs */
+  .dark input,
+  .dark select,
+  .dark textarea {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+    border-color: #4b5563 !important;
+  }
+
+  /* Table stripes */
+  .dark .even\:bg-gray-50:nth-child(even) { background-color: #1a2332 !important; }
+  .dark .odd\:bg-white:nth-child(odd) { background-color: #1f2937 !important; }
+  .dark .hover\:bg-gray-50:hover { background-color: #1a2332 !important; }
+
+  /* Tip icons */
+  .dark .tip-icon { background: #374151; color: #9ca3af; }
+  .dark .tip::after { background: #f9fafb; color: #111827; }
+
+  /* Toggle button */
+  .dark-toggle {
+    position: fixed; bottom: 1rem; right: 1rem; z-index: 9999;
+    width: 2.5rem; height: 2.5rem;
+    border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #374151;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    transition: background .15s, color .15s, border-color .15s;
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+  .dark .dark-toggle {
+    background: #374151;
+    color: #fbbf24;
+    border-color: #4b5563;
+  }
+</style>
+<script>
+document.addEventListener('alpine:init', () => {
+  const saved = localStorage.getItem('rl-dark-mode');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (saved === 'true' || (saved === null && prefersDark)) {
+    document.documentElement.classList.add('dark');
+  }
+});
+</script>

@@ -1,0 +1,17 @@
+## Extracted Risks (already identified in this document with evidence)
+
+{% for risk in extracted_risks %}
+- **{{ risk.risk_name }}** ({{ risk.risk_id }}): "{{ risk.evidence_quote }}"
+{% endfor %}
+
+## Target Categories
+
+For each target category below, determine if it is DIRECTLY supported by the extracted risks above.
+
+A category applies ONLY if the evidence quotes specifically demonstrate the category's concern — not merely a thematic overlap. Require at least one extracted risk whose evidence DIRECTLY addresses the target category's description.
+
+{% for target in target_risks %}
+- **{{ target.name }}** ({{ target.id }}): {{ target.description }}
+{% endfor %}
+
+For each target category, indicate whether it applies. If it applies, list the specific source risk IDs whose evidence directly supports it. If the connection is weak or indirect, mark it as NOT applying.

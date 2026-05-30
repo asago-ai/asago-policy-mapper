@@ -1,0 +1,38 @@
+# reviewed: 2026-05-24 — revised from 9 to 4 risks (removed implied-but-not-discussed risks)
+risks:
+  - id: atlas-confidential-information-in-data
+    name: Confidential information in data
+    evidence:
+      - text: "'Protected Data' means Administrative Data, Confidential Information, Customer Data, Financing Data, Support Data, Telemetry Data, Personal Data, and Sensitive Personal Data."
+        section: "3. Definitions"
+        page: 2
+      - text: "'Confidential Information' means any Customer Data, confidential information, and/or materials relating to the business, products, customers or employees of Cisco"
+        section: "3. Definitions"
+        page: 2
+  - id: atlas-data-usage
+    name: Data usage restrictions
+    evidence:
+      - text: "Supplier is not permitted to Process Protected Data for training, retraining or improving Artificial Intelligence or Machine Learning technologies without Cisco's express written permission."
+        section: "1. Use of Protected Data for Artificial Intelligence and Machine Learning."
+        page: 1
+  - id: atlas-legal-accountability
+    name: Legal accountability
+    evidence:
+      - text: "it is required to have an AI/ML governance program in place, with defined policies and procedures, that meets or exceeds current best industry standards."
+        section: "2. Supplier's Use of Artificial Intelligence and Machine Learning."
+        page: 1
+      - text: "Cisco reserves the right to audit Supplier's AI/ML governance program"
+        section: "2. Supplier's Use of Artificial Intelligence and Machine Learning."
+        page: 1
+  - id: nist-value-chain-and-component-integration
+    name: Value Chain and Component Integration
+    evidence:
+      - text: "If Supplier is using or intends to use Artificial Intelligence and/or Machine Learning technologies in the course of Performing, it is required to have an AI/ML governance program in place"
+        section: "2. Supplier's Use of Artificial Intelligence and Machine Learning."
+        page: 1
+      - text: "Cisco reserves the right to audit Supplier's AI/ML governance program before deciding whether to grant the requested permission"
+        section: "2. Supplier's Use of Artificial Intelligence and Machine Learning."
+        page: 1
+      - text: "Supplier is not permitted to Process Protected Data for training, retraining or improving Artificial Intelligence or Machine Learning technologies without Cisco's express written permission."
+        section: "1. Use of Protected Data for Artificial Intelligence and Machine Learning."
+        page: 1

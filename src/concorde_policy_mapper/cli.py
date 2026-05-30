@@ -1,0 +1,160 @@
+import json
+from pathlib import Path
+
+import typer
+
+from concorde_policy_mapper.llm import LLMConfig, TokenTracker, create_client
+from concorde_policy_mapper import debug
+
+app = typer.Typer()
+
+
+@app.callback()
+def main():
+    """Concorde Policy Mapper — policy risk extraction using AI Atlas Nexus."""
+
+
+EXCLUDED_TAXONOMIES = {"mit-ai-risk-repository-causal", "ibm-granite-guardian"}
+
+
+@app.command()
+def extract(
+    policy_files: list[Path] = typer.Argument(..., help="Policy document(s) to extract risks from"),
+    output: Path = typer.Option(..., "--output", "-o", help="Output directory"),
+    base_url: str = typer.Option(None, "--base-url", envvar="REFINER_BASE_URL", help="LLM API base URL"),
+    model: str = typer.Option(None, "--model", envvar="REFINER_MODEL", help="LLM model name"),
+    api_key: str = typer.Option("none", "--api-key", envvar="REFINER_API_KEY", help="LLM API key"),
+    nexus_base_dir: str = typer.Option(None, "--nexus-base-dir", envvar="NEXUS_BASE_DIR", help="Path to ai-atlas-nexus repo"),
+    debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
+    max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
+    ocr: bool = typer.Option(False, "--ocr", help="Enable OCR for document conversion"),
+    threshold_high: float = typer.Option(0.7, "--threshold-high", help="Auto-accept threshold"),
+    threshold_low: float = typer.Option(0.15, "--threshold-low", help="Discard threshold"),
+    bi_encoder_model: str = typer.Option("all-mpnet-base-v2", "--bi-encoder-model", help="Bi-encoder model"),
+    cross_encoder_model: str = typer.Option("cross-encoder/ms-marco-MiniLM-L-12-v2", "--cross-encoder-model", help="Cross-encoder model"),
+    bm25_rescue_rank: int = typer.Option(10, "--bm25-rescue-rank", help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled)"),
+    no_cross_encoder: bool = typer.Option(False, "--no-cross-encoder", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead"),
+    rrf_min_score: float = typer.Option(0.01, "--rrf-min-score", help="Minimum RRF score for candidates (only used with --no-cross-encoder)"),
+    classify_taxonomies: str = typer.Option("nist-ai-rmf", "--classify-taxonomies", help="Comma-separated taxonomies to classify post-retrieval instead of retrieving directly (empty to disable)"),
+):
+    """Extract risks from policy documents using hybrid retrieval."""
+    for pf in policy_files:
+        if not pf.exists():
+            typer.echo(f"Error: {pf} does not exist", err=True)
+            raise typer.Exit(1)
+
+    if not base_url or not model:
+        typer.echo("Error: --base-url and --model are required", err=True)
+        raise typer.Exit(1)
+
+    if not nexus_base_dir:
+        typer.echo("Error: --nexus-base-dir is required", err=True)
+        raise typer.Exit(1)
+
+    config = LLMConfig(base_url=base_url, model=model, api_key=api_key, max_concurrent=max_concurrent)
+    tracker = TokenTracker()
+    client = create_client(config, tracker=tracker)
+    debug.configure(debug_dir)
+
+    output.mkdir(parents=True, exist_ok=True)
+
+    from ai_atlas_nexus import AIAtlasNexus
+
+    nexus = AIAtlasNexus(base_dir=nexus_base_dir)
+    all_risks = [
+        r for r in nexus.get_all_risks()
+        if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
+    ]
+
+    from concorde_policy_mapper.extract.pipeline import run_extraction
+
+    typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
+    ct_list = [t.strip() for t in classify_taxonomies.split(",") if t.strip()] if classify_taxonomies else []
+
+    result = run_extraction(
+        documents=policy_files,
+        client=client,
+        config=config,
+        risks=all_risks,
+        ocr=ocr,
+        threshold_high=threshold_high,
+        threshold_low=threshold_low,
+        bi_encoder_model=bi_encoder_model,
+        cross_encoder_model=cross_encoder_model,
+        bm25_rescue_rank=bm25_rescue_rank,
+        use_cross_encoder=not no_cross_encoder,
+        rrf_min_score=rrf_min_score,
+        classify_taxonomies=ct_list,
+    )
+
+    result.token_usage = tracker.to_dict()
+
+    result_data = result.model_dump()
+    result_path = output / "risk-extraction.json"
+    result_path.write_text(json.dumps(result_data, indent=2))
+    typer.echo(f"Risk extraction written to {result_path}")
+    typer.echo(f"  {len(result.risks)} risks matched")
+    stats = result.retrieval_stats
+    if no_cross_encoder:
+        typer.echo(f"  {stats.auto_accepted} RRF-accepted, {stats.grounding_filtered} grounding-filtered (no cross-encoder)")
+    else:
+        typer.echo(f"  {stats.auto_accepted} auto-accepted, {stats.llm_judged} LLM-judged, {stats.grounding_filtered} grounding-filtered")
+    typer.echo(f"Token usage: {tracker.prompt_tokens:,} prompt + {tracker.completion_tokens:,} completion = {tracker.total_tokens:,} total ({tracker.calls} calls)")
+
+    from concorde_policy_mapper.extract.report import build_risk_extraction_report
+    report_path = build_risk_extraction_report(result_data, output / "risk-extraction.html")
+    typer.echo(f"Report written to {report_path}")
+
+
+@app.command(name="eval")
+def eval_cmd(
+    run_dir: Path = typer.Argument(..., help="Directory containing risk-extraction.json"),
+    ground_truth: Path = typer.Option(None, "--ground-truth", "-g", help="Ground truth YAML file (default: evals/ground_truth/{name}.yaml)"),
+    min_recall: float = typer.Option(0.80, "--min-recall", help="Minimum recall threshold"),
+    min_precision: float = typer.Option(0.60, "--min-precision", help="Minimum precision threshold"),
+):
+    """Evaluate a risk extraction run against ground truth."""
+    extracted_path = run_dir / "risk-extraction.json"
+    if not extracted_path.exists():
+        typer.echo(f"Error: {extracted_path} not found", err=True)
+        raise typer.Exit(1)
+
+    if ground_truth is None:
+        evals_dir = Path(__file__).parent.parent.parent / "evals" / "ground_truth"
+        ground_truth = evals_dir / f"{run_dir.name}.yaml"
+
+    if not ground_truth.exists():
+        typer.echo(f"Error: ground truth not found at {ground_truth}", err=True)
+        raise typer.Exit(1)
+
+    from concorde_policy_mapper.evals.eval import evaluate_extraction
+
+    result = evaluate_extraction(
+        ground_truth, extracted_path,
+        policy_name=run_dir.name,
+        min_recall=min_recall,
+        min_precision=min_precision,
+    )
+
+    eval_path = run_dir / "eval.json"
+    eval_path.write_text(json.dumps(result, indent=2))
+
+    extraction_data = json.loads(extracted_path.read_text())
+    extraction_data["eval"] = result
+    extracted_path.write_text(json.dumps(extraction_data, indent=2))
+
+    from concorde_policy_mapper.extract.report import build_risk_extraction_report
+    report_path = build_risk_extraction_report(extraction_data, run_dir / "risk-extraction.html")
+
+    status = "PASS" if result["pass"] else "FAIL"
+    typer.echo(f"Eval: {result['policy']} — {status}")
+    typer.echo(f"  Precision: {result['precision']:.3f} (threshold: {min_precision})")
+    typer.echo(f"  Recall:    {result['recall']:.3f} (threshold: {min_recall})")
+    typer.echo(f"  F1:        {result['f1']:.3f}")
+    typer.echo(f"  Matched:   {result['matched']}/{result['total_expected']} expected, {result['total_extracted']} extracted")
+    if result["missing"]:
+        typer.echo(f"  Missing:   {', '.join(result['missing'])}")
+    if result["spurious"]:
+        typer.echo(f"  Spurious:  {', '.join(result['spurious'])}")
+    typer.echo(f"  Written to {eval_path}")
+    typer.echo(f"  Report updated at {report_path}")

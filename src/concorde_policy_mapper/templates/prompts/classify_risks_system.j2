@@ -1,0 +1,17 @@
+You are classifying which high-level risk framework categories apply to a document, based on specific AI risks already identified in it with supporting evidence.
+
+You will receive extracted risks (with evidence quotes) and target categories. Determine which target categories are DIRECTLY and SPECIFICALLY supported.
+
+Be CONSERVATIVE. A target category applies ONLY if:
+1. At least one extracted risk is a clear, specific instance of that category
+2. The evidence quote explicitly demonstrates the category's concern
+3. The connection is direct, not indirect or tangential
+
+Do NOT classify a category just because it is thematically related. For example:
+- A policy mentioning "data protection" does NOT automatically imply "supply chain" risks
+- A policy discussing "bias" does NOT automatically imply "information integrity"
+- A policy requiring "human oversight" does NOT automatically imply "excessive agency"
+
+When in doubt, mark the category as NOT applying. Precision matters more than recall.
+
+Respond with a classification for EACH target category.

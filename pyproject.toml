@@ -1,0 +1,41 @@
+[project]
+name = "concorde-policy-mapper"
+version = "0.1.0"
+description = "Policy risk extraction using AI Atlas Nexus risk taxonomy"
+requires-python = ">=3.11"
+dependencies = [
+    "instructor>=1.0",
+    "openai>=1.0",
+    "pydantic>=2.0",
+    "typer>=0.12",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+    "docling>=2.0,<3.0",
+    "torch>=2.11,<2.12",
+    "transformers>=5.5,<5.6",
+    "ai-atlas-nexus @ git+https://github.com/IBM/ai-atlas-nexus.git@30f29c3bb74a872dbdbe75601e3772f3ce7c659b",
+    "sentence-transformers>=3.0",
+    "rank-bm25>=0.2",
+    "nltk>=3.8",
+    "numpy",
+    "mlflow>=2.17",
+]
+
+[project.scripts]
+concorde-policy-mapper = "concorde_policy_mapper.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/concorde_policy_mapper"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
