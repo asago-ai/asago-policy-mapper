@@ -27,6 +27,16 @@ from pathlib import Path
 import yaml
 
 from concorde_policy_mapper.evals.eval import evaluate_extraction
+from concorde_policy_mapper.tracking import (
+    init_tracking,
+    end_tracking,
+    is_tracking_enabled,
+    log_params,
+    log_metrics,
+    log_artifact,
+    log_child_run,
+    sync_prompts,
+)
 
 PACKAGE_DIR = Path(__file__).parent
 ROOT = PACKAGE_DIR.parent
@@ -310,6 +320,8 @@ def main():
     parser.add_argument("--no-cross-encoder", action="store_true", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead")
     parser.add_argument("--rrf-min-score", type=float, default=0.01, help="Minimum RRF score for candidates (only used with --no-cross-encoder)")
     parser.add_argument("--classify-taxonomies", default="nist-ai-rmf", help="Taxonomies to classify post-retrieval (comma-separated, empty to disable)")
+    parser.add_argument("--mlflow-experiment", default="risk-extraction", help="MLflow experiment name (default: risk-extraction)")
+    parser.add_argument("--no-mlflow", action="store_true", help="Disable MLflow tracking")
     args = parser.parse_args()
 
     battery_path = args.battery if args.battery.is_absolute() else PACKAGE_DIR / args.battery
@@ -355,6 +367,34 @@ def main():
     print(f"  output:         {runs_dir}")
     print()
 
+    # --- MLflow tracking ---
+    tracking_ctx = init_tracking(
+        enabled=not args.no_mlflow,
+        experiment_name=args.mlflow_experiment,
+        run_name=f"{battery_name}_{timestamp}",
+    )
+    if is_tracking_enabled(tracking_ctx):
+        log_params(tracking_ctx, {
+            "model": model,
+            "bi_encoder_model": args.bi_encoder_model,
+            "cross_encoder_model": args.cross_encoder_model,
+            "threshold_high": str(args.threshold_high),
+            "threshold_low": str(args.threshold_low),
+            "rrf_min_score": str(args.rrf_min_score),
+            "classify_taxonomies": args.classify_taxonomies,
+            "no_cross_encoder": str(args.no_cross_encoder),
+            "jobs": str(args.jobs),
+            "battery_config": battery_path.name,
+        })
+        templates_dir = PACKAGE_DIR / "src" / "concorde_policy_mapper" / "templates"
+        prompt_versions = sync_prompts(tracking_ctx, templates_dir)
+        for pname, pversion in prompt_versions.items():
+            log_params(tracking_ctx, {f"prompt/{pname}_version": str(pversion)})
+        print(f"  mlflow:         {args.mlflow_experiment} (tracking enabled)")
+    else:
+        if not args.no_mlflow:
+            print(f"  mlflow:         disabled (initialization failed)")
+
     t_battery = time.monotonic()
     failed = []
     timings: dict[str, float] = {}
@@ -397,6 +437,58 @@ def main():
                     build_risk_extraction_report(data, runs_dir / name / "risk-extraction.html")
                 except Exception as e:
                     _locked_print(f"  [{name}] Warning: could not generate HTML report: {e}")
+
+    # --- MLflow child runs ---
+    if is_tracking_enabled(tracking_ctx):
+        for name, _ in runs:
+            if name in failed:
+                continue
+            result_path = runs_dir / name / "risk-extraction.json"
+            if not result_path.exists():
+                continue
+
+            data = json.loads(result_path.read_text())
+            ev = eval_results.get(name)
+            child_metrics: dict[str, float] = {}
+            child_tags: dict[str, str] = {}
+            child_artifacts: list[Path] = [result_path]
+
+            n_risks = len(data.get("risks", []))
+            stats = data.get("retrieval_stats", {})
+            child_metrics["risks_count"] = float(n_risks)
+            child_metrics["auto_accepted"] = float(stats.get("auto_accepted", 0))
+            child_metrics["llm_judged"] = float(stats.get("llm_judged", 0))
+            child_metrics["grounding_filtered"] = float(stats.get("grounding_filtered", 0))
+            child_metrics["elapsed_seconds"] = timings.get(name, 0.0)
+
+            if ev:
+                child_metrics["recall"] = ev["recall"]
+                child_metrics["precision"] = ev["precision"]
+                child_metrics["f1"] = ev["f1"]
+                child_metrics["total_expected"] = float(ev["total_expected"])
+                child_metrics["total_extracted"] = float(ev["total_extracted"])
+                child_metrics["matched"] = float(ev["matched"])
+                child_tags["eval_status"] = "PASS" if ev["pass"] else "FAIL"
+                for tax, td in ev.get("per_taxonomy", {}).items():
+                    child_metrics[f"{tax}/recall"] = td["recall"]
+                    child_metrics[f"{tax}/precision"] = td["precision"]
+                    child_metrics[f"{tax}/f1"] = td["f1"]
+                eval_path = runs_dir / name / "eval.json"
+                if eval_path.exists():
+                    child_artifacts.append(eval_path)
+
+            html_path = runs_dir / name / "risk-extraction.html"
+            if html_path.exists():
+                child_artifacts.append(html_path)
+
+            log_child_run(
+                tracking_ctx,
+                name=name,
+                params={"policy_name": name},
+                metrics=child_metrics,
+                tags=child_tags,
+                artifacts=child_artifacts,
+            )
 
     # --- Summary ---
     print(f"\n{'═' * 60}")
@@ -483,6 +575,40 @@ def main():
             print(f"Battery report: {runs_dir / 'battery-summary.html'}")
         except Exception as e:
             _locked_print(f"Warning: could not generate battery HTML report: {e}")
+
+    # --- MLflow parent run summary ---
+    if is_tracking_enabled(tracking_ctx):
+        parent_metrics: dict[str, float] = {
+            "runs_succeeded": float(len(runs) - len(failed)),
+            "runs_failed": float(len(failed)),
+        }
+        if eval_results:
+            parent_metrics["evals_passed"] = float(sum(1 for ev in eval_results.values() if ev["pass"]))
+            parent_metrics["evals_total"] = float(len(eval_results))
+            parent_metrics["macro_recall"] = sum(ev["recall"] for ev in eval_results.values()) / len(eval_results)
+            parent_metrics["macro_precision"] = sum(ev["precision"] for ev in eval_results.values()) / len(eval_results)
+            parent_metrics["macro_f1"] = sum(ev["f1"] for ev in eval_results.values()) / len(eval_results)
+            if tax_agg:
+                for tax, a in tax_agg.items():
+                    m, e, x = a["matched"], a["expected"], a["extracted"]
+                    spur = x - m
+                    p = m / (m + spur) if m + spur > 0 else 0.0
+                    r = m / e if e > 0 else 0.0
+                    f = 2 * p * r / (p + r) if p + r > 0 else 0.0
+                    parent_metrics[f"{tax}/recall"] = r
+                    parent_metrics[f"{tax}/precision"] = p
+                    parent_metrics[f"{tax}/f1"] = f
+
+        log_metrics(tracking_ctx, parent_metrics)
+
+        summary_json = runs_dir / "battery-summary.json"
+        summary_html = runs_dir / "battery-summary.html"
+        if summary_json.exists():
+            log_artifact(tracking_ctx, summary_json)
+        if summary_html.exists():
+            log_artifact(tracking_ctx, summary_html)
+
+    end_tracking(tracking_ctx)
 
     print(f"\nOutput: {runs_dir}")
     sys.exit(1 if failed else 0)
