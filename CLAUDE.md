@@ -32,6 +32,12 @@ uv run concorde-policy-mapper eval output/ -g evals/ground_truth/policy-name.yam
 just run-risk-extract-battery batteries/risk-selected.yaml <base-url> <model>
 # Or directly with more options:
 python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --model <model> -j 6
+
+# Run battery with MLflow tracking disabled
+just no_mlflow="1" run-risk-extract-battery batteries/risk-selected.yaml <base-url> <model>
+
+# Run battery with custom MLflow experiment name
+python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --model <model> --mlflow-experiment my-experiment
 ```
 
 ## Architecture
@@ -82,6 +88,8 @@ Runs `concorde-policy-mapper extract` as a subprocess per policy in a battery YA
 - Excluded taxonomies (not loaded from Nexus): `mit-ai-risk-repository-causal`, `ibm-granite-guardian` (in `cli.py::EXCLUDED_TAXONOMIES`)
 - `LLMCallRecord` captures every LLM call (messages, response, timing) in the ExtractionResult for analysis/debugging
 - `debug.py` writes per-call JSON files when `--debug <dir>` is passed
+- MLflow tracking is enabled by default in the battery runner; set `MLFLOW_TRACKING_URI` to point to your MLflow server. Pass `--no-mlflow` to disable.
+- Prompt templates are synced to the MLflow Prompt Registry at the start of each tracked battery run (hash-based dedup avoids duplicate versions)
 
 ## Dependency Pins
 
