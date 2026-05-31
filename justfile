@@ -5,5 +5,5 @@ no_mlflow := ""
 test:
     uv run pytest tests/
 
-run-risk-extract-battery battery base_url model="" bi_encoder="" cross_encoder="" jobs="6":
-    uv run python run_extract_battery.py {{ battery }} --base-url {{ base_url }} -j {{ jobs }} {{ if model != "" { "--model " + model } else { "" } }} {{ if bi_encoder != "" { "--bi-encoder-model " + bi_encoder } else { "" } }} {{ if cross_encoder != "" { "--cross-encoder-model " + cross_encoder } else { "" } }} {{ if no_cross_encoder != "" { "--no-cross-encoder" } else { "" } }} {{ if rrf_min_score != "" { "--rrf-min-score " + rrf_min_score } else { "" } }} {{ if no_mlflow != "" { "--no-mlflow" } else { "" } }}
+run-risk-extract-battery battery base_url="" model="" bi_encoder="" cross_encoder="" jobs="6":
+    uv run python run_extract_battery.py {{ battery }} -j {{ jobs }} {{ if base_url != "" { "--base-url " + base_url } else { "" } }} {{ if model != "" { "--model " + model } else { "" } }} {{ if bi_encoder != "" { "--bi-encoder-model " + bi_encoder } else { "" } }} {{ if cross_encoder != "" { "--cross-encoder-model " + cross_encoder } else { "" } }} {{ if no_cross_encoder != "" { "--no-cross-encoder" } else { "" } }} {{ if rrf_min_score != "" { "--rrf-min-score " + rrf_min_score } else { "" } }} {{ if no_mlflow != "" { "--no-mlflow" } else { "" } }}

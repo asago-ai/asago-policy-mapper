@@ -8,4 +8,8 @@
 - **{{ risk.risk_id }}**: {{ risk.risk_name }} — {{ risk.risk_description }}
 {% endfor %}
 
-For each candidate risk, determine if it is relevant to the text passage. Respond with the risk_id, whether it is relevant (true/false), and a brief justification.
+For each candidate risk, determine if it is relevant to the text passage.
+
+First, identify the core themes, prohibitions, and compliance measures in the text. Then for each candidate risk, assess whether the text provides enough specificity to conclude that this particular risk is being addressed, prohibited, or described — not merely thematically related.
+
+Respond with the risk_id, whether it is relevant (true/false), and a brief justification.

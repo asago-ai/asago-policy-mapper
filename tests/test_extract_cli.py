@@ -24,7 +24,7 @@ def test_extract_missing_base_url():
             "extract", f.name,
             "-o", "/tmp/test-output",
             "--nexus-base-dir", "/tmp/nexus",
-        ], env={"REFINER_BASE_URL": "", "REFINER_MODEL": ""})
+        ], env={"POLICY_MAPPER_BASE_URL": "", "POLICY_MAPPER_MODEL": ""})
     assert result.exit_code != 0
 
 

@@ -310,8 +310,8 @@ def _build_battery_report(summary: dict, output_path: Path) -> None:
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("battery", type=Path, help="Battery config YAML file (e.g. ../batteries/simple.yaml)")
-    parser.add_argument("--base-url", required=True, help="LLM API base URL")
-    parser.add_argument("--model", default=None, help="Override model from battery config")
+    parser.add_argument("--base-url", default=os.environ.get("POLICY_MAPPER_BASE_URL"), help="LLM API base URL (default: $POLICY_MAPPER_BASE_URL)")
+    parser.add_argument("--model", default=None, help="Override model from battery config (default: $POLICY_MAPPER_MODEL)")
     parser.add_argument("-j", "--jobs", type=int, default=6, help="Max parallel jobs (default: 6)")
     parser.add_argument("--threshold-high", type=float, default=0.7, help="Auto-accept threshold (default: 0.7)")
     parser.add_argument("--threshold-low", type=float, default=0.15, help="Discard threshold (default: 0.15)")
@@ -330,9 +330,13 @@ def main():
         sys.exit(1)
 
     config = yaml.safe_load(battery_path.read_text())
-    model = args.model or config.get("model")
+    if not args.base_url:
+        print("Error: --base-url is required (or set POLICY_MAPPER_BASE_URL)")
+        sys.exit(1)
+
+    model = args.model or config.get("model") or os.environ.get("POLICY_MAPPER_MODEL")
     if not model:
-        print("Error: model not specified (set in battery config or pass --model)")
+        print("Error: model not specified (set in battery config, pass --model, or set POLICY_MAPPER_MODEL)")
         sys.exit(1)
 
     battery_name = battery_path.stem

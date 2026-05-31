@@ -1,0 +1,36 @@
+{
+  "extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "# Task: AI System Extraction from Policy Documents\n\nExtract all AI systems mentioned in the provided policy document. For each system, capture its name, description, capabilities, and deployment_status.\n\n## Extraction Criteria\nExtract any AI system that the organization:\n- Actively deploys or operates in a workflow.\n- Procures or uses as a tool for staff.\n- Evaluates, governs, or regulates.\n- References as a specific tool (even if prohibited or used as a comparison).\n\n### ⚠️ CRITICAL: Filtering Logic (Avoid Spurious Extractions)\nTo maintain high precision, follow these exclusion rules:\n1. **Do NOT extract \"Prohibited Examples\" as systems:** If the text says \"Do not use @claude\" or \"Agents that take action without approval are banned,\" do not extract \"@claude\" or \"unauthorized agents\" as systems unless the text implies the organization *actually possesses or is currently using* them. If they are merely hypothetical examples of what is forbidden, skip them.\n2. **Do NOT extract \"Policy Concepts\" as systems:** Do not extract \"Automated review tools\" or \"Opt-in review tools\" if the text is describing a *category of behavior* or a *policy requirement* rather than a specific tool or functional implementation currently in use.\n3. **Do NOT extract \"Content Types\":** Do not extract \"Synthetic media\" or \"AI-generated summaries\" as systems; these are outputs, not the systems themselves.\n\n## Classification Rules\n\n### 1. Deployment Status\nClassify each system into exactly one of these categories:\n- **\"deployed\"**: The organization actively operates, uses, or has implemented this system/functionality in its current workflow. \n    - *Note:* If the document describes a functional application (e.g., \"AI tools for translation\" or \"LLMs used for coding\"), classify it as **\"deployed\"** even if no brand name is provided.\n- **\"referenced\"**: A specific, named third-party system mentioned in the text (e.g., \"GPT-4\", \"@claude\") that is not necessarily used by the organization, or a specific tool used for comparison.\n- **\"generic\"**: A high-level technology category or concept that describes a class of tools without being tied to a specific organizational task (e.g., \"Generative AI\", \"Large Language Models\").\n\n### 2. Naming and Granularity\n- **Functional Names**: If a system lacks a brand name, use its functional description as its name (e.g., \"Cargo screening system\", \"AI research tools\", \"AI coding assistants\").\n- **Granularity**: Do not group multiple distinct use cases into one entry. If the text lists \"AI for grammar\" and \"AI for translation,\" extract them as two separate systems.\n- **Avoid Over-Abstraction**: Do not extract \"Generative AI\" as a system unless it is tied to a specific use case (e.g., \"Generative AI for image production\").\n\n### 3. Capabilities\n- Use the provided `ontology_snippet` to map capabilities.\n- If a capability is described in the text but not in the ontology, extract the specific functional capability (e.g., \"object detection,\" \"language translation,\" \"grammar checking\").\n- **Rule**: Describe what the system *does*, not what the system *is*.\n\n## Execution Strategy\n1. **Scan for Workflows**: First, identify all instances where AI is tied to a specific human task (e.g., \"Reporters use AI to summarize documents\"). These are almost always `deployed` functional systems.\n2. **Distinguish Tool vs. Concept**: Ask: \"Is this a tool the employee picks up to do work (System), or is this a rule about how work should be done (Concept)?\"\n3. **Verify Deployment**: If the text says \"Contributors can use whatever tools they like,\" the \"AI tools\" mentioned are `deployed` functional systems, even if the specific brand is not named.",
+      "fields": [
+        {
+          "prefix": "Document Text:",
+          "description": "Full policy document text"
+        },
+        {
+          "prefix": "Ontology Snippet:",
+          "description": "AI system types and capability vocabulary from DPV ontology"
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Extraction:",
+          "description": "Extracted AI systems with names, descriptions, capabilities, and deployment status"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.2.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}

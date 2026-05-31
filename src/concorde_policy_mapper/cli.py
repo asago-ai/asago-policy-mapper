@@ -21,9 +21,9 @@ EXCLUDED_TAXONOMIES = {"mit-ai-risk-repository-causal", "ibm-granite-guardian"}
 def extract(
     policy_files: list[Path] = typer.Argument(..., help="Policy document(s) to extract risks from"),
     output: Path = typer.Option(..., "--output", "-o", help="Output directory"),
-    base_url: str = typer.Option(None, "--base-url", envvar="REFINER_BASE_URL", help="LLM API base URL"),
-    model: str = typer.Option(None, "--model", envvar="REFINER_MODEL", help="LLM model name"),
-    api_key: str = typer.Option("none", "--api-key", envvar="REFINER_API_KEY", help="LLM API key"),
+    base_url: str = typer.Option(None, "--base-url", envvar="POLICY_MAPPER_BASE_URL", help="LLM API base URL"),
+    model: str = typer.Option(None, "--model", envvar="POLICY_MAPPER_MODEL", help="LLM model name"),
+    api_key: str = typer.Option("none", "--api-key", envvar="POLICY_MAPPER_API_KEY", help="LLM API key"),
     nexus_base_dir: str = typer.Option(None, "--nexus-base-dir", envvar="NEXUS_BASE_DIR", help="Path to ai-atlas-nexus repo"),
     debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
