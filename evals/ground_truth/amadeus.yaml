@@ -347,4 +347,68 @@ risks:
         section: "II. Amadeus AI Principles For development and deployment/use - 2.1. Fairness and human oversight"
       - text: "Recruitment and HR: decision-making in the area of recruitment and HR (e.g., selection, evaluation, assessment, promotion, termination, task allocation and monitoring of employees)"
         section: "Annex 1 - High-Risk Practices"
-
+  - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---biometric-data-(facial-recognition)
+    name: Non-consensual tracking - Biometric data (facial recognition)
+    evidence:
+      - text: "Real-time remote biometric identification in publicly accessible spaces for law enforcement purposes, except in limited cases."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)
+    name: Unauthorized collection - Biometric data (facial recognition)
+    evidence:
+      - text: "Untargeted scraping of facial recognition databases. For example, using an AI tool to scrape of facial images from the internet, social media platforms or CCTV footages."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
+    name: Unauthorized inference - Biometric data (facial recognition)
+    evidence:
+      - text: "Biometric categorization to infer sensitive personal traits. For example, using AI to categorize passengers by their facial images to infer their racial or ethnic origin, political opinion, trade union membership, religious or philosophical belief."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: ai-risk-taxonomy-unauthorized-processing---biometric-data-(facial-recognition)
+    name: Unauthorized processing - Biometric data (facial recognition)
+    evidence:
+      - text: "Biometric categorization to infer sensitive personal traits."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: ai-risk-taxonomy-criminal-justice/predictive-policing
+    name: Criminal justice / Predictive policing
+    evidence:
+      - text: "Predictive policing based solely on profiling or assessment of personality traits."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---predicted-personality
+    name: Discrimination in employment - Predicted personality
+    evidence:
+      - text: "Classification or scoring of people based on behavior or personality characteristics leading to detrimental treatment."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: ai-risk-taxonomy-classification-of-individuals---mental-characteristics
+    name: Classification of individuals - Mental characteristics
+    evidence:
+      - text: "biometric categorisation of individuals and/or emotion recognition of individuals (including facial recognition)."
+        section: "Annex 1 - HIGH-RISK PRACTICES"
+  - id: atlas-data-acquisition
+    name: Data acquisition
+    evidence:
+      - text: "Untargeted scraping of facial recognition databases. For example, using an AI tool to scrape of facial images from the internet, social media platforms or CCTV footages."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: credo-risk-002
+    name: AI pursuing its own goals in conflict with human goals or values
+    evidence:
+      - text: "Subliminal, manipulative and/or deceptive techniques with the risk of significant harm."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: credo-risk-003
+    name: AI possessing dangerous capabilities
+    evidence:
+      - text: "Subliminal, manipulative and/or deceptive techniques with the risk of significant harm."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: credo-risk-026
+    name: Fraud, scams, and targeted manipulation
+    evidence:
+      - text: "Subliminal, manipulative and/or deceptive techniques with the risk of significant harm."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: mit-ai-risk-subdomain-4.3
+    name: Fraud, scams, and targeted manipulation
+    evidence:
+      - text: "Subliminal, manipulative and/or deceptive techniques with the risk of significant harm. For example, using an AI tool to manipulate people's opinion."
+        section: "Annex 1 - PROHIBITED PRACTICES"
+  - id: mit-ai-risk-subdomain-7.2
+    name: AI possessing dangerous capabilities
+    evidence:
+      - text: "Subliminal, manipulative and/or deceptive techniques with the risk of significant harm. For example, using an AI tool to manipulate people's opinion."
+        section: "Annex 1 - PROHIBITED PRACTICES"
