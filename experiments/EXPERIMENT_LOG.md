@@ -390,3 +390,45 @@ Regressed badly — 2/27 pass vs 5/27 baseline. The tight score clustering meant
 - Many "true positives" removed have genuinely thin evidence (single words). 5 of these were GT errors (removed).
 
 **Conclusion:** Hard evidence-length filter is too blunt. The over-extraction problem is best addressed by improving the LLM judge's ability to reject risks matched on generic governance language. DSPy judge re-optimization in progress with updated dataset (27 policies, risk-level only, category taxonomies excluded).
+
+---
+
+## 2026-06-01: DSPy Judge Prompt Optimization v3 — Risk-Level Only Dataset
+
+**Description:** Re-ran GEPA with the updated dataset: 187 train / 244 eval examples from 27 policies (13 train, 14 eval). Category-level taxonomies excluded from the risk pool. Hard negatives mined via cross-encoder from risk-level risks only. Amadeus (train) and ICRC (eval) split to test generalisation on EU AI Act prohibition patterns.
+
+**Results (isolated judge eval):**
+
+- Baseline F1: 70.90% (up from v2's 69.26% — cleaner dataset)
+- Optimized F1: 80.23%
+- Improvement: +9.33%
+
+**Optimized prompt key innovations (different from v2):**
+
+- "Avoid Over-Literalism": don't reject because the specific technical term is missing — if text manages a domain, risks in that domain are relevant
+- Theme-to-risk mapping: governance/process → compliance/governance risks; data protection → privacy risks; security → adversarial risks
+- "Crucial Note" on governance frameworks: approval processes, monitoring, contract reviews implicitly address the risks those guardrails prevent
+- Specificity guard maintained: general privacy ≠ biometric/facial recognition
+
+**End-to-end battery (v3 judge, 27 policies):**
+
+| Metric          | Baseline (v2 judge) | v3 Judge  | Delta    |
+|-----------------|---------------------|-----------|----------|
+| Macro F1        | 0.708               | **0.719** | **+0.010** |
+| Macro Precision | 0.813               | 0.814     | +0.001   |
+| Macro Recall    | 0.649               | **0.665** | **+0.017** |
+| Pass rate       | 5/27                | **6/27**  | +1       |
+| NIST cat F1     | 0.923               | 0.920     | -0.003   |
+| OWASP LLM F1   | 0.907               | **0.935** | +0.028   |
+
+15 policies improved, 8 regressed (mostly small), 4 unchanged. Precision held — the v3 prompt's
+"Avoid Over-Literalism" did NOT cause the over-acceptance that killed v1 (which regressed F1 0.754→0.723).
+
+**Why v3 worked where v1 failed:** v1 was trained on random negatives with a subsampled dataset (50 train);
+v3 used hard negatives from the cross-encoder with a full dataset (187 train) and risk-level-only risks.
+The hard negatives taught the prompt to be inclusive on domain-relevant risks while rejecting
+cross-domain false matches. The "Distinguish Specificity" guard (general privacy ≠ biometric) prevented
+the over-acceptance pattern.
+
+**Conclusion:** Shipped as default judge prompt. First DSPy judge optimization to improve end-to-end
+performance. New baseline: P=0.814, R=0.665, F1=0.719.
