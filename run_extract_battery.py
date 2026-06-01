@@ -97,7 +97,6 @@ def run_one(
         name_width: int = 20,
         no_cross_encoder: bool = False,
         rrf_min_score: float = 0.01,
-        classify_taxonomies: str = "nist-ai-rmf,owasp-llm-2.0",
 ) -> tuple[str, bool, str, int, float]:
     out = runs_dir / name
     tag = _pad_name(name, name_width)
@@ -116,7 +115,6 @@ def run_one(
         "--threshold-low", str(threshold_low),
         "--bi-encoder-model", bi_encoder_model,
         "--cross-encoder-model", cross_encoder_model,
-        "--classify-taxonomies", classify_taxonomies,
     ]
     if no_cross_encoder:
         cmd.extend(["--no-cross-encoder", "--rrf-min-score", str(rrf_min_score)])
@@ -319,7 +317,6 @@ def main():
     parser.add_argument("--cross-encoder-model", default="cross-encoder/ms-marco-MiniLM-L-12-v2", help="Cross-encoder model (default: cross-encoder/ms-marco-MiniLM-L-12-v2)")
     parser.add_argument("--no-cross-encoder", action="store_true", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead")
     parser.add_argument("--rrf-min-score", type=float, default=0.01, help="Minimum RRF score for candidates (only used with --no-cross-encoder)")
-    parser.add_argument("--classify-taxonomies", default="nist-ai-rmf", help="Taxonomies to classify post-retrieval (comma-separated, empty to disable)")
     parser.add_argument("--mlflow-experiment", default="risk-extraction", help="MLflow experiment name (default: risk-extraction)")
     parser.add_argument("--no-mlflow", action="store_true", help="Disable MLflow tracking")
     args = parser.parse_args()
@@ -365,7 +362,6 @@ def main():
         print(f"  rrf_min_score:  {args.rrf_min_score}")
     print(f"  threshold_high: {args.threshold_high}")
     print(f"  threshold_low:  {args.threshold_low}")
-    print(f"  classify_tax:   {args.classify_taxonomies or 'DISABLED'}")
     print(f"  runs:           {len(runs)} ({n_single} single-doc, {n_groups} multi-doc)")
     print(f"  jobs:           {args.jobs}")
     print(f"  output:         {runs_dir}")
@@ -385,7 +381,6 @@ def main():
             "threshold_high": str(args.threshold_high),
             "threshold_low": str(args.threshold_low),
             "rrf_min_score": str(args.rrf_min_score),
-            "classify_taxonomies": args.classify_taxonomies,
             "no_cross_encoder": str(args.no_cross_encoder),
             "jobs": str(args.jobs),
             "battery_config": battery_path.name,
@@ -410,7 +405,6 @@ def main():
                 args.threshold_high, args.threshold_low,
                 args.bi_encoder_model, args.cross_encoder_model, name_width,
                 args.no_cross_encoder, args.rrf_min_score,
-                args.classify_taxonomies,
             ): name
             for name, files in runs
         }

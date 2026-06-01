@@ -45,22 +45,22 @@ python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --mo
 ### Extraction Pipeline (`extract/pipeline.py::run_extraction`)
 
 ```
-Documents → parse_document() → chunk_documents() → per-chunk retrieve → judge → ground → merge → classify
-                                                                    ↑ ThreadPoolExecutor (steps 7-8)
+Documents → parse_document() → chunk_documents() → per-chunk retrieve → judge → ground → merge
+                                                                    ↑ ThreadPoolExecutor (steps 6-7)
 ```
 
 1. **Parse** (`parse.py`) — Docling converts PDF/DOCX/HTML to markdown; plain text passes through
 2. **Chunk** (`parse.py`) — HybridChunker splits into ~512-token chunks preserving page/section metadata
 3. **Agentic filter** — If document lacks agent-related terminology, agentic risks are excluded from the catalog
-4. **Taxonomy split** — Risks in `classify_taxonomies` (default: nist-ai-rmf) are deferred to post-retrieval classification; the rest go through retrieval
-5. **Index** (`index.py`) — `RiskIndex` builds BM25 + bi-encoder embeddings + optional cross-encoder over the retrieval risk set
-6. **Retrieve** (`retrieve.py`) — Per-chunk: BM25 + semantic → RRF fusion → cross-encoder rerank → threshold classify into accepted/borderline/discarded
-7. **Judge** (`retrieve.py`) — LLM judges borderline candidates using padded text (adjacent chunk sentences for context). Parallel via ThreadPoolExecutor
-8. **Ground** (`attribute.py`) — LLM extracts evidence quotes + confidence (high/medium/low) for accepted candidates; ungrounded ones filtered out. Parallel via ThreadPoolExecutor
-9. **Merge** (`merge.py`) — Deduplicate matches across chunks, keep best confidence and top-3 evidence spans
-10. **Classify** (`classify.py`) — LLM maps already-extracted risks to high-level taxonomy categories
+4. **Index** (`index.py`) — `RiskIndex` builds BM25 + bi-encoder embeddings + optional cross-encoder over risk-level taxonomies only
+5. **Retrieve** (`retrieve.py`) — Per-chunk: BM25 + semantic → RRF fusion → cross-encoder rerank → threshold classify into accepted/borderline/discarded
+6. **Judge** (`retrieve.py`) — LLM judges borderline candidates using padded text (adjacent chunk sentences for context). Parallel via ThreadPoolExecutor
+7. **Ground** (`attribute.py`) — LLM extracts evidence quotes + confidence (high/medium/low) for accepted candidates; ungrounded ones filtered out. Parallel via ThreadPoolExecutor
+8. **Merge** (`merge.py`) — Deduplicate matches across chunks, keep best confidence and top-3 evidence spans
 
-With `--no-cross-encoder`, steps 6-7 are replaced by RRF score floor filtering (no LLM judging).
+With `--no-cross-encoder`, steps 5-6 are replaced by RRF score floor filtering (no LLM judging).
+
+Category-level taxonomy mapping (NIST, OWASP, AILuminate) is handled at eval time via a static SSSOM mapping, not during extraction.
 
 ### LLM Integration (`llm.py`)
 
@@ -71,11 +71,17 @@ With `--no-cross-encoder`, steps 6-7 are replaced by RRF score floor filtering (
 
 ### Prompt Templates (`templates/prompts/`)
 
-Three Jinja2 template pairs (`_system.j2` + `_user.j2`): `judge_risk`, `ground_evidence`, `classify_risks`. Loaded by `prompts.py::render_prompt()`.
+Two Jinja2 template pairs (`_system.j2` + `_user.j2`): `judge_risk`, `ground_evidence`. Loaded by `prompts.py::render_prompt()`.
 
 ### Evaluation (`evals/eval.py`)
 
-Compares extracted risk IDs against ground truth YAML. Computes precision/recall/F1 overall and per-taxonomy. 20 ground truth files in `evals/ground_truth/`.
+Two-tier evaluation:
+- **Tier 1 (risk-level)**: Compares extracted risk IDs against ground truth YAML. Computes precision/recall/F1 overall and per-taxonomy. 20 ground truth files in `evals/ground_truth/` — risk-level only (no category-level entries).
+- **Tier 2 (category-level)**: Derives NIST/OWASP/AILuminate/ASI categories from risk IDs via `data/risk_to_category.sssom.tsv` (SSSOM mapping, 802 entries). Computes P/R/F1 per category taxonomy. Only uses strong predicates (exact/close/broadMatch), excludes relatedMatch.
+
+### Cross-Taxonomy Mapping (`data/risk_to_category.sssom.tsv`)
+
+Static SSSOM file mapping 486 risk-level risks to 4 category-level taxonomies (NIST AI RMF 12 risks, OWASP LLM 10 risks, AILuminate 12 risks, OWASP ASI 10 risks). Built from Nexus mapping files + manually reviewed gap-fill for IBM agentic risks, Credo, MIT, and AIR 2024 (314 risks via group-level inheritance).
 
 ### Battery Runner (`run_extract_battery.py`)
 
@@ -85,7 +91,7 @@ Runs `concorde-policy-mapper extract` as a subprocess per policy in a battery YA
 
 - `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points to a local clone of `github.com/IBM/ai-atlas-nexus`
 - Risk IDs are taxonomy-prefixed: `atlas-` → ibm-risk-atlas, `nist-` → nist-ai-rmf, `credo-` → credo-ucf, etc. (see `evals/eval.py::_TAXONOMY_PREFIXES`)
-- Excluded taxonomies (not loaded from Nexus): `mit-ai-risk-repository-causal`, `ibm-granite-guardian` (in `cli.py::EXCLUDED_TAXONOMIES`)
+- Excluded taxonomies (not loaded from Nexus): category-level (`nist-ai-rmf`, `owasp-llm-2.0`, `ailuminate-v1.0`, `owasp-asi`, `shieldgemma-taxonomy`) and others (`mit-ai-risk-repository-causal`, `ibm-granite-guardian`) — see `cli.py::EXCLUDED_TAXONOMIES`
 - `LLMCallRecord` captures every LLM call (messages, response, timing) in the ExtractionResult for analysis/debugging
 - `debug.py` writes per-call JSON files when `--debug <dir>` is passed
 - MLflow tracking is enabled by default in the battery runner; set `MLFLOW_TRACKING_URI` to point to your MLflow server. Pass `--no-mlflow` to disable.
@@ -96,8 +102,13 @@ Runs `concorde-policy-mapper extract` as a subprocess per policy in a battery YA
 - `ai-atlas-nexus` is pinned to a specific commit (v1.2.1) — `@main` may have breaking Pydantic schema changes
 - `torch<2.12` and `transformers<5.6` — newer versions introduce an MPS-incompatible `rt_detr_v2` layout model in docling's PDF pipeline on Apple Silicon
 
+## Experiments
+
+- Always update `experiments/EXPERIMENT_LOG.md` with results after running any experiment or battery that produces new data points
+- Include MLflow experiment name and run ID in experiment log entries when MLflow tracking is enabled (e.g., `**MLflow:** experiment=risk-extraction, run_id=abc123`)
+- Cross-encoder scores are barely better than random (AUC ~0.56) — do not rely on them for hard negative mining or scoring
+
 ## Development
 
 - DO NOT skip updating the changelog with any changes made
 - DO NOT skip updating CLAUDE.md and the README.md when changes require it
-- 

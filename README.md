@@ -11,7 +11,7 @@ This semantic gap — from *"the model must not provide medical advice"* to `atl
 This software takes raw, unstructured policy documents and produces a **risk landscape**: a set of AI Risk Atlas Nexus risk identifiers with enrichments.
 
 - **Risk identification** — Identifies Nexus risk IDs (e.g., `atlas-hallucination`, `air-2024-0042`, `nist-ms-2.5`) directly from policy text
-- **Cross-taxonomy mapping** — Leverages Nexus's SSSOM cross-mappings to provide equivalent identifiers across all 10 included taxonomies (IBM Atlas, NIST, OWASP, AIR 2024, MIT, etc.)
+- **Cross-taxonomy mapping** — A static SSSOM mapping (`data/risk_to_category.sssom.tsv`) maps extracted risks to category-level taxonomies (NIST AI RMF, OWASP Top 10 LLM, OWASP ASI, AILuminate)
 - **Evidence grounding** — Each identified risk is grounded to specific passages in the source document, providing traceability from risk to policy text
 - **Confidence scoring** — Each risk mapping includes a confidence score, enabling human review of uncertain mappings
 
@@ -48,7 +48,15 @@ The service parses and chunks input documents, then uses hybrid retrieval (keywo
 5. **Judge** — LLM judges borderline candidates (parallel)
 6. **Ground** — LLM extracts evidence quotes and confidence (parallel)
 7. **Merge** — Deduplicate across chunks, keep top-3 evidence spans
-8. **Classify** — LLM maps extracted risks to high-level taxonomy categories (e.g., NIST AI RMF)
+
+### Two-Tier Evaluation
+
+The pipeline extracts **risk-level** risks (IBM Risk Atlas, Credo UCF, AIR 2024, MIT AI Risk Repository — ~486 specific risks). Evaluation runs at two tiers:
+
+- **Tier 1 (risk-level)**: precision/recall/F1 on exact risk ID matches against ground truth
+- **Tier 2 (category-level)**: risk IDs are mapped to category-level taxonomies (NIST AI RMF, OWASP Top 10 LLM, OWASP ASI) via a static SSSOM cross-taxonomy mapping (`data/risk_to_category.sssom.tsv`), then precision/recall/F1 is computed per category taxonomy
+
+Category-level eval answers "did we find the right risk themes?" — more forgiving than risk-level since finding *any* bias-related risk satisfies the NIST `harmful-bias-or-homogenization` category.
 
 ## Setup
 

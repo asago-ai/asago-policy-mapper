@@ -14,7 +14,15 @@ def main():
     """Concorde Policy Mapper — policy risk extraction using AI Atlas Nexus."""
 
 
-EXCLUDED_TAXONOMIES = {"mit-ai-risk-repository-causal", "ibm-granite-guardian"}
+EXCLUDED_TAXONOMIES = {
+    "mit-ai-risk-repository-causal",
+    "ibm-granite-guardian",
+    "nist-ai-rmf",
+    "owasp-llm-2.0",
+    "ailuminate-v1.0",
+    "owasp-asi",
+    "shieldgemma-taxonomy",
+}
 
 
 @app.command()
@@ -35,7 +43,6 @@ def extract(
     bm25_rescue_rank: int = typer.Option(10, "--bm25-rescue-rank", help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled)"),
     no_cross_encoder: bool = typer.Option(False, "--no-cross-encoder", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead"),
     rrf_min_score: float = typer.Option(0.01, "--rrf-min-score", help="Minimum RRF score for candidates (only used with --no-cross-encoder)"),
-    classify_taxonomies: str = typer.Option("nist-ai-rmf", "--classify-taxonomies", help="Comma-separated taxonomies to classify post-retrieval instead of retrieving directly (empty to disable)"),
 ):
     """Extract risks from policy documents using hybrid retrieval."""
     for pf in policy_files:
@@ -69,7 +76,6 @@ def extract(
     from concorde_policy_mapper.extract.pipeline import run_extraction
 
     typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
-    ct_list = [t.strip() for t in classify_taxonomies.split(",") if t.strip()] if classify_taxonomies else []
 
     result = run_extraction(
         documents=policy_files,
@@ -84,7 +90,6 @@ def extract(
         bm25_rescue_rank=bm25_rescue_rank,
         use_cross_encoder=not no_cross_encoder,
         rrf_min_score=rrf_min_score,
-        classify_taxonomies=ct_list,
     )
 
     result.token_usage = tracker.to_dict()

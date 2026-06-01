@@ -24,18 +24,6 @@ risks:
       - text: "The AI is designed to use personal or sensitive data 1  or security classified information 2 ."
         section: "Criteria and areas of consideration"
         page: 21
-  - id: ail-specialized-advice
-    name: Specialized Advice
-    evidence:
-      - text: "The Digital Transformation Agency has tried to make the information in this product as accurate as possible. However, it does not guarantee that the information is totally accurate or complete. Therefore, you should not solely rely on this information when making a commercial decision."
-        section: "Policy for the responsible use of AI in government"
-        page: 1
-      - text: "recruitment and other employment-related decision making"
-        section: "Criteria and areas of consideration"
-        page: 21
-      - text: "administration of justice and democratic processes"
-        section: "Criteria and areas of consideration"
-        page: 21
   - id: atlas-data-usage
     name: Data usage restrictions
     evidence:

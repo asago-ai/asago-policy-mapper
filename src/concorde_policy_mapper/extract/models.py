@@ -42,7 +42,6 @@ class RiskMatch(BaseModel):
     accepted_by: str
     evidence: list[EvidenceSpan]
     scores: RetrievalScores
-    source_risk_ids: list[str] = []
 
 
 class RetrievalStats(BaseModel):
@@ -70,7 +69,7 @@ class ChunkSummary(BaseModel):
 
 class LLMCallRecord(BaseModel):
     call_id: str
-    stage: Literal["judge", "grounding", "classify"]
+    stage: Literal["judge", "grounding"]
     chunk_index: int = -1
     risk_ids: list[str]
     messages: list[dict]

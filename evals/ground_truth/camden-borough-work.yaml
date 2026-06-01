@@ -7,18 +7,6 @@ risks:
         section: "What are generative AI Bots?"
       - text: "summarising long pieces of content such as news articles; drafting a letter or email template; writing basic code or providing solutions to code errors"
         section: "What opportunities do they bring?"
-  - id: ail-specialized-advice
-    name: Specialized Advice
-    evidence:
-      - text: "Always check your work."
-        section: "Never use prompts containing:"
-        page: 3
-      - text: "You must always check any answers or outputs you get. Don't assume it is correct, and don't use it without reading it first."
-        section: "Never use prompts containing:"
-        page: 3
-      - text: "If you are unsure, ask an expert or do more research through other methods."
-        section: "Never use prompts containing:"
-        page: 3
   - id: atlas-confidential-data-in-prompt
     name: Confidential data in prompt
     evidence:
@@ -221,43 +209,4 @@ risks:
       - text: "AI bots will attempt to give an answer to a prompt even if it doesn't have the right data, which means it will sometimes give incorrect information or answers that make no sense which are referred to 'hallucinations'."
         section: "What are the risks associated with them?"
       - text: "If you are unsure, ask an expert or do more research through other methods."
-        section: "What should you consider if you're already using or planning to use AI bots?"
-  - id: nist-confabulation
-    name: Confabulation
-    evidence:
-      - text: "Hallucinations refer to the generation of outputs or responses that are imaginative or unrealistic."
-        section: "Terms relating to AI"
-        page: 4
-      - text: "AI models, including language models like GPT-3, can sometimes generate text that goes beyond the given prompt or the available knowledge, resulting in creative or nonsensical responses."
-        section: "Terms relating to AI"
-        page: 4
-      - text: "AI bots will attempt to give an answer to a prompt even if it doesn't have the right data , which means it will sometimes give incorrect information or answers that make no sense which are referred to 'hallucinations'."
-        section: "What are the risks associated with them?"
-        page: 1
-  - id: nist-data-privacy
-    name: Data Privacy
-    evidence:
-      - text: "personal and sensitive data should never be passed through them in their current form."
-        section: "What are the risks associated with them?"
-      - text: "If AI tools or bots are being proposed to replace a previous, be added to an existing or create a new business process, then a Data Privacy Impact Assessment must be completed."
-        section: "Data Protection Implications"
-      - text: "Never use prompts containing: Personal information (yours or anyone else's) such as names, addresses, or any information that could be used to identify someone."
-        section: "What should you consider if you're already using or planning to use AI bots?"
-  - id: nist-harmful-bias-or-homogenization
-    name: Harmful Bias or Homogenization
-    evidence:
-      - text: "Because AI bots are trained by humans with data that was created by humans, they can be biased in the same way that humans are. This is referred to as data bias, an error that occurs when certain elements of a dataset are overweighted or overrepresented, resulting in skewed outcomes, systematic prejudice, and low accuracy."
-        section: "What are the risks associated with them?"
-      - text: "the data bias mentioned above can still perpetuate biases that exist in society and end up gamifying learning."
-        section: "The ethics of using Artificial Intelligence tools and bots"
-      - text: "Refers to the presence of unfair or prejudiced behaviour in the responses or actions of the bot. Bias can occur if the underlying training data used to train the AI model contains prejudiced information or reflects societal biases."
-        section: "Terms relating to AI"
-  - id: nist-information-integrity
-    name: Information Integrity
-    evidence:
-      - text: "AI bots will attempt to give an answer to a prompt even if it doesn't have the right data, which means it will sometimes give incorrect information or answers that make no sense which are referred to 'hallucinations'."
-        section: "What are the risks associated with them?"
-      - text: "Artificial Intelligence tools have been trained using data from books, articles, websites, and other sources, so can only answer prompts using the data it was trained with. In the case of ChatGPT this data only goes up to 2021, so will not be able to provide information about current issues or recent developments."
-        section: "What are the risks associated with them?"
-      - text: "You must always check any answers or outputs you get. Don't assume it is correct, and don't use it without reading it first."
         section: "What should you consider if you're already using or planning to use AI bots?"

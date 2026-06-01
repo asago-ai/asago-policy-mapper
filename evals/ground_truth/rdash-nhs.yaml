@@ -58,22 +58,6 @@ risks:
         section: "5.3 Use of publicly available artificial intelligence in clinical practice"
       - text: "explicit consent must be obtained prior to any processing"
         section: "5.3 Use of publicly available artificial intelligence in clinical practice"
-  - id: ail-privacy
-    name: Privacy
-    evidence:
-      - text: "Using Copilot chat to create a care plan for John Smith, NHS number 123 456 7890, to help him lose weight."
-        section: "11.1.6 Further guidance"
-      - text: "Writing discharge instructions for an identified patient."
-        section: "11.1.6 Further guidance"
-  - id: ail-specialized-advice
-    name: Specialized Advice
-    evidence:
-      - text: "Artificial intelligence can support clinical decision-making but must not replace professional judgment."
-        section: "11.1.2 Key principles"
-      - text: "Clinicians remain personally accountable for all decisions regarding patient care."
-        section: "11.1.2 Key principles"
-      - text: "Copilot must not be used for making clinical decisions or replacing professional judgment."
-        section: "11.1.1 NHS England guidance on Copilot (relevant for all generative artificial intelligence models)"
   - id: atlas-confidential-information-in-data
     name: Confidential information in data
     evidence:
@@ -311,11 +295,6 @@ risks:
         section: "4.4 Senior information risk owner (SIRO)"
       - text: "Ensure that appropriate risk management processes, controls, and policies are in place."
         section: "4.4 Senior information risk owner (SIRO)"
-  - id: llm092025-misinformation
-    name: "LLM09:2025 Misinformation"
-    evidence:
-      - text: "it can produce inaccurate, biased or false information."
-        section: "5.4 Freely available artificial intelligence apps and technologies"
   - id: mit-ai-risk-subdomain-1.1
     name: Unfair discrimination and misrepresentation
     evidence:
@@ -377,38 +356,3 @@ risks:
         section: "5.5 Use of ChatGPT (and other as per 5.4) on trust devices"
       - text: "patients must be fully informed and fully understand the use"
         section: "5.3 Use of publicly available artificial intelligence in clinical practice"
-  - id: nist-confabulation
-    name: Confabulation
-    evidence:
-      - text: "be aware that you will need to verify any output of these products to ensure accuracy"
-        section: "5.5 Use of ChatGPT (and other as per 5.4) on trust devices"
-      - text: "All outputs should be reviewed and validated before use to ensure accuracy and compliance."
-        section: "11.1.1 NHS England guidance on Copilot (relevant for all generative artificial intelligence models)"
-  - id: nist-data-privacy
-    name: Data Privacy
-    evidence:
-      - text: "complete a data protection impact assessment (DPIA), where person identifiable data is to be used, or a new system is being procured"
-        section: "5.5 Use of ChatGPT (and other as per 5.4) on trust devices"
-      - text: "data must be processed in a lawful and ethical manner, with appropriate consent and anonymisation measures in place"
-        section: "5.5 Use of ChatGPT (and other as per 5.4) on trust devices"
-  - id: nist-harmful-bias-or-homogenization
-    name: Harmful Bias or Homogenization
-    evidence:
-      - text: "be aware of ethical considerations when using these products. Including the potential to produce biased, discriminatory, or harmful content"
-        section: "5.5 Use of ChatGPT (and other as per 5.4) on trust devices"
-      - text: "it should not be used as your primary source for information because it can produce inaccurate, biased or false information."
-        section: "5.4 Freely available artificial intelligence apps and technologies"
-  - id: nist-human-ai-configuration
-    name: Human-AI Configuration
-    evidence:
-      - text: "artificial intelligence outcomes or outputs must be reviewed by a human; you cannot rely solely on the use of artificial intelligence for decision-making, there must be substantial involvement from an appropriately qualified human"
-        section: "5.5 Use of ChatGPT (and other as per 5.4) on trust devices"
-      - text: "Artificial intelligence can support clinical decision-making but must not replace professional judgment."
-        section: "11.1.2 Key principles"
-  - id: nist-information-security
-    name: Information Security
-    evidence:
-      - text: "Ensure the proper configuration, security, and compatibility of artificial intelligence systems with existing information technology infrastructure."
-        section: "4.6 Information technology or technical and business intelligence"
-      - text: "as per the information technology (IT) security policy you must not install any software without explicit permission from information technology"
-        section: "5.5 Use of ChatGPT (and other as per 5.4) on trust devices"

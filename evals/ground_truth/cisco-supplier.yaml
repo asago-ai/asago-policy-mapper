@@ -24,15 +24,3 @@ risks:
       - text: "Cisco reserves the right to audit Supplier's AI/ML governance program"
         section: "2. Supplier's Use of Artificial Intelligence and Machine Learning."
         page: 1
-  - id: nist-value-chain-and-component-integration
-    name: Value Chain and Component Integration
-    evidence:
-      - text: "If Supplier is using or intends to use Artificial Intelligence and/or Machine Learning technologies in the course of Performing, it is required to have an AI/ML governance program in place"
-        section: "2. Supplier's Use of Artificial Intelligence and Machine Learning."
-        page: 1
-      - text: "Cisco reserves the right to audit Supplier's AI/ML governance program before deciding whether to grant the requested permission"
-        section: "2. Supplier's Use of Artificial Intelligence and Machine Learning."
-        page: 1
-      - text: "Supplier is not permitted to Process Protected Data for training, retraining or improving Artificial Intelligence or Machine Learning technologies without Cisco's express written permission."
-        section: "1. Use of Protected Data for Artificial Intelligence and Machine Learning."
-        page: 1

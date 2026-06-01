@@ -64,13 +64,6 @@ risks:
         section: "5.3 What should I consider when using AI?"
       - text: "Declare when AI has been used in formal reports, public documents, or decision-making."
         section: "5.6 Expectations when using AI"
-  - id: ail-specialized-advice
-    name: Specialized Advice
-    evidence:
-      - text: "Summarise legislation or guidance (non-legal)"
-        section: "3. Knowledge and Research"
-      - text: "Do not use it for legal interpretation, risk assessments, or direct public communication without review."
-        section: "6. Stay Within intended Use Cases"
   - id: atlas-data-bias
     name: Data bias
     evidence:
@@ -341,18 +334,6 @@ risks:
         section: "Contents"
       - text: "6.2 Artificial Intelligence Board"
         section: "Contents"
-  - id: llm052025-improper-output-handling
-    name: "LLM05:2025 Improper Output Handling"
-    evidence:
-      - text: "Ensure all outputs are reviewed and clearly attributed."
-        section: "3. Be Transparent When Required"
-      - text: "Mitigation: Users must verify all AI-generated content before acting on it, especially where operational or evidential decisions are involved."
-        section: "Information Reliability"
-  - id: llm092025-misinformation
-    name: "LLM09:2025 Misinformation"
-    evidence:
-      - text: "These hallucinations can include invented facts, inaccurate details, or even entirely fictional references."
-        section: "5.3 What should I consider when using AI?"
   - id: mit-ai-risk-subdomain-1.1
     name: Unfair discrimination and misrepresentation
     evidence:
@@ -429,17 +410,3 @@ risks:
     evidence:
       - text: "maintain transparency in formal outputs"
         section: "All Leicestershire Police Staff and Officers"
-  - id: nist-confabulation
-    name: Confabulation
-    evidence:
-      - text: "AI tools can produce inaccurate, misleading, or fabricated information-commonly referred to as \"hallucinations.\""
-        section: "Information Reliability"
-  - id: nist-harmful-bias-or-homogenization
-    name: Harmful Bias or Homogenization
-    evidence:
-      - text: "AI systems may reflect or amplify societal biases present in their training data."
-        section: "- Bias and Stereotyping"
-      - text: "This can result in unintended reinforcement of stereotypes related to gender, race, profession, or other protected characteristics."
-        section: "- Bias and Stereotyping"
-      - text: "Certain groups may be disproportionately represented-or excluded-in Al-generated outputs."
-        section: "Overrepresentation or Underrepresentation"

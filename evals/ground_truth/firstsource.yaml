@@ -35,21 +35,6 @@ risks:
       - text: "Only input the data you need. Only input data that is required for the purpose for which you are using the AI tool"
         section: "8.2 Data Guardrails"
         page: 7
-  - id: ail-privacy
-    name: Privacy
-    evidence:
-      - text: "Privacy protection and security: AI systems should respect and uphold privacy rights and data protection and ensure the security of data."
-        section: "5. Ethical use of AI"
-      - text: "Do not input Sensitive Personal Data. This includes information such as social security numbers, financial information like credit card or bank account numbers, personal addresses, or personal health information but not limited to these."
-        section: "8.2 Data Guardrails"
-      - text: "Anonymization and De-identification: Where possible, anonymize or de-identify data before using it in AI applications to protect individual privacy."
-        section: "8.2 Data Guardrails"
-  - id: ail-specialized-advice
-    name: Specialized Advice
-    evidence:
-      - text: "Avoid using AI-generated outputs for sensitive topics (e.g., legal advice, project work recommendations) without human review and approval."
-        section: "8.4 AI-Generated Output Guardrails"
-        page: 8
   - id: atlas-confidential-data-in-prompt
     name: Confidential data in prompt
     evidence:
@@ -525,27 +510,6 @@ risks:
       - text: "If AI systems integrate with third-party services or utilize external APIs, proper due diligence should be conducted to ensure the security practices of these entities."
         section: "10. Data Privacy and Security in AI Systems"
         page: 11
-  - id: llm022025-sensitive-information-disclosure
-    name: "LLM02:2025 Sensitive Information Disclosure"
-    evidence:
-      - text: "Data security is a critical aspect of AI systems to protect data from unauthorized access, breaches, and misuse."
-        section: "10. Data Privacy and Security in AI Systems"
-        page: 9
-      - text: "Any personal or sensitive information about customers stored within the company's internal systems, which must be protected in accordance with data privacy regulations."
-        section: "10. Data Privacy and Security in AI Systems"
-        page: 9
-      - text: "Employees must not disregard treating Firstsource data and customer data confidentially"
-        section: "Don'ts"
-        page: 5
-  - id: llm092025-misinformation
-    name: "LLM09:2025 Misinformation"
-    evidence:
-      - text: "Don't Use AI to Spread Misinformation or Disinformation"
-        section: "Don'ts"
-      - text: "Understand that many GenAI tools are prone to 'hallucinations,' false answers or information, or information that is stale, and therefore responses must always be carefully verified by a human."
-        section: "8.1 Guidelines"
-      - text: "Prohibit the use of AI tools that do not comply with data protection regulations, promoting mis information, inadequate security, tools with proprietary risks, or that do not guarantee the confidentiality of input data."
-        section: "7. Prohibited AI Tools"
   - id: mit-ai-risk-subdomain-1.1
     name: Unfair discrimination and misrepresentation
     evidence:
@@ -669,66 +633,3 @@ risks:
       - text: "Be able to articulate the reasoning behind AI-generated outputs, including which factors influenced the AI's conclusions."
         section: "9. Transparency, Explainability and Accountability:"
         page: 9
-  - id: nist-confabulation
-    name: Confabulation
-    evidence:
-      - text: "the output does not present false or misleading information (e.g. hallucinations)."
-        section: "8.1 Guidelines"
-        page: 7
-      - text: "Understand that many GenAI tools are prone to 'hallucinations,' false answers or information, or information that is stale, and therefore responses must always be carefully verified by a human."
-        section: "8.1 Guidelines"
-        page: 7
-      - text: "Responsible for checking it for accuracy."
-        section: "8.4 AI-Generated Output Guardrails"
-        page: 8
-  - id: nist-data-privacy
-    name: Data Privacy
-    evidence:
-      - text: "Data security is a critical aspect of AI systems to protect data from unauthorized access, breaches, and misuse. Robust data security measures are essential to ensure confidentiality, integrity, and availability of data."
-        section: "10. Data Privacy and Security in AI Systems"
-      - text: "Deployer or developer must inform users if their personal data is going to be used to train an AI system, to ensure that processing is fair and transparent. User/Consumer consent must be obtained before collecting any data."
-        section: "14. General Consumer Data Rights"
-      - text: "To mitigate privacy risks / Date exposure, AI systems should employ techniques such as anonymization and de-identification to remove or protect personally identifiable information from data or Any data shared should be de identified / anonymized."
-        section: "10. Data Privacy and Security in AI Systems"
-  - id: nist-harmful-bias-or-homogenization
-    name: Harmful Bias or Homogenization
-    evidence:
-      - text: "Fairness: AI systems should be inclusive and accessible and should not involve or result in unfair discrimination against individuals, communities, or groups. Measures to identify and mitigate biases that may arise from biased, non-inclusive training data or bias in algorithms, thereby promoting equitable outcomes for all user groups"
-        section: "5. Ethical use of AI"
-      - text: "Examples of prohibited AI tools: facial recognition systems without explicit consent, biased AI models that discriminate, and any AI tool employed for malicious purposes."
-        section: "7. Prohibited AI Tools"
-      - text: "Implement regular audits of AI systems to assess their performance, bias, and compliance with ethical standards and regulations."
-        section: "9. Transparency, Explainability and Accountability"
-  - id: nist-human-ai-configuration
-    name: Human-AI Configuration
-    evidence:
-      - text: "Don't Use AI to Replace Human Judgment in Critical Decisions"
-        section: "Don'ts"
-      - text: "Deployers shall assign human oversight to natural persons who have the necessary competence, training and authority, as well as the necessary support"
-        section: "13. Developer and Deployer Obligations"
-      - text: "Employees must always verify data produced via generative AI. It should never be used as a single source of the truth and only to supplement additional research or writing methods."
-        section: "Do's"
-  - id: nist-information-security
-    name: Information Security
-    evidence:
-      - text: "Encryption is a fundamental technique to protect data confidentiality. AI systems should employ encryption methods in line with HIPAA / FIPS to encrypt data both at rest (stored data) and in transit (data being transmitted between systems)."
-        section: "10. Data Privacy and Security in AI Systems"
-      - text: "Implementation of strong access controls is essential to restrict access to data within AI systems. One of the user authentications is mandatory, Enforce strong authentication mechanisms, such as username/password combinations, multi-factor authentication (MFA), or biometric"
-        section: "10. Data Privacy and Security in AI Systems"
-      - text: "Periodic security assessments and audits should be conducted to identify vulnerabilities and ensure that security controls are effective. This includes penetration testing, vulnerability scanning, and code reviews to identify and remediate any security weaknesses in AI systems."
-        section: "10. Data Privacy and Security in AI Systems"
-  - id: nist-intellectual-property
-    name: Intellectual Property
-    evidence:
-      - text: "Do not input any Restricted Data. This may include things like material nonpublic information, SOX-controlled data, Company trade secrets, or internal security controls."
-        section: "8.2 Data Guardrails"
-        page: 7
-  - id: nist-value-chain-and-component-integration
-    name: Value Chain and Component Integration
-    evidence:
-      - text: "If AI systems integrate with third-party services or utilize external APIs, proper due diligence should be conducted to ensure the security practices of these entities."
-        section: "10. Data Privacy and Security in AI Systems"
-        page: 11
-      - text: "Establish clear protocols for sharing data with third-party AI tools, including agreements on data usage and security measures."
-        section: "8.2 Data Guardrails"
-        page: 7

@@ -55,8 +55,8 @@ risks:
         section: "Relevance to Policy Example Generation"
       - text: "Potential Policy Concept: Biometric Identification & Civil Liberties"
         section: "Relevance to Policy Example Generation"
-  - id: ail-child-sexual-exploitation
-    name: Child Sexual Exploitation
+  - id: credo-risk-014
+    name: Obscene and sexually abusive content
     evidence:
       - text: "identifying and rescuing victims of child sexual exploitation (CSE) and arresting perpetrators"
         section: "ICE — Immigration and Customs Enforcement"

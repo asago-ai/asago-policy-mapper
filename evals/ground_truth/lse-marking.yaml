@@ -30,13 +30,6 @@ risks:
       - text: "Staff must not include student details or upload student work into GenAI tools without explicit permission. This prevents personal data from being collected, stored, accessed, and shared without consent."
         section: "4. Guidelines for Implementation"
         page: 4
-  - id: ail-privacy
-    name: Privacy
-    evidence:
-      - text: "Staff must not include student details or upload student work into GenAI tools without explicit permission. This prevents personal data from being collected, stored, accessed, and shared without consent."
-        section: "Guidelines for Implementation"
-      - text: "Staff must use LSE approved GenAI tools - such as Claude AI and Microsoft Copilot - for any AI-assisted activities related to assessment, including feedback, marking, and moderation. These tools are selected to ensure compliance with data protection regulations (e.g. UK GDPR), and offer enterprise-grade assurances around security, data integrity, privacy, and responsible AI use."
-        section: "Principles of AI-assisted Marking and Feedback"
   - id: atlas-data-bias
     name: Data bias
     evidence:
@@ -244,11 +237,6 @@ risks:
         section: "Guidelines for Implementation"
       - text: "AI tools may assist with aspects of the marking process, but cannot replace human academic judgment in determining marks, conducting moderation, or making final assessment decisions-these responsibilities remain entirely the responsibility of academic staff."
         section: "Principles of AI-assisted Marking and Feedback"
-  - id: llm092025-misinformation
-    name: "LLM09:2025 Misinformation"
-    evidence:
-      - text: "GenAI can generate incorrect responses based on probabilities and biases. While GenAI excels at summarising information and solving known problems, it can produce simplified or incorrect outputs."
-        section: "Guidelines for Implementation"
   - id: mit-ai-risk-subdomain-1.1
     name: Unfair discrimination and misrepresentation
     evidence:
@@ -308,37 +296,3 @@ risks:
       - text: "Students are made aware of this process in advance and shown a demonstration, reinforcing transparency and trust."
         section: "Scenario A -- Scaling Feedback While Maintaining Quality"
         page: 6
-  - id: nist-confabulation
-    name: Confabulation
-    evidence:
-      - text: "GenAI can generate incorrect responses based on probabilities and biases."
-        section: "4. Guidelines for Implementation"
-        page: 4
-      - text: "While GenAI excels at summarising information and solving known problems, it can produce simplified or incorrect outputs."
-        section: "4. Guidelines for Implementation"
-        page: 4
-  - id: nist-data-privacy
-    name: Data Privacy
-    evidence:
-      - text: "Staff must not include student details or upload student work into GenAI tools without explicit permission. This prevents personal data from being collected, stored, accessed, and shared without consent."
-        section: "Guidelines for Implementation"
-      - text: "These tools are selected to ensure compliance with data protection regulations (e.g. UK GDPR), and offer enterprise-grade assurances around security, data integrity, privacy, and responsible AI use."
-        section: "Principles of AI-assisted Marking and Feedback"
-  - id: nist-harmful-bias-or-homogenization
-    name: Harmful Bias or Homogenization
-    evidence:
-      - text: "the information is based on large volumes of data, some of which can be inaccurate, biased, or discriminatory. Human judgement and filtering for what may be appropriate and reliable is not applied."
-        section: "Bias and discrimination risks with AI"
-      - text: "the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics."
-        section: "Bias and discrimination risks with AI"
-      - text: "These benefits lead to high approval rates among staff and students (Barrett and Pack, 2023)."
-        section: "Research Context and Rationale"
-  - id: nist-human-ai-configuration
-    name: Human-AI Configuration
-    evidence:
-      - text: "AI-assisted marking and feedback: Human educators use AI tools to support and enhance their work, with full human oversight and final decision-making at every stage"
-        section: "Introduction"
-      - text: "Academic judgment stays with you: AI cannot determine marks, conduct moderation, or make final assessment decisions"
-        section: "Executive Summary"
-      - text: "Staff should ensure AI-assisted feedback does not independently determine marks or academic judgements. Marking responsibilities remain strictly with human educators."
-        section: "Guidelines for Implementation"

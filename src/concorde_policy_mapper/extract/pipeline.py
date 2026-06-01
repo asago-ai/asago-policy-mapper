@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from concorde_policy_mapper.extract.attribute import ground_and_extract_evidence
-from concorde_policy_mapper.extract.classify import classify_risks
 from concorde_policy_mapper.extract.index import RiskIndex
 from concorde_policy_mapper.extract.merge import merge_matches
 from concorde_policy_mapper.extract.models import (
@@ -77,9 +76,6 @@ def _ground_one(cr, chunks, client, model, call_collector):
     return cr, grounded
 
 
-_DEFAULT_CLASSIFY_TAXONOMIES = ["nist-ai-rmf"]
-
-
 def run_extraction(
     documents: list[Path],
     client,
@@ -94,7 +90,6 @@ def run_extraction(
     bm25_rescue_rank: int = 10,
     use_cross_encoder: bool = True,
     rrf_min_score: float = 0.01,
-    classify_taxonomies: list[str] | None = None,
 ) -> ExtractionResult:
     timing: dict[str, float] = {}
     max_workers = config.max_concurrent
@@ -123,22 +118,12 @@ def run_extraction(
                 filtered,
             )
 
-    ct_set = set(classify_taxonomies if classify_taxonomies is not None else _DEFAULT_CLASSIFY_TAXONOMIES)
-    classification_risks = [r for r in risks if getattr(r, "isDefinedByTaxonomy", "") in ct_set]
-    retrieval_risks = [r for r in risks if getattr(r, "isDefinedByTaxonomy", "") not in ct_set]
-
-    if classification_risks:
-        logger.info(
-            "Taxonomy classification: %d risks in %d taxonomies deferred to post-retrieval classification",
-            len(classification_risks), len(ct_set),
-        )
-
     t0 = time.time()
-    if not retrieval_risks:
+    if not risks:
         logger.error("No risks loaded from Nexus")
         return _empty_result(documents)
     index = RiskIndex(
-        retrieval_risks,
+        risks,
         bi_encoder_model=bi_encoder_model,
         cross_encoder_model=cross_encoder_model if use_cross_encoder else None,
     )
@@ -274,18 +259,6 @@ def run_extraction(
     merged = merge_matches(all_matches)
     timing["merge_ms"] = (time.time() - t0) * 1000
 
-    t0 = time.time()
-    if classification_risks and merged:
-        classified = classify_risks(
-            extracted=merged,
-            targets=classification_risks,
-            client=client,
-            model=config.model,
-            call_collector=call_collector,
-        )
-        merged.extend(classified)
-    timing["classify_ms"] = (time.time() - t0) * 1000
-
     total_stats = RetrievalStats(
         total_chunks=len(chunks),
         total_candidates_retrieved=sum(
@@ -312,7 +285,6 @@ def run_extraction(
             "threshold_low": threshold_low,
             "bm25_rescue_rank": bm25_rescue_rank,
             "rrf_min_score": rrf_min_score,
-            "classify_taxonomies": sorted(ct_set),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         },
         chunks=chunk_summaries,

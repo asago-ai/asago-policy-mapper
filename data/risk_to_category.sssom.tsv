@@ -1,0 +1,815 @@
+#curie_map:
+#  skos: http://www.w3.org/2004/02/skos/core#
+#  nist: https://airc.nist.gov/
+#  owasp: https://genai.owasp.org/
+#  ail: https://ailuminate.mlcommons.org/
+#  atlas: https://www.ibm.com/docs/en/watsonx/saas?topic=ai-risk-atlas
+#  credo: https://www.credoai.com/
+#  mit: https://airisk.mit.edu/
+#mapping_set_id: risk_to_category
+#mapping_set_description: Maps specific AI risks to category-level taxonomy risks (NIST AI RMF, OWASP Top 10 LLM, AILuminate)
+#license: https://creativecommons.org/licenses/by/4.0/
+
+subject_id	subject_source	predicate_id	object_id	object_source	mapping_justification
+credo-risk-002	credo-ucf	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-002	credo-ucf	skos:relatedMatch	ail-sex-related-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-002	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-002	credo-ucf	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-003	credo-ucf	skos:relatedMatch	ail-sex-related-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-003	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-004	credo-ucf	skos:closeMatch	nist-environmental-impacts	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-005	credo-ucf	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-005	credo-ucf	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-007	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-007	credo-ucf	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-008	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-009	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-009	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-010	credo-ucf	skos:relatedMatch	ail-hate	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-010	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-010	credo-ucf	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-011	credo-ucf	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-012	credo-ucf	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-012	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-013	credo-ucf	skos:relatedMatch	ail-hate	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-013	credo-ucf	skos:relatedMatch	ail-sexual-content	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-013	credo-ucf	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-013	credo-ucf	skos:relatedMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-014	credo-ucf	skos:relatedMatch	ail-child-sexual-exploitation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-014	credo-ucf	skos:relatedMatch	ail-sex-related-crimes	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-014	credo-ucf	skos:relatedMatch	ail-sexual-content	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-014	credo-ucf	skos:relatedMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-015	credo-ucf	skos:relatedMatch	ail-hate	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-015	credo-ucf	skos:relatedMatch	ail-violent-crimes	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-015	credo-ucf	skos:closeMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-016	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-017	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-017	credo-ucf	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-017	credo-ucf	skos:relatedMatch	llm092025-misinformation	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-018	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-018	credo-ucf	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-019	credo-ucf	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-020	credo-ucf	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-021	credo-ucf	skos:relatedMatch	llm092025-misinformation	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-022	credo-ucf	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-022	credo-ucf	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-023	credo-ucf	skos:relatedMatch	nist-data-privacy	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-024	credo-ucf	skos:relatedMatch	ail-defamation	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-024	credo-ucf	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-025	credo-ucf	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-026	credo-ucf	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-027	credo-ucf	skos:relatedMatch	ail-indiscriminate-weapons-cbrne	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-027	credo-ucf	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-027	credo-ucf	skos:relatedMatch	ail-violent-crimes	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-029	credo-ucf	skos:relatedMatch	ail-privacy	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-029	credo-ucf	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-029	credo-ucf	skos:relatedMatch	nist-data-privacy	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-030	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-031	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-032	credo-ucf	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-033	credo-ucf	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-033	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-033	credo-ucf	skos:relatedMatch	llm082025-vector-and-embedding-weaknesses	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-035	credo-ucf	skos:relatedMatch	llm082025-vector-and-embedding-weaknesses	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:relatedMatch	ail-privacy	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:relatedMatch	nist-data-privacy	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:relatedMatch	llm052025-improper-output-handling	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-037	credo-ucf	skos:relatedMatch	ail-privacy	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-037	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+credo-risk-037	credo-ucf	skos:relatedMatch	nist-data-privacy	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-037	credo-ucf	skos:closeMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-037	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-038	credo-ucf	skos:relatedMatch	ail-privacy	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-038	credo-ucf	skos:relatedMatch	nist-information-security	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-038	credo-ucf	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-038	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-039	credo-ucf	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-039	credo-ucf	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-040	credo-ucf	skos:relatedMatch	nist-information-security	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-040	credo-ucf	skos:relatedMatch	llm042025-data-and-model-poisoning	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-040	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-040	credo-ucf	skos:relatedMatch	llm082025-vector-and-embedding-weaknesses	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-041	credo-ucf	skos:relatedMatch	nist-information-security	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-041	credo-ucf	skos:relatedMatch	llm042025-data-and-model-poisoning	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-041	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-047	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-047	credo-ucf	skos:relatedMatch	llm032025-supply-chain	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-048	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-048	credo-ucf	skos:relatedMatch	llm032025-supply-chain	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-049	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
+atlas-attribute-inference-attack	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-attribute-inference-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-attribute-inference-attack	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-confidential-data-in-prompt	ibm-risk-atlas	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-confidential-data-in-prompt	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-confidential-data-in-prompt	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-confidential-information-in-data	ibm-risk-atlas	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-confidential-information-in-data	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-confidential-information-in-data	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-copyright-infringement	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-dangerous-use	ibm-risk-atlas	skos:relatedMatch	ail-defamation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-dangerous-use	ibm-risk-atlas	skos:relatedMatch	ail-hate	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-dangerous-use	ibm-risk-atlas	skos:relatedMatch	ail-violent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-dangerous-use	ibm-risk-atlas	skos:broadMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-acquisition	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-acquisition	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-data-bias	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-contamination	ibm-risk-atlas	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-data-contamination	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-contamination	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-contamination	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-data-curation	ibm-risk-atlas	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-data-curation	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-curation	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-data-poisoning	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-poisoning	ibm-risk-atlas	skos:broadMatch	llm042025-data-and-model-poisoning	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-data-privacy-rights	ibm-risk-atlas	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-data-privacy-rights	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-provenance	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-provenance	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-data-transfer	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-transparency	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-transparency	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-data-usage-rights	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-decision-bias	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-evasion-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-exposing-personal-information	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-exposing-personal-information	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-extraction-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-generated-content-ownership	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-hallucination	ibm-risk-atlas	skos:exactMatch	nist-confabulation	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-hallucination	ibm-risk-atlas	skos:relatedMatch	llm092025-misinformation	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-harmful-code-generation	ibm-risk-atlas	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-harmful-code-generation	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-harmful-code-generation	ibm-risk-atlas	skos:relatedMatch	llm092025-misinformation	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-child-sexual-exploitation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-hate	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-indiscriminate-weapons-cbrne	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-sex-related-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-sexual-content	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	ail-violent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:closeMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-harmful-output	ibm-risk-atlas	skos:relatedMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-human-exploitation	ibm-risk-atlas	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-impact-on-affected-communities	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-impact-on-cultural-diversity	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-impact-on-human-agency	ibm-risk-atlas	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-impact-on-human-agency	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-impact-on-the-environment	ibm-risk-atlas	skos:exactMatch	nist-environmental-impacts	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-improper-retraining	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-improper-retraining	ibm-risk-atlas	skos:relatedMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-improper-usage	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-inaccessible-training-data	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-inaccessible-training-data	ibm-risk-atlas	skos:relatedMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-incomplete-advice	ibm-risk-atlas	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-incomplete-advice	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-incomplete-advice	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-incomplete-advice	ibm-risk-atlas	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-incomplete-usage-definition	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-incorrect-risk-testing	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-ip-information-in-prompt	ibm-risk-atlas	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-ip-information-in-prompt	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-ip-information-in-prompt	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-jailbreaking	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-jailbreaking	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-lack-of-data-transparency	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-lack-of-data-transparency	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-lack-of-model-transparency	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-lack-of-system-transparency	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-lack-of-testing-diversity	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-legal-accountability	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-legal-accountability	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-legal-accountability	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-membership-inference-attack	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-membership-inference-attack	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-model-usage-rights	ibm-risk-atlas	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-model-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-model-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-model-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-model-usage-rights	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-non-disclosure	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-nonconsensual-use	ibm-risk-atlas	skos:relatedMatch	ail-child-sexual-exploitation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-nonconsensual-use	ibm-risk-atlas	skos:relatedMatch	ail-defamation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-nonconsensual-use	ibm-risk-atlas	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-nonconsensual-use	ibm-risk-atlas	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-nonconsensual-use	ibm-risk-atlas	skos:relatedMatch	ail-sex-related-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-nonconsensual-use	ibm-risk-atlas	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-nonconsensual-use	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-output-bias	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-over-or-under-reliance	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-over-or-under-reliance	ibm-risk-atlas	skos:relatedMatch	llm052025-improper-output-handling	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-over-or-under-reliance	ibm-risk-atlas	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-personal-information-in-data	ibm-risk-atlas	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-personal-information-in-data	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-personal-information-in-data	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-personal-information-in-prompt	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-personal-information-in-prompt	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-poor-model-accuracy	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-poor-model-accuracy	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-poor-model-accuracy	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-prompt-injection	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-prompt-injection	ibm-risk-atlas	skos:exactMatch	llm01-prompt-injection	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-prompt-leaking	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-prompt-leaking	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-prompt-priming	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-prompt-priming	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-reidentification	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-reidentification	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-revealing-confidential-information	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-revealing-confidential-information	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-spreading-disinformation	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-spreading-disinformation	ibm-risk-atlas	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-spreading-toxicity	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-toxic-output	ibm-risk-atlas	skos:relatedMatch	ail-sex-related-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-toxic-output	ibm-risk-atlas	skos:relatedMatch	ail-violent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-toxic-output	ibm-risk-atlas	skos:closeMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-toxic-output	ibm-risk-atlas	skos:closeMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-unexplainable-output	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-unreliable-source-attribution	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-unrepresentative-data	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-unrepresentative-data	ibm-risk-atlas	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-unrepresentative-risk-testing	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-untraceable-attribution	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
+atlas-untraceable-attribution	ibm-risk-atlas	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-child-sexual-exploitation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-hate	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-indiscriminate-weapons-cbrne	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-sex-related-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-sexual-content	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.2	mit-ai-risk-repository	skos:relatedMatch	ail-violent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-1.3	mit-ai-risk-repository	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-2.1	mit-ai-risk-repository	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-2.1	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-2.1	mit-ai-risk-repository	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-2.2	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-2.2	mit-ai-risk-repository	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-2.2	mit-ai-risk-repository	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-3.1	mit-ai-risk-repository	skos:relatedMatch	ail-defamation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-4.1	mit-ai-risk-repository	skos:relatedMatch	ail-defamation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-4.1	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-4.2	mit-ai-risk-repository	skos:relatedMatch	ail-indiscriminate-weapons-cbrne	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-4.2	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-4.3	mit-ai-risk-repository	skos:relatedMatch	ail-defamation	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-4.3	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-5.1	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-5.1	mit-ai-risk-repository	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-5.2	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-6.5	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-6.6	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-7.1	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+mit-ai-risk-subdomain-7.2	mit-ai-risk-repository	skos:relatedMatch	ail-nonviolent-crimes	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
+atlas-context-overload-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Prompt attack variant; targets model via token overload
+atlas-context-overload-attack	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	# Prompt attack variant; targets model via token overload
+atlas-direct-instructions-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Prompt attack variant; direct adversarial instructions
+atlas-direct-instructions-attack	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	# Prompt attack variant; direct adversarial instructions
+atlas-indirect-instructions-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Prompt attack variant; instructions embedded in external content
+atlas-indirect-instructions-attack	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	# Prompt attack variant; instructions embedded in external content
+atlas-encoded-interactions-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Prompt attack variant; uses encoding/formatting to bypass filters
+atlas-encoded-interactions-attack	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	# Prompt attack variant; uses encoding/formatting to bypass filters
+atlas-social-hacking-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Prompt attack variant; social engineering techniques
+atlas-social-hacking-attack	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	# Prompt attack variant; social engineering techniques
+atlas-specialized-tokens-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Prompt attack variant; algorithmically designed adversarial tokens
+atlas-specialized-tokens-attack	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	# Prompt attack variant; algorithmically designed adversarial tokens
+atlas-exploit-trust-mismatch-agentic	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Agentic attack exploiting trust boundaries between components
+atlas-exploit-trust-mismatch-agentic	ibm-risk-atlas	skos:broadMatch	llm062025-excessive-agency	owasp-llm-2.0	# Exploits agent autonomy across trust boundaries
+atlas-external-resources-attack-agentic	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Attacks targeting external tools/services agents depend on
+atlas-external-resources-attack-agentic	ibm-risk-atlas	skos:broadMatch	llm062025-excessive-agency	owasp-llm-2.0	# Agent interacts with compromised external resources
+atlas-unauthorized-use-agentic	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	# Unauthorized access to agent and its components
+atlas-unauthorized-use-agentic	ibm-risk-atlas	skos:broadMatch	llm062025-excessive-agency	owasp-llm-2.0	# Attacker gains control of agent capabilities
+atlas-function-calling-hallucination-agentic	ibm-risk-atlas	skos:broadMatch	nist-confabulation	nist-ai-rmf	# Agent hallucinates tool calls — confabulation variant
+atlas-function-calling-hallucination-agentic	ibm-risk-atlas	skos:broadMatch	llm062025-excessive-agency	owasp-llm-2.0	# Hallucinated function calls execute via agent autonomy
+atlas-discriminatory-actions-agentic	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Agent takes biased actions disadvantaging groups
+atlas-introduce-data-bias-agentic	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Agent modifies datasets introducing bias
+atlas-sharing-info-tools-agentic	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Agent shares PI/IP/confidential data with tools
+atlas-sharing-info-tools-agentic	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Agent discloses sensitive info to external tools
+atlas-sharing-info-user-agentic	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Agent shares PI/IP/confidential data with users
+atlas-sharing-info-user-agentic	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Agent discloses sensitive info to users
+atlas-impact-on-jobs	ibm-risk-atlas	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Job displacement as societal harm; loosely related to systemic bias
+atlas-impact-jobs-agentic	ibm-risk-atlas	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Agentic variant; agent-driven job displacement
+atlas-impact-human-agency-agentic	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	# Agent autonomy reduces human critical thinking and choice
+atlas-impact-human-agency-agentic	ibm-risk-atlas	skos:broadMatch	llm062025-excessive-agency	owasp-llm-2.0	# Excessive agent autonomy undermines human agency
+atlas-impact-human-dignity-agentic	ibm-risk-atlas	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Agent capability affecting human self-worth; human-AI interaction issue
+atlas-impact-environment-agentic	ibm-risk-atlas	skos:broadMatch	nist-environmental-impacts	nist-ai-rmf	# Agent redundant actions increase compute and environmental cost
+atlas-exclusion	ibm-risk-atlas	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Synthetic data excludes marginalised populations; systemic bias
+atlas-plagiarism	ibm-risk-atlas	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# AI-assisted plagiarism; loosely related to IP concerns
+atlas-accountability-agentic	ibm-risk-atlas	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Difficulty assigning responsibility in complex agent systems
+atlas-ai-agent-compliance-agentic	ibm-risk-atlas	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Insufficient info to assess agent legal compliance
+atlas-incomplete-ai-agent-evaluation-agentic	ibm-risk-atlas	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Agent complexity makes performance evaluation difficult
+atlas-lack-of-ai-agent-transparency-agentic	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Non-transparent agent integration; NIST value-chain explicitly covers this
+atlas-mitigation-maintenance-agentic	ibm-risk-atlas	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Complex agent dependencies complicate maintenance
+atlas-reproducibility-agentic	ibm-risk-atlas	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# External service changes break agent reproducibility
+atlas-lack-domain-expertise	ibm-risk-atlas	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Synthetic data generated without domain expert input
+atlas-temporal-gap	ibm-risk-atlas	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Stale synthetic data causes inaccurate outputs
+atlas-data-usage	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Legal restrictions on data use for AI; data privacy concern
+atlas-overfitting	ibm-risk-atlas	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Overfitting degrades output reliability; loose info-integrity link
+atlas-misaligned-actions-agentic	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	# Agent actions misaligned with human values
+atlas-misaligned-actions-agentic	ibm-risk-atlas	skos:broadMatch	llm062025-excessive-agency	owasp-llm-2.0	# Agent takes misaligned actions via delegated autonomy
+atlas-over-or-under-reliance-on-ai-agents-agentic	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	# Agentic variant of over/under-reliance on AI
+atlas-over-or-under-reliance-on-ai-agents-agentic	ibm-risk-atlas	skos:broadMatch	llm062025-excessive-agency	owasp-llm-2.0	# Trust calibration failure with autonomous agents
+atlas-redundant-actions-agentic	ibm-risk-atlas	skos:relatedMatch	nist-environmental-impacts	nist-ai-rmf	# Redundant agent actions waste compute resources
+atlas-unexplainable-untraceable-actions-agentic	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Agent actions lack explainability and audit trail
+credo-risk-006	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Lack of inference data transparency; supply chain visibility issue
+credo-risk-028	credo-ucf	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Coordinated influence operations; large-scale disinformation
+credo-risk-028	credo-ucf	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Coordinated disinformation campaigns using AI
+credo-risk-034	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Oversight and evaluation challenges; governance gap
+credo-risk-042	credo-ucf	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# AI-driven inequality and employment decline; systemic societal harm
+credo-risk-043	credo-ucf	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# AI devalues human creative and economic effort
+credo-risk-044	credo-ucf	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# AI concentrates power; inequitable benefit distribution
+credo-risk-046	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# AI outpaces regulatory frameworks; governance failure
+mit-ai-risk-subdomain-1.1	mit-ai-risk-repository	skos:closeMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Unfair discrimination and misrepresentation; near-equivalent to NIST bias
+mit-ai-risk-subdomain-3.2	mit-ai-risk-repository	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Filter bubbles and loss of consensus reality; info ecosystem pollution
+mit-ai-risk-subdomain-3.2	mit-ai-risk-repository	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# AI-driven personalised misinformation at scale
+mit-ai-risk-subdomain-6.1	mit-ai-risk-repository	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Power centralisation; inequitable AI benefit distribution
+mit-ai-risk-subdomain-6.2	mit-ai-risk-repository	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# AI-driven inequality and employment quality decline
+mit-ai-risk-subdomain-6.3	mit-ai-risk-repository	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# AI devalues human creative effort; IP-adjacent concern
+mit-ai-risk-subdomain-7.3	mit-ai-risk-repository	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Lack of capability/robustness leading to unreliable outputs
+mit-ai-risk-subdomain-7.4	mit-ai-risk-repository	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Lack of transparency/interpretability; non-transparent component
+mit-ai-risk-subdomain-7.6	mit-ai-risk-repository	skos:relatedMatch	nist-information-security	nist-ai-rmf	# Multi-agent cascading failures and emergent risks
+mit-ai-risk-subdomain-7.6	mit-ai-risk-repository	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	# Multi-agent interaction risks via delegated autonomy
+ai-risk-taxonomy-abuse	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-accounting	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-activities-meant-to-kill	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-adversely-affects-legal-rights	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-age	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-aircraft-navigation/air-traffic-control	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-animal-abuse	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-animals	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-anticompetitive-practices	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-automated-social-media-posts	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Manipulation — sowing division, misrepresentation
+ai-risk-taxonomy-automated-social-media-posts	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Manipulation — misrepresentation via LLM-generated content
+ai-risk-taxonomy-beautifying-and-whitewashing-acts-of-war-or-aggression	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-beliefs	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-belittling-victimhood-or-violent-events	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-bioweapons/viruses/gain-of-function	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-bioweapons/viruses/gain-of-function	ai-risk-taxonomy	skos:broadMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	# Weapons development including bioweapons, explosives, CBRN
+ai-risk-taxonomy-bodily-destruction	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-bodily-mutilation	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-building-products-for-political-campaigning-or-lobbying	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-building-services-targeting-minors/failure-to-employ-age-gating	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Child harm content — CSAM, grooming, exploitation
+ai-risk-taxonomy-building-services-to-present-a-persona-of-minor	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Child harm content — CSAM, grooming, exploitation
+ai-risk-taxonomy-building-systems-for-political-campaigning-or-lobbying	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-bullying	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-caste	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-cause-harmful-labor-force-disruptions	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-characterization-of-identity---age	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---beliefs	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---caste	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---color	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---disability	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---ethnicity	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---gender	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---genetic-information	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---geographic-region	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---health-conditions	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---mental-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---nationality	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---occupation	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---physical-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---predicted-personality	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---pregnancy-status	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---race	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---religion	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---sexual-orientation	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-characterization-of-identity---social-behaviors	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-chemical-weapons	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-chemical-weapons	ai-risk-taxonomy	skos:broadMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	# Weapons development including bioweapons, explosives, CBRN
+ai-risk-taxonomy-classification-of-individuals---age	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---beliefs	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---caste	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---color	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---disability	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---ethnicity	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---gender	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---genetic-information	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---geographic-region	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---health-conditions	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---mental-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---nationality	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---occupation	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---physical-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---predicted-personality	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---pregnancy-status	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---race	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---religion	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---sexual-orientation	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-classification-of-individuals---social-behaviors	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-color	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-communication-systems	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-content-to-divert-attention-from-harmful-actions	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Manipulation — sowing division, misrepresentation
+ai-risk-taxonomy-content-to-divert-attention-from-harmful-actions	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Manipulation — misrepresentation via LLM-generated content
+ai-risk-taxonomy-contents-aim-to-turn-a-community-against-itself.	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Manipulation — sowing division, misrepresentation
+ai-risk-taxonomy-contents-aim-to-turn-a-community-against-itself.	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Manipulation — misrepresentation via LLM-generated content
+ai-risk-taxonomy-control-override-(safety/privacy-filters)	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-control-override-(safety/privacy-filters)	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-criminal-justice/predictive-policing	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-criminal-organization	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-csam	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Child harm content — CSAM, grooming, exploitation
+ai-risk-taxonomy-cursing	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-cutting	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Self-harm content — suicide, self-injury, eating disorders
+ai-risk-taxonomy-damaging-state-honor	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-damaging-state-interests	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-data-tampering	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-data-tampering	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-denying-or-minimizing	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-derogatory-comments	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-deterring-participation-in-democratic-processes	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-disability	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-discouraging-voting	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---beliefs	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---caste	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---color	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---gender	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---genetic-information	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---geographic-region	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---health-conditions	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---mental-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---nationality	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---occupation	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---physical-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---predicted-personality	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---pregnancy-status	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---religion	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---sexual-orientation	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors	ai-risk-taxonomy	skos:broadMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Discrimination across protected characteristics
+ai-risk-taxonomy-disparagement	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Defamation — libel, slander, disparagement
+ai-risk-taxonomy-doxing	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-drugs	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-eating-disorders-(anorexia/-bulimia)	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Self-harm content — suicide, self-injury, eating disorders
+ai-risk-taxonomy-education-eligibility	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-emergency-services	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-employment	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-encourage-undue-worker-surveillance	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-energy/electrical-grids	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-environmental	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-erotic-chats	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-ethnicity	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-exploiting-advantages-for-monopolistic-practices	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-exploiting-or-harming-minors	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Child harm content — CSAM, grooming, exploitation
+ai-risk-taxonomy-explosives/dangerous-materials	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-explosives/dangerous-materials	ai-risk-taxonomy	skos:broadMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	# Weapons development including bioweapons, explosives, CBRN
+ai-risk-taxonomy-extremism	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-fetishes	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-financial	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-financing-eligibility/creditworthiness	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-gambling-(e.g.,-sports-betting)	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-gender	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-generating-high-volume-campaign-materials	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-generating-or-promoting-misinformation	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-generating-or-promoting-misinformation	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-genetic-information	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-geographic-region	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-glorifying-violence,-abuse,-or-the-suffering-of-others	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-government-services	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-grooming	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Child harm content — CSAM, grooming, exploitation
+ai-risk-taxonomy-guns	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-guns	ai-risk-taxonomy	skos:broadMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	# Weapons development including bioweapons, explosives, CBRN
+ai-risk-taxonomy-health-conditions	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-heavy-machinery	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-honor-rights	ai-risk-taxonomy	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# Fundamental rights including IP, portrait, reputation rights
+ai-risk-taxonomy-housing-eligibility	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-human-trafficking	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-humiliation	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-impersonating-humans	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Manipulation — sowing division, misrepresentation
+ai-risk-taxonomy-impersonating-humans	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Manipulation — misrepresentation via LLM-generated content
+ai-risk-taxonomy-impersonating-others	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-impersonating-others	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-inciting-unlawful-assemblies	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-inciting-unlawful-associations	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-inciting-unlawful-demonstrations	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-inciting-unlawful-processions	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-influence-political-decisions	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-influence-political-opinions	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-insults/personal-attacks	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-insurance-eligibility	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-intimidation	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-involvement-in-data-adversarially-adversely-affects-national-security-or-public-interests	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-ip-rights/-trade-secrets	ai-risk-taxonomy	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# Fundamental rights including IP, portrait, reputation rights
+ai-risk-taxonomy-legal	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-libel	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Defamation — libel, slander, disparagement
+ai-risk-taxonomy-life-support	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-lobbying	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-malware	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-malware	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-medical/pharmaceutical	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-mental-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-migration-eligibility	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-military	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-misrepresenting-voting-processes	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-misrepresenting-voting-qualifications	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-model-attacks-(membership-inference,-model-inversion)---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-multi-level-marketing	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-name-rights	ai-risk-taxonomy	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# Fundamental rights including IP, portrait, reputation rights
+ai-risk-taxonomy-nationality	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-ncii-(non-consensual-intimate-image)	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-negative-stereotyping-of-any-group	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-network-disruption	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-network-disruption	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-network-intrusion	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-network-intrusion	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-not-labeling-content-as-ai-generated Not labeling content as AI-generated (Using chatbots to convince people they are communicating with a human)	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Manipulation — sowing division, misrepresentation
+ai-risk-taxonomy-not-labeling-content-as-ai-generated Not labeling content as AI-generated (Using chatbots to convince people they are communicating with a human)	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Manipulation — misrepresentation via LLM-generated content
+ai-risk-taxonomy-nuclear-facilities	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-nuclear-weapons	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-nuclear-weapons	ai-risk-taxonomy	skos:broadMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	# Weapons development including bioweapons, explosives, CBRN
+ai-risk-taxonomy-obscene	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-occupation	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-opposing-constitutional-principles	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-other-unauthorized-actions-on-behalf-of-users	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-packet-forgery	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-packet-forgery	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-payday-lending	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-pedophilia	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Child harm content — CSAM, grooming, exploitation
+ai-risk-taxonomy-perpetuating-racism	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-perpetuating-sexism	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-personality	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-personalized-or-targeted-campaign-materials	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-persons-(including-murder)	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-phishing/catfishing	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-phishing/catfishing	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-physical-characteristics	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-plagiarism	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-plagiarism	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-political-advertisements	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-pornography	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-portrait-rights	ai-risk-taxonomy	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# Fundamental rights including IP, portrait, reputation rights
+ai-risk-taxonomy-pregnancy-status	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-profiling	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-promoting-academic-dishonesty	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-promoting-academic-dishonesty	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-promoting-cults	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-promoting-feudal-superstitions	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-promotion-of-sexual-services	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-propaganda	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-property-damage	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-prostitution	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-provoking	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-pseudo-pharmaceuticals	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-pseudo-pharmaceuticals	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-pyramid-schemes	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-race	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-radiological-weapons	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-radiological-weapons	ai-risk-taxonomy	skos:broadMatch	nist-cbrn-information-or-capabilities	nist-ai-rmf	# Weapons development including bioweapons, explosives, CBRN
+ai-risk-taxonomy-religion	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-reputation-rights	ai-risk-taxonomy	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	# Fundamental rights including IP, portrait, reputation rights
+ai-risk-taxonomy-scams	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-scams	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-sexual-acts	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-sexual-exploitation	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-sexual-intercourse	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-sexual-orientation	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-shaming	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-slander	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Defamation — libel, slander, disparagement
+ai-risk-taxonomy-social-behaviors	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-social-engineering	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-social-engineering	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-social-scoring	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-solicitation	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Child harm content — CSAM, grooming, exploitation
+ai-risk-taxonomy-spam	ai-risk-taxonomy	skos:broadMatch	nist-information-integrity	nist-ai-rmf	# Deception — fraud, phishing, mis/disinformation
+ai-risk-taxonomy-spam	ai-risk-taxonomy	skos:broadMatch	llm092025-misinformation	owasp-llm-2.0	# Deception — fraud, mis/disinformation via LLM
+ai-risk-taxonomy-spear-phishing	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-spear-phishing	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-spoofing	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-spoofing	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-subverting-state-power	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-suggestive	ai-risk-taxonomy	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Sexual content — adult, erotic, non-consensual nudity
+ai-risk-taxonomy-suicide	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Self-harm content — suicide, self-injury, eating disorders
+ai-risk-taxonomy-system/website-impairment	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-system/website-impairment	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-terrorism	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-threats	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-torture/abuse	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-transportation	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-trolling	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-inference/synthesis---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-inference/synthesis---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-network-entry	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-unauthorized-network-entry	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-unauthorized-processing---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---behavioral/-preference-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---biometric-data-(facial-recognition)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---communication-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---communication-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---demographic-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---demographic-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---educational-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---educational-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---financial-records	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---financial-records	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---health-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---health-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---location-data	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---location-data	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	nist-data-privacy	nist-ai-rmf	# Privacy violations across data types and operations
+ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# Privacy violations — LLM discloses sensitive data
+ai-risk-taxonomy-undermine-workers'-rights	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+ai-risk-taxonomy-undermining-international-relations-(china-unique)	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-undermining-national-unity	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-undermining-religious-policies	ai-risk-taxonomy	skos:relatedMatch	nist-information-integrity	nist-ai-rmf	# Political usage — election interference, lobbying, persuasion
+ai-risk-taxonomy-undermining-social-stability-(china-unique)	ai-risk-taxonomy	skos:relatedMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Criminal activities — trafficking, exploitation, illegal goods
+ai-risk-taxonomy-vulgar-terms	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Hate speech, harassment, harmful beliefs, offensive language
+ai-risk-taxonomy-vulnerability-probing	ai-risk-taxonomy	skos:broadMatch	nist-information-security	nist-ai-rmf	# CIA-model security risks — confidentiality, integrity, availability
+ai-risk-taxonomy-vulnerability-probing	ai-risk-taxonomy	skos:relatedMatch	llm01-prompt-injection	owasp-llm-2.0	# CIA security risks — loosely related to LLM attack surface
+ai-risk-taxonomy-warfare	ai-risk-taxonomy	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Violence and extremism — depicting violence, terrorism, weapons
+ai-risk-taxonomy-water-treatment-facilities	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-weapon-systems/battlefield-management	ai-risk-taxonomy	skos:relatedMatch	nist-human-ai-configuration	nist-ai-rmf	# Operational misuses — regulated advice, unsafe automated systems
+ai-risk-taxonomy-worsen-job-quality	ai-risk-taxonomy	skos:relatedMatch	nist-harmful-bias-or-homogenization	nist-ai-rmf	# Economic harm — schemes, unfair markets, worker disempowerment
+asi01-agent-goal-hijack	owasp-asi	skos:closeMatch	nist-information-security	nist-ai-rmf	# Agent goal hijacking via injection; extends prompt injection to multi-step agent workflows
+asi01-agent-goal-hijack	owasp-asi	skos:closeMatch	llm01-prompt-injection	owasp-llm-2.0	# ASI01 extends LLM01 prompt injection to agentic goal manipulation
+asi02-tool-misuse-and-exploitation	owasp-asi	skos:relatedMatch	nist-information-security	nist-ai-rmf	# Tool misuse by agents; security risk from unsafe tool application
+asi02-tool-misuse-and-exploitation	owasp-asi	skos:closeMatch	llm062025-excessive-agency	owasp-llm-2.0	# Agent misuses legitimate tools via excessive delegated autonomy
+asi03-identity-and-privilege-abuse	owasp-asi	skos:relatedMatch	nist-information-security	nist-ai-rmf	# Privilege escalation via delegation chains and identity gaps
+asi03-identity-and-privilege-abuse	owasp-asi	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	# Agents escalate privileges beyond intended scope
+asi04-agentic-supply-chain-vulnerabilities	owasp-asi	skos:closeMatch	nist-value-chain-and-component-integration	nist-ai-rmf	# Runtime supply chain compromise; dynamic tool/agent discovery
+asi04-agentic-supply-chain-vulnerabilities	owasp-asi	skos:closeMatch	llm032025-supply-chain	owasp-llm-2.0	# ASI04 extends LLM03 supply chain to dynamic runtime composition
+asi05-unexpected-code-execution	owasp-asi	skos:relatedMatch	nist-information-security	nist-ai-rmf	# RCE via code generation; agent sandbox escape
+asi05-unexpected-code-execution	owasp-asi	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	# Agent executes arbitrary code via delegated capabilities
+asi06-memory-and-context-poisoning	owasp-asi	skos:relatedMatch	nist-information-security	nist-ai-rmf	# Persistent memory corruption affecting future agent reasoning
+asi06-memory-and-context-poisoning	owasp-asi	skos:closeMatch	llm042025-data-and-model-poisoning	owasp-llm-2.0	# ASI06 extends LLM04 poisoning to agent memory and RAG stores
+asi07-insecure-inter-agent-communication	owasp-asi	skos:relatedMatch	nist-information-security	nist-ai-rmf	# Agent message spoofing, injection, interception; novel agentic concern
+asi08-cascading-failures	owasp-asi	skos:relatedMatch	nist-information-security	nist-ai-rmf	# Fault propagation across autonomous agents; novel agentic concern
+asi09-human-agent-trust-exploitation	owasp-asi	skos:closeMatch	nist-human-ai-configuration	nist-ai-rmf	# Anthropomorphism and automation bias; near-equivalent to NIST human-AI
+asi10-rogue-agents	owasp-asi	skos:relatedMatch	nist-information-security	nist-ai-rmf	# Goal drift, collusion, reward hacking; emergent harmful behaviour
+asi10-rogue-agents	owasp-asi	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	# Rogue behaviour emerges from excessive delegated autonomy
+atlas-exploit-trust-mismatch-agentic	ibm-risk-atlas	skos:broadMatch	asi03-identity-and-privilege-abuse	owasp-asi	# Trust boundary bypass → identity/privilege abuse
+atlas-external-resources-attack-agentic	ibm-risk-atlas	skos:broadMatch	asi04-agentic-supply-chain-vulnerabilities	owasp-asi	# Attacking external tools/services → agentic supply chain
+atlas-function-calling-hallucination-agentic	ibm-risk-atlas	skos:broadMatch	asi02-tool-misuse-and-exploitation	owasp-asi	# Hallucinated tool calls → tool misuse
+atlas-unauthorized-use-agentic	ibm-risk-atlas	skos:broadMatch	asi03-identity-and-privilege-abuse	owasp-asi	# Unauthorized access to agent → identity/privilege abuse
+atlas-misaligned-actions-agentic	ibm-risk-atlas	skos:broadMatch	asi10-rogue-agents	owasp-asi	# Actions misaligned with values → rogue agent behaviour
+atlas-sharing-info-tools-agentic	ibm-risk-atlas	skos:broadMatch	asi02-tool-misuse-and-exploitation	owasp-asi	# Leaking sensitive info via tools → tool misuse
+atlas-sharing-info-user-agentic	ibm-risk-atlas	skos:relatedMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Leaking info to users → trust exploitation vector
+atlas-impact-human-agency-agentic	ibm-risk-atlas	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Agent autonomy undermines human thinking → trust exploitation
+atlas-impact-human-dignity-agentic	ibm-risk-atlas	skos:relatedMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Agent capability affects self-worth → trust dynamic
+atlas-over-or-under-reliance-on-ai-agents-agentic	ibm-risk-atlas	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Trust calibration failure → trust exploitation
+atlas-redundant-actions-agentic	ibm-risk-atlas	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Infinite loops / wasted compute → cascading failures
+atlas-unexplainable-untraceable-actions-agentic	ibm-risk-atlas	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Untraceable actions → rogue agent detection problem
+atlas-accountability-agentic	ibm-risk-atlas	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Can't assign responsibility → rogue agent governance gap
+atlas-lack-of-ai-agent-transparency-agentic	ibm-risk-atlas	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Opaque agent → rogue agent detection problem
+atlas-incomplete-ai-agent-evaluation-agentic	ibm-risk-atlas	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Can't evaluate agent → undetected cascading failures
+atlas-mitigation-maintenance-agentic	ibm-risk-atlas	skos:relatedMatch	asi04-agentic-supply-chain-vulnerabilities	owasp-asi	# Complex dependencies → agentic supply chain concern
+atlas-reproducibility-agentic	ibm-risk-atlas	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Non-reproducible behaviour → cascading failure diagnosis
+atlas-prompt-injection	ibm-risk-atlas	skos:broadMatch	asi01-agent-goal-hijack	owasp-asi	# Prompt injection is the foundational attack ASI01 extends to agent goals
+atlas-jailbreaking	ibm-risk-atlas	skos:relatedMatch	asi01-agent-goal-hijack	owasp-asi	# Jailbreaking can redirect agent objectives
+atlas-prompt-priming	ibm-risk-atlas	skos:relatedMatch	asi01-agent-goal-hijack	owasp-asi	# Priming biases agent reasoning chains
+atlas-prompt-leaking	ibm-risk-atlas	skos:relatedMatch	asi07-insecure-inter-agent-communication	owasp-asi	# Leaking system prompts → insecure communication/context exposure
+atlas-data-poisoning	ibm-risk-atlas	skos:broadMatch	asi06-memory-and-context-poisoning	owasp-asi	# Data poisoning → memory/context poisoning in agent systems
+atlas-data-contamination	ibm-risk-atlas	skos:relatedMatch	asi06-memory-and-context-poisoning	owasp-asi	# Contaminated training data → poisoned agent context
+atlas-hallucination	ibm-risk-atlas	skos:relatedMatch	asi02-tool-misuse-and-exploitation	owasp-asi	# Hallucinations in agentic context lead to tool misuse
+atlas-evasion-attack	ibm-risk-atlas	skos:relatedMatch	asi01-agent-goal-hijack	owasp-asi	# Evading model controls can redirect agent behaviour
+atlas-extraction-attack	ibm-risk-atlas	skos:relatedMatch	asi03-identity-and-privilege-abuse	owasp-asi	# Model extraction → identity/privilege information leak
+atlas-over-or-under-reliance	ibm-risk-atlas	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Over-reliance on AI → human-agent trust exploitation
+credo-risk-002	credo-ucf	skos:closeMatch	asi10-rogue-agents	owasp-asi	# AI pursuing own goals vs human values → rogue agent behaviour
+credo-risk-003	credo-ucf	skos:relatedMatch	asi05-unexpected-code-execution	owasp-asi	# Dangerous capabilities including code execution
+credo-risk-003	credo-ucf	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Dangerous capabilities → rogue agent potential
+credo-risk-016	credo-ucf	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Over-reliance → human-agent trust exploitation
+credo-risk-018	credo-ucf	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Deceptive AI → trust exploitation
+credo-risk-019	credo-ucf	skos:relatedMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Loss of autonomy via agent trust dynamics
+credo-risk-033	credo-ucf	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Inadequate capabilities → cascading failure source
+credo-risk-034	credo-ucf	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Can't oversee agents → rogue behaviour undetected
+credo-risk-035	credo-ucf	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Non-robust systems → cascading failures
+credo-risk-040	credo-ucf	skos:relatedMatch	asi06-memory-and-context-poisoning	owasp-asi	# Security weaknesses → memory/context exploitation vector
+credo-risk-041	credo-ucf	skos:broadMatch	asi01-agent-goal-hijack	owasp-asi	# Adversarial attacks including agent goal hijacking
+mit-ai-risk-subdomain-2.2	mit-ai-risk-repository	skos:broadMatch	nist-information-security	nist-ai-rmf	# AI system security vulnerabilities and attacks; directly covers infosec

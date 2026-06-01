@@ -2,7 +2,13 @@ import json
 import pytest
 from pathlib import Path
 
-from concorde_policy_mapper.evals.eval import evaluate_extraction, _infer_taxonomy
+from concorde_policy_mapper.evals.eval import (
+    evaluate_extraction,
+    _infer_taxonomy,
+    _sanitise_risk_id,
+    _load_risk_to_category_map,
+    _derive_categories,
+)
 
 
 @pytest.fixture
@@ -107,6 +113,14 @@ def test_evaluate_extraction_custom_thresholds(tmp_ground_truth, tmp_extraction)
     assert result["pass"] is True
 
 
+def test_sanitise_risk_id():
+    assert _sanitise_risk_id("atlas-bias") == "atlas-bias"
+    assert _sanitise_risk_id("atlas-bias ") == "atlas-bias"
+    assert _sanitise_risk_id(
+        "ai-risk-taxonomy-not-labeling-content-as-ai-generated Not labeling content as AI-generated"
+    ) == "ai-risk-taxonomy-not-labeling-content-as-ai-generated"
+
+
 def test_infer_taxonomy():
     assert _infer_taxonomy("atlas-bias") == "ibm-risk-atlas"
     assert _infer_taxonomy("atlas-hallucination") == "ibm-risk-atlas"
@@ -117,6 +131,7 @@ def test_infer_taxonomy():
     assert _infer_taxonomy("ail-child-exploitation") == "ailuminate-v1.0"
     assert _infer_taxonomy("granite-guardian-harm") == "ibm-granite-guardian"
     assert _infer_taxonomy("llm01-prompt-injection") == "owasp-llm-2.0"
+    assert _infer_taxonomy("llm102025-unbounded-consumption") == "owasp-llm-2.0"
     assert _infer_taxonomy("shieldgemma-dangerous-content") == "shieldgemma-taxonomy"
     assert _infer_taxonomy("unknown-risk-id") == "unknown"
 
@@ -224,3 +239,121 @@ def test_evaluate_extraction_enriched_gt_format(tmp_path, tmp_extraction):
     assert result["total_expected"] == 4
     assert result["matched"] == 2
     assert set(result["matched_ids"]) == {"atlas-bias", "atlas-privacy"}
+
+
+# --- Category-level eval tests ---
+
+
+@pytest.fixture
+def tmp_sssom(tmp_path):
+    """Create a minimal SSSOM mapping file for testing."""
+    sssom = tmp_path / "test.sssom.tsv"
+    sssom.write_text(
+        "# test mapping\n"
+        "subject_id\tsubject_source\tpredicate_id\tobject_id\tobject_source\tmapping_justification\n"
+        "atlas-bias\tibm-risk-atlas\tskos:broadMatch\tnist-harmful-bias-or-homogenization\tnist-ai-rmf\ttest\n"
+        "atlas-privacy\tibm-risk-atlas\tskos:broadMatch\tnist-data-privacy\tnist-ai-rmf\ttest\n"
+        "atlas-privacy\tibm-risk-atlas\tskos:broadMatch\tllm022025-sensitive-information-disclosure\towasp-llm-2.0\ttest\n"
+        "atlas-hallucination\tibm-risk-atlas\tskos:exactMatch\tnist-confabulation\tnist-ai-rmf\ttest\n"
+        "atlas-transparency\tibm-risk-atlas\tskos:relatedMatch\tnist-value-chain-and-component-integration\tnist-ai-rmf\ttest\n"
+        "credo-risk-021\tcredo-ucf\tskos:broadMatch\tnist-information-integrity\tnist-ai-rmf\ttest\n"
+    )
+    return sssom
+
+
+def test_load_risk_to_category_map(tmp_sssom):
+    mapping = _load_risk_to_category_map(tmp_sssom)
+    assert "atlas-bias" in mapping
+    assert "nist-harmful-bias-or-homogenization" in mapping["atlas-bias"]["nist-ai-rmf"]
+    assert "atlas-privacy" in mapping
+    assert "nist-data-privacy" in mapping["atlas-privacy"]["nist-ai-rmf"]
+    assert "llm022025-sensitive-information-disclosure" in mapping["atlas-privacy"]["owasp-llm-2.0"]
+
+
+def test_load_risk_to_category_map_excludes_related(tmp_sssom):
+    mapping = _load_risk_to_category_map(tmp_sssom)
+    assert "atlas-transparency" not in mapping
+
+
+def test_derive_categories(tmp_sssom):
+    mapping = _load_risk_to_category_map(tmp_sssom)
+    risk_ids = {"atlas-bias", "atlas-privacy", "credo-risk-021"}
+    cats = _derive_categories(risk_ids, mapping)
+    assert "nist-ai-rmf" in cats
+    assert cats["nist-ai-rmf"] == {
+        "nist-harmful-bias-or-homogenization",
+        "nist-data-privacy",
+        "nist-information-integrity",
+    }
+    assert "owasp-llm-2.0" in cats
+    assert cats["owasp-llm-2.0"] == {"llm022025-sensitive-information-disclosure"}
+
+
+def test_category_eval_in_evaluate_extraction(tmp_path, tmp_sssom):
+    gt = tmp_path / "cat-eval.yaml"
+    gt.write_text(
+        "risk_ids:\n"
+        "  - atlas-bias\n"
+        "  - atlas-privacy\n"
+        "  - credo-risk-021\n"
+    )
+    data = {
+        "version": "0.3",
+        "risks": [
+            {"risk_id": "atlas-bias", "risk_name": "Bias", "risk_description": "",
+             "confidence": 0.9, "grounding_confidence": "high", "accepted_by": "threshold",
+             "evidence": [], "scores": {"bm25_rank": 1, "embedding_distance": 0.1,
+             "cross_encoder_score": 0.9, "rrf_score": 0.5}},
+            {"risk_id": "atlas-hallucination", "risk_name": "Hallucination", "risk_description": "",
+             "confidence": 0.7, "grounding_confidence": "medium", "accepted_by": "llm_judge",
+             "evidence": [], "scores": {"bm25_rank": 3, "embedding_distance": 0.3,
+             "cross_encoder_score": 0.7, "rrf_score": 0.3}},
+        ],
+        "source_documents": ["policy.md"],
+        "retrieval_stats": {"total_chunks": 10, "total_candidates_retrieved": 50,
+                            "auto_accepted": 1, "llm_judged": 1, "grounding_filtered": 0},
+    }
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps(data))
+
+    result = evaluate_extraction(gt, ext, sssom_path=tmp_sssom)
+
+    assert "category_eval" in result
+    ce = result["category_eval"]
+
+    # NIST: GT derives {harmful-bias, data-privacy, info-integrity}
+    #       Extracted derives {harmful-bias, confabulation} (from atlas-bias + atlas-hallucination)
+    #       Matched: {harmful-bias}
+    assert "nist-ai-rmf" in ce
+    nist = ce["nist-ai-rmf"]
+    assert "nist-harmful-bias-or-homogenization" in nist["matched"]
+    assert "nist-confabulation" in nist["spurious"]
+    assert "nist-data-privacy" in nist["missing"]
+    assert "nist-information-integrity" in nist["missing"]
+
+    # Risk-level: matched 1/3 (atlas-bias), missed atlas-privacy + credo-risk-021
+    assert result["matched"] == 1
+    # Category-level NIST: matched 1/3 — more forgiving if we'd found atlas-privacy
+    assert nist["recall"] == pytest.approx(1 / 3, abs=0.001)
+
+
+def test_category_eval_missing_sssom(tmp_path):
+    gt = tmp_path / "no-sssom.yaml"
+    gt.write_text("risk_ids:\n  - atlas-bias\n")
+    data = {
+        "version": "0.3",
+        "risks": [
+            {"risk_id": "atlas-bias", "risk_name": "Bias", "risk_description": "",
+             "confidence": 0.9, "grounding_confidence": "high", "accepted_by": "threshold",
+             "evidence": [], "scores": {"bm25_rank": 1, "embedding_distance": 0.1,
+             "cross_encoder_score": 0.9, "rrf_score": 0.5}},
+        ],
+        "source_documents": ["policy.md"],
+        "retrieval_stats": {"total_chunks": 1, "total_candidates_retrieved": 1,
+                            "auto_accepted": 1, "llm_judged": 0, "grounding_filtered": 0},
+    }
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps(data))
+
+    result = evaluate_extraction(gt, ext, sssom_path=tmp_path / "nonexistent.tsv")
+    assert result["category_eval"] == {}

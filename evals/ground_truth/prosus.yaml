@@ -180,26 +180,3 @@ risks:
       - text: "AI systems and their outputs should be context-sensitive, transparent and explainable to different stakeholders in appropriate circumstances."
         section: "3. RESPONSIBLE AI GUIDING PRINCIPLES"
         page: 2
-  - id: nist-data-privacy
-    name: Data Privacy
-    evidence:
-      - text: "Data used to train and deploy AI systems must be proportionate, handled in conformity with applicable data protection laws."
-        section: "3. RESPONSIBLE AI GUIDING PRINCIPLES"
-      - text: "design for privacy, security, transparency, bias controls, and robustness as an integral part of development and deployment of AI systems and models."
-        section: "4.2. Design"
-  - id: nist-harmful-bias-or-homogenization
-    name: Harmful Bias or Homogenization
-    evidence:
-      - text: "We strive to avoid creating unfair biases and reinforcing or exacerbating existing biases."
-        section: "3. RESPONSIBLE AI GUIDING PRINCIPLES"
-      - text: "We ensure that fairness and inclusivity considerations are appropriately incorporated in the development and deployment of AI systems."
-        section: "3. RESPONSIBLE AI GUIDING PRINCIPLES"
-      - text: "auditing for accountability, bias and risks implicated by specific AI models. This can be enabled through adopting tools for bias check as part of model-development practices."
-        section: "4.3. Monitor"
-  - id: nist-information-security
-    name: Information Security
-    evidence:
-      - text: "We make sure that the AI we develop, use and deploy are designed in a way that minimises known security threats, through appropriate technical and organisational measures."
-        section: "3. RESPONSIBLE AI GUIDING PRINCIPLES"
-      - text: "design for privacy, security, transparency, bias controls, and robustness as an integral part of development and deployment of AI systems and models."
-        section: "4.2. Design"
