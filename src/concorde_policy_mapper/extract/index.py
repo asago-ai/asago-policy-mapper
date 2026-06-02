@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 _DEFAULT_BI_ENCODER = "all-mpnet-base-v2"
 _DEFAULT_CROSS_ENCODER = "cross-encoder/ms-marco-MiniLM-L-12-v2"
 
+_SIGMOID_MODELS = {"cross-encoder/ms-marco-MiniLM-L-12-v2", "cross-encoder/ms-marco-electra-base"}
+
 
 class RiskIndex:
     def __init__(
@@ -60,8 +62,10 @@ class RiskIndex:
 
         if cross_encoder_model:
             self._cross_encoder = CrossEncoder(cross_encoder_model)
+            self._apply_sigmoid = cross_encoder_model in _SIGMOID_MODELS
         else:
             self._cross_encoder = None
+            self._apply_sigmoid = False
 
     @property
     def risk_count(self) -> int:
@@ -123,9 +127,12 @@ class RiskIndex:
             return []
         pairs = [(f"{c.risk_name}: {c.risk_description}", text) for c in candidates]
         raw_scores = self._cross_encoder.predict(pairs)
-        sigmoid_scores = 1.0 / (1.0 + np.exp(-np.array(raw_scores)))
+        if self._apply_sigmoid:
+            scores = 1.0 / (1.0 + np.exp(-np.array(raw_scores)))
+        else:
+            scores = np.clip(np.array(raw_scores, dtype=np.float64), 0.0, 1.0)
         scored = sorted(
-            zip(candidates, sigmoid_scores), key=lambda x: x[1], reverse=True
+            zip(candidates, scores), key=lambda x: x[1], reverse=True
         )
         results = []
         for c, score in scored[:top_k]:

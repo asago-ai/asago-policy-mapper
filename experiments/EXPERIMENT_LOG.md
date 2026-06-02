@@ -432,3 +432,54 @@ the over-acceptance pattern.
 
 **Conclusion:** Shipped as default judge prompt. First DSPy judge optimization to improve end-to-end
 performance. New baseline: P=0.814, R=0.665, F1=0.719.
+
+---
+
+## 2026-06-02: Cross-Encoder Sigmoid Bug Fix & GTE Re-evaluation
+
+**Description:** Discovered that the pipeline's `rerank()` method unconditionally applied sigmoid
+normalisation to all cross-encoder scores. This was correct for ms-marco (which outputs unbounded
+logits) but wrong for GTE-reranker-modernbert-base (which outputs calibrated scores in ~[0, 1]).
+
+Raw GTE scores: relevant pair=0.77, irrelevant=0.08 (spread 0.85). After sigmoid: 0.68 vs 0.52
+(spread 0.20). The sigmoid was destroying GTE's discrimination ability, explaining the earlier
+"score clustering" problem.
+
+**Fix:** Added `_SIGMOID_MODELS` allowlist in `index.py`. Only ms-marco models get sigmoid; others
+use raw scores clipped to [0, 1].
+
+**GTE end-to-end results (with fix, various thresholds):**
+
+| Config | Macro P | Macro R | Macro F1 | Pass |
+|--------|---------|---------|----------|------|
+| Baseline (ms-marco, 0.7/0.15) | 0.814 | 0.665 | **0.719** | 6/27 |
+| GTE, 0.7/0.15 (raw scores) | 0.660 | 0.680 | 0.650 | 5/27 |
+| GTE, 0.82/0.55 (tuned) | 0.651 | 0.663 | 0.644 | 5/27 |
+
+**Conclusion:** Even with correct scoring, GTE-reranker regresses end-to-end. GTE scores more
+accurately but more permissively than ms-marco — it gives decent scores (>0.7 raw) to loosely
+related risks. ms-marco's miscalibration (AUC 0.636) is accidentally conservative: it scores most
+things low, so the 0.7 threshold catches only strong matches. ms-marco + v3 judge remains the best
+combination. The sigmoid fix is kept for correctness when evaluating future cross-encoder models.
+
+---
+
+## 2026-06-02: Bi-Encoder Swap Evaluation
+
+**Description:** Evaluated modern bi-encoder models as replacements for `all-mpnet-base-v2` (2021, 768-dim).
+
+**Candidate recall@100 on 8 eval policies:**
+
+| Bi-encoder | Semantic Recall | BM25-only rescues | Params |
+|-----------|----------------|-------------------|--------|
+| all-mpnet-base-v2 (current) | 0.917 | 23 | 110M |
+| **BAAI/bge-m3** | **0.962** | 8 | 568M |
+| gte-modernbert-base | 0.929 | 19 | 110M |
+
+BGE-M3 reduces BM25-only rescues from 23 to 8 — 15 risks now found via semantic search.
+
+**End-to-end with BGE-M3 + ms-marco reranker:**
+Regressed (P=0.78, 3/25 pass). Better bi-encoder feeds more candidates above the cross-encoder
+threshold, but ms-marco doesn't discriminate well on the additional candidates, so precision drops.
+Bi-encoder and cross-encoder are coupled — swapping one without the other changes the candidate
+distribution the thresholds were tuned for.
