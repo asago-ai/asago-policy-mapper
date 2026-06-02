@@ -456,11 +456,8 @@ use raw scores clipped to [0, 1].
 | GTE, 0.7/0.15 (raw scores) | 0.660 | 0.680 | 0.650 | 5/27 |
 | GTE, 0.82/0.55 (tuned) | 0.651 | 0.663 | 0.644 | 5/27 |
 
-**Conclusion:** Even with correct scoring, GTE-reranker regresses end-to-end. GTE scores more
-accurately but more permissively than ms-marco — it gives decent scores (>0.7 raw) to loosely
-related risks. ms-marco's miscalibration (AUC 0.636) is accidentally conservative: it scores most
-things low, so the 0.7 threshold catches only strong matches. ms-marco + v3 judge remains the best
-combination. The sigmoid fix is kept for correctness when evaluating future cross-encoder models.
+**Conclusion:** Even with correct scoring, GTE-reranker regresses end-to-end with arbitrary
+thresholds. Needed data-informed threshold calibration — see next experiment.
 
 ---
 
@@ -483,3 +480,72 @@ Regressed (P=0.78, 3/25 pass). Better bi-encoder feeds more candidates above the
 threshold, but ms-marco doesn't discriminate well on the additional candidates, so precision drops.
 Bi-encoder and cross-encoder are coupled — swapping one without the other changes the candidate
 distribution the thresholds were tuned for.
+
+---
+
+## 2026-06-02: Pipeline-Mined Eval Dataset & Cross-Encoder Re-evaluation
+
+**Description:** Discovered the cross-encoder eval dataset was biased — hard negatives were mined
+using ms-marco's own scores, making GTE look artificially good (it easily rejected ms-marco's
+specific failure modes). Rebuilt the dataset with model-agnostic, chunk-level pipeline-mined
+negatives from actual battery runs.
+
+**Pipeline-mined dataset:** 3,962 train / 4,954 eval pairs. Hard negatives are risks that the
+retrieval stage (BM25 + bi-encoder + RRF) surfaced for each specific chunk but aren't in the GT.
+These represent the actual candidate distribution any reranker would face.
+
+**Results on pipeline-mined dataset:**
+
+| Model | AUC-ROC | Best F1 | Pos mean | Hard neg mean | Separation |
+|-------|---------|---------|----------|---------------|------------|
+| ms-marco-MiniLM | **0.498** | 0.420 | 0.295 | 0.733 | **-0.438** |
+| GTE-reranker | **0.759** | **0.596** | **0.701** | 0.618 | **+0.083** |
+
+**Key finding:** ms-marco has AUC 0.498 on pipeline-mined negatives — literally random. Hard
+negatives score HIGHER than positives (0.733 vs 0.295). The previous AUC of 0.636 was an artifact
+of testing against ms-marco's own failure modes, which other models easily reject.
+
+GTE genuinely discriminates (AUC 0.759, positive > negative) but with narrow separation (+0.083).
+
+---
+
+## 2026-06-02: GTE with Data-Informed Thresholds
+
+**Description:** Using the pipeline-mined dataset to set GTE thresholds empirically:
+threshold_high=0.72 (above positive median), threshold_low=0.55 (below hard negative mean).
+
+**End-to-end results:**
+
+| Config | Macro P | Macro R | Macro F1 | Pass |
+|--------|---------|---------|----------|------|
+| ms-marco + threshold 0.7/0.15 (baseline) | **0.813** | 0.649 | **0.708** | 5/27 |
+| No cross-encoder (RRF only) | 0.676 | 0.625 | 0.635 | 1/27 |
+| GTE calibrated 0.72/0.55 | 0.650 | **0.652** | 0.634 | 6/27 |
+
+**Analysis:** GTE calibrated performs identically to no cross-encoder at all. Despite better
+discrimination (AUC 0.759 vs 0.498), GTE doesn't improve end-to-end because:
+
+1. ms-marco works as a **volume reduction filter**, not a semantic discriminator. It randomly
+   rejects ~70% of candidates, and the survivors happen to include enough true positives
+   because the grounding stage catches the noise.
+2. ms-marco's apparent "precision" (0.813) comes from its conservatism (most scores are low),
+   not from intelligent discrimination. It's sensitive to surface-level text similarity
+   (trained on MS MARCO passages) which correlates with crude relevance.
+3. GTE discriminates on semantic relevance, but the pipeline's LLM judge and grounding stages
+   already handle semantic relevance — making the cross-encoder's discrimination redundant.
+
+**Rank-based selection (top_n_accept/top_n_judge) results:**
+
+| Config | Macro P | Macro R | Macro F1 |
+|--------|---------|---------|----------|
+| ms-marco + rank (15/10) | 0.795 | 0.629 | 0.688 |
+| GTE + rank (15/10) | 0.691 | 0.607 | 0.625 |
+
+Rank-based slightly underperforms threshold-based for ms-marco (-0.020 F1) and is worse for
+GTE because GTE's ranking pushes different (wrong) risks into the top positions.
+
+**Conclusion:** The cross-encoder's role in this pipeline is volume reduction, not semantic
+discrimination. ms-marco's random-but-conservative filtering happens to work well with the
+existing grounding stage. Replacing it requires either: (1) a model fine-tuned on our specific
+task to learn the right rejection pattern, or (2) a fundamentally different pipeline architecture
+that doesn't rely on cross-encoder filtering.

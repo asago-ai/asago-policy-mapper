@@ -97,6 +97,14 @@ Runs `concorde-policy-mapper extract` as a subprocess per policy in a battery YA
 - MLflow tracking is enabled by default in the battery runner; set `MLFLOW_TRACKING_URI` to point to your MLflow server. Pass `--no-mlflow` to disable.
 - Prompt templates are synced to the MLflow Prompt Registry at the start of each tracked battery run (hash-based dedup avoids duplicate versions)
 
+## Retrieval Architecture Notes
+
+- The cross-encoder (ms-marco-MiniLM) has AUC ~0.50 on pipeline-mined negatives — it does not discriminate semantically. It functions as a volume reduction filter: randomly rejecting ~70% of candidates, with the grounding stage catching the noise. See `experiments/EXPERIMENT_LOG.md` for details.
+- Candidate selection supports both rank-based (`--top-n-accept`, `--top-n-judge`) and legacy threshold-based (`--threshold-high`, `--threshold-low`) modes. Default is rank-based with top_n_accept=5, top_n_judge=5.
+- ColBERT late-interaction models are supported via `--colbert-model` (replaces bi-encoder + cross-encoder with a single model using MaxSim scoring)
+- Modern cross-encoders (GTE, BGE) output calibrated scores — the pipeline skips sigmoid normalisation for these (see `_SIGMOID_MODELS` in `index.py`)
+- Embedding/reranking models can be served on GPU via vLLM's embedding/scoring API on the cluster
+
 ## Dependency Pins
 
 - `ai-atlas-nexus` is pinned to a specific commit (v1.2.1) — `@main` may have breaking Pydantic schema changes
@@ -106,7 +114,8 @@ Runs `concorde-policy-mapper extract` as a subprocess per policy in a battery YA
 
 - Always update `experiments/EXPERIMENT_LOG.md` with results after running any experiment or battery that produces new data points
 - Include MLflow experiment name and run ID in experiment log entries when MLflow tracking is enabled (e.g., `**MLflow:** experiment=risk-extraction, run_id=abc123`)
-- Cross-encoder scores are barely better than random (AUC ~0.56) — do not rely on them for hard negative mining or scoring
+- Cross-encoder scores are random on pipeline-mined negatives (AUC ~0.50) — the ms-marco cross-encoder does NOT discriminate semantically; it acts as a volume reduction filter. Do not rely on cross-encoder scores for hard negative mining — use pipeline-mined negatives from `grounding_filtered_candidates` instead.
+- Cross-encoder eval datasets MUST use pipeline-mined negatives (from actual battery runs), not cross-encoder-mined negatives. The latter are biased toward the mining model's specific failure modes.
 
 ## Development
 
