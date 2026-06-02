@@ -56,14 +56,47 @@ def test_build_padded_text_no_cross_document():
     assert "Doc B first chunk." not in padded
 
 
-def test_classify_candidates():
+def test_classify_candidates_rank_based():
+    """Rank-based mode: top N accepted, next M borderline, rest discarded."""
+    candidates = [
+        ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a", cross_encoder_score=0.85),
+        ScoredCandidate(risk_id="R-002", risk_name="B", risk_description="b", cross_encoder_score=0.70),
+        ScoredCandidate(risk_id="R-003", risk_name="C", risk_description="c", cross_encoder_score=0.50),
+        ScoredCandidate(risk_id="R-004", risk_name="D", risk_description="d", cross_encoder_score=0.30),
+        ScoredCandidate(risk_id="R-005", risk_name="E", risk_description="e", cross_encoder_score=0.10),
+    ]
+    accepted, borderline, discarded = classify_candidates(
+        candidates, top_n_accept=2, top_n_judge=2,
+    )
+    assert [c.risk_id for c in accepted] == ["R-001", "R-002"]
+    assert [c.risk_id for c in borderline] == ["R-003", "R-004"]
+    assert [c.risk_id for c in discarded] == ["R-005"]
+
+
+def test_classify_candidates_rank_based_floor():
+    """Min score floor rejects low-scoring candidates regardless of rank."""
+    candidates = [
+        ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a", cross_encoder_score=0.85),
+        ScoredCandidate(risk_id="R-002", risk_name="B", risk_description="b", cross_encoder_score=0.50),
+        ScoredCandidate(risk_id="R-003", risk_name="C", risk_description="c", cross_encoder_score=0.10),
+    ]
+    accepted, borderline, discarded = classify_candidates(
+        candidates, top_n_accept=2, top_n_judge=2, min_score_floor=0.3,
+    )
+    assert [c.risk_id for c in accepted] == ["R-001", "R-002"]
+    assert len(borderline) == 0
+    assert [c.risk_id for c in discarded] == ["R-003"]
+
+
+def test_classify_candidates_legacy_threshold():
+    """Legacy threshold mode when threshold_high is set."""
     candidates = [
         ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a", cross_encoder_score=0.85),
         ScoredCandidate(risk_id="R-002", risk_name="B", risk_description="b", cross_encoder_score=0.50),
         ScoredCandidate(risk_id="R-003", risk_name="C", risk_description="c", cross_encoder_score=0.15),
     ]
     accepted, borderline, discarded = classify_candidates(
-        candidates, threshold_high=0.7, threshold_low=0.3
+        candidates, threshold_high=0.7, threshold_low=0.3,
     )
     assert [c.risk_id for c in accepted] == ["R-001"]
     assert [c.risk_id for c in borderline] == ["R-002"]
@@ -97,6 +130,20 @@ def test_classify_candidates_bm25_rescue_disabled():
     assert len(accepted) == 0
     assert len(borderline) == 0
     assert len(discarded) == 1
+
+
+def test_classify_candidates_bm25_rescue_rank_based():
+    """BM25 rescue works in rank-based mode too."""
+    candidates = [
+        ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a", cross_encoder_score=0.85),
+        ScoredCandidate(risk_id="R-002", risk_name="B", risk_description="b", cross_encoder_score=0.001, bm25_rank=5),
+    ]
+    accepted, borderline, discarded = classify_candidates(
+        candidates, top_n_accept=1, top_n_judge=0, bm25_rescue_rank=10,
+    )
+    assert [c.risk_id for c in accepted] == ["R-001"]
+    assert [c.risk_id for c in borderline] == ["R-002"]
+    assert len(discarded) == 0
 
 
 def test_judge_borderline_accepts_relevant():

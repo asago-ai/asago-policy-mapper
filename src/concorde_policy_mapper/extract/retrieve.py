@@ -50,23 +50,49 @@ def build_padded_text(
 
 def classify_candidates(
     candidates: list[ScoredCandidate],
-    threshold_high: float = 0.7,
-    threshold_low: float = 0.3,
+    *,
+    top_n_accept: int = 5,
+    top_n_judge: int = 5,
+    min_score_floor: float = 0.0,
     bm25_rescue_rank: int = 0,
+    threshold_high: float | None = None,
+    threshold_low: float | None = None,
 ) -> tuple[list[ScoredCandidate], list[ScoredCandidate], list[ScoredCandidate]]:
+    if threshold_high is not None:
+        tl = threshold_low if threshold_low is not None else 0.15
+        accepted = []
+        borderline = []
+        discarded = []
+        for c in candidates:
+            if c.cross_encoder_score >= threshold_high:
+                accepted.append(c)
+            elif c.cross_encoder_score >= tl:
+                borderline.append(c)
+            elif (
+                bm25_rescue_rank > 0
+                and c.bm25_rank > 0
+                and c.bm25_rank <= bm25_rescue_rank
+            ):
+                borderline.append(c)
+            else:
+                discarded.append(c)
+        return accepted, borderline, discarded
+
+    ranked = sorted(candidates, key=lambda c: c.cross_encoder_score, reverse=True)
     accepted = []
     borderline = []
     discarded = []
-    for c in candidates:
-        if c.cross_encoder_score >= threshold_high:
+    for i, c in enumerate(ranked):
+        if min_score_floor > 0 and c.cross_encoder_score < min_score_floor:
+            if bm25_rescue_rank > 0 and c.bm25_rank > 0 and c.bm25_rank <= bm25_rescue_rank:
+                borderline.append(c)
+            else:
+                discarded.append(c)
+        elif i < top_n_accept:
             accepted.append(c)
-        elif c.cross_encoder_score >= threshold_low:
+        elif i < top_n_accept + top_n_judge:
             borderline.append(c)
-        elif (
-            bm25_rescue_rank > 0
-            and c.bm25_rank > 0
-            and c.bm25_rank <= bm25_rescue_rank
-        ):
+        elif bm25_rescue_rank > 0 and c.bm25_rank > 0 and c.bm25_rank <= bm25_rescue_rank:
             borderline.append(c)
         else:
             discarded.append(c)
@@ -144,12 +170,15 @@ def retrieve_chunk(
     index,
     *,
     top_k: int = 50,
-    threshold_high: float = 0.7,
-    threshold_low: float = 0.3,
+    top_n_accept: int = 5,
+    top_n_judge: int = 5,
+    min_score_floor: float = 0.0,
     context_sentences: int = 2,
     bm25_rescue_rank: int = 0,
     use_cross_encoder: bool = True,
     rrf_min_score: float = 0.0,
+    threshold_high: float | None = None,
+    threshold_low: float | None = None,
 ) -> ChunkResult:
     chunk = chunks[chunk_index]
     padded = build_padded_text(chunks, chunk_index, context_sentences)
@@ -177,12 +206,18 @@ def retrieve_chunk(
         )
 
     accepted, borderline, discarded = classify_candidates(
-        candidates, threshold_high, threshold_low,
+        candidates,
+        top_n_accept=top_n_accept,
+        top_n_judge=top_n_judge,
+        min_score_floor=min_score_floor,
         bm25_rescue_rank=bm25_rescue_rank,
+        threshold_high=threshold_high,
+        threshold_low=threshold_low,
     )
+    floor = threshold_low if threshold_low is not None else min_score_floor
     bm25_rescued = sum(
         1 for c in borderline
-        if c.cross_encoder_score < threshold_low
+        if c.cross_encoder_score < floor
         and c.bm25_rank > 0
         and c.bm25_rank <= bm25_rescue_rank
     )

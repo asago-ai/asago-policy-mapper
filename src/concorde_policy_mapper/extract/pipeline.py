@@ -83,13 +83,17 @@ def run_extraction(
     risks: list,
     ocr: bool = False,
     chunk_max_tokens: int = 512,
-    threshold_high: float = 0.7,
-    threshold_low: float = 0.15,
+    top_n_accept: int = 5,
+    top_n_judge: int = 5,
+    min_score_floor: float = 0.0,
     bi_encoder_model: str = "all-mpnet-base-v2",
     cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2",
     bm25_rescue_rank: int = 10,
     use_cross_encoder: bool = True,
     rrf_min_score: float = 0.01,
+    colbert_model: str | None = None,
+    threshold_high: float | None = None,
+    threshold_low: float | None = None,
 ) -> ExtractionResult:
     timing: dict[str, float] = {}
     max_workers = config.max_concurrent
@@ -125,7 +129,8 @@ def run_extraction(
     index = RiskIndex(
         risks,
         bi_encoder_model=bi_encoder_model,
-        cross_encoder_model=cross_encoder_model if use_cross_encoder else None,
+        cross_encoder_model=cross_encoder_model if use_cross_encoder and not colbert_model else None,
+        colbert_model=colbert_model,
     )
     timing["index_ms"] = (time.time() - t0) * 1000
 
@@ -136,11 +141,14 @@ def run_extraction(
             chunks,
             i,
             index,
-            threshold_high=threshold_high,
-            threshold_low=threshold_low,
+            top_n_accept=top_n_accept,
+            top_n_judge=top_n_judge,
+            min_score_floor=min_score_floor,
             bm25_rescue_rank=bm25_rescue_rank,
             use_cross_encoder=use_cross_encoder,
             rrf_min_score=rrf_min_score if not use_cross_encoder else 0.0,
+            threshold_high=threshold_high,
+            threshold_low=threshold_low,
         )
         chunk_results.append(cr)
     timing["retrieve_ms"] = (time.time() - t0) * 1000
@@ -281,6 +289,10 @@ def run_extraction(
             "bi_encoder_model": bi_encoder_model,
             "cross_encoder_model": cross_encoder_model if use_cross_encoder else None,
             "use_cross_encoder": use_cross_encoder,
+            "colbert_model": colbert_model,
+            "top_n_accept": top_n_accept,
+            "top_n_judge": top_n_judge,
+            "min_score_floor": min_score_floor,
             "threshold_high": threshold_high,
             "threshold_low": threshold_low,
             "bm25_rescue_rank": bm25_rescue_rank,

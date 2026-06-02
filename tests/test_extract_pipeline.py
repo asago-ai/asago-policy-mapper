@@ -122,8 +122,8 @@ def test_run_extraction_metadata(mock_config, tmp_path):
     )
 
     assert result.metadata["model"] == "test-model"
-    assert result.metadata["threshold_high"] == 0.7
-    assert result.metadata["threshold_low"] == 0.15
+    assert result.metadata["top_n_accept"] == 5
+    assert result.metadata["top_n_judge"] == 5
 
 
 def test_run_extraction_populates_chunks(mock_config, tmp_path):

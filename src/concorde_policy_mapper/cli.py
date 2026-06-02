@@ -36,13 +36,17 @@ def extract(
     debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
     ocr: bool = typer.Option(False, "--ocr", help="Enable OCR for document conversion"),
-    threshold_high: float = typer.Option(0.7, "--threshold-high", help="Auto-accept threshold"),
-    threshold_low: float = typer.Option(0.15, "--threshold-low", help="Discard threshold"),
+    top_n_accept: int = typer.Option(5, "--top-n-accept", help="Auto-accept top N candidates per chunk (rank-based)"),
+    top_n_judge: int = typer.Option(5, "--top-n-judge", help="Send next N candidates to LLM judge (rank-based)"),
+    min_score_floor: float = typer.Option(0.0, "--min-score-floor", help="Reject candidates below this score regardless of rank"),
+    threshold_high: float = typer.Option(None, "--threshold-high", help="Legacy: absolute auto-accept threshold (overrides rank-based)"),
+    threshold_low: float = typer.Option(None, "--threshold-low", help="Legacy: absolute discard threshold (overrides rank-based)"),
     bi_encoder_model: str = typer.Option("all-mpnet-base-v2", "--bi-encoder-model", help="Bi-encoder model"),
     cross_encoder_model: str = typer.Option("cross-encoder/ms-marco-MiniLM-L-12-v2", "--cross-encoder-model", help="Cross-encoder model"),
     bm25_rescue_rank: int = typer.Option(10, "--bm25-rescue-rank", help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled)"),
     no_cross_encoder: bool = typer.Option(False, "--no-cross-encoder", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead"),
     rrf_min_score: float = typer.Option(0.01, "--rrf-min-score", help="Minimum RRF score for candidates (only used with --no-cross-encoder)"),
+    colbert_model: str = typer.Option(None, "--colbert-model", help="ColBERT model for late interaction retrieval (replaces bi-encoder + cross-encoder)"),
 ):
     """Extract risks from policy documents using hybrid retrieval."""
     for pf in policy_files:
@@ -83,13 +87,17 @@ def extract(
         config=config,
         risks=all_risks,
         ocr=ocr,
-        threshold_high=threshold_high,
-        threshold_low=threshold_low,
+        top_n_accept=top_n_accept,
+        top_n_judge=top_n_judge,
+        min_score_floor=min_score_floor,
         bi_encoder_model=bi_encoder_model,
         cross_encoder_model=cross_encoder_model,
         bm25_rescue_rank=bm25_rescue_rank,
         use_cross_encoder=not no_cross_encoder,
         rrf_min_score=rrf_min_score,
+        colbert_model=colbert_model or None,
+        threshold_high=threshold_high,
+        threshold_low=threshold_low,
     )
 
     result.token_usage = tracker.to_dict()

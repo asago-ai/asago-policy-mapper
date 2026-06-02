@@ -90,13 +90,17 @@ def run_one(
         base_url: str,
         model: str,
         runs_dir: Path,
-        threshold_high: float = 0.7,
-        threshold_low: float = 0.15,
+        top_n_accept: int = 5,
+        top_n_judge: int = 5,
+        min_score_floor: float = 0.0,
+        threshold_high: float | None = None,
+        threshold_low: float | None = None,
         bi_encoder_model: str = "all-mpnet-base-v2",
         cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2",
         name_width: int = 20,
         no_cross_encoder: bool = False,
         rrf_min_score: float = 0.01,
+        colbert_model: str | None = None,
 ) -> tuple[str, bool, str, int, float]:
     out = runs_dir / name
     tag = _pad_name(name, name_width)
@@ -111,13 +115,20 @@ def run_one(
         "--base-url", base_url,
         "--model", model,
         "--nexus-base-dir", NEXUS_BASE_DIR,
-        "--threshold-high", str(threshold_high),
-        "--threshold-low", str(threshold_low),
+        "--top-n-accept", str(top_n_accept),
+        "--top-n-judge", str(top_n_judge),
+        "--min-score-floor", str(min_score_floor),
         "--bi-encoder-model", bi_encoder_model,
         "--cross-encoder-model", cross_encoder_model,
     ]
     if no_cross_encoder:
         cmd.extend(["--no-cross-encoder", "--rrf-min-score", str(rrf_min_score)])
+    if colbert_model:
+        cmd.extend(["--colbert-model", colbert_model])
+    if threshold_high is not None:
+        cmd.extend(["--threshold-high", str(threshold_high)])
+    if threshold_low is not None:
+        cmd.extend(["--threshold-low", str(threshold_low)])
 
     t0 = time.monotonic()
     proc = subprocess.Popen(
@@ -311,12 +322,16 @@ def main():
     parser.add_argument("--base-url", default=os.environ.get("POLICY_MAPPER_BASE_URL"), help="LLM API base URL (default: $POLICY_MAPPER_BASE_URL)")
     parser.add_argument("--model", default=None, help="Override model from battery config (default: $POLICY_MAPPER_MODEL)")
     parser.add_argument("-j", "--jobs", type=int, default=6, help="Max parallel jobs (default: 6)")
-    parser.add_argument("--threshold-high", type=float, default=0.7, help="Auto-accept threshold (default: 0.7)")
-    parser.add_argument("--threshold-low", type=float, default=0.15, help="Discard threshold (default: 0.15)")
+    parser.add_argument("--top-n-accept", type=int, default=5, help="Auto-accept top N candidates per chunk (default: 5)")
+    parser.add_argument("--top-n-judge", type=int, default=5, help="Send next N candidates to LLM judge (default: 5)")
+    parser.add_argument("--min-score-floor", type=float, default=0.0, help="Reject candidates below this score (default: 0.0)")
+    parser.add_argument("--threshold-high", type=float, default=None, help="Legacy: absolute auto-accept threshold (overrides rank-based)")
+    parser.add_argument("--threshold-low", type=float, default=None, help="Legacy: absolute discard threshold")
     parser.add_argument("--bi-encoder-model", default="all-mpnet-base-v2", help="Bi-encoder model (default: all-mpnet-base-v2)")
     parser.add_argument("--cross-encoder-model", default="cross-encoder/ms-marco-MiniLM-L-12-v2", help="Cross-encoder model (default: cross-encoder/ms-marco-MiniLM-L-12-v2)")
     parser.add_argument("--no-cross-encoder", action="store_true", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead")
     parser.add_argument("--rrf-min-score", type=float, default=0.01, help="Minimum RRF score for candidates (only used with --no-cross-encoder)")
+    parser.add_argument("--colbert-model", default=None, help="ColBERT model for late interaction retrieval (replaces bi-encoder + cross-encoder)")
     parser.add_argument("--mlflow-experiment", default="risk-extraction", help="MLflow experiment name (default: risk-extraction)")
     parser.add_argument("--no-mlflow", action="store_true", help="Disable MLflow tracking")
     args = parser.parse_args()
@@ -360,8 +375,13 @@ def main():
     print(f"  cross_encoder:  {'DISABLED' if args.no_cross_encoder else args.cross_encoder_model}")
     if args.no_cross_encoder:
         print(f"  rrf_min_score:  {args.rrf_min_score}")
-    print(f"  threshold_high: {args.threshold_high}")
-    print(f"  threshold_low:  {args.threshold_low}")
+    if args.threshold_high is not None:
+        print(f"  threshold_high: {args.threshold_high} (legacy mode)")
+        print(f"  threshold_low:  {args.threshold_low}")
+    else:
+        print(f"  top_n_accept:   {args.top_n_accept}")
+        print(f"  top_n_judge:    {args.top_n_judge}")
+        print(f"  min_score_floor:{args.min_score_floor}")
     print(f"  runs:           {len(runs)} ({n_single} single-doc, {n_groups} multi-doc)")
     print(f"  jobs:           {args.jobs}")
     print(f"  output:         {runs_dir}")
@@ -378,6 +398,9 @@ def main():
             "model": model,
             "bi_encoder_model": args.bi_encoder_model,
             "cross_encoder_model": args.cross_encoder_model,
+            "top_n_accept": str(args.top_n_accept),
+            "top_n_judge": str(args.top_n_judge),
+            "min_score_floor": str(args.min_score_floor),
             "threshold_high": str(args.threshold_high),
             "threshold_low": str(args.threshold_low),
             "rrf_min_score": str(args.rrf_min_score),
@@ -402,9 +425,11 @@ def main():
         futures = {
             pool.submit(
                 run_one, files, name, args.base_url, model, runs_dir,
+                args.top_n_accept, args.top_n_judge, args.min_score_floor,
                 args.threshold_high, args.threshold_low,
                 args.bi_encoder_model, args.cross_encoder_model, name_width,
                 args.no_cross_encoder, args.rrf_min_score,
+                args.colbert_model,
             ): name
             for name, files in runs
         }
