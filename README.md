@@ -88,6 +88,8 @@ F1 scores are from IR-only evaluation (no LLM judge/grounding) on 27 policies. W
 
 ### Configuration Examples
 
+Pass a **model name** to run locally (downloaded on first use), or a **URL** to use a remote model served via vLLM.
+
 **Best quality** (Qwen3 + GTE, both on GPU cluster):
 
 ```bash
@@ -100,7 +102,7 @@ uv run concorde-policy-mapper extract policy.pdf -o output/ \
   --expand-siblings
 ```
 
-**Good quality** (EmbeddingGemma + GTE):
+**Good quality** (EmbeddingGemma + GTE, remote):
 
 ```bash
 uv run concorde-policy-mapper extract policy.pdf -o output/ \
@@ -110,7 +112,16 @@ uv run concorde-policy-mapper extract policy.pdf -o output/ \
   --cross-encoder-model https://gte-reranker-serving.example.com/v1/score
 ```
 
-**Local (no GPU, default models)**:
+**Local with GTE reranker** (bi-encoder local, cross-encoder local — needs GPU for GTE):
+
+```bash
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://localhost:8000/v1 --model my-model \
+  --cross-encoder-model Alibaba-NLP/gte-reranker-modernbert-base
+```
+
+**Local defaults** (no GPU needed, models downloaded automatically):
 
 ```bash
 uv run concorde-policy-mapper extract policy.pdf -o output/ \
@@ -118,7 +129,7 @@ uv run concorde-policy-mapper extract policy.pdf -o output/ \
   --base-url http://localhost:8000/v1 --model my-model
 ```
 
-**IR-only (no LLM needed)** — useful for quick evaluation or when no LLM is available:
+**IR-only** (no LLM needed — useful for quick evaluation):
 
 ```bash
 uv run concorde-policy-mapper extract policy.pdf -o output/ \
