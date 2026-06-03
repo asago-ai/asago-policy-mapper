@@ -90,7 +90,29 @@ def extract(
         if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
     ]
 
+    from concorde_policy_mapper.extract.models import RetrievalConfig
     from concorde_policy_mapper.extract.pipeline import run_extraction
+
+    retrieval = RetrievalConfig(
+        bi_encoder_model=bi_encoder_model,
+        query_instruction=query_instruction,
+        cross_encoder_model=cross_encoder_model,
+        colbert_model=colbert_model or None,
+        chunk_max_tokens=chunk_max_tokens,
+        top_n_accept=top_n_accept,
+        top_n_judge=top_n_judge,
+        min_score_floor=min_score_floor,
+        threshold_high=threshold_high,
+        threshold_low=threshold_low,
+        bm25_rescue_rank=bm25_rescue_rank,
+        rrf_min_score=rrf_min_score,
+        use_cross_encoder=not no_cross_encoder,
+        no_judge=no_judge,
+        no_grounding=no_grounding,
+        judge_prompt=judge_prompt,
+        judge_context_tokens=judge_context_tokens,
+        expand_siblings=expand_siblings,
+    )
 
     typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
 
@@ -99,25 +121,8 @@ def extract(
         client=client,
         config=config,
         risks=all_risks,
+        retrieval=retrieval,
         ocr=ocr,
-        chunk_max_tokens=chunk_max_tokens,
-        top_n_accept=top_n_accept,
-        top_n_judge=top_n_judge,
-        min_score_floor=min_score_floor,
-        bi_encoder_model=bi_encoder_model,
-        query_instruction=query_instruction,
-        cross_encoder_model=cross_encoder_model,
-        bm25_rescue_rank=bm25_rescue_rank,
-        use_cross_encoder=not no_cross_encoder,
-        rrf_min_score=rrf_min_score,
-        colbert_model=colbert_model or None,
-        threshold_high=threshold_high,
-        threshold_low=threshold_low,
-        expand_siblings=expand_siblings,
-        no_judge=no_judge,
-        no_grounding=no_grounding,
-        judge_prompt=judge_prompt,
-        judge_context_tokens=judge_context_tokens,
     )
 
     result.token_usage = tracker.to_dict()

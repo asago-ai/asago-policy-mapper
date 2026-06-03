@@ -2,9 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`accepted_by` label bug**: when `no_judge=True` with grounding enabled, candidates were incorrectly tagged `"llm_judge"` instead of `"auto_promoted"`. The grounding path now uses the same `determine_accepted_by()` function as the no-grounding path.
+
+### Changed
+- **Pipeline decomplection** (steps from `docs/decomplection-analysis.md`):
+  - Extracted `determine_accepted_by()` and `build_risk_match()` pure functions — eliminates 3-way RiskMatch construction duplication and scattered `accepted_by` computation.
+  - Extracted `timed()` context manager — replaces 8 inline `t0 = time.time()` / `timing[...] = ...` pairs.
+  - Split `classify_candidates()` into `classify_by_rank()` and `classify_by_threshold()` with a thin dispatcher for backward compatibility.
+  - Extracted `_rrf_fuse()` shared function and `_make_score_normalizer()` factory from `RiskIndex` — eliminates RRF accumulation duplication between `hybrid_search` and `_hybrid_search_colbert`, and replaces inline score normalization branching with a factory resolved at init time.
+  - Bundled 18 retrieval parameters into `RetrievalConfig` dataclass with pre-resolved properties (`effective_cross_encoder_model`, `effective_rrf_min_score`) and `to_metadata()`. `run_extraction` now accepts `retrieval: RetrievalConfig` instead of individual keyword arguments.
+- **Decomplection analysis revised**: fixed inaccurate counts (18→23 params, 7→8 timing sites, 30→27 CLI params), replaced strategy pattern proposal for RiskIndex with lighter shared-function approach, replaced debug module globals entry with eval↔extraction schema drift concern, added caveat to RetrievalConfig that a dataclass alone is cosmetic without pre-resolving downstream decisions.
+- **Schema drift smoke test**: `test_extraction_result_schema_compatible_with_eval` constructs an `ExtractionResult` via Pydantic, serializes to JSON, and runs eval — catches silent breakage if extraction output fields drift from what eval reads.
+
 ### Added
-- **Mitigation recommendations**: each extracted risk now includes recommended mitigation actions from 5 frameworks (MIT AI Risk Repository, OWASP LLM Top 10, NIST AI RMF 600-1, Credo UCF, AIUC-1). Pre-built index maps 95 Atlas risks to ~5,190 action entries. Mitigations appear in JSON output (`mitigations` field on `RiskMatch`) and in the HTML report as an expandable section per risk.
-- **`scripts/build_mitigation_index.py`**: generates `data/atlas_risk_to_actions.yaml` by reading local MIT/OWASP action files and resolving NIST/Credo/AIUC-1 transitive cross-framework mappings from Nexus. Each action is categorized as `technical`, `operational`, or `governance` via rules in `data/mitigation_categories.yaml`.
+- **Mitigation recommendations**: each extracted risk now includes recommended mitigation actions from 5 frameworks (MIT AI Risk Repository, OWASP LLM Top 10, NIST AI RMF 600-1, Credo UCF, AIUC-1). Pre-built index maps 87 Atlas risks to ~2,875 action entries via direct `action → atlas-*` mappings (no transitive cross-framework hops). Mitigations appear in JSON output (`mitigations` field on `RiskMatch` with `action_id`, `action_name`, `description`, `source`, `category`) and in the HTML report as an expandable section per risk, grouped by category (technical/operational/governance) then source.
+- **`scripts/build_mitigation_index.py`**: generates `data/atlas_risk_to_actions.yaml` from 5 direct mapping files. Each action is categorized as `technical`, `operational`, or `governance` via rules in `data/mitigation_categories.yaml`.
+- **Direct action→risk mapping files**: `data/nist_ai_rmf_actions_to_atlas_data.yaml` (212 NIST actions → 338 risk links), `data/credo_ucf_actions_to_atlas_data.yaml` (41 Credo controls → 115 risk links), `data/aiuc1_actions_to_atlas_data.yaml` (49 AIUC-1 requirements → 100 risk links). All hand-reviewed.
 - **`data/mitigation_categories.yaml`**: category assignment rules (MIT group → category, NIST RMF prefix → category, AIUC-1 principle → category) plus explicit assignments for OWASP and Credo actions.
 - **`data/mit_ai_risk_mitigation_to_atlas_data.yaml`**: maps 831 MIT AI Risk Repository controls to IBM Atlas risk IDs (MIT's own risk-to-mitigation mappings are not yet published; these were generated independently).
 - **`data/owasp_llm_2.0_actions_data.yaml`**: 80 structured mitigation actions extracted from OWASP LLM Top 10 v2.0, each mapped to Atlas risk IDs.

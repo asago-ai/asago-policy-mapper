@@ -94,36 +94,40 @@ def build_padded_text(
     return " ".join(parts)
 
 
-def classify_candidates(
+def classify_by_threshold(
+    candidates: list[ScoredCandidate],
+    *,
+    threshold_high: float,
+    threshold_low: float = 0.15,
+    bm25_rescue_rank: int = 0,
+) -> tuple[list[ScoredCandidate], list[ScoredCandidate], list[ScoredCandidate]]:
+    accepted = []
+    borderline = []
+    discarded = []
+    for c in candidates:
+        if c.cross_encoder_score >= threshold_high:
+            accepted.append(c)
+        elif c.cross_encoder_score >= threshold_low:
+            borderline.append(c)
+        elif (
+            bm25_rescue_rank > 0
+            and c.bm25_rank > 0
+            and c.bm25_rank <= bm25_rescue_rank
+        ):
+            borderline.append(c)
+        else:
+            discarded.append(c)
+    return accepted, borderline, discarded
+
+
+def classify_by_rank(
     candidates: list[ScoredCandidate],
     *,
     top_n_accept: int = 5,
     top_n_judge: int = 5,
     min_score_floor: float = 0.0,
     bm25_rescue_rank: int = 0,
-    threshold_high: float | None = None,
-    threshold_low: float | None = None,
 ) -> tuple[list[ScoredCandidate], list[ScoredCandidate], list[ScoredCandidate]]:
-    if threshold_high is not None:
-        tl = threshold_low if threshold_low is not None else 0.15
-        accepted = []
-        borderline = []
-        discarded = []
-        for c in candidates:
-            if c.cross_encoder_score >= threshold_high:
-                accepted.append(c)
-            elif c.cross_encoder_score >= tl:
-                borderline.append(c)
-            elif (
-                bm25_rescue_rank > 0
-                and c.bm25_rank > 0
-                and c.bm25_rank <= bm25_rescue_rank
-            ):
-                borderline.append(c)
-            else:
-                discarded.append(c)
-        return accepted, borderline, discarded
-
     ranked = sorted(candidates, key=lambda c: c.cross_encoder_score, reverse=True)
     accepted = []
     borderline = []
@@ -143,6 +147,32 @@ def classify_candidates(
         else:
             discarded.append(c)
     return accepted, borderline, discarded
+
+
+def classify_candidates(
+    candidates: list[ScoredCandidate],
+    *,
+    top_n_accept: int = 5,
+    top_n_judge: int = 5,
+    min_score_floor: float = 0.0,
+    bm25_rescue_rank: int = 0,
+    threshold_high: float | None = None,
+    threshold_low: float | None = None,
+) -> tuple[list[ScoredCandidate], list[ScoredCandidate], list[ScoredCandidate]]:
+    if threshold_high is not None:
+        return classify_by_threshold(
+            candidates,
+            threshold_high=threshold_high,
+            threshold_low=threshold_low if threshold_low is not None else 0.15,
+            bm25_rescue_rank=bm25_rescue_rank,
+        )
+    return classify_by_rank(
+        candidates,
+        top_n_accept=top_n_accept,
+        top_n_judge=top_n_judge,
+        min_score_floor=min_score_floor,
+        bm25_rescue_rank=bm25_rescue_rank,
+    )
 
 
 def judge_borderline(

@@ -139,6 +139,47 @@ def _maxsim(query_tokens: np.ndarray, doc_tokens: np.ndarray) -> float:
     return float(sim.max(axis=1).sum())
 
 
+def _rrf_fuse(
+    results_a: list[ScoredCandidate],
+    results_b: list[ScoredCandidate],
+    rrf_k: int = 60,
+) -> tuple[dict[str, float], dict[str, ScoredCandidate], dict[str, int]]:
+    rrf_scores: dict[str, float] = {}
+    candidate_data: dict[str, ScoredCandidate] = {}
+    bm25_ranks: dict[str, int] = {}
+
+    for rank, c in enumerate(results_a, 1):
+        rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
+        candidate_data[c.risk_id] = c
+        bm25_ranks[c.risk_id] = rank
+
+    for rank, c in enumerate(results_b, 1):
+        rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
+        if c.risk_id not in candidate_data:
+            candidate_data[c.risk_id] = c
+
+    return rrf_scores, candidate_data, bm25_ranks
+
+
+def _make_score_normalizer(*, is_nli=False, apply_sigmoid=False):
+    if is_nli:
+        def normalize(raw):
+            if raw.ndim == 2:
+                exp_scores = np.exp(raw - np.max(raw, axis=1, keepdims=True))
+                softmax = exp_scores / exp_scores.sum(axis=1, keepdims=True)
+                return softmax[:, -1]
+            return raw
+        return normalize
+    elif apply_sigmoid:
+        def normalize(raw):
+            return 1.0 / (1.0 + np.exp(-raw))
+        return normalize
+    else:
+        def normalize(raw):
+            return np.clip(raw.astype(np.float64), 0.0, 1.0)
+        return normalize
+
+
 class RiskIndex:
     def __init__(
         self,
@@ -248,6 +289,10 @@ class RiskIndex:
                 self._apply_sigmoid = False
                 self._is_nli = False
 
+            self._score_normalizer = _make_score_normalizer(
+                is_nli=self._is_nli, apply_sigmoid=self._apply_sigmoid,
+            )
+
     @property
     def risk_count(self) -> int:
         return len(self._risk_ids)
@@ -354,14 +399,7 @@ class RiskIndex:
         else:
             raw_scores = self._cross_encoder.predict(pairs)
         raw_scores = np.array(raw_scores)
-        if self._is_nli and raw_scores.ndim == 2:
-            exp_scores = np.exp(raw_scores - np.max(raw_scores, axis=1, keepdims=True))
-            softmax = exp_scores / exp_scores.sum(axis=1, keepdims=True)
-            scores = softmax[:, -1]
-        elif self._apply_sigmoid:
-            scores = 1.0 / (1.0 + np.exp(-raw_scores))
-        else:
-            scores = np.clip(raw_scores.astype(np.float64), 0.0, 1.0)
+        scores = self._score_normalizer(raw_scores)
         scored = sorted(
             zip(candidates, scores), key=lambda x: x[1], reverse=True
         )
@@ -393,21 +431,10 @@ class RiskIndex:
         if not bm25_results and not semantic_results:
             return []
 
-        rrf_scores: dict[str, float] = {}
-        candidate_data: dict[str, ScoredCandidate] = {}
-        bm25_ranks: dict[str, int] = {}
-        semantic_distances: dict[str, float] = {}
-
-        for rank, c in enumerate(bm25_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            candidate_data[c.risk_id] = c
-            bm25_ranks[c.risk_id] = rank
-
-        for rank, c in enumerate(semantic_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            if c.risk_id not in candidate_data:
-                candidate_data[c.risk_id] = c
-            semantic_distances[c.risk_id] = c.embedding_distance
+        rrf_scores, candidate_data, bm25_ranks = _rrf_fuse(
+            bm25_results, semantic_results, rrf_k=rrf_k,
+        )
+        semantic_distances = {c.risk_id: c.embedding_distance for c in semantic_results}
 
         sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)
         rrf_candidates = []
@@ -480,21 +507,10 @@ class RiskIndex:
         if not bm25_results and not colbert_results:
             return []
 
-        rrf_scores: dict[str, float] = {}
-        candidate_data: dict[str, ScoredCandidate] = {}
-        bm25_ranks: dict[str, int] = {}
-        colbert_scores: dict[str, float] = {}
-
-        for rank, c in enumerate(bm25_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            candidate_data[c.risk_id] = c
-            bm25_ranks[c.risk_id] = rank
-
-        for rank, c in enumerate(colbert_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            if c.risk_id not in candidate_data:
-                candidate_data[c.risk_id] = c
-            colbert_scores[c.risk_id] = c.cross_encoder_score
+        rrf_scores, candidate_data, bm25_ranks = _rrf_fuse(
+            bm25_results, colbert_results, rrf_k=rrf_k,
+        )
+        colbert_scores = {c.risk_id: c.cross_encoder_score for c in colbert_results}
 
         sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)[:top_k]
 

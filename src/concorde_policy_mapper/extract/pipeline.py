@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,9 +15,11 @@ from concorde_policy_mapper.extract.models import (
     ExtractionResult,
     FilteredCandidate,
     LLMCallRecord,
+    RetrievalConfig,
     RetrievalScores,
     RetrievalStats,
     RiskMatch,
+    ScoredCandidate,
 )
 from concorde_policy_mapper.extract.parse import chunk_documents, parse_document
 from concorde_policy_mapper.extract.retrieve import (
@@ -27,6 +30,16 @@ from concorde_policy_mapper.extract.retrieve import (
 from concorde_policy_mapper.llm import LLMConfig
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def timed(timing, key):
+    t0 = time.time()
+    try:
+        yield
+    finally:
+        timing[key] = (time.time() - t0) * 1000
+
 
 _AGENTIC_PHRASES = {
     "agentic",
@@ -75,6 +88,47 @@ def _ground_one(cr, chunks, client, model, call_collector):
         call_collector=call_collector,
     )
     return cr, grounded
+
+
+def determine_accepted_by(candidate, *, borderline_judged, use_cross_encoder, no_judge):
+    if candidate in borderline_judged:
+        return "auto_promoted" if no_judge else "llm_judge"
+    return "threshold" if use_cross_encoder else "rrf"
+
+
+def build_risk_match(
+    candidate,
+    *,
+    taxonomy,
+    accepted_by,
+    grounding_confidence,
+    evidence,
+    use_cross_encoder=True,
+    confidence_override=None,
+    scores_override=None,
+):
+    confidence = (
+        confidence_override
+        if confidence_override is not None
+        else (candidate.cross_encoder_score if use_cross_encoder else candidate.rrf_score)
+    )
+    scores = scores_override or RetrievalScores(
+        bm25_rank=candidate.bm25_rank,
+        embedding_distance=candidate.embedding_distance,
+        cross_encoder_score=candidate.cross_encoder_score,
+        rrf_score=candidate.rrf_score,
+    )
+    return RiskMatch(
+        risk_id=candidate.risk_id,
+        risk_name=candidate.risk_name,
+        risk_description=candidate.risk_description,
+        taxonomy=taxonomy,
+        confidence=confidence,
+        grounding_confidence=grounding_confidence,
+        accepted_by=accepted_by,
+        evidence=list(evidence),
+        scores=scores,
+    )
 
 
 def _run_expansion(
@@ -136,22 +190,19 @@ def _run_expansion(
             stats["expanded_grounded"] += len(grounded)
             for rid, (evidence, confidence) in grounded.items():
                 info = risk_lookup.get(rid, {})
+                stub = ScoredCandidate(
+                    risk_id=rid,
+                    risk_name=info.get("name", ""),
+                    risk_description=info.get("description", ""),
+                )
                 expansion_matches.append(
-                    RiskMatch(
-                        risk_id=rid,
-                        risk_name=info.get("name", ""),
-                        risk_description=info.get("description", ""),
+                    build_risk_match(
+                        stub,
                         taxonomy=index.get_taxonomy(rid),
-                        confidence=0.0,
-                        grounding_confidence=confidence,
                         accepted_by="expansion",
+                        grounding_confidence=confidence,
                         evidence=evidence,
-                        scores=RetrievalScores(
-                            bm25_rank=0,
-                            embedding_distance=0.0,
-                            cross_encoder_score=0.0,
-                            rrf_score=0.0,
-                        ),
+                        confidence_override=0.0,
                     )
                 )
 
@@ -166,42 +217,25 @@ def run_extraction(
     client,
     config: LLMConfig,
     risks: list,
+    retrieval: RetrievalConfig | None = None,
+    *,
     ocr: bool = False,
-    chunk_max_tokens: int = 512,
-    top_n_accept: int = 10,
-    top_n_judge: int = 10,
-    min_score_floor: float = 0.70,
-    bi_encoder_model: str = "all-mpnet-base-v2",
-    query_instruction: str = "",
-    cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2",
-    bm25_rescue_rank: int = 0,
-    use_cross_encoder: bool = True,
-    rrf_min_score: float = 0.01,
-    colbert_model: str | None = None,
-    threshold_high: float | None = None,
-    threshold_low: float | None = None,
-    no_judge: bool = False,
-    no_grounding: bool = False,
-    judge_prompt: str = "judge_risk",
-    judge_context_tokens: int = 0,
-    expand_siblings: bool = False,
 ) -> ExtractionResult:
+    retrieval = retrieval or RetrievalConfig()
     timing: dict[str, float] = {}
     max_workers = config.max_concurrent
 
-    t0 = time.time()
-    parsed = [parse_document(doc, ocr=ocr) for doc in documents]
-    parsed = [p for p in parsed if p.content.strip()]
-    if not parsed:
-        logger.warning("All documents are empty after parsing")
-        return _empty_result(documents)
-    timing["parse_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "parse_ms"):
+        parsed = [parse_document(doc, ocr=ocr) for doc in documents]
+        parsed = [p for p in parsed if p.content.strip()]
+        if not parsed:
+            logger.warning("All documents are empty after parsing")
+            return _empty_result(documents)
 
-    t0 = time.time()
-    chunks = chunk_documents(parsed, max_tokens=chunk_max_tokens)
-    if not chunks:
-        return _empty_result(documents)
-    timing["chunk_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "chunk_ms"):
+        chunks = chunk_documents(parsed, max_tokens=retrieval.chunk_max_tokens)
+        if not chunks:
+            return _empty_result(documents)
 
     if not _document_discusses_agents([p.content for p in parsed]):
         original_count = len(risks)
@@ -213,37 +247,35 @@ def run_extraction(
                 filtered,
             )
 
-    t0 = time.time()
-    if not risks:
-        logger.error("No risks loaded from Nexus")
-        return _empty_result(documents)
-    index = RiskIndex(
-        risks,
-        bi_encoder_model=bi_encoder_model,
-        cross_encoder_model=cross_encoder_model if use_cross_encoder and not colbert_model else None,
-        colbert_model=colbert_model,
-        query_instruction=query_instruction,
-    )
-    timing["index_ms"] = (time.time() - t0) * 1000
-
-    t0 = time.time()
-    chunk_results = []
-    for i in range(len(chunks)):
-        cr = retrieve_chunk(
-            chunks,
-            i,
-            index,
-            top_n_accept=top_n_accept,
-            top_n_judge=top_n_judge,
-            min_score_floor=min_score_floor,
-            bm25_rescue_rank=bm25_rescue_rank,
-            use_cross_encoder=use_cross_encoder,
-            rrf_min_score=rrf_min_score if not use_cross_encoder else 0.0,
-            threshold_high=threshold_high,
-            threshold_low=threshold_low,
+    with timed(timing, "index_ms"):
+        if not risks:
+            logger.error("No risks loaded from Nexus")
+            return _empty_result(documents)
+        index = RiskIndex(
+            risks,
+            bi_encoder_model=retrieval.bi_encoder_model,
+            cross_encoder_model=retrieval.effective_cross_encoder_model,
+            colbert_model=retrieval.colbert_model,
+            query_instruction=retrieval.query_instruction,
         )
-        chunk_results.append(cr)
-    timing["retrieve_ms"] = (time.time() - t0) * 1000
+
+    with timed(timing, "retrieve_ms"):
+        chunk_results = []
+        for i in range(len(chunks)):
+            cr = retrieve_chunk(
+                chunks,
+                i,
+                index,
+                top_n_accept=retrieval.top_n_accept,
+                top_n_judge=retrieval.top_n_judge,
+                min_score_floor=retrieval.min_score_floor,
+                bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                use_cross_encoder=retrieval.use_cross_encoder,
+                rrf_min_score=retrieval.effective_rrf_min_score,
+                threshold_high=retrieval.threshold_high,
+                threshold_low=retrieval.threshold_low,
+            )
+            chunk_results.append(cr)
 
     call_collector: list[LLMCallRecord] = []
 
@@ -263,129 +295,103 @@ def run_extraction(
         for cr in chunk_results
     ]
 
-    t0 = time.time()
-    if no_judge:
-        for cr in chunk_results:
-            if cr.borderline:
-                cr.borderline_judged = list(cr.borderline)
-                cr.accepted.extend(cr.borderline)
-    elif use_cross_encoder:
-        judge_tasks = [
-            (i, cr) for i, cr in enumerate(chunk_results) if cr.borderline
-        ]
-        if judge_tasks:
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                futures = {
-                    pool.submit(_judge_one, i, cr, chunks, client, config.model, call_collector, judge_prompt, judge_context_tokens): i
-                    for i, cr in judge_tasks
-                }
-                for future in as_completed(futures):
-                    idx, judged = future.result()
-                    chunk_results[idx].borderline_judged = judged
-                    chunk_results[idx].accepted.extend(judged)
-    timing["judge_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "judge_ms"):
+        if retrieval.no_judge:
+            for cr in chunk_results:
+                if cr.borderline:
+                    cr.borderline_judged = list(cr.borderline)
+                    cr.accepted.extend(cr.borderline)
+        elif retrieval.use_cross_encoder:
+            judge_tasks = [
+                (i, cr) for i, cr in enumerate(chunk_results) if cr.borderline
+            ]
+            if judge_tasks:
+                with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                    futures = {
+                        pool.submit(_judge_one, i, cr, chunks, client, config.model, call_collector, retrieval.judge_prompt, retrieval.judge_context_tokens): i
+                        for i, cr in judge_tasks
+                    }
+                    for future in as_completed(futures):
+                        idx, judged = future.result()
+                        chunk_results[idx].borderline_judged = judged
+                        chunk_results[idx].accepted.extend(judged)
 
-    t0 = time.time()
     all_matches: list[RiskMatch] = []
     all_filtered: list[FilteredCandidate] = []
 
-    if no_grounding:
+    if retrieval.no_grounding:
         for cr in chunk_results:
             for candidate in cr.accepted:
-                if candidate in cr.borderline_judged:
-                    accepted_by = "auto_promoted" if no_judge else "llm_judge"
-                elif use_cross_encoder:
-                    accepted_by = "threshold"
-                else:
-                    accepted_by = "rrf"
-                conf_score = candidate.cross_encoder_score if use_cross_encoder else candidate.rrf_score
+                accepted_by = determine_accepted_by(
+                    candidate, borderline_judged=cr.borderline_judged,
+                    use_cross_encoder=retrieval.use_cross_encoder, no_judge=retrieval.no_judge,
+                )
                 all_matches.append(
-                    RiskMatch(
-                        risk_id=candidate.risk_id,
-                        risk_name=candidate.risk_name,
-                        risk_description=candidate.risk_description,
+                    build_risk_match(
+                        candidate,
                         taxonomy=index.get_taxonomy(candidate.risk_id),
-                        confidence=conf_score,
-                        grounding_confidence="ungrounded",
                         accepted_by=accepted_by,
+                        grounding_confidence="ungrounded",
                         evidence=[],
-                        scores=RetrievalScores(
-                            bm25_rank=candidate.bm25_rank,
-                            embedding_distance=candidate.embedding_distance,
-                            cross_encoder_score=candidate.cross_encoder_score,
-                            rrf_score=candidate.rrf_score,
-                        ),
+                        use_cross_encoder=retrieval.use_cross_encoder,
                     )
                 )
         timing["grounding_ms"] = 0.0
         grounding_filtered = 0
     else:
-        total_candidates_for_grounding = 0
-        total_grounded = 0
+        with timed(timing, "grounding_ms"):
+            total_candidates_for_grounding = 0
+            total_grounded = 0
 
-        ground_tasks = [cr for cr in chunk_results if cr.accepted]
-        for cr in ground_tasks:
-            total_candidates_for_grounding += len(cr.accepted)
+            ground_tasks = [cr for cr in chunk_results if cr.accepted]
+            for cr in ground_tasks:
+                total_candidates_for_grounding += len(cr.accepted)
 
-        if ground_tasks:
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                futures = {
-                    pool.submit(_ground_one, cr, chunks, client, config.model, call_collector): cr
-                    for cr in ground_tasks
-                }
-                for future in as_completed(futures):
-                    cr, grounded = future.result()
-                    total_grounded += len(grounded)
-                    grounded_ids = set(grounded.keys())
-                    for candidate in cr.accepted:
-                        if use_cross_encoder:
-                            accepted_by = (
-                                "llm_judge"
-                                if candidate in cr.borderline_judged
-                                else "threshold"
+            if ground_tasks:
+                with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                    futures = {
+                        pool.submit(_ground_one, cr, chunks, client, config.model, call_collector): cr
+                        for cr in ground_tasks
+                    }
+                    for future in as_completed(futures):
+                        cr, grounded = future.result()
+                        total_grounded += len(grounded)
+                        grounded_ids = set(grounded.keys())
+                        for candidate in cr.accepted:
+                            accepted_by = determine_accepted_by(
+                                candidate, borderline_judged=cr.borderline_judged,
+                                use_cross_encoder=retrieval.use_cross_encoder, no_judge=retrieval.no_judge,
                             )
-                        else:
-                            accepted_by = "rrf"
-                        rid = candidate.risk_id
-                        if rid in grounded_ids:
-                            evidence, confidence = grounded[rid]
-                            conf_score = candidate.cross_encoder_score if use_cross_encoder else candidate.rrf_score
-                            all_matches.append(
-                                RiskMatch(
-                                    risk_id=rid,
-                                    risk_name=candidate.risk_name,
-                                    risk_description=candidate.risk_description,
-                                    taxonomy=index.get_taxonomy(rid),
-                                    confidence=conf_score,
-                                    grounding_confidence=confidence,
-                                    accepted_by=accepted_by,
-                                    evidence=evidence,
-                                    scores=RetrievalScores(
-                                        bm25_rank=candidate.bm25_rank,
-                                        embedding_distance=candidate.embedding_distance,
+                            rid = candidate.risk_id
+                            if rid in grounded_ids:
+                                evidence, confidence = grounded[rid]
+                                all_matches.append(
+                                    build_risk_match(
+                                        candidate,
+                                        taxonomy=index.get_taxonomy(rid),
+                                        accepted_by=accepted_by,
+                                        grounding_confidence=confidence,
+                                        evidence=evidence,
+                                        use_cross_encoder=retrieval.use_cross_encoder,
+                                    )
+                                )
+                            else:
+                                all_filtered.append(
+                                    FilteredCandidate(
+                                        risk_id=rid,
+                                        risk_name=candidate.risk_name,
+                                        taxonomy=index.get_taxonomy(rid),
                                         cross_encoder_score=candidate.cross_encoder_score,
                                         rrf_score=candidate.rrf_score,
-                                    ),
+                                        bm25_rank=candidate.bm25_rank,
+                                        accepted_by=accepted_by,
+                                        chunk_index=cr.chunk_index,
+                                    )
                                 )
-                            )
-                        else:
-                            all_filtered.append(
-                                FilteredCandidate(
-                                    risk_id=rid,
-                                    risk_name=candidate.risk_name,
-                                    taxonomy=index.get_taxonomy(rid),
-                                    cross_encoder_score=candidate.cross_encoder_score,
-                                    rrf_score=candidate.rrf_score,
-                                    bm25_rank=candidate.bm25_rank,
-                                    accepted_by=accepted_by,
-                                    chunk_index=cr.chunk_index,
-                                )
-                            )
-        timing["grounding_ms"] = (time.time() - t0) * 1000
         grounding_filtered = total_candidates_for_grounding - total_grounded
 
     chunk_risk_ids: dict[int, list[str]] = {}
-    if no_grounding:
+    if retrieval.no_grounding:
         for cr in chunk_results:
             for candidate in cr.accepted:
                 chunk_risk_ids.setdefault(cr.chunk_index, []).append(candidate.risk_id)
@@ -396,18 +402,16 @@ def run_extraction(
     for cs in chunk_summaries:
         cs.accepted_risk_ids = sorted(set(chunk_risk_ids.get(cs.index, [])))
 
-    t0 = time.time()
-    merged = merge_matches(all_matches)
-    timing["merge_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "merge_ms"):
+        merged = merge_matches(all_matches)
 
     expansion_stats = {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}
-    if expand_siblings and not no_grounding and client is not None:
-        t0 = time.time()
-        merged, expansion_stats = _run_expansion(
-            risks, merged, chunk_results, chunks, documents,
-            index, client, config, max_workers, call_collector,
-        )
-        timing["expansion_ms"] = (time.time() - t0) * 1000
+    if retrieval.expand_siblings and not retrieval.no_grounding and client is not None:
+        with timed(timing, "expansion_ms"):
+            merged, expansion_stats = _run_expansion(
+                risks, merged, chunk_results, chunks, documents,
+                index, client, config, max_workers, call_collector,
+            )
 
     total_stats = RetrievalStats(
         total_chunks=len(chunks),
@@ -428,23 +432,7 @@ def run_extraction(
         retrieval_stats=total_stats,
         metadata={
             "model": config.model,
-            "bi_encoder_model": bi_encoder_model,
-            "cross_encoder_model": cross_encoder_model if use_cross_encoder else None,
-            "use_cross_encoder": use_cross_encoder,
-            "colbert_model": colbert_model,
-            "chunk_max_tokens": chunk_max_tokens,
-            "top_n_accept": top_n_accept,
-            "top_n_judge": top_n_judge,
-            "min_score_floor": min_score_floor,
-            "threshold_high": threshold_high,
-            "threshold_low": threshold_low,
-            "bm25_rescue_rank": bm25_rescue_rank,
-            "rrf_min_score": rrf_min_score,
-            "judge_prompt": judge_prompt,
-            "no_judge": no_judge,
-            "no_grounding": no_grounding,
-            "judge_context_tokens": judge_context_tokens,
-            "expand_siblings": expand_siblings,
+            **retrieval.to_metadata(),
             "expansion_stats": expansion_stats,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         },

@@ -4,6 +4,8 @@ from concorde_policy_mapper.extract.models import LLMCallRecord, ScoredCandidate
 from concorde_policy_mapper.extract.parse import Chunk
 from concorde_policy_mapper.extract.retrieve import (
     build_padded_text,
+    classify_by_rank,
+    classify_by_threshold,
     classify_candidates,
     judge_borderline,
 )
@@ -265,3 +267,59 @@ def test_retrieve_chunk_no_cross_encoder():
     mock_index.hybrid_search.assert_called_once()
     call_kwargs = mock_index.hybrid_search.call_args
     assert call_kwargs[1]["rrf_min_score"] == 0.01
+
+
+# --- classify_by_rank / classify_by_threshold direct tests ---
+
+def test_classify_by_rank_accepts_top_n():
+    candidates = [
+        ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a", cross_encoder_score=0.90),
+        ScoredCandidate(risk_id="R-002", risk_name="B", risk_description="b", cross_encoder_score=0.70),
+        ScoredCandidate(risk_id="R-003", risk_name="C", risk_description="c", cross_encoder_score=0.50),
+    ]
+    accepted, borderline, discarded = classify_by_rank(
+        candidates, top_n_accept=1, top_n_judge=1,
+    )
+    assert [c.risk_id for c in accepted] == ["R-001"]
+    assert [c.risk_id for c in borderline] == ["R-002"]
+    assert [c.risk_id for c in discarded] == ["R-003"]
+
+
+def test_classify_by_rank_floor_discards():
+    candidates = [
+        ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a", cross_encoder_score=0.80),
+        ScoredCandidate(risk_id="R-002", risk_name="B", risk_description="b", cross_encoder_score=0.30),
+    ]
+    accepted, borderline, discarded = classify_by_rank(
+        candidates, top_n_accept=5, top_n_judge=5, min_score_floor=0.50,
+    )
+    assert [c.risk_id for c in accepted] == ["R-001"]
+    assert len(borderline) == 0
+    assert [c.risk_id for c in discarded] == ["R-002"]
+
+
+def test_classify_by_threshold_accepts_above_high():
+    candidates = [
+        ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a", cross_encoder_score=0.90),
+        ScoredCandidate(risk_id="R-002", risk_name="B", risk_description="b", cross_encoder_score=0.50),
+        ScoredCandidate(risk_id="R-003", risk_name="C", risk_description="c", cross_encoder_score=0.05),
+    ]
+    accepted, borderline, discarded = classify_by_threshold(
+        candidates, threshold_high=0.80, threshold_low=0.20,
+    )
+    assert [c.risk_id for c in accepted] == ["R-001"]
+    assert [c.risk_id for c in borderline] == ["R-002"]
+    assert [c.risk_id for c in discarded] == ["R-003"]
+
+
+def test_classify_by_threshold_bm25_rescue():
+    candidates = [
+        ScoredCandidate(risk_id="R-001", risk_name="A", risk_description="a",
+                        cross_encoder_score=0.05, bm25_rank=2),
+    ]
+    accepted, borderline, discarded = classify_by_threshold(
+        candidates, threshold_high=0.80, threshold_low=0.20, bm25_rescue_rank=5,
+    )
+    assert len(accepted) == 0
+    assert [c.risk_id for c in borderline] == ["R-001"]
+    assert len(discarded) == 0

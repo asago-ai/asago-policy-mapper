@@ -3,8 +3,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from concorde_policy_mapper.extract.models import ExtractionResult
-from concorde_policy_mapper.extract.pipeline import run_extraction
+from concorde_policy_mapper.extract.models import ExtractionResult, RetrievalConfig, RetrievalScores, ScoredCandidate
+from concorde_policy_mapper.extract.pipeline import build_risk_match, determine_accepted_by, run_extraction
 
 
 def _make_risk(id, name, description, concern=""):
@@ -189,9 +189,8 @@ def test_run_extraction_no_judge_no_grounding(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(no_judge=True, no_grounding=True),
         ocr=False,
-        no_judge=True,
-        no_grounding=True,
     )
 
     assert isinstance(result, ExtractionResult)
@@ -222,8 +221,8 @@ def test_run_extraction_no_grounding_with_judge(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(no_grounding=True),
         ocr=False,
-        no_grounding=True,
     )
 
     assert isinstance(result, ExtractionResult)
@@ -251,11 +250,11 @@ def test_run_extraction_no_judge_no_grounding_no_cross_encoder(mock_config, tmp_
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(
+            no_judge=True, no_grounding=True,
+            use_cross_encoder=False, rrf_min_score=0.001,
+        ),
         ocr=False,
-        no_judge=True,
-        no_grounding=True,
-        use_cross_encoder=False,
-        rrf_min_score=0.001,
     )
 
     assert isinstance(result, ExtractionResult)
@@ -281,9 +280,8 @@ def test_run_extraction_no_cross_encoder(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(use_cross_encoder=False, rrf_min_score=0.01),
         ocr=False,
-        use_cross_encoder=False,
-        rrf_min_score=0.01,
     )
 
     assert isinstance(result, ExtractionResult)
@@ -292,3 +290,118 @@ def test_run_extraction_no_cross_encoder(mock_config, tmp_path):
     assert result.metadata["cross_encoder_model"] is None
     judge_calls = [c for c in result.llm_calls if c.stage == "judge"]
     assert len(judge_calls) == 0
+
+
+# --- determine_accepted_by unit tests ---
+
+def _candidate(risk_id="R-001"):
+    return ScoredCandidate(
+        risk_id=risk_id, risk_name="Test", risk_description="desc",
+        cross_encoder_score=0.8, rrf_score=0.5,
+    )
+
+
+def test_determine_accepted_by_llm_judge():
+    c = _candidate()
+    result = determine_accepted_by(
+        c, borderline_judged=[c], use_cross_encoder=True, no_judge=False,
+    )
+    assert result == "llm_judge"
+
+
+def test_determine_accepted_by_auto_promoted():
+    c = _candidate()
+    result = determine_accepted_by(
+        c, borderline_judged=[c], use_cross_encoder=True, no_judge=True,
+    )
+    assert result == "auto_promoted"
+
+
+def test_determine_accepted_by_threshold():
+    c = _candidate()
+    result = determine_accepted_by(
+        c, borderline_judged=[], use_cross_encoder=True, no_judge=False,
+    )
+    assert result == "threshold"
+
+
+def test_determine_accepted_by_rrf():
+    c = _candidate()
+    result = determine_accepted_by(
+        c, borderline_judged=[], use_cross_encoder=False, no_judge=False,
+    )
+    assert result == "rrf"
+
+
+def test_run_extraction_no_judge_with_grounding_accepted_by(mock_config, tmp_path):
+    """Regression: no_judge=True with grounding should tag as 'auto_promoted', not 'llm_judge'."""
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "AI policy document about data governance and risk management. "
+        "We must ensure bias detection and mitigation strategies are in place. "
+        "Training data integrity is critical for model reliability."
+    )
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = []
+
+    result = run_extraction(
+        documents=[doc],
+        client=mock_client,
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(no_judge=True, no_grounding=False),
+        ocr=False,
+    )
+
+    for risk in result.risks:
+        assert risk.accepted_by in ("auto_promoted", "rrf", "threshold"), (
+            f"Expected auto_promoted/rrf/threshold but got '{risk.accepted_by}' for {risk.risk_id}"
+        )
+
+
+# --- build_risk_match unit tests ---
+
+def test_build_risk_match_cross_encoder():
+    c = _candidate()
+    m = build_risk_match(
+        c, taxonomy="test-tax", accepted_by="threshold",
+        grounding_confidence="high", evidence=[], use_cross_encoder=True,
+    )
+    assert m.confidence == c.cross_encoder_score
+    assert m.scores.rrf_score == c.rrf_score
+    assert m.accepted_by == "threshold"
+    assert m.taxonomy == "test-tax"
+
+
+def test_build_risk_match_rrf_mode():
+    c = _candidate()
+    m = build_risk_match(
+        c, taxonomy="test-tax", accepted_by="rrf",
+        grounding_confidence="ungrounded", evidence=[], use_cross_encoder=False,
+    )
+    assert m.confidence == c.rrf_score
+
+
+def test_build_risk_match_confidence_override():
+    c = _candidate()
+    m = build_risk_match(
+        c, taxonomy="test-tax", accepted_by="expansion",
+        grounding_confidence="high", evidence=[], confidence_override=0.0,
+    )
+    assert m.confidence == 0.0
+
+
+def test_build_risk_match_scores_override():
+    c = _candidate()
+    zero_scores = RetrievalScores(
+        bm25_rank=0, embedding_distance=0.0,
+        cross_encoder_score=0.0, rrf_score=0.0,
+    )
+    m = build_risk_match(
+        c, taxonomy="test-tax", accepted_by="expansion",
+        grounding_confidence="high", evidence=[],
+        confidence_override=0.0, scores_override=zero_scores,
+    )
+    assert m.scores.bm25_rank == 0
+    assert m.scores.cross_encoder_score == 0.0
