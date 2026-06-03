@@ -136,6 +136,37 @@ def test_enrich_no_crossmap_for_unmapped_risk(sample_index_path):
     assert risks[0].mitigations == []
 
 
+def test_enrich_with_threats(sample_index_path):
+    index = load_mitigation_index(sample_index_path)
+    threats = {
+        "atlas-hallucination": {
+            "threat": "Model generates fabricated content",
+            "threat_source": "Queries outside training distribution",
+            "vulnerability": "Model produces plausible output without expressing uncertainty",
+        }
+    }
+    risks = [_make_risk("atlas-hallucination")]
+    enrich_with_mitigations(risks, index, risk_threats=threats)
+    assert risks[0].threat == "Model generates fabricated content"
+    assert risks[0].threat_source == "Queries outside training distribution"
+    assert risks[0].vulnerability == "Model produces plausible output without expressing uncertainty"
+
+
+def test_enrich_threats_via_crossmap(sample_index_path):
+    index = load_mitigation_index(sample_index_path)
+    threats = {
+        "atlas-hallucination": {
+            "threat": "Model generates fabricated content",
+            "threat_source": "Queries outside training distribution",
+            "vulnerability": "Plausible output without uncertainty",
+        }
+    }
+    crossmap = {"credo-risk-020": {"atlas-hallucination"}}
+    risks = [_make_risk("credo-risk-020")]
+    enrich_with_mitigations(risks, index, risk_crossmap=crossmap, risk_threats=threats)
+    assert risks[0].threat == "Model generates fabricated content"
+
+
 def test_real_index_parses():
     """Smoke test: if the generated index file exists, verify it loads."""
     real_path = Path(__file__).resolve().parents[1] / "data" / "atlas_risk_to_actions.yaml"

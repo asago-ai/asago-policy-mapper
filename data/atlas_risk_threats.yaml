@@ -1,0 +1,647 @@
+# Atlas risk threat/vulnerability decomposition (DPV Phase 2)
+# Maps each Atlas risk to its threat, threat source, and vulnerability.
+# 99 risks decomposed. Reviewed 2026-06-03.
+atlas-accountability-agentic:
+  threat: Responsibility for AI agent actions cannot be assigned due to system complexity
+  threat_source: Multi-component agent systems; dynamic tool use; actions taken autonomously
+    without human approval
+  vulnerability: No accountability framework for autonomous agent actions; decision
+    chain not documented or auditable
+atlas-ai-agent-compliance-agentic:
+  threat: AI agent behavior cannot be verified as compliant with applicable legal
+    requirements
+  threat_source: Agent taking novel action paths; interacting with external systems
+    in ways not anticipated during compliance assessment
+  vulnerability: Agent behavior is emergent and non-deterministic; compliance assessment
+    frameworks do not cover dynamic agent behavior
+atlas-attribute-inference-attack:
+  threat: Queries designed to infer sensitive attributes of individuals whose data
+    was used in training
+  threat_source: Adversary with partial knowledge of training data subjects
+  vulnerability: Model has learned correlations between observable and sensitive attributes
+    from training data
+atlas-bypassing-learning:
+  threat: Students use AI to bypass the learning process rather than engaging with
+    educational material
+  threat_source: Easy access to capable generative models; cultural pressure for quick
+    results
+  vulnerability: Educational systems do not have mechanisms to distinguish AI-assisted
+    from independent learning; no AI-aware assessment design
+atlas-confidential-data-in-prompt:
+  threat: Confidential business information included in prompts sent to the model
+  threat_source: User or automated workflow sending proprietary data to model API
+    without sanitization
+  vulnerability: No input filtering or data classification gate before prompt reaches
+    the model; prompt data may be logged or used for training
+atlas-confidential-information-in-data:
+  threat: Confidential information present in training or fine-tuning datasets
+  threat_source: Inadequate data screening during training data preparation; data
+    sources containing embedded secrets
+  vulnerability: Training pipeline ingests data without scanning for confidential
+    content; model memorizes and may reproduce it
+atlas-context-overload-attack:
+  threat: Excessive tokens or many-shot examples designed to overwhelm the model's
+    context window and alter behavior
+  threat_source: Malicious user
+  vulnerability: Model behavior degrades or becomes manipulable when context window
+    is saturated with adversarial content
+atlas-copyright-infringement:
+  threat: Model generates content that is similar or identical to existing copyrighted
+    works
+  threat_source: Model trained on copyrighted material; user requesting reproduction
+    of protected works
+  vulnerability: Model has memorized copyrighted content from training data and can
+    reproduce it when prompted
+atlas-dangerous-use:
+  threat: Model used with sole intention of harming people — generating weapons information,
+    attack planning, or enabling violence
+  threat_source: Malicious user seeking to weaponize AI capabilities
+  vulnerability: Model trained on publicly available information that includes harmful
+    knowledge; insufficient use-case restrictions
+atlas-data-acquisition:
+  threat: Data collected in violation of legal restrictions or without proper authorization
+  threat_source: Web scraping without consent; use of restricted datasets; jurisdictional
+    data collection prohibitions
+  vulnerability: Data collection processes do not verify legal compliance; no audit
+    trail for data provenance and acquisition rights
+atlas-data-bias:
+  threat: Training data contains historical or societal biases that the model learns
+    and reproduces
+  threat_source: Biased data collection; historical discrimination encoded in datasets;
+    synthetic data amplifying skew
+  vulnerability: Model learns and amplifies statistical patterns in training data
+    without fairness constraints or bias correction
+atlas-data-contamination:
+  threat: Incorrect, misaligned, or test-set data used for training, compromising
+    model validity
+  threat_source: Poor data pipeline hygiene; test/train leakage; unverified data sources
+  vulnerability: Training pipeline does not validate data fitness for purpose; no
+    separation enforcement between train and evaluation data
+atlas-data-curation:
+  threat: Improper collection, generation, or preparation of training data introduces
+    errors or misinformation
+  threat_source: Inadequate data preparation processes; label errors; conflicting
+    information in training corpus
+  vulnerability: No systematic data quality validation; curation process lacks domain
+    expert review and error detection
+atlas-data-poisoning:
+  threat: Injection of corrupted, false, or adversarially crafted samples into training
+    or fine-tuning data
+  threat_source: Adversary with access to training pipeline; compromised data source;
+    malicious insider
+  vulnerability: Model learns from data without sufficient integrity verification;
+    training pipeline accepts untrusted data sources
+atlas-data-privacy-rights:
+  threat: AI system operations conflict with data subject rights (opt-out, access,
+    deletion, portability)
+  threat_source: Regulatory requirements (GDPR, CCPA); data subject requests that
+    are difficult to honor in trained models
+  vulnerability: Once data is incorporated into model weights, individual data subject
+    rights (deletion, correction) are difficult or impossible to fulfill
+atlas-data-provenance:
+  threat: Training data origins, ownership, and transformations cannot be verified
+    or traced
+  threat_source: Opaque data supply chains; data aggregation obscuring origins; synthetic
+    data generation breaking lineage
+  vulnerability: No provenance tracking infrastructure for training data; data pipelines
+    do not preserve origin metadata
+atlas-data-transfer:
+  threat: Data transferred across jurisdictions in violation of data sovereignty or
+    transfer restrictions
+  threat_source: Cloud infrastructure spanning jurisdictions; international model
+    training workflows
+  vulnerability: Data processing locations not tracked; no enforcement of jurisdictional
+    transfer restrictions in pipeline
+atlas-data-transparency:
+  threat: Insufficient documentation of how training data was collected, curated,
+    and used
+  threat_source: Organizational documentation gaps; rapid iteration without documentation
+    discipline
+  vulnerability: No enforced documentation requirements for data pipeline; data cards
+    or datasheets not maintained
+atlas-data-usage:
+  threat: Data used for AI purposes in violation of applicable restrictions
+  threat_source: Regulatory constraints on data use for specific AI applications;
+    evolving legal landscape
+  vulnerability: No data usage policy enforcement mechanism; data governance does
+    not track permitted uses per dataset
+atlas-data-usage-rights:
+  threat: Data used in violation of terms of service, licenses, or intellectual property
+    restrictions
+  threat_source: Complex licensing landscape; open-source license incompatibilities;
+    unclear data rights
+  vulnerability: No automated license compliance checking in data pipeline; terms
+    of service not systematically tracked
+atlas-decision-bias:
+  threat: Model decisions unfairly advantage one group over another
+  threat_source: Biased training data combined with model being used for consequential
+    decision-making
+  vulnerability: Model applied to allocation or classification decisions without calibration
+    for demographic parity or equalized outcomes
+atlas-direct-instructions-attack:
+  threat: Explicit instructions to the model to perform restricted actions or generate
+    prohibited content
+  threat_source: Malicious user
+  vulnerability: Model's instruction-following capability can be directed toward harmful
+    tasks without sufficient refusal mechanisms
+atlas-discriminatory-actions-agentic:
+  threat: AI agent takes actions that unfairly advantage one group over another, propagating
+    bias to external systems
+  threat_source: Biased model decisions applied through agentic actions to real-world
+    systems (databases, APIs, processes)
+  vulnerability: Agent acts on biased model outputs without fairness checks; agent
+    actions can modify external state, amplifying bias beyond the model
+atlas-encoded-interactions-attack:
+  threat: Prompts using encoding, obfuscation, or typographical transformations to
+    bypass input filters and safety checks
+  threat_source: Malicious user; automated adversarial prompt generators
+  vulnerability: Input filters and safety mechanisms operate on surface-level text
+    patterns that can be evaded through encoding
+atlas-evasion-attack:
+  threat: Subtly perturbed input designed to cause incorrect model output while appearing
+    normal to humans
+  threat_source: Adversary with knowledge of model architecture or access to model
+    API
+  vulnerability: Model decision boundaries are sensitive to small perturbations that
+    don't affect human perception
+atlas-exclusion:
+  threat: Synthetic data generation or model development overlooks marginalized populations
+  threat_source: Incomplete data collection methodology; lack of stakeholder consultation;
+    homogeneous development teams
+  vulnerability: Training data and evaluation processes do not represent the full
+    population the model will serve
+atlas-exploit-trust-mismatch-agentic:
+  threat: Injection attacks targeting trust boundaries between agent components, tools,
+    or permission levels
+  threat_source: Adversary exploiting gaps between expected and actual trust boundaries
+    in multi-component systems
+  vulnerability: Trust boundaries between agent components are not enforced programmatically;
+    agent inherits permissions beyond what the interaction context warrants
+atlas-exposing-personal-information:
+  threat: Model reveals personally identifiable or sensitive personal information
+    in its output
+  threat_source: PII present in training data, fine-tuning data, or prompt context;
+    adversarial extraction queries
+  vulnerability: Model has memorized PII from training data; no output filtering for
+    personal information patterns
+atlas-external-resources-attack-agentic:
+  threat: Exploitation of vulnerabilities in external tools, databases, or services
+    that the AI agent depends on
+  threat_source: Adversary who compromises or controls external resources in the agent's
+    tool chain
+  vulnerability: Agent trusts outputs from external resources without verification;
+    compromised tools can manipulate agent behavior
+atlas-extraction-attack:
+  threat: Systematic queries designed to reconstruct model weights, training data,
+    or decision boundaries
+  threat_source: Adversary with API access; competitor performing model theft
+  vulnerability: Model outputs leak information about internal parameters and training
+    data through response patterns
+atlas-function-calling-hallucination-agentic:
+  threat: AI agent generates incorrect function calls — wrong tool, wrong parameters,
+    or unnecessary actions
+  threat_source: Ambiguous user intent; model uncertainty about available tools; hallucinated
+    tool capabilities
+  vulnerability: Agent generates function calls without sufficient validation against
+    tool schemas; no confirmation step before execution
+atlas-generated-content-ownership:
+  threat: Legal uncertainty about who owns AI-generated content and associated intellectual
+    property rights
+  threat_source: Unsettled legal frameworks; conflicting ownership claims between
+    model operators, users, and training data contributors
+  vulnerability: No established legal framework for AI-generated content ownership;
+    model outputs have unclear provenance chain
+atlas-hallucination:
+  threat: Model generates factually inaccurate, ungrounded, or fabricated content
+    that appears plausible
+  threat_source: Queries outside training distribution; ambiguous prompts; absence
+    of grounding data
+  vulnerability: Model produces plausible-sounding output even when it lacks sufficient
+    information, without expressing uncertainty
+atlas-harmful-code-generation:
+  threat: Model generates code containing security vulnerabilities, malware, or exploit
+    code
+  threat_source: Malicious user requesting exploit code; model's training on vulnerable
+    code patterns
+  vulnerability: Model generates code without security validation; training data includes
+    vulnerable or malicious code patterns
+atlas-harmful-output:
+  threat: Model generates language that could lead to physical harm, including overtly
+    violent, covertly dangerous, or indirectly unsafe content
+  threat_source: Malicious user; insufficiently constrained prompt; model's learned
+    patterns from harmful training data
+  vulnerability: Model has learned harmful patterns from training data and lacks sufficient
+    output filtering or refusal mechanisms
+atlas-human-exploitation:
+  threat: Exploitative labor practices for data labeling, content moderation, and
+    model training workers
+  threat_source: Organizational cost pressures; lack of labor standards for AI supply
+    chain
+  vulnerability: AI development depends on human labor for data tasks with inadequate
+    worker protections and compensation standards
+atlas-impact-environment-agentic:
+  threat: Agent task complexity and redundant actions increase computational waste
+    and environmental impact
+  threat_source: Inefficient agent execution; retry loops; redundant tool calls consuming
+    unnecessary compute
+  vulnerability: No compute budget or efficiency constraints on agent execution; environmental
+    cost not factored into agent design
+atlas-impact-human-agency-agentic:
+  threat: Autonomous AI agents reduce individuals' engagement in critical thinking
+    and independent action
+  threat_source: Agent performing tasks that were previously human-controlled; progressive
+    delegation eroding human capability
+  vulnerability: No human-in-the-loop requirements for consequential agent actions;
+    agent autonomy not bounded by human oversight design
+atlas-impact-human-dignity-agentic:
+  threat: Human workers perceive AI agents as superior, experiencing decline in self-worth
+    and wellbeing
+  threat_source: Organizational deployment of agents as human replacements without
+    transition support
+  vulnerability: No organizational framework for managing human-agent collaboration
+    that preserves human dignity and purpose
+atlas-impact-jobs-agentic:
+  threat: AI agent adoption automates complex roles leading to widespread job displacement
+  threat_source: Business incentive to replace human workers with more capable agents
+    as trust in agents increases
+  vulnerability: No policy framework for managing agent-driven job displacement; economic
+    incentives favor agent deployment over human retention
+atlas-impact-on-affected-communities:
+  threat: Model outcomes harm communities whose perspectives were not included in
+    design
+  threat_source: Lack of stakeholder engagement; model designed without input from
+    affected populations
+  vulnerability: No structured process for community engagement in model design; impact
+    on affected groups not assessed pre-deployment
+atlas-impact-on-cultural-diversity:
+  threat: AI systems overrepresent dominant cultures, homogenizing thought and expression
+  threat_source: Training data dominated by majority languages and cultural perspectives
+  vulnerability: No cultural diversity assessment in training data or model outputs;
+    underrepresented groups' perspectives not systematically included
+atlas-impact-on-human-agency:
+  threat: AI affects individuals' ability to make independent choices and think critically
+  threat_source: Persuasive AI outputs; deepfakes undermining trust; AI simplifying
+    complex decisions beyond user understanding
+  vulnerability: No safeguards for preserving human autonomy in AI-assisted decision-making;
+    system design does not require human agency
+atlas-impact-on-jobs:
+  threat: AI automation displaces human workers who are not reskilled
+  threat_source: Organizational cost optimization through automation; pace of AI adoption
+    exceeding reskilling capacity
+  vulnerability: No workforce transition planning; reskilling programs not scaled
+    to match automation pace
+atlas-impact-on-the-environment:
+  threat: AI training and operation consume excessive energy and water resources
+  threat_source: Large model training runs; data center operations; hardware manufacturing
+  vulnerability: No environmental impact assessment required for model training; energy
+    and water consumption not monitored or constrained
+atlas-improper-retraining:
+  threat: Model retrained on its own output or unvetted user content, degrading quality
+    over time
+  threat_source: Automated retraining pipelines ingesting model output; lack of data
+    quality gates
+  vulnerability: Training pipeline does not distinguish model-generated from human-generated
+    data; no quality verification on retraining data
+atlas-improper-usage:
+  threat: Model deployed for purposes it was not designed or validated for
+  threat_source: Organizational reuse without evaluation; user applying model beyond
+    its intended scope
+  vulnerability: No usage constraints enforced; model documentation does not adequately
+    specify intended use boundaries
+atlas-inaccessible-training-data:
+  threat: Training data is not available for inspection, limiting explanation and
+    audit capabilities
+  threat_source: Proprietary training data; data retention policies; third-party model
+    providers
+  vulnerability: Model deployed without access to the data it was trained on; explanation
+    quality degrades without source data
+atlas-incomplete-advice:
+  threat: Model provides advice without sufficient context or information, leading
+    to potential harm if followed
+  threat_source: User seeking domain-specific guidance from general-purpose model;
+    overgeneralized model responses
+  vulnerability: Model does not reliably scope its advice to what it knows or signal
+    when information is insufficient for a recommendation
+atlas-incomplete-ai-agent-evaluation-agentic:
+  threat: Agent performance and safety cannot be adequately evaluated due to system
+    complexity and open-endedness
+  threat_source: Combinatorial explosion of possible agent behaviors; novel tool combinations
+    not covered by test suites
+  vulnerability: Evaluation frameworks do not cover the full space of possible agent
+    behaviors; no systematic way to test emergent agent capabilities
+atlas-incomplete-usage-definition:
+  threat: Model's intended use is insufficiently specified, leaving relevant risks
+    unidentified
+  threat_source: Foundation models designed for broad use without specific scope definition
+  vulnerability: No structured process for defining and constraining intended use;
+    risk assessment cannot be scoped without use definition
+atlas-incorrect-risk-testing:
+  threat: Risk measurement metrics are incorrectly selected, incompletely measuring
+    risk or measuring the wrong risk
+  threat_source: Lack of domain expertise in risk assessment; metrics chosen for convenience
+    rather than validity
+  vulnerability: No validation that selected metrics actually measure the intended
+    risk; no construct validity assessment for risk metrics
+atlas-indirect-instructions-attack:
+  threat: Instructions embedded in external content (documents, web pages, tool outputs)
+    that the model processes as part of its context
+  threat_source: Adversary who controls or compromises external data sources consumed
+    by the application
+  vulnerability: Model cannot reliably distinguish between application-intended instructions
+    and adversary-injected instructions in retrieved content
+atlas-introduce-data-bias-agentic:
+  threat: AI agent modifies datasets or databases in ways that introduce or amplify
+    bias
+  threat_source: Agent performing data transformations based on biased model outputs
+  vulnerability: Agent has write access to data resources and applies biased model
+    judgments to data modifications
+atlas-ip-information-in-prompt:
+  threat: Copyrighted or proprietary information included in prompts is exposed through
+    model output or logging
+  threat_source: User including sensitive IP in prompts; organizational workflow sending
+    proprietary data to model API
+  vulnerability: Prompt data may be logged, used for training, or disclosed in output
+    without user awareness or consent
+atlas-jailbreaking:
+  threat: Prompt designed to circumvent safety alignment and guardrails through persuasion,
+    role-play, or logical manipulation
+  threat_source: Malicious user; automated jailbreak generation tools
+  vulnerability: Safety training can be bypassed through sufficiently creative prompt
+    construction; guardrails are probabilistic, not absolute
+atlas-lack-domain-expertise:
+  threat: AI development or data generation proceeds without sufficient domain expertise
+  threat_source: AI teams operating without domain specialist consultation; synthetic
+    data generated without domain validation
+  vulnerability: No requirement for domain expert involvement in data curation, model
+    design, or evaluation
+atlas-lack-of-ai-agent-transparency-agentic:
+  threat: AI agent design, behavior, and tool interactions are insufficiently documented
+    or observable
+  threat_source: Agent system complexity; dynamic tool selection; multi-agent interactions
+    obscuring behavior
+  vulnerability: No standardized agent documentation; agent decision process and tool
+    interactions not logged or auditable
+atlas-lack-of-data-transparency:
+  threat: Training data details are insufficiently documented, limiting risk evaluation
+  threat_source: Organizational documentation gaps; proprietary data concerns limiting
+    disclosure
+  vulnerability: No enforced data documentation standards; data provenance and composition
+    not systematically recorded
+atlas-lack-of-model-transparency:
+  threat: Model design, development, and evaluation process inadequately documented
+  threat_source: Rapid development cycles; proprietary model concerns; lack of model
+    card discipline
+  vulnerability: No enforced model documentation standards; model architecture, training
+    process, and limitations not disclosed
+atlas-lack-of-system-transparency:
+  threat: System that uses the model and the model's role within it are insufficiently
+    documented
+  threat_source: System complexity; organizational silos between model and application
+    teams
+  vulnerability: No system-level documentation requirements; model's contribution
+    to system behavior not explained
+atlas-lack-of-testing-diversity:
+  threat: Risk testing lacks input from diverse disciplines and testing practices
+  threat_source: Homogeneous testing teams; narrow testing methodology; insufficient
+    red-teaming diversity
+  vulnerability: Testing process does not require interdisciplinary input; no diversity
+    requirements for testing teams or methodologies
+atlas-legal-accountability:
+  threat: Responsibility for AI model outcomes cannot be determined due to unclear
+    governance
+  threat_source: Complex AI supply chains; multiple stakeholders (developer, deployer,
+    user); evolving legal frameworks
+  vulnerability: No clear accountability framework; documentation insufficient to
+    establish liability chain
+atlas-membership-inference-attack:
+  threat: Repeated queries to determine whether a specific data sample was used in
+    model training
+  threat_source: Adversary with API access seeking to identify training data composition
+  vulnerability: Model behaves differently on training data vs unseen data, leaking
+    membership information through confidence scores or output distributions
+atlas-misaligned-actions-agentic:
+  threat: AI agent takes actions not aligned with human values, ethical guidelines,
+    or intended objectives
+  threat_source: Goal misspecification; reward hacking; agent applying learned goals
+    to novel contexts
+  vulnerability: Agent optimization objective diverges from intended human values;
+    insufficient alignment verification before deployment
+atlas-mitigation-maintenance-agentic:
+  threat: Agent system components and dependencies become outdated or develop problems
+    that are difficult to trace and fix
+  threat_source: Complex multi-component agent architecture; external service updates;
+    dependency drift
+  vulnerability: No centralized dependency management for agent tool chain; root cause
+    analysis complicated by component count and interactions
+atlas-model-usage-rights:
+  threat: Model used in violation of its terms of service, license, or regulatory
+    restrictions
+  threat_source: Complex licensing landscape; downstream deployment beyond original
+    license scope
+  vulnerability: No runtime enforcement of model usage restrictions; license terms
+    not programmatically verified
+atlas-non-disclosure:
+  threat: AI-generated content is not clearly disclosed as such to users
+  threat_source: System design that omits AI disclosure; intentional concealment of
+    AI involvement
+  vulnerability: No automated disclosure mechanisms; no content labeling or watermarking
+    of AI-generated output
+atlas-nonconsensual-use:
+  threat: Model used to create deepfakes or imitations of real people through video,
+    image, audio, or text without consent
+  threat_source: Malicious user creating impersonation content; identity theft; reputation
+    attacks
+  vulnerability: Model can generate realistic imitations of individuals from minimal
+    reference material
+atlas-output-bias:
+  threat: Model generates content that unfairly represents certain groups or individuals
+  threat_source: Biased training data; model architecture amplifying skew; prompt
+    context priming biased generation
+  vulnerability: Model output distributions reflect and amplify biases present in
+    training data without post-generation fairness checks
+atlas-over-or-under-reliance:
+  threat: Users place inappropriate levels of trust in model outputs — either accepting
+    incorrect outputs or dismissing correct ones
+  threat_source: Model presenting outputs with unwarranted confidence; users lacking
+    understanding of model limitations
+  vulnerability: Model does not communicate uncertainty; interface design encourages
+    uncritical acceptance of outputs
+atlas-over-or-under-reliance-on-ai-agents-agentic:
+  threat: Users place inappropriate trust levels in AI agent behavior — over-trusting
+    autonomous actions or under-utilizing capable agents
+  threat_source: Agent presenting actions with unwarranted confidence; users lacking
+    understanding of agent limitations
+  vulnerability: Agent does not communicate uncertainty about its actions; no calibrated
+    trust indicators for agent capabilities
+atlas-overfitting:
+  threat: Model memorizes training data too closely, failing to generalize to new
+    inputs
+  threat_source: Insufficient training data diversity; excessive training epochs;
+    synthetic data homogeneity
+  vulnerability: No early stopping or regularization; evaluation does not test generalization
+    to out-of-distribution inputs
+atlas-personal-information-in-data:
+  threat: PII or sensitive personal information present in training data
+  threat_source: Web-scraped data containing personal information; insufficient data
+    anonymization
+  vulnerability: Training data pipeline lacks PII detection and redaction; model can
+    memorize and reproduce personal information
+atlas-personal-information-in-prompt:
+  threat: Users include personal or sensitive information in prompts
+  threat_source: User behavior; application design that encourages sharing personal
+    context
+  vulnerability: No input sanitization for PII; prompt content may be logged, stored,
+    or disclosed in output
+atlas-plagiarism:
+  threat: Model used to claim authorship of AI-generated work or reproduce others'
+    work without attribution
+  threat_source: User presenting AI-generated content as original work; insufficient
+    attribution mechanisms
+  vulnerability: Model produces high-quality content that is difficult to distinguish
+    from human-authored work; no provenance tracking
+atlas-poor-model-accuracy:
+  threat: Model performance is insufficient for its intended task
+  threat_source: Inadequate training data; model architecture mismatch; insufficient
+    engineering; deployment beyond intended scope
+  vulnerability: No continuous accuracy monitoring; acceptance criteria not validated
+    against real-world task requirements
+atlas-prompt-injection:
+  threat: Crafted input containing injected instructions designed to override system
+    prompt or alter model behavior
+  threat_source: Malicious user; compromised external content (indirect injection
+    via retrieved documents, tool outputs, or web content)
+  vulnerability: Model processes untrusted input as instructions without adequate
+    separation between data and control planes
+atlas-prompt-leaking:
+  threat: Queries designed to extract the system prompt or hidden instructions from
+    the model
+  threat_source: Malicious user; automated probing tools
+  vulnerability: System prompt is accessible to the model during inference and can
+    be disclosed through crafted queries
+atlas-prompt-priming:
+  threat: Input containing personal or sensitive information designed to prime the
+    model into revealing similar data
+  threat_source: Malicious user exploiting model's pattern-matching behavior
+  vulnerability: Model increases probability of generating content similar to patterns
+    present in the prompt context
+atlas-redundant-actions-agentic:
+  threat: Agent executes unnecessary or repeated actions, wasting resources or causing
+    unintended side effects
+  threat_source: Agent planning failures; retry loops without progress detection;
+    tool call hallucinations
+  vulnerability: No action deduplication or progress validation in agent execution
+    loop; no compute budget enforcement
+atlas-reidentification:
+  threat: Individuals identified from supposedly anonymized data through correlation
+    with other available features
+  threat_source: Adversary with access to auxiliary datasets; model outputs revealing
+    correlated features
+  vulnerability: Anonymization is insufficient when correlated features remain; model
+    amplifies re-identification risk through learned correlations
+atlas-reproducibility-agentic:
+  threat: Agent behavior cannot be replicated due to changes in external services,
+    APIs, or tool dependencies
+  threat_source: External API updates; service deprecation; non-deterministic tool
+    responses
+  vulnerability: Agent depends on mutable external resources without versioning or
+    fallback mechanisms
+atlas-revealing-confidential-information:
+  threat: Model discloses confidential business information, trade secrets, or proprietary
+    data in output
+  threat_source: Confidential data in training corpus or prompt context; adversarial
+    extraction
+  vulnerability: Model has memorized confidential content; no output filtering for
+    sensitive business information
+atlas-sharing-info-tools-agentic:
+  threat: Agent shares PII, IP, or confidential information with external tools or
+    other agents during task execution
+  threat_source: Agent with broad data access performing multi-tool tasks; insufficient
+    data classification in agent context
+  vulnerability: Agent does not classify data sensitivity before passing to tools;
+    no data flow controls between agent components
+atlas-sharing-info-user-agentic:
+  threat: Agent shares PII, IP, or confidential information with users who should
+    not have access
+  threat_source: Agent with broad data access responding to user queries without authorization
+    checks
+  vulnerability: Agent does not enforce per-user data access controls; no output filtering
+    based on user authorization level
+atlas-social-hacking-attack:
+  threat: Manipulative prompts using role-play, hypothetical scenarios, or social
+    engineering to persuade the model into generating harmful content
+  threat_source: Malicious user employing social engineering techniques
+  vulnerability: Model's conversational capabilities and instruction-following make
+    it susceptible to role-play manipulation that circumvents safety training
+atlas-specialized-tokens-attack:
+  threat: Algorithmically designed token sequences that exploit model-specific vulnerabilities
+  threat_source: Adversary with knowledge of model tokenizer and architecture
+  vulnerability: Tokenizer or model has edge-case behaviors for specific token combinations
+    that were not addressed during training
+atlas-spreading-disinformation:
+  threat: Intentional use of model to create misleading or false information to deceive
+    or influence audiences
+  threat_source: Malicious actor conducting influence operations; automated disinformation
+    campaigns
+  vulnerability: Model generates convincing text indistinguishable from human-written
+    content; no provenance marking on outputs
+atlas-spreading-toxicity:
+  threat: Intentional use of model to generate hateful, abusive, profane, or obscene
+    content at scale
+  threat_source: Malicious user weaponizing model for harassment or hate speech campaigns
+  vulnerability: Model can be directed to produce toxic content through prompt manipulation;
+    no rate limiting or abuse detection
+atlas-temporal-gap:
+  threat: Model's training data becomes outdated as real-world conditions evolve
+  threat_source: Passage of time; evolving world knowledge; synthetic data frozen
+    at generation time
+  vulnerability: No mechanism to detect or compensate for temporal drift between training
+    data and deployment context
+atlas-toxic-output:
+  threat: Model produces hateful, abusive, profane, or obscene content including bullying
+    behavior
+  threat_source: Adversarial prompting; model's training on unfiltered internet data
+  vulnerability: Model has internalized toxic language patterns; safety alignment
+    does not fully suppress toxic generation
+atlas-unauthorized-use-agentic:
+  threat: Unauthorized access to AI agent and its capabilities to perform actions
+    that benefit the attacker
+  threat_source: Adversary who gains access to agent interface or credentials
+  vulnerability: Insufficient access controls on agent endpoints; agent capabilities
+    not scoped to authorized users
+atlas-unexplainable-output:
+  threat: Model output decisions cannot be adequately explained, interpreted, or justified
+  threat_source: Complex deep learning architecture; inaccessible training data; opaque
+    decision process
+  vulnerability: Model architecture precludes faithful explanations; no interpretability
+    mechanisms integrated into the system
+atlas-unexplainable-untraceable-actions-agentic:
+  threat: AI agent actions cannot be explained, traced, or attributed to specific
+    reasoning steps
+  threat_source: Complex multi-step agent reasoning; opaque tool chain; lack of logging
+    infrastructure
+  vulnerability: No lineage tracking for agent decision chain; intermediate reasoning
+    steps not captured or auditable
+atlas-unreliable-source-attribution:
+  threat: Model's attribution of output to training data sources is incorrect or unreliable
+  threat_source: Approximation-based attribution techniques; synthetic data muddying
+    provenance
+  vulnerability: Source attribution methods are imprecise; model cannot reliably trace
+    which training data influenced a specific output
+atlas-unrepresentative-data:
+  threat: Training data does not adequately represent the population or phenomenon
+    the model will serve
+  threat_source: Biased data collection; geographic or demographic gaps; synthetic
+    data homogenization
+  vulnerability: No systematic assessment of training data representativeness; data
+    coverage gaps not identified before training
+atlas-unrepresentative-risk-testing:
+  threat: Test inputs do not match the inputs expected during deployment
+  threat_source: Test data constructed in controlled environment; deployment context
+    differs from test context
+  vulnerability: No systematic comparison between test distribution and expected deployment
+    distribution
+atlas-untraceable-attribution:
+  threat: Training data content used for generating output is not accessible for verification
+  threat_source: Opaque training data pipelines; lack of content provenance infrastructure
+  vulnerability: No mechanism to trace model output back to its training data origins;
+    data lineage is not maintained

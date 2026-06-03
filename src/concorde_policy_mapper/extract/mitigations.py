@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 _DEFAULT_INDEX_PATH = (
     Path(__file__).resolve().parents[3] / "data" / "atlas_risk_to_actions.yaml"
 )
+_DEFAULT_THREATS_PATH = (
+    Path(__file__).resolve().parents[3] / "data" / "atlas_risk_threats.yaml"
+)
 
 
 def load_mitigation_index(
@@ -113,11 +116,24 @@ def build_risk_crossmap(nexus_base_dir: str) -> dict[str, set[str]]:
     return crossmap
 
 
+def load_risk_threats(
+    path: Path | None = None,
+) -> dict[str, dict[str, str]]:
+    path = path or _DEFAULT_THREATS_PATH
+    if not path.exists():
+        logger.warning("Risk threats file not found at %s", path)
+        return {}
+    with open(path) as f:
+        raw = yaml.safe_load(f)
+    return raw or {}
+
+
 def enrich_with_mitigations(
     risks: list[RiskMatch],
     index: dict[str, list[MitigationRef]],
     descriptions: dict[str, str] | None = None,
     risk_crossmap: dict[str, set[str]] | None = None,
+    risk_threats: dict[str, dict[str, str]] | None = None,
 ) -> None:
     for risk in risks:
         mitigations = index.get(risk.risk_id, [])
@@ -135,3 +151,15 @@ def enrich_with_mitigations(
             for m in mitigations:
                 m.description = descriptions.get(m.action_id)
         risk.mitigations = mitigations
+
+        if risk_threats:
+            threat_data = risk_threats.get(risk.risk_id)
+            if not threat_data and risk_crossmap:
+                for atlas_id in sorted(risk_crossmap.get(risk.risk_id, set())):
+                    threat_data = risk_threats.get(atlas_id)
+                    if threat_data:
+                        break
+            if threat_data:
+                risk.threat = threat_data.get("threat")
+                risk.threat_source = threat_data.get("threat_source")
+                risk.vulnerability = threat_data.get("vulnerability")

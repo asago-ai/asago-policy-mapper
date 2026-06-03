@@ -68,6 +68,9 @@ class RiskMatch(BaseModel):
     evidence: list[EvidenceSpan]
     scores: RetrievalScores
     mitigations: list[MitigationRef] = []
+    threat: str | None = None
+    threat_source: str | None = None
+    vulnerability: str | None = None
 
 
 class RetrievalStats(BaseModel):
