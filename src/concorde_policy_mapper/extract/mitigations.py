@@ -15,6 +15,9 @@ _DEFAULT_INDEX_PATH = (
 _DEFAULT_THREATS_PATH = (
     Path(__file__).resolve().parents[3] / "data" / "atlas_risk_threats.yaml"
 )
+_DEFAULT_CONSEQUENCES_PATH = (
+    Path(__file__).resolve().parents[3] / "data" / "atlas_risk_consequences.yaml"
+)
 
 
 def load_mitigation_index(
@@ -116,16 +119,25 @@ def build_risk_crossmap(nexus_base_dir: str) -> dict[str, set[str]]:
     return crossmap
 
 
-def load_risk_threats(
-    path: Path | None = None,
-) -> dict[str, dict[str, str]]:
-    path = path or _DEFAULT_THREATS_PATH
+def _load_risk_yaml(path: Path, label: str) -> dict[str, dict[str, str]]:
     if not path.exists():
-        logger.warning("Risk threats file not found at %s", path)
+        logger.warning("%s file not found at %s", label, path)
         return {}
     with open(path) as f:
         raw = yaml.safe_load(f)
     return raw or {}
+
+
+def load_risk_threats(
+    path: Path | None = None,
+) -> dict[str, dict[str, str]]:
+    return _load_risk_yaml(path or _DEFAULT_THREATS_PATH, "Risk threats")
+
+
+def load_risk_consequences(
+    path: Path | None = None,
+) -> dict[str, dict[str, str]]:
+    return _load_risk_yaml(path or _DEFAULT_CONSEQUENCES_PATH, "Risk consequences")
 
 
 def enrich_with_mitigations(
@@ -134,6 +146,7 @@ def enrich_with_mitigations(
     descriptions: dict[str, str] | None = None,
     risk_crossmap: dict[str, set[str]] | None = None,
     risk_threats: dict[str, dict[str, str]] | None = None,
+    risk_consequences: dict[str, dict[str, str]] | None = None,
 ) -> None:
     for risk in risks:
         mitigations = index.get(risk.risk_id, [])
@@ -163,3 +176,14 @@ def enrich_with_mitigations(
                 risk.threat = threat_data.get("threat")
                 risk.threat_source = threat_data.get("threat_source")
                 risk.vulnerability = threat_data.get("vulnerability")
+
+        if risk_consequences:
+            cons_data = risk_consequences.get(risk.risk_id)
+            if not cons_data and risk_crossmap:
+                for atlas_id in sorted(risk_crossmap.get(risk.risk_id, set())):
+                    cons_data = risk_consequences.get(atlas_id)
+                    if cons_data:
+                        break
+            if cons_data:
+                risk.consequence = cons_data.get("consequence")
+                risk.impact = cons_data.get("impact")

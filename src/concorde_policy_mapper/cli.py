@@ -135,6 +135,7 @@ def extract(
         build_risk_crossmap,
         enrich_with_mitigations,
         load_mitigation_index,
+        load_risk_consequences,
         load_risk_threats,
     )
     mitigation_index = load_mitigation_index()
@@ -142,7 +143,8 @@ def extract(
         action_descs = build_action_descriptions(nexus_base_dir)
         risk_crossmap = build_risk_crossmap(nexus_base_dir)
         risk_threats = load_risk_threats()
-        enrich_with_mitigations(result.risks, mitigation_index, action_descs, risk_crossmap, risk_threats)
+        risk_consequences = load_risk_consequences()
+        enrich_with_mitigations(result.risks, mitigation_index, action_descs, risk_crossmap, risk_threats, risk_consequences)
         typer.echo(f"  Mitigations attached from {len(mitigation_index)} risk entries")
 
     result_data = result.model_dump()

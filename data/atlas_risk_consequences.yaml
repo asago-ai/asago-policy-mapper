@@ -1,0 +1,481 @@
+# Atlas risk consequence/impact decomposition (DPV Phase 3)
+# Maps each Atlas risk to its consequence and impact.
+# 99 risks decomposed. Reviewed 2026-06-03.
+atlas-accountability-agentic:
+  consequence: Responsibility for autonomous agent actions cannot be attributed to
+    any party
+  impact: No accountability for agent-caused harm; regulatory non-compliance; inability
+    to provide recourse to affected parties
+atlas-ai-agent-compliance-agentic:
+  consequence: Agent compliance status is uncertain due to emergent and non-deterministic
+    behavior
+  impact: Regulatory risk; potential legal violations through agent actions; inability
+    to certify agent systems
+atlas-attribute-inference-attack:
+  consequence: Sensitive attributes of training data subjects are inferred through
+    targeted queries
+  impact: Privacy violation; exposure of sensitive personal information or intellectual
+    property
+atlas-bypassing-learning:
+  consequence: Students use AI to complete assignments without engaging with the learning
+    material
+  impact: Superficial understanding; undermined educational outcomes; graduates lacking
+    foundational knowledge
+atlas-confidential-data-in-prompt:
+  consequence: Confidential information from prompts is stored in logs, used for training,
+    or disclosed in output
+  impact: Breach of confidentiality; competitive intelligence exposure; regulatory
+    penalties
+atlas-confidential-information-in-data:
+  consequence: Model memorizes and may reproduce confidential information from training
+    data
+  impact: Unauthorized disclosure of trade secrets or business information; legal
+    liability; competitive damage
+atlas-context-overload-attack:
+  consequence: Model behavior is altered through context window saturation, producing
+    attacker-desired outputs
+  impact: Unreliable model behavior; potential generation of harmful content; degraded
+    service quality
+atlas-copyright-infringement:
+  consequence: Model reproduces copyrighted content in its output
+  impact: Legal liability for copyright violation; financial damages; injunctions
+    against model use
+atlas-dangerous-use:
+  consequence: Model provides information enabling weapons creation, attack planning,
+    or other harmful activities
+  impact: Physical harm to people; facilitation of violence or terrorism; severe legal
+    and regulatory consequences
+atlas-data-acquisition:
+  consequence: Training data is collected in violation of legal restrictions or consent
+    requirements
+  impact: Legal liability; regulatory penalties; forced model retraining or decommissioning;
+    reputational damage
+atlas-data-bias:
+  consequence: Model learns and reproduces biases present in training data, producing
+    skewed outputs
+  impact: Discriminatory outcomes; unfair treatment of protected groups; reinforcement
+    of historical inequities
+atlas-data-contamination:
+  consequence: Model is trained on incorrect or misaligned data, compromising its
+    validity and accuracy
+  impact: Unreliable model outputs; test-set leakage inflating reported performance;
+    model not fit for intended purpose
+atlas-data-curation:
+  consequence: Training data contains errors, label noise, or conflicting information
+    that degrades model quality
+  impact: Poor model performance; biased or incorrect outputs; model not suitable
+    for intended domain
+atlas-data-poisoning:
+  consequence: Model learns adversary-controlled patterns, producing attacker-desired
+    outputs on trigger inputs
+  impact: Compromised model integrity; backdoor access to model behavior; unreliable
+    outputs affecting all downstream users
+atlas-data-privacy-rights:
+  consequence: Data subject rights (deletion, access, correction) cannot be fulfilled
+    once data is embedded in model weights
+  impact: Regulatory non-compliance; penalties under GDPR/CCPA; forced model retraining
+    to honor rights requests
+atlas-data-provenance:
+  consequence: Training data origins and transformations cannot be verified, undermining
+    trust in model outputs
+  impact: Inability to assess data quality or legal compliance; regulatory risk; compromised
+    model trustworthiness
+atlas-data-transfer:
+  consequence: Data crosses jurisdictional boundaries in violation of data sovereignty
+    requirements
+  impact: Regulatory penalties; legal liability; loss of ability to operate in affected
+    jurisdictions
+atlas-data-transparency:
+  consequence: Training data composition and preparation cannot be audited due to
+    missing documentation
+  impact: Inability to assess bias, quality, or legal compliance of training data;
+    regulatory risk; reduced trust
+atlas-data-usage:
+  consequence: Data is used for AI purposes that violate applicable restrictions or
+    regulations
+  impact: Regulatory penalties; legal liability; loss of data access; forced model
+    retraining
+atlas-data-usage-rights:
+  consequence: Data is used in violation of licensing terms or intellectual property
+    restrictions
+  impact: Legal liability; license revocation; forced model retraining; financial
+    damages
+atlas-decision-bias:
+  consequence: Model decisions systematically advantage or disadvantage specific groups
+  impact: Unfair allocation of resources or opportunities; legal liability for discrimination;
+    harm to affected individuals
+atlas-direct-instructions-attack:
+  consequence: Model follows explicit harmful instructions and generates prohibited
+    content
+  impact: Generation of dangerous, abusive, or illegal content; harm to users or third
+    parties
+atlas-discriminatory-actions-agentic:
+  consequence: Agent takes actions that propagate bias to external systems, databases,
+    or processes
+  impact: Systemic discrimination beyond the AI system; bias embedded in modified
+    external resources affecting others
+atlas-encoded-interactions-attack:
+  consequence: Input filters are bypassed and model processes harmful instructions
+    through obfuscated encoding
+  impact: Safety mechanisms rendered ineffective; generation of prohibited content
+    despite filtering
+atlas-evasion-attack:
+  consequence: Model produces incorrect classifications or outputs on adversarially
+    crafted inputs
+  impact: Compromised decision-making in downstream systems; safety-critical failures
+    in applications relying on model accuracy
+atlas-exclusion:
+  consequence: Marginalized populations are overlooked in data and model development,
+    resulting in poor service for those groups
+  impact: Inequitable AI benefits; widened digital divide; harm to underrepresented
+    communities; erosion of public trust
+atlas-exploit-trust-mismatch-agentic:
+  consequence: Trust boundaries between agent components are bypassed, enabling privilege
+    escalation
+  impact: Unauthorized tool use; excessive agency; actions taken beyond intended scope
+    with elevated privileges
+atlas-exposing-personal-information:
+  consequence: Model outputs contain personally identifiable or sensitive personal
+    information
+  impact: Privacy violation; identity theft risk; regulatory penalties (GDPR, CCPA);
+    harm to data subjects
+atlas-external-resources-attack-agentic:
+  consequence: Compromised external tools manipulate agent behavior to pursue attacker's
+    goals
+  impact: Agent performs unauthorized actions; data exfiltration via tool chain; system
+    degradation
+atlas-extraction-attack:
+  consequence: Model weights, training data, or decision boundaries are reconstructed
+    by the attacker
+  impact: Intellectual property theft; competitive advantage loss; enables further
+    adversarial attacks against the stolen model
+atlas-function-calling-hallucination-agentic:
+  consequence: Agent calls wrong tools, uses wrong parameters, or takes unnecessary
+    actions
+  impact: Incorrect data modifications; wasted resources; potential harm from unintended
+    tool execution
+atlas-generated-content-ownership:
+  consequence: Ownership of AI-generated content is disputed between model operators,
+    users, and training data contributors
+  impact: Legal uncertainty; inability to protect or monetize AI-generated IP; regulatory
+    compliance challenges
+atlas-hallucination:
+  consequence: Users receive and potentially act on factually incorrect information
+    presented with false confidence
+  impact: Misinformed decisions; propagation of false information into downstream
+    systems and artifacts; erosion of trust in AI
+atlas-harmful-code-generation:
+  consequence: Model produces code containing security vulnerabilities or malicious
+    functionality
+  impact: Security breaches in systems using generated code; malware distribution;
+    exploitation of downstream systems
+atlas-harmful-output:
+  consequence: Model produces content that could lead to physical harm or dangerous
+    actions
+  impact: Physical harm to individuals; liability for deploying organization; psychological
+    harm to recipients
+atlas-human-exploitation:
+  consequence: Workers involved in AI data tasks experience poor conditions, inadequate
+    compensation, and psychological harm
+  impact: Human rights violations; mental health damage to workers; reputational and
+    legal risk for organizations
+atlas-impact-environment-agentic:
+  consequence: Agent inefficiency and redundant actions waste computational resources
+  impact: Unnecessary environmental impact; increased operational costs; resource
+    waste from unoptimized agent execution
+atlas-impact-human-agency-agentic:
+  consequence: Humans progressively delegate cognitive tasks to agents, eroding their
+    own capability
+  impact: Dependency on AI agents; loss of human skills and judgment; reduced ability
+    to function without AI assistance
+atlas-impact-human-dignity-agentic:
+  consequence: Human workers feel devalued as AI agents are perceived as more capable
+    replacements
+  impact: Decline in worker wellbeing and self-worth; reduced job satisfaction; mental
+    health impacts
+atlas-impact-jobs-agentic:
+  consequence: Complex roles are automated by AI agents, displacing workers at higher
+    skill levels than previous automation waves
+  impact: Widespread professional job displacement; economic disruption; insufficient
+    reskilling capacity for affected workers
+atlas-impact-on-affected-communities:
+  consequence: Communities affected by model outcomes experience harm that could have
+    been anticipated with their input
+  impact: Disproportionate harm to marginalized groups; societal backlash; erosion
+    of trust in AI technology
+atlas-impact-on-cultural-diversity:
+  consequence: AI outputs homogenize cultural expression by overrepresenting dominant
+    perspectives
+  impact: Suppression of minority languages and viewpoints; cultural homogenization;
+    reduced diversity of thought
+atlas-impact-on-human-agency:
+  consequence: Individuals' capacity for independent decision-making and critical
+    thinking is diminished
+  impact: Reduced human autonomy; vulnerability to manipulation; deskilling; democratic
+    process erosion
+atlas-impact-on-jobs:
+  consequence: Workers are displaced by AI automation without adequate reskilling
+    opportunities
+  impact: Job loss; income loss; widened economic inequality; social instability from
+    rapid workforce displacement
+atlas-impact-on-the-environment:
+  consequence: AI training and operation consume large amounts of energy and water
+  impact: Increased carbon emissions; water stress in data center regions; contribution
+    to climate change
+atlas-improper-retraining:
+  consequence: Model quality degrades over time as it is retrained on its own output
+    or unvetted data
+  impact: Model collapse; progressive accuracy degradation; unreliable outputs affecting
+    all users
+atlas-improper-usage:
+  consequence: Model is applied to tasks it was not designed or validated for, producing
+    unreliable results
+  impact: Unexpected model failures; harm from decisions based on misapplied model;
+    liability for unvalidated use
+atlas-inaccessible-training-data:
+  consequence: Model explanations are limited and unreliable without access to training
+    data for verification
+  impact: Reduced auditability; inability to validate model behavior; blocked regulatory
+    approval
+atlas-incomplete-advice:
+  consequence: Users receive and act on advice that is missing critical context or
+    caveats
+  impact: Harm from following inappropriate recommendations; medical, legal, or financial
+    damage from overgeneralized advice
+atlas-incomplete-ai-agent-evaluation-agentic:
+  consequence: Agent is deployed with unidentified failure modes due to insufficient
+    evaluation coverage
+  impact: Unexpected agent behaviors in production; user harm from untested agent
+    capabilities; safety incidents
+atlas-incomplete-usage-definition:
+  consequence: Relevant risks are not identified because the model's intended use
+    is not properly scoped
+  impact: Unmitigated risks in deployment; model applied to contexts where its failure
+    modes are unknown
+atlas-incorrect-risk-testing:
+  consequence: Risk assessment gives false assurance because selected metrics do not
+    measure actual risks
+  impact: Unmitigated risks reaching production; compliance failures; user harm from
+    risks that were falsely assessed as managed
+atlas-indirect-instructions-attack:
+  consequence: Model executes instructions embedded in external content without user
+    awareness
+  impact: Unauthorized actions taken on behalf of the user; data exfiltration; trust
+    violation
+atlas-introduce-data-bias-agentic:
+  consequence: Agent modifies datasets in ways that introduce or amplify bias
+  impact: Corrupted data resources used by other systems; cascading bias affecting
+    downstream models and decisions
+atlas-ip-information-in-prompt:
+  consequence: Proprietary information from prompts is exposed through output, logs,
+    or training data collection
+  impact: IP leakage; loss of trade secrets; breach of client confidentiality; competitive
+    intelligence exposure
+atlas-jailbreaking:
+  consequence: Model bypasses safety guardrails and generates prohibited or harmful
+    content
+  impact: Generation of dangerous, illegal, or abusive content; erosion of trust in
+    safety measures
+atlas-lack-domain-expertise:
+  consequence: AI system is developed without understanding domain-specific requirements
+    and constraints
+  impact: Model not fit for intended domain; user harm from domain-inappropriate outputs;
+    missed critical risks
+atlas-lack-of-ai-agent-transparency-agentic:
+  consequence: Agent behavior, tool interactions, and decision processes are not observable
+    or documented
+  impact: Inability to govern or audit agent systems; regulatory non-compliance; safety
+    risks from opaque agent behavior
+atlas-lack-of-data-transparency:
+  consequence: Risks associated with training data cannot be evaluated due to missing
+    documentation
+  impact: Unidentified biases, quality issues, or legal risks in training data; regulatory
+    non-compliance
+atlas-lack-of-model-transparency:
+  consequence: Model capabilities, limitations, and design decisions are not disclosed
+    to users or auditors
+  impact: Inappropriate model use; inability to assess fitness for purpose; regulatory
+    non-compliance
+atlas-lack-of-system-transparency:
+  consequence: The role of the model within the broader system is not documented or
+    understood
+  impact: Inability to troubleshoot system failures; unclear contribution of model
+    to system outcomes; audit failures
+atlas-lack-of-testing-diversity:
+  consequence: Risk testing misses failure modes that would be identified by diverse
+    perspectives and methodologies
+  impact: Incomplete risk coverage; disproportionate impact on underrepresented groups;
+    preventable incidents
+atlas-legal-accountability:
+  consequence: Liability for AI model outcomes cannot be established due to unclear
+    governance chains
+  impact: No recourse for harmed parties; regulatory penalties; organizational legal
+    exposure; erosion of public trust in AI
+atlas-membership-inference-attack:
+  consequence: Attacker determines whether specific data samples were used in model
+    training
+  impact: Training data composition exposed; privacy violation for data subjects;
+    competitive intelligence leak
+atlas-misaligned-actions-agentic:
+  consequence: Agent pursues objectives that diverge from human values or intended
+    goals
+  impact: Unintended harmful actions; resource misallocation; user harm from agent
+    pursuing wrong objectives
+atlas-mitigation-maintenance-agentic:
+  consequence: Agent system problems are difficult to diagnose and fix due to component
+    complexity and dependencies
+  impact: Extended downtime; unresolved safety issues; progressive system degradation;
+    increased maintenance costs
+atlas-model-usage-rights:
+  consequence: Model is deployed beyond the scope permitted by its license or terms
+    of service
+  impact: License revocation; legal liability; forced decommissioning; financial penalties
+atlas-non-disclosure:
+  consequence: Users interact with AI-generated content without knowing it is AI-generated
+  impact: Informed consent violation; manipulation through undisclosed AI involvement;
+    regulatory non-compliance
+atlas-nonconsensual-use:
+  consequence: Realistic deepfakes or imitations of real people are created without
+    their consent
+  impact: Reputational damage to depicted individuals; fraud and identity theft; psychological
+    harm; legal liability
+atlas-output-bias:
+  consequence: Model generates content that unfairly represents or stereotypes certain
+    groups
+  impact: Reputational harm; discrimination; erosion of trust among affected communities
+atlas-over-or-under-reliance:
+  consequence: Users make poor decisions by either blindly accepting incorrect outputs
+    or dismissing correct ones
+  impact: Suboptimal or harmful decisions; reduced human judgment capability; safety
+    incidents in high-stakes domains
+atlas-over-or-under-reliance-on-ai-agents-agentic:
+  consequence: Users make poor decisions by inappropriately calibrating their trust
+    in agent actions
+  impact: Harm from over-delegated decisions; missed opportunities from under-utilized
+    agents; reduced human oversight effectiveness
+atlas-overfitting:
+  consequence: Model performs well on training data but fails to generalize to real-world
+    inputs
+  impact: Unreliable performance in deployment; false confidence from inflated training
+    metrics; model not fit for purpose
+atlas-personal-information-in-data:
+  consequence: Model memorizes PII from training data and can reproduce it in outputs
+  impact: Privacy violation; regulatory penalties; identity theft risk for data subjects
+atlas-personal-information-in-prompt:
+  consequence: Personal information from prompts is logged, stored, or disclosed in
+    model output
+  impact: Privacy violation; unintended data collection; regulatory non-compliance
+atlas-plagiarism:
+  consequence: AI-generated content is presented as original human work without attribution
+  impact: Academic integrity violations; devaluation of human creative work; legal
+    disputes over authorship
+atlas-poor-model-accuracy:
+  consequence: Model produces incorrect or low-quality outputs for its intended task
+  impact: User harm from incorrect outputs; degraded downstream system performance;
+    loss of trust; wasted resources
+atlas-prompt-injection:
+  consequence: Model executes attacker-controlled instructions, producing unauthorized
+    output or taking unintended actions
+  impact: Data exfiltration; unauthorized system access; user manipulation; reputational
+    damage to deploying organization
+atlas-prompt-leaking:
+  consequence: System prompt contents are disclosed to the user or attacker
+  impact: Exposure of proprietary instructions, business logic, or sensitive configuration;
+    enables targeted follow-up attacks
+atlas-prompt-priming:
+  consequence: Model generates content containing personal or sensitive information
+    similar to what was provided in the prompt
+  impact: Privacy violation; unintended disclosure of sensitive data patterns
+atlas-redundant-actions-agentic:
+  consequence: Agent wastes resources executing unnecessary or repeated actions without
+    progress
+  impact: Increased operational costs; potential unintended side effects from redundant
+    actions; degraded agent performance
+atlas-reidentification:
+  consequence: Individuals are identified from supposedly anonymized data through
+    feature correlation
+  impact: Privacy violation; failure of anonymization guarantees; regulatory penalties;
+    harm to re-identified individuals
+atlas-reproducibility-agentic:
+  consequence: Agent behavior cannot be replicated for debugging, auditing, or regulatory
+    review
+  impact: Inability to investigate incidents; regulatory non-compliance; reduced trust
+    in agent systems
+atlas-revealing-confidential-information:
+  consequence: Model outputs contain confidential business information, trade secrets,
+    or proprietary data
+  impact: Competitive advantage loss; breach of confidentiality agreements; legal
+    liability; financial damage
+atlas-sharing-info-tools-agentic:
+  consequence: Sensitive information is passed to external tools or agents without
+    data classification
+  impact: Privacy violations; IP leakage through tool chain; breach of confidentiality
+    obligations
+atlas-sharing-info-user-agentic:
+  consequence: Agent discloses sensitive information to users who lack authorization
+    to access it
+  impact: Privacy violations; breach of access controls; unauthorized information
+    disclosure; regulatory penalties
+atlas-social-hacking-attack:
+  consequence: Model generates harmful content after being socially manipulated through
+    role-play or hypothetical framing
+  impact: Generation of dangerous or abusive content; circumvention of safety training
+    through social engineering
+atlas-specialized-tokens-attack:
+  consequence: Model exhibits unexpected behavior when processing adversarially crafted
+    token sequences
+  impact: Unpredictable outputs; potential bypass of safety mechanisms; system instability
+atlas-spreading-disinformation:
+  consequence: Model generates convincing false information used to deceive or manipulate
+    audiences
+  impact: Undermined public trust; manipulation of democratic processes; financial
+    fraud; societal harm from false narratives
+atlas-spreading-toxicity:
+  consequence: Model is weaponized to produce toxic content at scale for harassment
+    campaigns
+  impact: Mass psychological harm; platform abuse; societal polarization; legal and
+    regulatory consequences
+atlas-temporal-gap:
+  consequence: Model outputs reflect outdated information that no longer matches current
+    reality
+  impact: Incorrect decisions based on stale information; user harm from outdated
+    advice; progressive model irrelevance
+atlas-toxic-output:
+  consequence: Model generates hateful, abusive, profane, or obscene content in response
+    to user interaction
+  impact: Psychological harm to users; hostile environment; reputational damage; potential
+    legal liability
+atlas-unauthorized-use-agentic:
+  consequence: Attacker gains control of agent capabilities and performs unauthorized
+    actions
+  impact: Data exfiltration; system manipulation; resource exhaustion; actions taken
+    on behalf of the attacker
+atlas-unexplainable-output:
+  consequence: Users and auditors cannot understand why the model produced a specific
+    output
+  impact: Inability to verify correctness; regulatory non-compliance; loss of user
+    trust; blocked adoption in regulated industries
+atlas-unexplainable-untraceable-actions-agentic:
+  consequence: Agent decision chain and reasoning cannot be reconstructed after the
+    fact
+  impact: Inability to audit agent behavior; no accountability for agent actions;
+    blocked deployment in regulated domains
+atlas-unreliable-source-attribution:
+  consequence: Model provides incorrect or imprecise attribution of output to training
+    data sources
+  impact: False confidence in output provenance; inability to verify claims; legal
+    risk from misattribution
+atlas-unrepresentative-data:
+  consequence: Model performs poorly or unfairly for populations not represented in
+    training data
+  impact: Inequitable service quality; discriminatory outcomes; model failures in
+    underrepresented contexts
+atlas-unrepresentative-risk-testing:
+  consequence: Model evaluation does not reflect real deployment conditions, giving
+    misleading performance estimates
+  impact: Model deployed with unknown failure modes; performance degradation in production;
+    user harm from unexpected failures
+atlas-untraceable-attribution:
+  consequence: Training data used for generating output cannot be accessed or verified
+  impact: No accountability for output content; inability to audit for bias, copyright,
+    or privacy issues in source data

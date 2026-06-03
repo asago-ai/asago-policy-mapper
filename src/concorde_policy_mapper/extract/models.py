@@ -71,6 +71,8 @@ class RiskMatch(BaseModel):
     threat: str | None = None
     threat_source: str | None = None
     vulnerability: str | None = None
+    consequence: str | None = None
+    impact: str | None = None
 
 
 class RetrievalStats(BaseModel):
