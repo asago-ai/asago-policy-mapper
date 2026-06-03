@@ -97,7 +97,7 @@ def run_one(
         threshold_high: float | None = None,
         threshold_low: float | None = None,
         bi_encoder_model: str = "all-mpnet-base-v2",
-        query_instruction: str = "",
+        query_instruction: str | None = None,
         cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2",
         name_width: int = 20,
         bm25_rescue_rank: int = 0,
@@ -353,7 +353,7 @@ def main():
     parser.add_argument("--threshold-high", type=float, default=None, help="Legacy: absolute auto-accept threshold (overrides rank-based)")
     parser.add_argument("--threshold-low", type=float, default=None, help="Legacy: absolute discard threshold")
     parser.add_argument("--bi-encoder-model", default="all-mpnet-base-v2", help="Bi-encoder model (default: all-mpnet-base-v2)")
-    parser.add_argument("--query-instruction", default="", help="Instruction prefix for query encoding (e.g. for Qwen3-Embedding)")
+    parser.add_argument("--query-instruction", default=None, help="Instruction prefix for query encoding (default: built-in policy-risk instruction)")
     parser.add_argument("--cross-encoder-model", default="cross-encoder/ms-marco-MiniLM-L-12-v2", help="Cross-encoder model (default: cross-encoder/ms-marco-MiniLM-L-12-v2)")
     parser.add_argument("--bm25-rescue-rank", type=int, default=0, help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled, default: 0)")
     parser.add_argument("--no-cross-encoder", action="store_true", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead")

@@ -43,7 +43,7 @@ def extract(
     threshold_high: float = typer.Option(None, "--threshold-high", help="Legacy: absolute auto-accept threshold (overrides rank-based)"),
     threshold_low: float = typer.Option(None, "--threshold-low", help="Legacy: absolute discard threshold (overrides rank-based)"),
     bi_encoder_model: str = typer.Option("all-mpnet-base-v2", "--bi-encoder-model", help="Bi-encoder model"),
-    query_instruction: str = typer.Option("", "--query-instruction", help="Instruction prefix for query encoding (e.g. for Qwen3-Embedding)"),
+    query_instruction: str = typer.Option(None, "--query-instruction", help="Instruction prefix for query encoding (default: built-in policy-risk instruction)"),
     cross_encoder_model: str = typer.Option("cross-encoder/ms-marco-MiniLM-L-12-v2", "--cross-encoder-model", help="Cross-encoder model"),
     bm25_rescue_rank: int = typer.Option(0, "--bm25-rescue-rank", help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled)"),
     no_cross_encoder: bool = typer.Option(False, "--no-cross-encoder", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead"),
@@ -93,9 +93,12 @@ def extract(
     from concorde_policy_mapper.extract.models import RetrievalConfig
     from concorde_policy_mapper.extract.pipeline import run_extraction
 
+    rc_kwargs = {}
+    if query_instruction is not None:
+        rc_kwargs["query_instruction"] = query_instruction
     retrieval = RetrievalConfig(
         bi_encoder_model=bi_encoder_model,
-        query_instruction=query_instruction,
+        **rc_kwargs,
         cross_encoder_model=cross_encoder_model,
         colbert_model=colbert_model or None,
         chunk_max_tokens=chunk_max_tokens,
@@ -129,13 +132,15 @@ def extract(
 
     from concorde_policy_mapper.extract.mitigations import (
         build_action_descriptions,
+        build_risk_crossmap,
         enrich_with_mitigations,
         load_mitigation_index,
     )
     mitigation_index = load_mitigation_index()
     if mitigation_index:
         action_descs = build_action_descriptions(nexus_base_dir)
-        enrich_with_mitigations(result.risks, mitigation_index, action_descs)
+        risk_crossmap = build_risk_crossmap(nexus_base_dir)
+        enrich_with_mitigations(result.risks, mitigation_index, action_descs, risk_crossmap)
         typer.echo(f"  Mitigations attached from {len(mitigation_index)} risk entries")
 
     result_data = result.model_dump()

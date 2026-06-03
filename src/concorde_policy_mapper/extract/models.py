@@ -134,7 +134,11 @@ class _RiskEvidence(BaseModel):
 @dataclass
 class RetrievalConfig:
     bi_encoder_model: str = "all-mpnet-base-v2"
-    query_instruction: str = ""
+    query_instruction: str = (
+        "Given a text passage from an AI governance policy document, retrieve AI risk"
+        " descriptions that are relevant to the concepts, requirements, or concerns"
+        " discussed in the passage"
+    )
     cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2"
     colbert_model: str | None = None
     chunk_max_tokens: int = 512
