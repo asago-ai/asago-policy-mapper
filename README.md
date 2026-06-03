@@ -80,15 +80,11 @@ F1 scores are from IR-only evaluation (no LLM judge/grounding) on 27 policies. W
 
 **all-mpnet-base-v2** (default) — 110M params, runs locally on CPU. Good baseline but instruction-unaware.
 
-Models not recommended: **BAAI/bge-m3** (568M params, similar quality to EmbeddingGemma but larger). **ColBERT** models (LateON, Iso-ModernColBERT) underperform and cannot be served remotely — vLLM returns pooled embeddings, not token-level.
-
 ### Cross-encoders
 
 **Alibaba-NLP/gte-reranker-modernbert-base** (recommended) — AUC=0.759 on pipeline-mined negatives. Genuinely discriminates relevant from irrelevant candidates. Outputs calibrated scores (no sigmoid needed). Serve via vLLM's `/v1/score` endpoint.
 
 **cross-encoder/ms-marco-MiniLM-L-12-v2** (default) — AUC=0.498 on pipeline-mined negatives (essentially random). Functions as a volume reduction filter rather than a semantic discriminator. Runs locally. Works well enough end-to-end because the LLM grounding stage provides the actual precision filtering.
-
-Models not recommended: **bge-reranker-v2-m3** (too aggressive, kills recall). **NLI DeBERTa-v3** (entailment framing unsuited to this task).
 
 ### Configuration Examples
 
