@@ -1,0 +1,978 @@
+# NIST AI RMF 600-1 actions → IBM AI Risk Atlas direct mappings
+# 212 actions, 338 risk links
+# Reviewed 2026-06-03
+actions:
+- id: GV-1.1-001
+  hasRelatedRisk:
+  - atlas-legal-accountability
+  - atlas-data-privacy-rights
+  - atlas-copyright-infringement
+  type: Action
+- id: GV-1.2-001
+  hasRelatedRisk:
+  - atlas-lack-of-data-transparency
+  - atlas-data-provenance
+  type: Action
+- id: GV-1.2-002
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: GV-1.3-001
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  - atlas-dangerous-use
+  type: Action
+- id: GV-1.3-002
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: GV-1.3-003
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: GV-1.3-004
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: GV-1.3-005
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: GV-1.3-006
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: GV-1.3-007
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: GV-1.4-001
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-nonconsensual-use
+  type: Action
+- id: GV-1.4-002
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-dangerous-use
+  type: Action
+- id: GV-1.5-001
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-data-provenance
+  type: Action
+- id: GV-1.5-002
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: GV-1.5-003
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: GV-1.6-001
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: GV-1.6-002
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: GV-1.6-003
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: GV-1.7-001
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: GV-1.7-002
+  hasRelatedRisk:
+  - atlas-data-privacy-rights
+  - atlas-revealing-confidential-information
+  type: Action
+- id: GV-2.1-001
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  type: Action
+- id: GV-2.1-002
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: GV-2.1-003
+  hasRelatedRisk:
+  - atlas-lack-domain-expertise
+  type: Action
+- id: GV-2.1-004
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: GV-2.1-005
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  type: Action
+- id: GV-3.2-001
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: GV-3.2-002
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: GV-3.2-003
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-over-or-under-reliance
+  type: Action
+- id: GV-3.2-004
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  - atlas-impact-on-human-agency
+  type: Action
+- id: GV-3.2-005
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  - atlas-evasion-attack
+  type: Action
+- id: GV-4.1-001
+  hasRelatedRisk:
+  - atlas-unexplainable-output
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: GV-4.1-002
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: GV-4.1-003
+  hasRelatedRisk:
+  - atlas-legal-accountability
+  type: Action
+- id: GV-4.2-001
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-incomplete-usage-definition
+  type: Action
+- id: GV-4.2-002
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: GV-4.2-003
+  hasRelatedRisk:
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: GV-4.3-001
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  type: Action
+- id: GV-4.3-002
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  type: Action
+- id: GV-4.3-003
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: GV-5.1-001
+  hasRelatedRisk:
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: GV-5.1-002
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  - atlas-over-or-under-reliance
+  type: Action
+- id: GV-6.1-001
+  hasRelatedRisk:
+  - atlas-copyright-infringement
+  - atlas-data-usage-rights
+  type: Action
+- id: GV-6.1-002
+  hasRelatedRisk:
+  - atlas-improper-usage
+  type: Action
+- id: GV-6.1-003
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  type: Action
+- id: GV-6.1-004
+  hasRelatedRisk:
+  - atlas-data-usage-rights
+  - atlas-copyright-infringement
+  type: Action
+- id: GV-6.1-005
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-data-acquisition
+  type: Action
+- id: GV-6.1-006
+  hasRelatedRisk:
+  - atlas-data-provenance
+  type: Action
+- id: GV-6.1-007
+  hasRelatedRisk:
+  - atlas-data-acquisition
+  - atlas-revealing-confidential-information
+  type: Action
+- id: GV-6.1-008
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-untraceable-attribution
+  type: Action
+- id: GV-6.1-009
+  hasRelatedRisk:
+  - atlas-data-privacy-rights
+  - atlas-copyright-infringement
+  - atlas-data-acquisition
+  type: Action
+- id: GV-6.1-010
+  hasRelatedRisk:
+  - atlas-model-usage-rights
+  - atlas-improper-usage
+  type: Action
+- id: GV-6.2-001
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  - atlas-data-provenance
+  type: Action
+- id: GV-6.2-002
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  type: Action
+- id: GV-6.2-003
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: GV-6.2-004
+  hasRelatedRisk:
+  - atlas-data-provenance
+  type: Action
+- id: GV-6.2-005
+  hasRelatedRisk:
+  - atlas-inaccessible-training-data
+  type: Action
+- id: GV-6.2-006
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  type: Action
+- id: GV-6.2-007
+  hasRelatedRisk:
+  - atlas-data-usage-rights
+  - atlas-data-acquisition
+  type: Action
+- id: MG-1.3-001
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: MG-1.3-002
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MG-2.2-001
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: MG-2.2-002
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-untraceable-attribution
+  type: Action
+- id: MG-2.2-003
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  type: Action
+- id: MG-2.2-004
+  hasRelatedRisk:
+  - atlas-data-bias
+  - atlas-output-bias
+  type: Action
+- id: MG-2.2-005
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-dangerous-use
+  type: Action
+- id: MG-2.2-006
+  hasRelatedRisk:
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: MG-2.2-007
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-data-provenance
+  type: Action
+- id: MG-2.2-008
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MG-2.2-009
+  hasRelatedRisk:
+  - atlas-exposing-personal-information
+  - atlas-data-privacy-rights
+  type: Action
+- id: MG-2.3-001
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: MG-2.4-001
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: MG-2.4-002
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: MG-2.4-003
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: MG-2.4-004
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: MG-3.1-001
+  hasRelatedRisk:
+  - atlas-prompt-injection
+  - atlas-jailbreaking
+  - atlas-hallucination
+  type: Action
+- id: MG-3.1-002
+  hasRelatedRisk:
+  - atlas-data-poisoning
+  - atlas-extraction-attack
+  type: Action
+- id: MG-3.1-003
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-poor-model-accuracy
+  type: Action
+- id: MG-3.1-004
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  - atlas-copyright-infringement
+  type: Action
+- id: MG-3.1-005
+  hasRelatedRisk:
+  - atlas-lack-of-model-transparency
+  type: Action
+- id: MG-3.2-001
+  hasRelatedRisk:
+  - atlas-unexplainable-output
+  - atlas-lack-of-model-transparency
+  type: Action
+- id: MG-3.2-002
+  hasRelatedRisk:
+  - atlas-lack-of-model-transparency
+  - atlas-improper-retraining
+  type: Action
+- id: MG-3.2-003
+  hasRelatedRisk:
+  - atlas-data-bias
+  - atlas-lack-of-data-transparency
+  type: Action
+- id: MG-3.2-004
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: MG-3.2-005
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-toxic-output
+  type: Action
+- id: MG-3.2-006
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-spreading-disinformation
+  type: Action
+- id: MG-3.2-007
+  hasRelatedRisk:
+  - atlas-data-provenance
+  type: Action
+- id: MG-3.2-008
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MG-3.2-009
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  type: Action
+- id: MG-4.1-001
+  hasRelatedRisk:
+  - atlas-evasion-attack
+  type: Action
+- id: MG-4.1-002
+  hasRelatedRisk:
+  - atlas-hallucination
+  - atlas-dangerous-use
+  type: Action
+- id: MG-4.1-003
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MG-4.1-004
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  type: Action
+- id: MG-4.1-005
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: MG-4.1-006
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-untraceable-attribution
+  type: Action
+- id: MG-4.1-007
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  type: Action
+- id: MG-4.2-001
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: MG-4.2-002
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: MG-4.2-003
+  hasRelatedRisk:
+  - atlas-unexplainable-output
+  type: Action
+- id: MG-4.3-001
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: MG-4.3-002
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  type: Action
+- id: MG-4.3-003
+  hasRelatedRisk:
+  - atlas-legal-accountability
+  type: Action
+- id: MP-1.1-001
+  hasRelatedRisk:
+  - atlas-incomplete-usage-definition
+  type: Action
+- id: MP-1.1-002
+  hasRelatedRisk:
+  - atlas-incomplete-usage-definition
+  - atlas-improper-usage
+  type: Action
+- id: MP-1.1-003
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  - atlas-decision-bias
+  type: Action
+- id: MP-1.1-004
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  - atlas-improper-usage
+  type: Action
+- id: MP-1.2-001
+  hasRelatedRisk:
+  - atlas-lack-of-testing-diversity
+  - atlas-unrepresentative-risk-testing
+  type: Action
+- id: MP-1.2-002
+  hasRelatedRisk:
+  - atlas-unrepresentative-risk-testing
+  - atlas-unrepresentative-data
+  type: Action
+- id: MP-2.1-001
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-untraceable-attribution
+  type: Action
+- id: MP-2.1-002
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-data-contamination
+  type: Action
+- id: MP-2.2-001
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-untraceable-attribution
+  type: Action
+- id: MP-2.2-002
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-spreading-disinformation
+  type: Action
+- id: MP-2.3-001
+  hasRelatedRisk:
+  - atlas-hallucination
+  - atlas-unreliable-source-attribution
+  type: Action
+- id: MP-2.3-002
+  hasRelatedRisk:
+  - atlas-data-bias
+  - atlas-unrepresentative-data
+  type: Action
+- id: MP-2.3-003
+  hasRelatedRisk:
+  - atlas-hallucination
+  - atlas-spreading-disinformation
+  type: Action
+- id: MP-2.3-004
+  hasRelatedRisk:
+  - atlas-nonconsensual-use
+  - atlas-spreading-disinformation
+  type: Action
+- id: MP-2.3-005
+  hasRelatedRisk:
+  - atlas-prompt-injection
+  - atlas-jailbreaking
+  - atlas-evasion-attack
+  type: Action
+- id: MP-3.4-001
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MP-3.4-002
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MP-3.4-003
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  - atlas-lack-domain-expertise
+  type: Action
+- id: MP-3.4-004
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MP-3.4-005
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  - atlas-impact-on-human-agency
+  type: Action
+- id: MP-3.4-006
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-incomplete-usage-definition
+  type: Action
+- id: MP-4.1-001
+  hasRelatedRisk:
+  - atlas-exposing-personal-information
+  - atlas-data-privacy-rights
+  type: Action
+- id: MP-4.1-002
+  hasRelatedRisk:
+  - atlas-copyright-infringement
+  - atlas-data-usage-rights
+  type: Action
+- id: MP-4.1-003
+  hasRelatedRisk:
+  - atlas-legal-accountability
+  type: Action
+- id: MP-4.1-004
+  hasRelatedRisk:
+  - atlas-data-curation
+  - atlas-lack-of-data-transparency
+  type: Action
+- id: MP-4.1-005
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  - atlas-data-privacy-rights
+  type: Action
+- id: MP-4.1-006
+  hasRelatedRisk:
+  - atlas-copyright-infringement
+  - atlas-data-privacy-rights
+  type: Action
+- id: MP-4.1-007
+  hasRelatedRisk:
+  - atlas-data-contamination
+  - atlas-poor-model-accuracy
+  type: Action
+- id: MP-4.1-008
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MP-4.1-009
+  hasRelatedRisk:
+  - atlas-exposing-personal-information
+  - atlas-personal-information-in-data
+  type: Action
+- id: MP-4.1-010
+  hasRelatedRisk:
+  - atlas-copyright-infringement
+  - atlas-data-privacy-rights
+  type: Action
+- id: MP-5.1-001
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-spreading-disinformation
+  type: Action
+- id: MP-5.1-002
+  hasRelatedRisk:
+  - atlas-spreading-disinformation
+  - atlas-nonconsensual-use
+  type: Action
+- id: MP-5.1-003
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  type: Action
+- id: MP-5.1-004
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MP-5.1-005
+  hasRelatedRisk:
+  - atlas-jailbreaking
+  - atlas-prompt-injection
+  - atlas-evasion-attack
+  type: Action
+- id: MP-5.1-006
+  hasRelatedRisk:
+  - atlas-spreading-disinformation
+  - atlas-prompt-injection
+  type: Action
+- id: MP-5.2-001
+  hasRelatedRisk:
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: MP-5.2-002
+  hasRelatedRisk:
+  - atlas-data-provenance
+  type: Action
+- id: MS-1.1-001
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  type: Action
+- id: MS-1.1-002
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-spreading-disinformation
+  type: Action
+- id: MS-1.1-003
+  hasRelatedRisk:
+  - atlas-decision-bias
+  - atlas-exclusion
+  type: Action
+- id: MS-1.1-004
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MS-1.1-005
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  - atlas-untraceable-attribution
+  type: Action
+- id: MS-1.1-006
+  hasRelatedRisk:
+  - atlas-output-bias
+  - atlas-exclusion
+  type: Action
+- id: MS-1.1-007
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-data-contamination
+  type: Action
+- id: MS-1.1-008
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MS-1.1-009
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MS-1.3-001
+  hasRelatedRisk:
+  - atlas-unrepresentative-risk-testing
+  type: Action
+- id: MS-1.3-002
+  hasRelatedRisk:
+  - atlas-unrepresentative-risk-testing
+  - atlas-lack-of-testing-diversity
+  type: Action
+- id: MS-1.3-003
+  hasRelatedRisk:
+  - atlas-unrepresentative-risk-testing
+  type: Action
+- id: MS-2.10-001
+  hasRelatedRisk:
+  - atlas-extraction-attack
+  - atlas-membership-inference-attack
+  - atlas-copyright-infringement
+  type: Action
+- id: MS-2.10-002
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MS-2.10-003
+  hasRelatedRisk:
+  - atlas-data-contamination
+  - atlas-overfitting
+  type: Action
+- id: MS-2.11-001
+  hasRelatedRisk:
+  - atlas-output-bias
+  - atlas-toxic-output
+  type: Action
+- id: MS-2.11-002
+  hasRelatedRisk:
+  - atlas-decision-bias
+  - atlas-output-bias
+  - atlas-exclusion
+  type: Action
+- id: MS-2.11-003
+  hasRelatedRisk:
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: MS-2.11-004
+  hasRelatedRisk:
+  - atlas-data-bias
+  - atlas-unrepresentative-data
+  type: Action
+- id: MS-2.11-005
+  hasRelatedRisk:
+  - atlas-data-contamination
+  - atlas-overfitting
+  type: Action
+- id: MS-2.12-001
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: MS-2.12-002
+  hasRelatedRisk:
+  - atlas-impact-on-the-environment
+  type: Action
+- id: MS-2.12-003
+  hasRelatedRisk:
+  - atlas-impact-on-the-environment
+  type: Action
+- id: MS-2.12-004
+  hasRelatedRisk:
+  - atlas-impact-on-the-environment
+  type: Action
+- id: MS-2.13-001
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MS-2.2-001
+  hasRelatedRisk:
+  - atlas-data-bias
+  - atlas-output-bias
+  type: Action
+- id: MS-2.2-002
+  hasRelatedRisk:
+  - atlas-data-privacy-rights
+  - atlas-exposing-personal-information
+  type: Action
+- id: MS-2.2-003
+  hasRelatedRisk:
+  - atlas-data-privacy-rights
+  type: Action
+- id: MS-2.2-004
+  hasRelatedRisk:
+  - atlas-exposing-personal-information
+  - atlas-reidentification
+  type: Action
+- id: MS-2.3-001
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  type: Action
+- id: MS-2.3-002
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  type: Action
+- id: MS-2.3-003
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  type: Action
+- id: MS-2.3-004
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MS-2.5-001
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MS-2.5-002
+  hasRelatedRisk:
+  - atlas-lack-of-model-transparency
+  type: Action
+- id: MS-2.5-003
+  hasRelatedRisk:
+  - atlas-hallucination
+  - atlas-unreliable-source-attribution
+  type: Action
+- id: MS-2.5-004
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MS-2.5-005
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-hallucination
+  type: Action
+- id: MS-2.5-006
+  hasRelatedRisk:
+  - atlas-jailbreaking
+  - atlas-prompt-injection
+  type: Action
+- id: MS-2.6-001
+  hasRelatedRisk:
+  - atlas-human-exploitation
+  - atlas-harmful-output
+  type: Action
+- id: MS-2.6-002
+  hasRelatedRisk:
+  - atlas-data-bias
+  - atlas-harmful-output
+  - atlas-copyright-infringement
+  type: Action
+- id: MS-2.6-003
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action
+- id: MS-2.6-004
+  hasRelatedRisk:
+  - atlas-harmful-code-generation
+  type: Action
+- id: MS-2.6-005
+  hasRelatedRisk:
+  - atlas-evasion-attack
+  - atlas-extraction-attack
+  type: Action
+- id: MS-2.6-006
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  - atlas-harmful-output
+  type: Action
+- id: MS-2.6-007
+  hasRelatedRisk:
+  - atlas-jailbreaking
+  - atlas-prompt-injection
+  type: Action
+- id: MS-2.7-001
+  hasRelatedRisk:
+  - atlas-extraction-attack
+  - atlas-data-poisoning
+  - atlas-evasion-attack
+  type: Action
+- id: MS-2.7-002
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  type: Action
+- id: MS-2.7-003
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  - atlas-spreading-disinformation
+  type: Action
+- id: MS-2.7-004
+  hasRelatedRisk:
+  - atlas-extraction-attack
+  - atlas-data-provenance
+  type: Action
+- id: MS-2.7-005
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  type: Action
+- id: MS-2.7-006
+  hasRelatedRisk:
+  - atlas-evasion-attack
+  type: Action
+- id: MS-2.7-007
+  hasRelatedRisk:
+  - atlas-prompt-injection
+  - atlas-jailbreaking
+  - atlas-evasion-attack
+  - atlas-data-poisoning
+  type: Action
+- id: MS-2.7-008
+  hasRelatedRisk:
+  - atlas-jailbreaking
+  - atlas-improper-retraining
+  type: Action
+- id: MS-2.7-009
+  hasRelatedRisk:
+  - atlas-evasion-attack
+  - atlas-extraction-attack
+  type: Action
+- id: MS-2.8-001
+  hasRelatedRisk:
+  - atlas-copyright-infringement
+  - atlas-non-disclosure
+  type: Action
+- id: MS-2.8-002
+  hasRelatedRisk:
+  - atlas-unrepresentative-risk-testing
+  type: Action
+- id: MS-2.8-003
+  hasRelatedRisk:
+  - atlas-untraceable-attribution
+  - atlas-data-provenance
+  type: Action
+- id: MS-2.8-004
+  hasRelatedRisk:
+  - atlas-improper-usage
+  type: Action
+- id: MS-2.9-001
+  hasRelatedRisk:
+  - atlas-unexplainable-output
+  - atlas-lack-of-model-transparency
+  type: Action
+- id: MS-2.9-002
+  hasRelatedRisk:
+  - atlas-lack-of-model-transparency
+  - atlas-lack-of-data-transparency
+  type: Action
+- id: MS-3.2-001
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action
+- id: MS-3.3-001
+  hasRelatedRisk:
+  - atlas-impact-on-affected-communities
+  - atlas-impact-on-cultural-diversity
+  type: Action
+- id: MS-3.3-002
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  - atlas-untraceable-attribution
+  type: Action
+- id: MS-3.3-003
+  hasRelatedRisk:
+  - atlas-output-bias
+  - atlas-decision-bias
+  type: Action
+- id: MS-3.3-004
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MS-3.3-005
+  hasRelatedRisk:
+  - atlas-impact-on-affected-communities
+  type: Action
+- id: MS-4.2-001
+  hasRelatedRisk:
+  - atlas-jailbreaking
+  - atlas-prompt-injection
+  - atlas-evasion-attack
+  type: Action
+- id: MS-4.2-002
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  type: Action
+- id: MS-4.2-003
+  hasRelatedRisk:
+  - atlas-unexplainable-output
+  type: Action
+- id: MS-4.2-004
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  type: Action
+- id: MS-4.2-005
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  type: Action

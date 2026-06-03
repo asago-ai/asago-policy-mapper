@@ -1,0 +1,251 @@
+# AIUC-1 requirements → IBM AI Risk Atlas direct mappings
+# 49 requirements, 100 risk links
+# Reviewed 2026-06-03. e007, e014 retired/merged in AIUC-1 Q1 2026 update.
+actions:
+- id: aiuc1-req-a001
+  hasRelatedRisk:
+  - atlas-data-privacy-rights
+  - atlas-data-usage
+  - atlas-data-acquisition
+  type: Action
+- id: aiuc1-req-a002
+  hasRelatedRisk:
+  - atlas-generated-content-ownership
+  - atlas-data-usage-rights
+  type: Action
+- id: aiuc1-req-a003
+  hasRelatedRisk:
+  - atlas-sharing-info-tools-agentic
+  - atlas-sharing-info-user-agentic
+  - atlas-data-privacy-rights
+  type: Action
+- id: aiuc1-req-a004
+  hasRelatedRisk:
+  - atlas-revealing-confidential-information
+  - atlas-ip-information-in-prompt
+  - atlas-confidential-data-in-prompt
+  type: Action
+- id: aiuc1-req-a005
+  hasRelatedRisk:
+  - atlas-exposing-personal-information
+  - atlas-revealing-confidential-information
+  type: Action
+- id: aiuc1-req-a006
+  hasRelatedRisk:
+  - atlas-exposing-personal-information
+  - atlas-personal-information-in-data
+  type: Action
+- id: aiuc1-req-a007
+  hasRelatedRisk:
+  - atlas-copyright-infringement
+  - atlas-plagiarism
+  type: Action
+- id: aiuc1-req-b001
+  hasRelatedRisk:
+  - atlas-evasion-attack
+  - atlas-prompt-injection
+  - atlas-jailbreaking
+  type: Action
+- id: aiuc1-req-b002
+  hasRelatedRisk:
+  - atlas-prompt-injection
+  - atlas-jailbreaking
+  - atlas-evasion-attack
+  type: Action
+- id: aiuc1-req-b003
+  hasRelatedRisk:
+  - atlas-extraction-attack
+  - atlas-social-hacking-attack
+  type: Action
+- id: aiuc1-req-b004
+  hasRelatedRisk:
+  - atlas-extraction-attack
+  type: Action
+- id: aiuc1-req-b005
+  hasRelatedRisk:
+  - atlas-prompt-injection
+  - atlas-jailbreaking
+  - atlas-direct-instructions-attack
+  type: Action
+- id: aiuc1-req-b006
+  hasRelatedRisk:
+  - atlas-unauthorized-use-agentic
+  - atlas-misaligned-actions-agentic
+  - atlas-exploit-trust-mismatch-agentic
+  type: Action
+- id: aiuc1-req-b007
+  hasRelatedRisk:
+  - atlas-unauthorized-use-agentic
+  - atlas-improper-usage
+  type: Action
+- id: aiuc1-req-b008
+  hasRelatedRisk:
+  - atlas-extraction-attack
+  - atlas-data-poisoning
+  type: Action
+- id: aiuc1-req-b009
+  hasRelatedRisk:
+  - atlas-revealing-confidential-information
+  - atlas-exposing-personal-information
+  - atlas-prompt-leaking
+  type: Action
+- id: aiuc1-req-c001
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  - atlas-incomplete-usage-definition
+  type: Action
+- id: aiuc1-req-c002
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  - atlas-unrepresentative-risk-testing
+  type: Action
+- id: aiuc1-req-c003
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-toxic-output
+  - atlas-decision-bias
+  type: Action
+- id: aiuc1-req-c004
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-incomplete-usage-definition
+  type: Action
+- id: aiuc1-req-c005
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-dangerous-use
+  type: Action
+- id: aiuc1-req-c006
+  hasRelatedRisk:
+  - atlas-harmful-code-generation
+  type: Action
+- id: aiuc1-req-c007
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-over-or-under-reliance
+  type: Action
+- id: aiuc1-req-c008
+  hasRelatedRisk:
+  - atlas-incorrect-risk-testing
+  - atlas-lack-of-system-transparency
+  type: Action
+- id: aiuc1-req-c009
+  hasRelatedRisk:
+  - atlas-over-or-under-reliance
+  - atlas-impact-on-human-agency
+  type: Action
+- id: aiuc1-req-c010
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-toxic-output
+  - atlas-decision-bias
+  type: Action
+- id: aiuc1-req-c011
+  hasRelatedRisk:
+  - atlas-improper-usage
+  type: Action
+- id: aiuc1-req-c012
+  hasRelatedRisk:
+  - atlas-harmful-output
+  - atlas-dangerous-use
+  type: Action
+- id: aiuc1-req-d001
+  hasRelatedRisk:
+  - atlas-hallucination
+  type: Action
+- id: aiuc1-req-d002
+  hasRelatedRisk:
+  - atlas-hallucination
+  type: Action
+- id: aiuc1-req-d003
+  hasRelatedRisk:
+  - atlas-function-calling-hallucination-agentic
+  - atlas-unauthorized-use-agentic
+  - atlas-misaligned-actions-agentic
+  type: Action
+- id: aiuc1-req-d004
+  hasRelatedRisk:
+  - atlas-function-calling-hallucination-agentic
+  - atlas-unauthorized-use-agentic
+  type: Action
+- id: aiuc1-req-e001
+  hasRelatedRisk:
+  - atlas-extraction-attack
+  - atlas-exposing-personal-information
+  type: Action
+- id: aiuc1-req-e002
+  hasRelatedRisk:
+  - atlas-harmful-output
+  type: Action
+- id: aiuc1-req-e003
+  hasRelatedRisk:
+  - atlas-hallucination
+  type: Action
+- id: aiuc1-req-e004
+  hasRelatedRisk:
+  - atlas-accountability-agentic
+  - atlas-legal-accountability
+  type: Action
+- id: aiuc1-req-e005
+  hasRelatedRisk:
+  - atlas-data-privacy-rights
+  - atlas-data-transfer
+  type: Action
+- id: aiuc1-req-e006
+  hasRelatedRisk:
+  - atlas-data-provenance
+  - atlas-data-acquisition
+  type: Action
+- id: aiuc1-req-e008
+  hasRelatedRisk:
+  - atlas-legal-accountability
+  type: Action
+- id: aiuc1-req-e009
+  hasRelatedRisk:
+  - atlas-unauthorized-use-agentic
+  - atlas-data-privacy-rights
+  type: Action
+- id: aiuc1-req-e010
+  hasRelatedRisk:
+  - atlas-improper-usage
+  - atlas-dangerous-use
+  type: Action
+- id: aiuc1-req-e011
+  hasRelatedRisk:
+  - atlas-data-transfer
+  type: Action
+- id: aiuc1-req-e012
+  hasRelatedRisk:
+  - atlas-legal-accountability
+  - atlas-data-privacy-rights
+  type: Action
+- id: aiuc1-req-e013
+  hasRelatedRisk:
+  - atlas-poor-model-accuracy
+  type: Action
+- id: aiuc1-req-e015
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  - atlas-accountability-agentic
+  - atlas-unexplainable-untraceable-actions-agentic
+  type: Action
+- id: aiuc1-req-e016
+  hasRelatedRisk:
+  - atlas-non-disclosure
+  - atlas-untraceable-attribution
+  type: Action
+- id: aiuc1-req-e017
+  hasRelatedRisk:
+  - atlas-lack-of-system-transparency
+  - atlas-lack-of-model-transparency
+  - atlas-non-disclosure
+  type: Action
+- id: aiuc1-req-f001
+  hasRelatedRisk:
+  - atlas-harmful-code-generation
+  - atlas-dangerous-use
+  type: Action
+- id: aiuc1-req-f002
+  hasRelatedRisk:
+  - atlas-dangerous-use
+  type: Action

@@ -329,6 +329,49 @@
                         </template>
                       </div>
                     </div>
+                    <!-- Mitigations -->
+                    <div x-show="(risk.mitigations || []).length > 0" x-data="{ mitOpen: false }">
+                      <p class="tip text-xs text-gray-400 uppercase mb-1 cursor-pointer select-none" @click="mitOpen = !mitOpen"
+                         data-tip="Recommended mitigation actions from NIST, OWASP, MIT, Credo, and AIUC-1 frameworks, categorized as technical (engineering deploys), operational (ops/QA executes), or governance (leadership/compliance owns).">
+                        Mitigations
+                        <span class="text-gray-500 font-mono" x-text="'(' + (risk.mitigations || []).length + ')'"></span>
+                        <template x-for="cat in ['technical','operational','governance']" :key="cat">
+                          <span class="ml-1 px-1 py-0.5 rounded text-xs"
+                                :class="cat === 'technical' ? 'bg-blue-50 text-blue-700' : cat === 'operational' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'"
+                                x-text="cat[0].toUpperCase() + ':' + (risk.mitigations || []).filter(m => m.category === cat).length"
+                                x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0"></span>
+                        </template>
+                        <svg class="w-3 h-3 inline ml-1 text-gray-400 chevron"
+                             :class="mitOpen ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </p>
+                      <div x-show="mitOpen" class="space-y-2">
+                        <template x-for="cat in ['technical','operational','governance']" :key="cat">
+                          <div x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0">
+                            <p class="text-xs font-semibold mt-1 mb-0.5"
+                               :class="cat === 'technical' ? 'text-blue-700' : cat === 'operational' ? 'text-amber-700' : 'text-purple-700'"
+                               x-text="cat.charAt(0).toUpperCase() + cat.slice(1)"></p>
+                            <template x-for="src in [...new Set((risk.mitigations || []).filter(m => m.category === cat).map(m => m.source))].sort()" :key="src">
+                              <div class="ml-2 mb-1">
+                                <p class="text-xs text-gray-500" x-text="src"></p>
+                                <div class="flex flex-wrap gap-1">
+                                  <template x-for="m in (risk.mitigations || []).filter(m => m.category === cat && m.source === src)" :key="m.action_id">
+                                    <div class="tip rounded text-xs p-1.5 mb-1"
+                                         :class="cat === 'technical' ? 'bg-blue-50 text-blue-800' : cat === 'operational' ? 'bg-amber-50 text-amber-800' : 'bg-purple-50 text-purple-800'"
+                                         :data-tip="m.action_id">
+                                      <span class="font-semibold" x-text="m.action_name || m.action_id"></span>
+                                      <p x-show="m.description" class="mt-0.5 text-xs opacity-80 font-normal" x-text="m.description"></p>
+                                    </div>
+                                  </template>
+                                </div>
+                              </div>
+                            </template>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
                     <!-- Inline LLM calls for this risk -->
                     <div x-show="riskCalls(risk.risk_id).length > 0">
                       <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="LLM calls that involved this risk (grounding verification, borderline judging).">LLM Calls</p>
