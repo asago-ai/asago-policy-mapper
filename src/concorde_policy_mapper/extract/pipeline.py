@@ -209,6 +209,42 @@ def _run_grounding(chunk_results, chunks, client, config, retrieval, index, call
     return all_matches, all_filtered, grounding_filtered
 
 
+def _run_judge(chunk_results, chunks, client, config, retrieval, call_collector):
+    max_workers = config.max_concurrent
+    if retrieval.no_judge:
+        for cr in chunk_results:
+            if cr.borderline:
+                cr.borderline_judged = list(cr.borderline)
+                cr.accepted.extend(cr.borderline)
+    elif retrieval.use_cross_encoder:
+        judge_tasks = [
+            (i, cr) for i, cr in enumerate(chunk_results) if cr.borderline
+        ]
+        if judge_tasks:
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                futures = {
+                    pool.submit(_judge_one, i, cr, chunks, client, config.model, call_collector, retrieval.judge_prompt, retrieval.judge_context_tokens): i
+                    for i, cr in judge_tasks
+                }
+                for future in as_completed(futures):
+                    idx, judged = future.result()
+                    chunk_results[idx].borderline_judged = judged
+                    chunk_results[idx].accepted.extend(judged)
+
+
+def _build_chunk_risk_map(chunk_results, all_matches, no_grounding):
+    chunk_risk_ids: dict[int, list[str]] = {}
+    if no_grounding:
+        for cr in chunk_results:
+            for candidate in cr.accepted:
+                chunk_risk_ids.setdefault(cr.chunk_index, []).append(candidate.risk_id)
+    else:
+        for m in all_matches:
+            for ev in m.evidence:
+                chunk_risk_ids.setdefault(ev.chunk_index, []).append(m.risk_id)
+    return chunk_risk_ids
+
+
 def _run_expansion(
     risks, merged, chunk_results, chunks, documents,
     index, client, config, max_workers, call_collector,
@@ -374,25 +410,7 @@ def run_extraction(
     ]
 
     with timed(timing, "judge_ms"):
-        if retrieval.no_judge:
-            for cr in chunk_results:
-                if cr.borderline:
-                    cr.borderline_judged = list(cr.borderline)
-                    cr.accepted.extend(cr.borderline)
-        elif retrieval.use_cross_encoder:
-            judge_tasks = [
-                (i, cr) for i, cr in enumerate(chunk_results) if cr.borderline
-            ]
-            if judge_tasks:
-                with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                    futures = {
-                        pool.submit(_judge_one, i, cr, chunks, client, config.model, call_collector, retrieval.judge_prompt, retrieval.judge_context_tokens): i
-                        for i, cr in judge_tasks
-                    }
-                    for future in as_completed(futures):
-                        idx, judged = future.result()
-                        chunk_results[idx].borderline_judged = judged
-                        chunk_results[idx].accepted.extend(judged)
+        _run_judge(chunk_results, chunks, client, config, retrieval, call_collector)
 
     if retrieval.no_grounding:
         all_matches = _collect_ungrounded(chunk_results, index, retrieval)
@@ -405,15 +423,7 @@ def run_extraction(
                 chunk_results, chunks, client, config, retrieval, index, call_collector,
             )
 
-    chunk_risk_ids: dict[int, list[str]] = {}
-    if retrieval.no_grounding:
-        for cr in chunk_results:
-            for candidate in cr.accepted:
-                chunk_risk_ids.setdefault(cr.chunk_index, []).append(candidate.risk_id)
-    else:
-        for m in all_matches:
-            for ev in m.evidence:
-                chunk_risk_ids.setdefault(ev.chunk_index, []).append(m.risk_id)
+    chunk_risk_ids = _build_chunk_risk_map(chunk_results, all_matches, retrieval.no_grounding)
     for cs in chunk_summaries:
         cs.accepted_risk_ids = sorted(set(chunk_risk_ids.get(cs.index, [])))
 

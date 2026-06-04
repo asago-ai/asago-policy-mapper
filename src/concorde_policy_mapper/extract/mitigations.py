@@ -140,6 +140,16 @@ def load_risk_consequences(
     return _load_risk_yaml(path or _DEFAULT_CONSEQUENCES_PATH, "Risk consequences")
 
 
+def _resolve_via_crossmap(risk_id, data_dict, crossmap):
+    result = data_dict.get(risk_id)
+    if not result and crossmap:
+        for atlas_id in sorted(crossmap.get(risk_id, set())):
+            result = data_dict.get(atlas_id)
+            if result:
+                break
+    return result
+
+
 def enrich_with_mitigations(
     risks: list[RiskMatch],
     index: dict[str, list[MitigationRef]],
@@ -166,24 +176,14 @@ def enrich_with_mitigations(
         risk.mitigations = mitigations
 
         if risk_threats:
-            threat_data = risk_threats.get(risk.risk_id)
-            if not threat_data and risk_crossmap:
-                for atlas_id in sorted(risk_crossmap.get(risk.risk_id, set())):
-                    threat_data = risk_threats.get(atlas_id)
-                    if threat_data:
-                        break
+            threat_data = _resolve_via_crossmap(risk.risk_id, risk_threats, risk_crossmap)
             if threat_data:
                 risk.threat = threat_data.get("threat")
                 risk.threat_source = threat_data.get("threat_source")
                 risk.vulnerability = threat_data.get("vulnerability")
 
         if risk_consequences:
-            cons_data = risk_consequences.get(risk.risk_id)
-            if not cons_data and risk_crossmap:
-                for atlas_id in sorted(risk_crossmap.get(risk.risk_id, set())):
-                    cons_data = risk_consequences.get(atlas_id)
-                    if cons_data:
-                        break
+            cons_data = _resolve_via_crossmap(risk.risk_id, risk_consequences, risk_crossmap)
             if cons_data:
                 risk.consequence = cons_data.get("consequence")
                 risk.impact = cons_data.get("impact")

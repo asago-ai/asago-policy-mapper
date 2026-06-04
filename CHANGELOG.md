@@ -16,6 +16,9 @@
   - Split `_call_with_retry()` into `_retry_with_validation()` (handles context overflow + validation errors) and the outer truncation retry loop.
   - Extracted `_load_colbert()`, `_load_bi_encoder()`, `_load_cross_encoder()` factory functions from `RiskIndex.__init__` — reduces CC from 24 to ~8.
   - Extracted `_pad_with_budget()` from `build_padded_text()` — separates token-budget padding from sentence-based padding.
+  - Extracted `_run_judge()` and `_build_chunk_risk_map()` from `run_extraction` — CC 38→24.
+  - Extracted `_resolve_via_crossmap()` from `enrich_with_mitigations` — deduplicates crossmap fallback for mitigations, threats, and consequences. CC 21→13.
+  - Extracted `_rescue_and_merge_scores()` from `hybrid_search` — CC 18→12.
 - **Decomplection analysis revised**: fixed inaccurate counts (18→23 params, 7→8 timing sites, 30→27 CLI params), replaced strategy pattern proposal for RiskIndex with lighter shared-function approach, replaced debug module globals entry with eval↔extraction schema drift concern, added caveat to RetrievalConfig that a dataclass alone is cosmetic without pre-resolving downstream decisions.
 - **Schema drift smoke test**: `test_extraction_result_schema_compatible_with_eval` constructs an `ExtractionResult` via Pydantic, serializes to JSON, and runs eval — catches silent breakage if extraction output fields drift from what eval reads.
 

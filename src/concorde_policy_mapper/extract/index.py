@@ -230,6 +230,36 @@ def _load_cross_encoder(model_name):
     return local, None, model_name in _SIGMOID_MODELS, model_name in _NLI_MODELS
 
 
+def _rescue_and_merge_scores(reranked, rrf_candidates, bm25_rescue_rank):
+    if bm25_rescue_rank > 0:
+        reranked_ids = {c.risk_id for c in reranked}
+        for c in rrf_candidates:
+            if (
+                c.risk_id not in reranked_ids
+                and c.bm25_rank > 0
+                and c.bm25_rank <= bm25_rescue_rank
+            ):
+                reranked.append(c)
+
+    rrf_lookup = {c.risk_id: c for c in rrf_candidates}
+    results = []
+    for c in reranked:
+        source = rrf_lookup.get(c.risk_id)
+        if source:
+            results.append(
+                c.model_copy(
+                    update={
+                        "rrf_score": source.rrf_score,
+                        "bm25_rank": source.bm25_rank,
+                        "embedding_distance": source.embedding_distance,
+                    }
+                )
+            )
+        else:
+            results.append(c)
+    return results
+
+
 class RiskIndex:
     def __init__(
         self,
@@ -468,34 +498,7 @@ class RiskIndex:
             ][:top_k]
 
         reranked = self.rerank(text, rrf_candidates, top_k=top_k)
-
-        if bm25_rescue_rank > 0:
-            reranked_ids = {c.risk_id for c in reranked}
-            for c in rrf_candidates:
-                if (
-                    c.risk_id not in reranked_ids
-                    and c.bm25_rank > 0
-                    and c.bm25_rank <= bm25_rescue_rank
-                ):
-                    reranked.append(c)
-
-        rrf_lookup = {c.risk_id: c for c in rrf_candidates}
-        results = []
-        for c in reranked:
-            source = rrf_lookup.get(c.risk_id)
-            if source:
-                results.append(
-                    c.model_copy(
-                        update={
-                            "rrf_score": source.rrf_score,
-                            "bm25_rank": source.bm25_rank,
-                            "embedding_distance": source.embedding_distance,
-                        }
-                    )
-                )
-            else:
-                results.append(c)
-        return results
+        return _rescue_and_merge_scores(reranked, rrf_candidates, bm25_rescue_rank)
 
     def _hybrid_search_colbert(
         self,
