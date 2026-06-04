@@ -1,0 +1,211 @@
+{
+  "model": "Alibaba-NLP/gte-reranker-modernbert-base",
+  "split": "eval",
+  "total_pairs": 8649,
+  "auc_roc": 0.8133,
+  "best_threshold": 0.67,
+  "best_f1": 0.5119,
+  "metrics_at_thresholds": [
+    {
+      "threshold": 0.15,
+      "precision": 0.1803,
+      "recall": 1.0,
+      "f1": 0.3054,
+      "tp": 1559,
+      "fp": 7090,
+      "fn": 0,
+      "tn": 0,
+      "predicted_pos": 8649,
+      "predicted_neg": 0
+    },
+    {
+      "threshold": 0.3,
+      "precision": 0.1803,
+      "recall": 1.0,
+      "f1": 0.3054,
+      "tp": 1559,
+      "fp": 7090,
+      "fn": 0,
+      "tn": 0,
+      "predicted_pos": 8649,
+      "predicted_neg": 0
+    },
+    {
+      "threshold": 0.5,
+      "precision": 0.1803,
+      "recall": 1.0,
+      "f1": 0.3054,
+      "tp": 1559,
+      "fp": 7090,
+      "fn": 0,
+      "tn": 0,
+      "predicted_pos": 8649,
+      "predicted_neg": 0
+    },
+    {
+      "threshold": 0.7,
+      "precision": 0.7432,
+      "recall": 0.0706,
+      "f1": 0.1289,
+      "tp": 110,
+      "fp": 38,
+      "fn": 1449,
+      "tn": 7052,
+      "predicted_pos": 148,
+      "predicted_neg": 8501
+    },
+    {
+      "threshold": 0.85,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1559,
+      "tn": 7090,
+      "predicted_pos": 0,
+      "predicted_neg": 8649
+    },
+    {
+      "threshold": 0.9,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1559,
+      "tn": 7090,
+      "predicted_pos": 0,
+      "predicted_neg": 8649
+    },
+    {
+      "threshold": 0.95,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1559,
+      "tn": 7090,
+      "predicted_pos": 0,
+      "predicted_neg": 8649
+    }
+  ],
+  "pair_type_breakdown": {
+    "positive": {
+      "count": 1559,
+      "accuracy": 0.0706,
+      "mean_score": 0.6682,
+      "median_score": 0.6734,
+      "std_score": 0.0275
+    },
+    "hard_negative": {
+      "count": 3972,
+      "accuracy": 0.9917,
+      "mean_score": 0.634,
+      "median_score": 0.6389,
+      "std_score": 0.0387
+    },
+    "easy_negative": {
+      "count": 3118,
+      "accuracy": 0.9984,
+      "mean_score": 0.6173,
+      "median_score": 0.6187,
+      "std_score": 0.0382
+    }
+  },
+  "per_policy": {
+    "ars": {
+      "precision": 0.4545,
+      "recall": 0.625,
+      "f1": 0.5263,
+      "total": 135,
+      "positives": 24
+    },
+    "aus-gov": {
+      "precision": 0.4516,
+      "recall": 0.5714,
+      "f1": 0.5045,
+      "total": 585,
+      "positives": 98
+    },
+    "ebay": {
+      "precision": 0.5072,
+      "recall": 0.625,
+      "f1": 0.56,
+      "total": 334,
+      "positives": 56
+    },
+    "leicestershire_police": {
+      "precision": 0.4817,
+      "recall": 0.4731,
+      "f1": 0.4773,
+      "total": 996,
+      "positives": 167
+    },
+    "lenovo": {
+      "precision": 0.4545,
+      "recall": 0.6962,
+      "f1": 0.55,
+      "total": 931,
+      "positives": 158
+    },
+    "lse-legreg": {
+      "precision": 0.4615,
+      "recall": 0.6328,
+      "f1": 0.5338,
+      "total": 1530,
+      "positives": 256
+    },
+    "lse-marking": {
+      "precision": 0.6667,
+      "recall": 0.4,
+      "f1": 0.5,
+      "total": 565,
+      "positives": 105
+    },
+    "new-york-state": {
+      "precision": 0.4412,
+      "recall": 0.6637,
+      "f1": 0.53,
+      "total": 589,
+      "positives": 113
+    },
+    "npcc": {
+      "precision": 0.4161,
+      "recall": 0.4318,
+      "f1": 0.4238,
+      "total": 696,
+      "positives": 132
+    },
+    "penn": {
+      "precision": 0.45,
+      "recall": 0.6835,
+      "f1": 0.5427,
+      "total": 471,
+      "positives": 79
+    },
+    "prosus": {
+      "precision": 0.3333,
+      "recall": 0.9302,
+      "f1": 0.4908,
+      "total": 240,
+      "positives": 43
+    },
+    "st-johns": {
+      "precision": 0.5417,
+      "recall": 0.5306,
+      "f1": 0.5361,
+      "total": 208,
+      "positives": 49
+    },
+    "vps": {
+      "precision": 0.542,
+      "recall": 0.4624,
+      "f1": 0.499,
+      "total": 1369,
+      "positives": 279
+    }
+  },
+  "scoring_time_s": 377.3
+}

@@ -1,0 +1,38 @@
+{
+  "train_policies": [
+    "sap",
+    "cisco-supplier",
+    "firstsource",
+    "guy-nhs",
+    "rdash-nhs",
+    "dhs-gov",
+    "eu-com",
+    "ovic",
+    "camden-borough-work",
+    "llvm",
+    "amadeus",
+    "fs-isac",
+    "gray",
+    "icrc"
+  ],
+  "eval_policies": [
+    "ars",
+    "leicestershire_police",
+    "lse-legreg",
+    "aus-gov",
+    "lenovo",
+    "prosus",
+    "new-york-state",
+    "lse-marking",
+    "ebay",
+    "vps",
+    "npcc",
+    "penn",
+    "st-johns"
+  ],
+  "train_pairs": 7208,
+  "eval_pairs": 8649,
+  "seed": 42,
+  "hard_neg_ratio": 3,
+  "easy_neg_ratio": 2
+}
