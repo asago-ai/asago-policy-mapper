@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+- **DSPy embedding instruction optimization** (`experiments/dspy_embedding/`): uses GEPA to optimize the query instruction prefix for instruction-aware embedding models (e.g. Qwen3-Embedding), maximizing risk-level retrieval recall
+- **`RiskIndex.set_query_instruction()`**: update the remote bi-encoder's query instruction without rebuilding the index
+- **`--grounding-passes N` flag**: runs per-chunk grounding N times and unions the results, reducing variance from LLM non-determinism. Stabilizes which base risks survive grounding, which in turn stabilizes expansion seeds.
+- **`--expansion-passes N` flag**: runs expansion grounding N times and unions the results, reducing variance from LLM non-determinism on borderline data-type variant risks.
+
 ### Fixed
 - **`accepted_by` label bug**: when `no_judge=True` with grounding enabled, candidates were incorrectly tagged `"llm_judge"` instead of `"auto_promoted"`. The grounding path now uses the same `determine_accepted_by()` function as the no-grounding path.
 

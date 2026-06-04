@@ -85,6 +85,59 @@ uv run python -m experiments.dspy_ground \
 
 ---
 
+### `dspy_embedding/` — Embedding Instruction Optimization
+
+Optimizes the query instruction prefix for instruction-aware embedding models (e.g. Qwen3-Embedding). The instruction is prepended to queries as `"Instruct: {instruction}\nQuery: {text}"` when using remote embedding endpoints. GEPA tunes this instruction to maximize risk-level retrieval recall.
+
+**Metric:** Risk-level recall (per-policy) — fraction of ground truth risks retrieved across all chunks via hybrid search (BM25 + semantic + RRF, no cross-encoder).
+
+**Optimization target:** The instruction string is the DSPy signature's `instructions` field. GEPA rewrites it via reflection; the module injects it into the remote bi-encoder's query prefix on each trial.
+
+```bash
+uv run python -m experiments.dspy_embedding \
+  --bi-encoder-model https://qwen-embedding.apps.example.com/v1/embeddings \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://your-llm-endpoint/v1 \
+  --model gemma-4-26b-a4b-it \
+  --auto medium
+```
+
+**Quick prototyping (subset of policies):**
+
+```bash
+uv run python -m experiments.dspy_embedding \
+  --bi-encoder-model https://qwen-embedding.../v1/embeddings \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://your-llm-endpoint/v1 \
+  --model gemma-4-26b-a4b-it \
+  --train-policies sap,cisco-supplier,firstsource,guy-nhs,rdash-nhs \
+  --auto light
+```
+
+**Baseline only:**
+
+```bash
+uv run python -m experiments.dspy_embedding \
+  --bi-encoder-model https://qwen-embedding.../v1/embeddings \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://your-llm-endpoint/v1 \
+  --model gemma-4-26b-a4b-it \
+  --baseline-only
+```
+
+**Options:**
+- `--auto light|medium|heavy` — GEPA optimization intensity (default: medium)
+- `--train-policies` — comma-separated subset for fast iteration
+- `--baseline-only` — skip optimization, just measure current recall
+- `--top-k` — candidates per chunk from hybrid search (default: 50)
+- `--rrf-min-score` — RRF score floor (default: 0.015)
+
+**Output:** Results and optimized program saved to `experiments/dspy_embedding/runs/`.
+
+**Applying results:** Update `RetrievalConfig.query_instruction` in `src/concorde_policy_mapper/extract/models.py` with the optimized instruction, or pass it via `--query-instruction` at extraction time.
+
+---
+
 ### `cross_encoder_tuning/` — Cross-Encoder Evaluation & Fine-Tuning
 
 Scripts for building datasets, evaluating, and fine-tuning cross-encoder reranker models.
