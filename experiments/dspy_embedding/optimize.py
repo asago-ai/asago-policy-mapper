@@ -219,8 +219,11 @@ def main():
             if hasattr(predictor, "signature") and hasattr(predictor.signature, "instructions"):
                 optimized_instructions = predictor.signature.instructions
             break
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning(
+            "Failed to extract optimized instruction from predictors; continuing with empty instruction.",
+            exc_info=exc,
+        )
 
     result = {
         "bi_encoder_model": args.bi_encoder_model,
