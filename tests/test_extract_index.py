@@ -2,7 +2,20 @@ from types import SimpleNamespace
 
 import pytest
 
-from concorde_policy_mapper.extract.index import RiskIndex, _is_remote, _parse_remote_url
+import numpy as np
+
+from unittest.mock import MagicMock, patch
+
+from concorde_policy_mapper.extract.index import (
+    RiskIndex,
+    _RemoteBiEncoder,
+    _RemoteCrossEncoder,
+    _is_remote,
+    _make_score_normalizer,
+    _parse_remote_url,
+    _rrf_fuse,
+)
+from concorde_policy_mapper.extract.models import ScoredCandidate
 
 
 def _make_risk(id, name, description, concern=""):
@@ -152,3 +165,150 @@ def test_parse_remote_url():
 def test_colbert_remote_rejected():
     with pytest.raises(ValueError, match="ColBERT models cannot be served remotely"):
         RiskIndex(RISKS, colbert_model="https://lateon.example.com/v1/embeddings")
+
+
+# --- _rrf_fuse tests ---
+
+def _sc(risk_id, ce_score=0.0, embed_dist=0.0, bm25_rank=0):
+    return ScoredCandidate(
+        risk_id=risk_id, risk_name=risk_id, risk_description="",
+        cross_encoder_score=ce_score, embedding_distance=embed_dist,
+        bm25_rank=bm25_rank,
+    )
+
+
+def test_rrf_fuse_basic():
+    list_a = [_sc("R-001"), _sc("R-002")]
+    list_b = [_sc("R-002", embed_dist=0.3), _sc("R-003", embed_dist=0.5)]
+    rrf_scores, candidate_data, bm25_ranks = _rrf_fuse(list_a, list_b, rrf_k=60)
+    assert "R-001" in rrf_scores
+    assert "R-002" in rrf_scores
+    assert "R-003" in rrf_scores
+    assert rrf_scores["R-002"] > rrf_scores["R-001"]
+    assert bm25_ranks["R-001"] == 1
+    assert bm25_ranks["R-002"] == 2
+    assert "R-003" not in bm25_ranks
+    assert candidate_data["R-001"].risk_id == "R-001"
+
+
+def test_rrf_fuse_first_occurrence_wins():
+    list_a = [_sc("R-001", ce_score=0.9)]
+    list_b = [_sc("R-001", ce_score=0.1)]
+    _, candidate_data, _ = _rrf_fuse(list_a, list_b)
+    assert candidate_data["R-001"].cross_encoder_score == 0.9
+
+
+# --- _make_score_normalizer tests ---
+
+def test_score_normalizer_clip():
+    norm = _make_score_normalizer(is_nli=False, apply_sigmoid=False)
+    raw = np.array([0.5, 1.5, -0.3])
+    result = norm(raw)
+    np.testing.assert_array_almost_equal(result, [0.5, 1.0, 0.0])
+
+
+def test_score_normalizer_sigmoid():
+    norm = _make_score_normalizer(is_nli=False, apply_sigmoid=True)
+    raw = np.array([0.0])
+    result = norm(raw)
+    assert abs(result[0] - 0.5) < 1e-6
+
+
+def test_score_normalizer_nli_2d():
+    norm = _make_score_normalizer(is_nli=True, apply_sigmoid=False)
+    raw = np.array([[1.0, 2.0, 3.0]])
+    result = norm(raw)
+    assert result.shape == (1,)
+    assert result[0] > 0.5
+
+
+# --- _RemoteBiEncoder tests ---
+
+
+@patch("openai.OpenAI")
+def test_remote_bi_encoder_encode(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_openai_cls.return_value = mock_client
+    mock_client.embeddings.create.return_value = SimpleNamespace(data=[
+        SimpleNamespace(index=0, embedding=[0.1, 0.2, 0.3]),
+        SimpleNamespace(index=1, embedding=[0.4, 0.5, 0.6]),
+    ])
+
+    encoder = _RemoteBiEncoder("https://bge-m3-model-serving.apps.example.com/v1/embeddings")
+    result = encoder.encode(["hello", "world"], normalize=True)
+
+    assert result.shape == (2, 3)
+    # Verify rows are L2-normalized (unit vectors)
+    norms = np.linalg.norm(result, axis=1)
+    np.testing.assert_allclose(norms, [1.0, 1.0], atol=1e-6)
+    mock_client.embeddings.create.assert_called_once()
+
+
+@patch("openai.OpenAI")
+def test_remote_bi_encoder_encode_batches(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_openai_cls.return_value = mock_client
+
+    # First batch: 2 texts
+    batch1_response = SimpleNamespace(data=[
+        SimpleNamespace(index=0, embedding=[1.0, 0.0]),
+        SimpleNamespace(index=1, embedding=[0.0, 1.0]),
+    ])
+    # Second batch: 1 text
+    batch2_response = SimpleNamespace(data=[
+        SimpleNamespace(index=0, embedding=[1.0, 1.0]),
+    ])
+    mock_client.embeddings.create.side_effect = [batch1_response, batch2_response]
+
+    encoder = _RemoteBiEncoder(
+        "https://bge-m3-model-serving.apps.example.com/v1/embeddings",
+        batch_size=2,
+    )
+    result = encoder.encode(["a", "b", "c"], normalize=True)
+
+    assert result.shape == (3, 2)
+    assert mock_client.embeddings.create.call_count == 2
+    # Verify first call got batch of 2, second call got batch of 1
+    calls = mock_client.embeddings.create.call_args_list
+    assert calls[0].kwargs["input"] == ["a", "b"]
+    assert calls[1].kwargs["input"] == ["c"]
+
+
+# --- _RemoteCrossEncoder tests ---
+
+
+@patch("httpx.Client")
+def test_remote_cross_encoder_predict(mock_httpx_client_cls):
+    mock_client = MagicMock()
+    mock_httpx_client_cls.return_value = mock_client
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "data": [
+            {"index": 1, "score": 0.42},
+            {"index": 0, "score": 0.85},
+        ]
+    }
+    mock_client.post.return_value = mock_response
+
+    encoder = _RemoteCrossEncoder("https://gte-reranker-model-serving.apps.example.com/v1/score")
+    pairs = [("risk desc A", "chunk text"), ("risk desc B", "chunk text")]
+    result = encoder.predict(pairs)
+
+    assert result.shape == (2,)
+    # Results should be sorted by index: index 0 -> 0.85, index 1 -> 0.42
+    np.testing.assert_allclose(result, [0.85, 0.42])
+    mock_client.post.assert_called_once()
+    mock_response.raise_for_status.assert_called_once()
+
+
+@patch("httpx.Client")
+def test_remote_cross_encoder_predict_empty(mock_httpx_client_cls):
+    mock_client = MagicMock()
+    mock_httpx_client_cls.return_value = mock_client
+
+    encoder = _RemoteCrossEncoder("https://gte-reranker-model-serving.apps.example.com/v1/score")
+    result = encoder.predict([])
+
+    assert result.shape == (0,)
+    mock_client.post.assert_not_called()

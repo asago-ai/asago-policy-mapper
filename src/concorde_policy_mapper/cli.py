@@ -43,15 +43,18 @@ def extract(
     threshold_high: float = typer.Option(None, "--threshold-high", help="Legacy: absolute auto-accept threshold (overrides rank-based)"),
     threshold_low: float = typer.Option(None, "--threshold-low", help="Legacy: absolute discard threshold (overrides rank-based)"),
     bi_encoder_model: str = typer.Option("all-mpnet-base-v2", "--bi-encoder-model", help="Bi-encoder model"),
-    query_instruction: str = typer.Option("", "--query-instruction", help="Instruction prefix for query encoding (e.g. for Qwen3-Embedding)"),
+    query_instruction: str = typer.Option(None, "--query-instruction", help="Instruction prefix for query encoding (default: built-in policy-risk instruction)"),
     cross_encoder_model: str = typer.Option("cross-encoder/ms-marco-MiniLM-L-12-v2", "--cross-encoder-model", help="Cross-encoder model"),
+    cross_encoder_type: str = typer.Option("score", "--cross-encoder-type", help="Cross-encoder API type: 'score' for /v1/score, 'generative' for /v1/chat/completions logprob rerankers"),
     bm25_rescue_rank: int = typer.Option(0, "--bm25-rescue-rank", help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled)"),
     no_cross_encoder: bool = typer.Option(False, "--no-cross-encoder", help="Skip cross-encoder reranking and LLM judge; use RRF score floor instead"),
     rrf_min_score: float = typer.Option(0.015, "--rrf-min-score", help="Minimum RRF score for candidates (only used with --no-cross-encoder)"),
     colbert_model: str = typer.Option(None, "--colbert-model", help="ColBERT model for late interaction retrieval (replaces bi-encoder + cross-encoder)"),
     judge_prompt: str = typer.Option("judge_risk", "--judge-prompt", help="Judge prompt template name (judge_risk, judge_risk_gepa, judge_risk_gepa_demos)"),
     judge_context_tokens: int = typer.Option(0, "--judge-context-tokens", help="Max tokens for judge context window (0=use default sentence padding)"),
-    expand_siblings: bool = typer.Option(False, "--expand-siblings", help="After merge, expand to sibling risks and ground them against relevant chunks"),
+    expand_siblings: bool = typer.Option(True, "--expand-siblings/--no-expand-siblings", help="Expand to sibling risks after merge and ground against relevant chunks (default: enabled)"),
+    grounding_passes: int = typer.Option(3, "--grounding-passes", help="Number of per-chunk grounding passes; union of results reduces variance (default: 3)"),
+    expansion_passes: int = typer.Option(3, "--expansion-passes", help="Number of expansion grounding passes; union of results reduces variance (default: 3)"),
     no_judge: bool = typer.Option(False, "--no-judge", help="Skip LLM judge; auto-promote borderline candidates to accepted"),
     no_grounding: bool = typer.Option(False, "--no-grounding", help="Skip LLM grounding; accepted candidates become matches without evidence"),
 ):
@@ -61,7 +64,7 @@ def extract(
             typer.echo(f"Error: {pf} does not exist", err=True)
             raise typer.Exit(1)
 
-    needs_llm = not (no_judge and no_grounding) or (not no_judge and use_cross_encoder)
+    needs_llm = not (no_judge and no_grounding and not expand_siblings)
     if needs_llm and (not base_url or not model):
         typer.echo("Error: --base-url and --model are required (unless both --no-judge and --no-grounding are set)", err=True)
         raise typer.Exit(1)
@@ -90,7 +93,35 @@ def extract(
         if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
     ]
 
+    from concorde_policy_mapper.extract.models import RetrievalConfig
     from concorde_policy_mapper.extract.pipeline import run_extraction
+
+    rc_kwargs = {}
+    if query_instruction is not None:
+        rc_kwargs["query_instruction"] = query_instruction
+    retrieval = RetrievalConfig(
+        bi_encoder_model=bi_encoder_model,
+        **rc_kwargs,
+        cross_encoder_model=cross_encoder_model,
+        cross_encoder_type=cross_encoder_type,
+        colbert_model=colbert_model or None,
+        chunk_max_tokens=chunk_max_tokens,
+        top_n_accept=top_n_accept,
+        top_n_judge=top_n_judge,
+        min_score_floor=min_score_floor,
+        threshold_high=threshold_high,
+        threshold_low=threshold_low,
+        bm25_rescue_rank=bm25_rescue_rank,
+        rrf_min_score=rrf_min_score,
+        use_cross_encoder=not no_cross_encoder,
+        no_judge=no_judge,
+        no_grounding=no_grounding,
+        judge_prompt=judge_prompt,
+        judge_context_tokens=judge_context_tokens,
+        expand_siblings=expand_siblings,
+        grounding_passes=grounding_passes,
+        expansion_passes=expansion_passes,
+    )
 
     typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
 
@@ -99,36 +130,27 @@ def extract(
         client=client,
         config=config,
         risks=all_risks,
+        retrieval=retrieval,
         ocr=ocr,
-        chunk_max_tokens=chunk_max_tokens,
-        top_n_accept=top_n_accept,
-        top_n_judge=top_n_judge,
-        min_score_floor=min_score_floor,
-        bi_encoder_model=bi_encoder_model,
-        query_instruction=query_instruction,
-        cross_encoder_model=cross_encoder_model,
-        bm25_rescue_rank=bm25_rescue_rank,
-        use_cross_encoder=not no_cross_encoder,
-        rrf_min_score=rrf_min_score,
-        colbert_model=colbert_model or None,
-        threshold_high=threshold_high,
-        threshold_low=threshold_low,
-        expand_siblings=expand_siblings,
-        no_judge=no_judge,
-        no_grounding=no_grounding,
-        judge_prompt=judge_prompt,
-        judge_context_tokens=judge_context_tokens,
     )
 
     result.token_usage = tracker.to_dict()
 
     from concorde_policy_mapper.extract.mitigations import (
+        build_action_descriptions,
+        build_risk_crossmap,
         enrich_with_mitigations,
         load_mitigation_index,
+        load_risk_consequences,
+        load_risk_threats,
     )
     mitigation_index = load_mitigation_index()
     if mitigation_index:
-        enrich_with_mitigations(result.risks, mitigation_index)
+        action_descs = build_action_descriptions(nexus_base_dir)
+        risk_crossmap = build_risk_crossmap(nexus_base_dir)
+        risk_threats = load_risk_threats()
+        risk_consequences = load_risk_consequences()
+        enrich_with_mitigations(result.risks, mitigation_index, action_descs, risk_crossmap, risk_threats, risk_consequences)
         typer.echo(f"  Mitigations attached from {len(mitigation_index)} risk entries")
 
     result_data = result.model_dump()

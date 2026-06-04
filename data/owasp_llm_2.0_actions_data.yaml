@@ -1,0 +1,1210 @@
+# OWASP Top 10 for Large Language Model Applications v2.0 — Mitigations
+# Extracted from the OWASP LLM Top 10 2025 prevention and mitigation strategies.
+# Each action maps to its parent OWASP risk and cross-mapped IBM Risk Atlas risks.
+documents:
+  - id: owasp-llm-2.0-doc
+    name: OWASP Top 10 for Large Language Model Applications v2.0
+    description: >-
+      The OWASP Top 10 for LLM Applications project provides a list of the
+      top 10 most critical vulnerabilities seen in LLM applications, with
+      prevention and mitigation strategies for each.
+    url: https://genai.owasp.org/llm-top-10/
+    dateCreated: 2024-11-18
+    dateModified: 2024-11-18
+
+actions:
+  # ── LLM01: Prompt Injection ──────────────────────────────────────────
+
+  - id: owasp-llm-act-01-01
+    name: Constrain model behavior via system prompt
+    description: >-
+      Provide specific instructions about role, capabilities, and limitations
+      in the system prompt. Enforce strict context adherence, limit responses
+      to specific tasks and topics, and instruct the model to ignore
+      modification attempts to its base instructions.
+    hasRelatedRisk:
+      - llm01-prompt-injection
+      - atlas-prompt-injection
+      - atlas-jailbreaking
+      - atlas-prompt-priming
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-01-02
+    name: Define and validate expected output formats
+    description: >-
+      Specify clear output formats, request detailed reasoning and source
+      citations, and use deterministic code to validate adherence to the
+      expected format.
+    hasRelatedRisk:
+      - llm01-prompt-injection
+      - atlas-prompt-injection
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-01-03
+    name: Implement input and output filtering
+    description: >-
+      Define sensitive content categories and construct rules for identifying
+      and handling such content. Apply semantic filters and string-checking
+      to scan for non-allowed content. Evaluate responses using the RAG Triad
+      (context relevance, groundedness, question/answer relevance).
+    hasRelatedRisk:
+      - llm01-prompt-injection
+      - atlas-prompt-injection
+      - atlas-jailbreaking
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-01-04
+    name: Enforce privilege control and least privilege access on LLM
+    description: >-
+      Provide the application with its own API tokens for extensible
+      functionality. Handle functions in code rather than delegating to the
+      model. Restrict the model's access privileges to the minimum necessary
+      for its intended operations.
+    hasRelatedRisk:
+      - llm01-prompt-injection
+      - atlas-prompt-injection
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-01-05
+    name: Require human approval for high-risk actions
+    description: >-
+      Implement human-in-the-loop controls for privileged operations to
+      prevent unauthorized actions triggered by prompt injection.
+    hasRelatedRisk:
+      - llm01-prompt-injection
+      - atlas-prompt-injection
+      - atlas-over-or-under-reliance
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-01-06
+    name: Segregate and identify external content
+    description: >-
+      Separate and clearly denote untrusted content to limit its influence
+      on user prompts. Use clear boundaries between trusted system prompts
+      and untrusted external inputs.
+    hasRelatedRisk:
+      - llm01-prompt-injection
+      - atlas-prompt-injection
+      - atlas-indirect-instructions-attack
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-01-07
+    name: Conduct adversarial testing for prompt injection
+    description: >-
+      Perform regular penetration testing and breach simulations, treating
+      the model as an untrusted user, to test trust boundaries and access
+      control effectiveness against prompt injection attacks.
+    hasRelatedRisk:
+      - llm01-prompt-injection
+      - atlas-prompt-injection
+      - atlas-jailbreaking
+      - atlas-prompt-priming
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM02: Sensitive Information Disclosure ──────────────────────────
+
+  - id: owasp-llm-act-02-01
+    name: Integrate data sanitization techniques
+    description: >-
+      Implement data sanitization to prevent user data from entering the
+      training model data. Mask or redact sensitive content before training
+      to reduce memorization risk.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-personal-information-in-data
+      - atlas-confidential-information-in-data
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-02
+    name: Apply strict input validation for sensitive data
+    description: >-
+      Apply strict input validation methods to detect and filter out
+      potentially harmful or sensitive data inputs before they reach the
+      model.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-personal-information-in-prompt
+      - atlas-confidential-data-in-prompt
+      - atlas-ip-information-in-prompt
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-03
+    name: Enforce access controls for sensitive data
+    description: >-
+      Limit access to sensitive data based on the principle of least
+      privilege. Restrict data sources and ensure runtime data orchestration
+      is securely managed.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-exposing-personal-information
+      - atlas-revealing-confidential-information
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-04
+    name: Utilize federated learning
+    description: >-
+      Train models using decentralized data across multiple servers or
+      devices to reduce centralized data collection and minimize the risk
+      of sensitive data exposure.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-personal-information-in-data
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-05
+    name: Incorporate differential privacy
+    description: >-
+      Apply differential privacy techniques that add calibrated noise to
+      data or outputs, making reverse-engineering of individual data points
+      difficult while preserving overall model utility.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-membership-inference-attack
+      - atlas-attribute-inference-attack
+      - atlas-reidentification
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-06
+    name: Educate users on safe LLM usage
+    description: >-
+      Provide guidance on avoiding the input of sensitive information into
+      LLM systems. Offer training on secure interaction patterns and data
+      handling best practices.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-confidential-data-in-prompt
+      - atlas-personal-information-in-prompt
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-07
+    name: Ensure transparency in data usage policies
+    description: >-
+      Maintain clear policies about data retention, usage, and deletion. Let
+      users opt out of training data inclusion. Document how user data flows
+      through the system.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-data-privacy-rights
+      - atlas-data-usage
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-08
+    name: Conceal system preamble from users
+    description: >-
+      Limit users' ability to override or access the system's initial
+      settings and system prompt content to prevent extraction of embedded
+      sensitive information.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - llm072025-system-prompt-leakage
+      - atlas-prompt-leaking
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-02-09
+    name: Implement tokenization and redaction for sensitive content
+    description: >-
+      Implement tokenization to preprocess and sanitize sensitive
+      information. Use pattern matching to detect and redact confidential
+      content such as PII, credentials, and proprietary data before it
+      reaches the model.
+    hasRelatedRisk:
+      - llm022025-sensitive-information-disclosure
+      - atlas-exposing-personal-information
+      - atlas-revealing-confidential-information
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM03: Supply Chain Vulnerabilities ──────────────────────────────
+
+  - id: owasp-llm-act-03-01
+    name: Vet data sources and suppliers
+    description: >-
+      Carefully vet data sources and suppliers, including terms and
+      conditions and privacy policies. Only use trusted suppliers and
+      regularly review and audit supplier security posture and access
+      controls.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - atlas-data-acquisition
+      - atlas-data-provenance
+      - atlas-data-usage-rights
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-02
+    name: Apply vulnerability scanning and patching
+    description: >-
+      Apply OWASP Top Ten A06:2021 mitigations including vulnerability
+      scanning, management, and patching of components in both production
+      and development environments.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-03
+    name: Red team third-party models before adoption
+    description: >-
+      Apply comprehensive AI red teaming and evaluations when selecting a
+      third-party model. Use benchmarks such as Decoding Trust and conduct
+      extensive use-case-specific red teaming beyond standard benchmarks.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - atlas-data-contamination
+      - atlas-inaccessible-training-data
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-04
+    name: Maintain AI and software bill of materials
+    description: >-
+      Maintain an up-to-date inventory of components using Software Bill of
+      Materials (SBOM). Evaluate AI BOMs and ML SBOMs starting with OWASP
+      CycloneDX to ensure comprehensive tracking of all AI system
+      dependencies.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - atlas-data-provenance
+      - atlas-untraceable-attribution
+      - atlas-lack-of-data-transparency
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-05
+    name: Audit licenses via bill of materials
+    description: >-
+      Create an inventory of all license types using bills of materials.
+      Conduct regular audits of software, tools, and datasets. Use automated
+      license management tools to ensure compliance.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - atlas-data-usage-rights
+      - atlas-model-usage-rights
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-06
+    name: Use verifiable model sources with integrity checks
+    description: >-
+      Only use models from verifiable sources. Use third-party model
+      integrity checks with signing and file hashes. Apply code signing for
+      externally supplied code.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - atlas-data-contamination
+      - atlas-untraceable-attribution
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-07
+    name: Monitor collaborative model development environments
+    description: >-
+      Implement strict monitoring and auditing practices for collaborative
+      model development environments to prevent and detect abuse quickly.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - atlas-data-contamination
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-08
+    name: Test supplied models for tampering and poisoning
+    description: >-
+      Apply anomaly detection and adversarial robustness tests on supplied
+      models and data to detect tampering and poisoning before integration
+      into production systems.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - llm042025-data-and-model-poisoning
+      - atlas-data-poisoning
+      - atlas-data-contamination
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-09
+    name: Implement patching policy for AI components
+    description: >-
+      Implement a patching policy to mitigate vulnerable or outdated
+      components. Ensure the application relies on maintained versions of
+      APIs and underlying models.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-03-10
+    name: Encrypt and verify models at AI edge
+    description: >-
+      Encrypt models deployed at AI edge with integrity checks. Use vendor
+      attestation APIs to prevent tampered applications and models. Terminate
+      applications running on unrecognized firmware.
+    hasRelatedRisk:
+      - llm032025-supply-chain
+      - atlas-extraction-attack
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM04: Data and Model Poisoning ──────────────────────────────────
+
+  - id: owasp-llm-act-04-01
+    name: Track data origins and transformations
+    description: >-
+      Track data origins and transformations using tools like OWASP
+      CycloneDX or ML-BOM. Verify data legitimacy across all stages of
+      model development.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - atlas-data-poisoning
+      - atlas-data-provenance
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-04-02
+    name: Vet data vendors and validate outputs
+    description: >-
+      Vet data vendors rigorously. Validate model outputs against trusted
+      sources to detect signs of poisoning or data manipulation.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - atlas-data-poisoning
+      - atlas-data-acquisition
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-04-03
+    name: Sandbox model exposure to unverified data
+    description: >-
+      Implement strict sandboxing to limit model exposure to unverified data
+      sources. Use anomaly detection to filter adversarial data before it
+      enters the training pipeline.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - atlas-data-poisoning
+      - atlas-data-contamination
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-04-04
+    name: Use data version control
+    description: >-
+      Use data version control (DVC) to track changes in datasets and detect
+      manipulation. Versioning is key to maintaining model integrity and
+      enabling rollback if poisoning is detected.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - atlas-data-poisoning
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-04-05
+    name: Use vector database for user-provided information
+    description: >-
+      Store user-provided information in a vector database, allowing
+      adjustments and corrections without re-training the entire model,
+      reducing the attack surface for training data poisoning.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - llm082025-vector-and-embedding-weaknesses
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-04-06
+    name: Red team for data poisoning robustness
+    description: >-
+      Test robustness via red team campaigns and adversarial methods such as
+      federated learning approaches to minimize the impact of data
+      perturbations on model behavior.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - atlas-data-poisoning
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-04-07
+    name: Monitor training loss for poisoning indicators
+    description: >-
+      Monitor training loss and analyze model behavior for signs of
+      poisoning. Use thresholds for detecting anomalous outputs that may
+      indicate compromised training data.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - atlas-data-poisoning
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-04-08
+    name: Use RAG and grounding to reduce hallucination risk
+    description: >-
+      During inference, integrate retrieval-augmented generation (RAG) and
+      grounding techniques to reduce risks of hallucinations caused by
+      poisoned or low-quality training data.
+    hasRelatedRisk:
+      - llm042025-data-and-model-poisoning
+      - llm092025-misinformation
+      - atlas-hallucination
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM05: Improper Output Handling ──────────────────────────────────
+
+  - id: owasp-llm-act-05-01
+    name: Treat model as untrusted user (zero-trust)
+    description: >-
+      Treat the model as any other user, adopting a zero-trust approach.
+      Apply proper input validation on responses coming from the model to
+      backend functions and downstream systems.
+    hasRelatedRisk:
+      - llm052025-improper-output-handling
+      - atlas-harmful-code-generation
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-05-02
+    name: Apply OWASP ASVS for output validation
+    description: >-
+      Follow OWASP Application Security Verification Standard (ASVS)
+      guidelines for effective input validation and sanitization of
+      LLM-generated content before downstream processing.
+    hasRelatedRisk:
+      - llm052025-improper-output-handling
+      - atlas-harmful-code-generation
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-05-03
+    name: Encode model output to prevent code execution
+    description: >-
+      Encode model output back to users to mitigate undesired code execution
+      by JavaScript or Markdown. Implement context-aware output encoding
+      based on where the output will be used (HTML encoding for web, SQL
+      escaping for databases).
+    hasRelatedRisk:
+      - llm052025-improper-output-handling
+      - atlas-harmful-code-generation
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-05-04
+    name: Use parameterized queries for LLM output
+    description: >-
+      Employ parameterized queries or prepared statements for all database
+      operations involving LLM output to prevent SQL injection from
+      model-generated content.
+    hasRelatedRisk:
+      - llm052025-improper-output-handling
+      - atlas-harmful-code-generation
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-05-05
+    name: Employ Content Security Policies for LLM content
+    description: >-
+      Employ strict Content Security Policies (CSP) to mitigate XSS attacks
+      from LLM-generated content rendered in web applications.
+    hasRelatedRisk:
+      - llm052025-improper-output-handling
+      - atlas-harmful-code-generation
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-05-06
+    name: Log and monitor LLM output patterns
+    description: >-
+      Implement robust logging and monitoring systems to detect unusual
+      patterns in LLM outputs that may signal exploitation attempts through
+      the output handling path.
+    hasRelatedRisk:
+      - llm052025-improper-output-handling
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM06: Excessive Agency ──────────────────────────────────────────
+
+  - id: owasp-llm-act-06-01
+    name: Minimize LLM agent extensions
+    description: >-
+      Limit the extensions, tools, and plugins that LLM agents can call to
+      the minimum necessary for the intended use case. Do not provide
+      unnecessary capabilities.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-over-or-under-reliance
+      - atlas-misaligned-actions-agentic
+      - atlas-function-calling-hallucination-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-02
+    name: Minimize extension functionality
+    description: >-
+      Limit functions implemented in LLM extensions to the minimum
+      necessary. For example, if an extension accesses a mailbox, provide
+      only read access rather than send, delete, or forward capabilities.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-misaligned-actions-agentic
+      - atlas-unauthorized-use-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-03
+    name: Avoid open-ended extensions
+    description: >-
+      Avoid open-ended extensions where possible, such as running arbitrary
+      shell commands or fetching arbitrary URLs. Use granular,
+      purpose-built extensions with well-defined input/output contracts
+      instead.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-misaligned-actions-agentic
+      - atlas-external-resources-attack-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-04
+    name: Minimize extension permissions
+    description: >-
+      Limit permissions granted to LLM extensions over other systems to the
+      minimum necessary. Use scoped API tokens and OAuth with minimum scope
+      rather than broad access credentials.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-unauthorized-use-agentic
+      - atlas-exploit-trust-mismatch-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-05
+    name: Execute extensions in user context
+    description: >-
+      Execute LLM extensions in the user's security context rather than a
+      privileged system context. Track user authorization and security scope
+      to ensure actions are performed with appropriate user-level
+      permissions.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-unauthorized-use-agentic
+      - atlas-exploit-trust-mismatch-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-06
+    name: Require user approval for high-impact agent actions
+    description: >-
+      Require human-in-the-loop confirmation for high-impact actions
+      performed by LLM agents before execution, especially actions that
+      modify external state or involve sensitive operations.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-over-or-under-reliance
+      - atlas-misaligned-actions-agentic
+      - atlas-accountability-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-07
+    name: Implement complete mediation in downstream systems
+    description: >-
+      Implement authorization checks in downstream systems rather than
+      relying on the LLM to decide if an action is allowed. Downstream
+      systems should enforce their own access controls independently of the
+      LLM's decision-making.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-exploit-trust-mismatch-agentic
+      - atlas-unauthorized-use-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-08
+    name: Rate limit agent actions
+    description: >-
+      Implement rate-limiting to reduce the number of undesirable actions
+      that can be performed within a given time period, bounding the damage
+      from compromised or malfunctioning agents.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-redundant-actions-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-06-09
+    name: Log and monitor agent extension activity
+    description: >-
+      Log and monitor the activity of LLM extensions and downstream systems
+      to identify undesirable actions, anomalous patterns, or unauthorized
+      access attempts by agents.
+    hasRelatedRisk:
+      - llm062025-excessive-agency
+      - atlas-lack-of-ai-agent-transparency-agentic
+      - atlas-unexplainable-untraceable-actions-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM07: System Prompt Leakage ─────────────────────────────────────
+
+  - id: owasp-llm-act-07-01
+    name: Separate sensitive data from system prompts
+    description: >-
+      Avoid embedding API keys, authentication credentials, database names,
+      user roles, or permission structures in system prompts. Externalize
+      sensitive configuration to systems the model cannot directly access.
+    hasRelatedRisk:
+      - llm072025-system-prompt-leakage
+      - atlas-prompt-leaking
+      - atlas-revealing-confidential-information
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-07-02
+    name: Do not rely on system prompts for behavior control
+    description: >-
+      Avoid reliance on system prompts as the sole mechanism for strict
+      behavior control. External systems should independently handle tasks
+      like detecting and preventing harmful content rather than depending on
+      prompt-based instructions.
+    hasRelatedRisk:
+      - llm072025-system-prompt-leakage
+      - llm01-prompt-injection
+      - atlas-jailbreaking
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-07-03
+    name: Implement guardrails outside the LLM
+    description: >-
+      Deploy guardrails as an independent system inspecting output for
+      compliance, rather than embedding safety rules in the system prompt.
+      External guardrails are not vulnerable to prompt extraction or
+      override.
+    hasRelatedRisk:
+      - llm072025-system-prompt-leakage
+      - llm01-prompt-injection
+      - atlas-jailbreaking
+      - atlas-prompt-injection
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-07-04
+    name: Enforce security controls independently from LLM
+    description: >-
+      Ensure critical controls such as privilege separation, authorization
+      boundary checks, and access control are enforced by external systems
+      independently of the LLM. For agentic systems, use multiple agents
+      each configured with least privileges.
+    hasRelatedRisk:
+      - llm072025-system-prompt-leakage
+      - llm062025-excessive-agency
+      - atlas-exploit-trust-mismatch-agentic
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM08: Vector and Embedding Weaknesses ───────────────────────────
+
+  - id: owasp-llm-act-08-01
+    name: Implement permission-aware vector stores
+    description: >-
+      Implement fine-grained access controls and permission-aware vector and
+      embedding stores. Ensure strict logical and access partitioning of
+      datasets in the vector database to prevent cross-tenant data leakage.
+    hasRelatedRisk:
+      - llm082025-vector-and-embedding-weaknesses
+      - atlas-exposing-personal-information
+      - atlas-revealing-confidential-information
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-08-02
+    name: Validate knowledge base data integrity
+    description: >-
+      Implement robust data validation pipelines for knowledge sources.
+      Regularly audit and verify knowledge base integrity for hidden codes,
+      data poisoning, and adversarial embeddings. Only accept data from
+      trusted and verified sources.
+    hasRelatedRisk:
+      - llm082025-vector-and-embedding-weaknesses
+      - atlas-data-poisoning
+      - atlas-data-contamination
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-08-03
+    name: Review and classify merged knowledge base data
+    description: >-
+      When merging data from multiple sources, thoroughly review the
+      combined dataset. Tag and classify data within the knowledge base to
+      control access levels and prevent data mismatch errors.
+    hasRelatedRisk:
+      - llm082025-vector-and-embedding-weaknesses
+      - atlas-data-contamination
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-08-04
+    name: Maintain immutable retrieval activity logs
+    description: >-
+      Maintain detailed, immutable logs of all retrieval activities to
+      detect and respond promptly to suspicious behavior such as
+      unauthorized access patterns or data exfiltration attempts via the
+      retrieval pipeline.
+    hasRelatedRisk:
+      - llm082025-vector-and-embedding-weaknesses
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM09: Misinformation ───────────────────────────────────────────
+
+  - id: owasp-llm-act-09-01
+    name: Use RAG for verified information retrieval
+    description: >-
+      Use retrieval-augmented generation (RAG) to enhance reliability by
+      retrieving verified information from trusted external databases during
+      response generation, grounding outputs in factual sources.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-hallucination
+      - atlas-spreading-disinformation
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-09-02
+    name: Fine-tune models to improve output quality
+    description: >-
+      Enhance the model with fine-tuning or embeddings to improve output
+      quality. Use parameter-efficient tuning (PET) and chain-of-thought
+      prompting to reduce misinformation in generated outputs.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-hallucination
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-09-03
+    name: Implement cross-checking and human oversight
+    description: >-
+      Encourage users to cross-check LLM outputs with trusted external
+      sources. Implement human oversight and fact-checking for critical
+      information. Ensure human reviewers are trained to avoid overreliance
+      on AI-generated content.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-hallucination
+      - atlas-over-or-under-reliance
+      - atlas-incomplete-advice
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-09-04
+    name: Automatically validate key outputs
+    description: >-
+      Implement automated tools and processes to validate key outputs,
+      especially from high-stakes environments where misinformation could
+      cause significant harm.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-hallucination
+      - atlas-incomplete-advice
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-09-05
+    name: Communicate misinformation risks to users
+    description: >-
+      Identify and communicate risks and possible harms of LLM-generated
+      content, including the potential for misinformation, to all users and
+      stakeholders.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-spreading-disinformation
+      - atlas-non-disclosure
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-09-06
+    name: Establish secure coding practices for AI-generated code
+    description: >-
+      Establish secure coding practices and review processes to prevent
+      integration of vulnerabilities due to incorrect code suggestions
+      generated by LLMs.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-harmful-code-generation
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-09-07
+    name: Design APIs and UIs for responsible LLM use
+    description: >-
+      Design APIs and user interfaces that encourage responsible use of LLM
+      outputs. Integrate content filters, clearly label AI-generated
+      content, inform users about reliability limitations, and specify
+      intended field-of-use constraints.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-non-disclosure
+      - atlas-over-or-under-reliance
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-09-08
+    name: Train users on LLM limitations and verification
+    description: >-
+      Provide comprehensive training for users on LLM limitations, the
+      importance of independent verification, and critical thinking. Offer
+      domain-specific training so users can evaluate outputs within their
+      field of expertise.
+    hasRelatedRisk:
+      - llm092025-misinformation
+      - atlas-over-or-under-reliance
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  # ── LLM10: Unbounded Consumption ─────────────────────────────────────
+
+  - id: owasp-llm-act-10-01
+    name: Validate input size limits
+    description: >-
+      Implement strict input validation to ensure inputs do not exceed
+      reasonable size limits, preventing resource exhaustion from oversized
+      prompts or payloads.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-02
+    name: Limit exposure of logits and logprobs
+    description: >-
+      Restrict or obfuscate logit_bias and logprobs in API responses to
+      prevent model extraction attacks that exploit token probability
+      distributions.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+      - atlas-extraction-attack
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-03
+    name: Apply rate limiting and user quotas
+    description: >-
+      Apply rate limiting and user quotas to restrict the number of requests
+      per source entity per time period, preventing abuse and resource
+      exhaustion.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-04
+    name: Monitor and manage resource allocation dynamically
+    description: >-
+      Monitor and manage resource allocation dynamically to prevent any
+      single user or request from consuming excessive computational
+      resources.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-05
+    name: Set timeouts and throttle resource-intensive operations
+    description: >-
+      Set timeouts and throttle processing for resource-intensive
+      operations to prevent denial-of-service conditions from expensive
+      queries.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-06
+    name: Sandbox LLM access to network and services
+    description: >-
+      Restrict the LLM's access to network resources, internal services,
+      and APIs using sandboxing techniques to mitigate both denial-of-service
+      risks and insider threats via side-channel attacks.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+      - llm062025-excessive-agency
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-07
+    name: Monitor for anomalous resource consumption
+    description: >-
+      Continuously monitor resource usage, implement logging for unusual
+      consumption patterns, and deploy anomaly detection to identify and
+      respond to abuse or denial-of-service attempts.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-08
+    name: Implement output watermarking
+    description: >-
+      Implement watermarking frameworks to embed and detect unauthorized use
+      of LLM outputs, enabling detection of model theft via output
+      replication.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+      - atlas-extraction-attack
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-09
+    name: Design for graceful degradation under load
+    description: >-
+      Design the LLM system to degrade gracefully under heavy load,
+      maintaining partial functionality rather than complete failure during
+      resource exhaustion or adversarial load conditions.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-10
+    name: Limit queued actions and implement dynamic scaling
+    description: >-
+      Implement restrictions on queued and total actions. Use dynamic
+      scaling and load balancing to maintain performance under increased
+      demand while preventing unbounded resource consumption.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-11
+    name: Train models for adversarial robustness against extraction
+    description: >-
+      Train models to detect and mitigate adversarial queries and model
+      extraction attempts through adversarial robustness training
+      techniques.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+      - atlas-extraction-attack
+      - atlas-evasion-attack
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-12
+    name: Filter glitch tokens
+    description: >-
+      Build lists of known glitch tokens and scan output before adding to
+      the context window to prevent resource waste and unexpected behavior
+      from adversarial token sequences.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-13
+    name: Implement access controls for model repositories
+    description: >-
+      Implement strong access controls, including RBAC and least privilege,
+      to limit unauthorized access to LLM model repositories and training
+      environments, preventing model theft and tampering.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+      - atlas-extraction-attack
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-14
+    name: Use centralized ML model registry
+    description: >-
+      Use a centralized ML model inventory and registry for models in
+      production, ensuring proper governance, access control, and tracking
+      of all deployed model versions.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+      - atlas-lack-of-model-transparency
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action
+
+  - id: owasp-llm-act-10-15
+    name: Implement automated MLOps deployment governance
+    description: >-
+      Implement automated MLOps deployment with governance, tracking, and
+      approval workflows to tighten access and deployment controls for
+      production model management.
+    hasRelatedRisk:
+      - llm102025-unbounded-consumption
+      - atlas-lack-of-model-transparency
+    hasDocumentation:
+      - owasp-llm-2.0-doc
+    isDefinedByTaxonomy: owasp-llm-2.0
+    type: Action

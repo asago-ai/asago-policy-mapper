@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,9 +15,11 @@ from concorde_policy_mapper.extract.models import (
     ExtractionResult,
     FilteredCandidate,
     LLMCallRecord,
+    RetrievalConfig,
     RetrievalScores,
     RetrievalStats,
     RiskMatch,
+    ScoredCandidate,
 )
 from concorde_policy_mapper.extract.parse import chunk_documents, parse_document
 from concorde_policy_mapper.extract.retrieve import (
@@ -27,6 +30,16 @@ from concorde_policy_mapper.extract.retrieve import (
 from concorde_policy_mapper.llm import LLMConfig
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def timed(timing, key):
+    t0 = time.time()
+    try:
+        yield
+    finally:
+        timing[key] = (time.time() - t0) * 1000
+
 
 _AGENTIC_PHRASES = {
     "agentic",
@@ -61,20 +74,277 @@ def _judge_one(i, cr, chunks, client, model, call_collector, judge_prompt="judge
     return i, judged
 
 
-def _ground_one(cr, chunks, client, model, call_collector):
+def _ground_one(cr, chunks, client, model, call_collector, passes=1):
     chunk = chunks[cr.chunk_index]
-    grounded = ground_and_extract_evidence(
-        chunk_text=chunk.text,
-        candidates=cr.accepted,
-        client=client,
-        model=model,
-        document=chunk.source,
-        chunk_index=cr.chunk_index,
-        page=chunk.page,
-        section=chunk.section,
-        call_collector=call_collector,
+    merged: dict[str, tuple[list, str]] = {}
+    for _ in range(passes):
+        grounded = ground_and_extract_evidence(
+            chunk_text=chunk.text,
+            candidates=cr.accepted,
+            client=client,
+            model=model,
+            document=chunk.source,
+            chunk_index=cr.chunk_index,
+            page=chunk.page,
+            section=chunk.section,
+            call_collector=call_collector,
+        )
+        for rid, val in grounded.items():
+            if rid not in merged:
+                merged[rid] = val
+    return cr, merged
+
+
+def determine_accepted_by(candidate, *, borderline_judged, use_cross_encoder, no_judge):
+    if candidate in borderline_judged:
+        return "auto_promoted" if no_judge else "llm_judge"
+    return "threshold" if use_cross_encoder else "rrf"
+
+
+def build_risk_match(
+    candidate,
+    *,
+    taxonomy,
+    accepted_by,
+    grounding_confidence,
+    evidence,
+    use_cross_encoder=True,
+    confidence_override=None,
+    scores_override=None,
+):
+    confidence = (
+        confidence_override
+        if confidence_override is not None
+        else (candidate.cross_encoder_score if use_cross_encoder else candidate.rrf_score)
     )
-    return cr, grounded
+    scores = scores_override or RetrievalScores(
+        bm25_rank=candidate.bm25_rank,
+        embedding_distance=candidate.embedding_distance,
+        cross_encoder_score=candidate.cross_encoder_score,
+        rrf_score=candidate.rrf_score,
+    )
+    return RiskMatch(
+        risk_id=candidate.risk_id,
+        risk_name=candidate.risk_name,
+        risk_description=candidate.risk_description,
+        taxonomy=taxonomy,
+        confidence=confidence,
+        grounding_confidence=grounding_confidence,
+        accepted_by=accepted_by,
+        evidence=list(evidence),
+        scores=scores,
+    )
+
+
+def _collect_ungrounded(chunk_results, index, retrieval):
+    matches = []
+    for cr in chunk_results:
+        for candidate in cr.accepted:
+            accepted_by = determine_accepted_by(
+                candidate, borderline_judged=cr.borderline_judged,
+                use_cross_encoder=retrieval.use_cross_encoder, no_judge=retrieval.no_judge,
+            )
+            matches.append(
+                build_risk_match(
+                    candidate,
+                    taxonomy=index.get_taxonomy(candidate.risk_id),
+                    accepted_by=accepted_by,
+                    grounding_confidence="ungrounded",
+                    evidence=[],
+                    use_cross_encoder=retrieval.use_cross_encoder,
+                )
+            )
+    return matches
+
+
+def _run_grounding(chunk_results, chunks, client, config, retrieval, index, call_collector, grounding_passes=1):
+    all_matches = []
+    all_filtered = []
+    total_candidates = 0
+    total_grounded = 0
+    max_workers = config.max_concurrent
+
+    ground_tasks = [cr for cr in chunk_results if cr.accepted]
+    for cr in ground_tasks:
+        total_candidates += len(cr.accepted)
+
+    if ground_tasks:
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {
+                pool.submit(_ground_one, cr, chunks, client, config.model, call_collector, grounding_passes): cr
+                for cr in ground_tasks
+            }
+            for future in as_completed(futures):
+                cr, grounded = future.result()
+                total_grounded += len(grounded)
+                grounded_ids = set(grounded.keys())
+                for candidate in cr.accepted:
+                    accepted_by = determine_accepted_by(
+                        candidate, borderline_judged=cr.borderline_judged,
+                        use_cross_encoder=retrieval.use_cross_encoder, no_judge=retrieval.no_judge,
+                    )
+                    rid = candidate.risk_id
+                    if rid in grounded_ids:
+                        evidence, confidence = grounded[rid]
+                        all_matches.append(
+                            build_risk_match(
+                                candidate,
+                                taxonomy=index.get_taxonomy(rid),
+                                accepted_by=accepted_by,
+                                grounding_confidence=confidence,
+                                evidence=evidence,
+                                use_cross_encoder=retrieval.use_cross_encoder,
+                            )
+                        )
+                    else:
+                        all_filtered.append(
+                            FilteredCandidate(
+                                risk_id=rid,
+                                risk_name=candidate.risk_name,
+                                taxonomy=index.get_taxonomy(rid),
+                                cross_encoder_score=candidate.cross_encoder_score,
+                                rrf_score=candidate.rrf_score,
+                                bm25_rank=candidate.bm25_rank,
+                                accepted_by=accepted_by,
+                                chunk_index=cr.chunk_index,
+                            )
+                        )
+
+    grounding_filtered = total_candidates - total_grounded
+    return all_matches, all_filtered, grounding_filtered
+
+
+def _run_judge(chunk_results, chunks, client, config, retrieval, call_collector):
+    max_workers = config.max_concurrent
+    if retrieval.no_judge:
+        for cr in chunk_results:
+            if cr.borderline:
+                cr.borderline_judged = list(cr.borderline)
+                cr.accepted.extend(cr.borderline)
+    elif retrieval.use_cross_encoder:
+        judge_tasks = [
+            (i, cr) for i, cr in enumerate(chunk_results) if cr.borderline
+        ]
+        if judge_tasks:
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                futures = {
+                    pool.submit(_judge_one, i, cr, chunks, client, config.model, call_collector, retrieval.judge_prompt, retrieval.judge_context_tokens): i
+                    for i, cr in judge_tasks
+                }
+                for future in as_completed(futures):
+                    idx, judged = future.result()
+                    chunk_results[idx].borderline_judged = judged
+                    chunk_results[idx].accepted.extend(judged)
+
+
+def _build_chunk_risk_map(chunk_results, all_matches, no_grounding):
+    chunk_risk_ids: dict[int, list[str]] = {}
+    if no_grounding:
+        for cr in chunk_results:
+            for candidate in cr.accepted:
+                chunk_risk_ids.setdefault(cr.chunk_index, []).append(candidate.risk_id)
+    else:
+        for m in all_matches:
+            for ev in m.evidence:
+                chunk_risk_ids.setdefault(ev.chunk_index, []).append(m.risk_id)
+    return chunk_risk_ids
+
+
+def _run_expansion(
+    risks, merged, chunk_results, chunks, documents,
+    index, client, config, max_workers, call_collector,
+    expansion_passes: int = 1,
+) -> tuple[list[RiskMatch], dict]:
+    from concorde_policy_mapper.extract.expand import (
+        build_expansion_graph,
+        expand_with_siblings,
+        group_for_grounding,
+    )
+
+    stats = {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}
+    expansion_graph = build_expansion_graph(risks)
+    risk_lookup = {
+        r.id: {"name": r.name or "", "description": r.description or ""}
+        for r in risks
+    }
+    risk_to_parent = {}
+    for r in risks:
+        parent = getattr(r, "isPartOf", "") or ""
+        if parent:
+            risk_to_parent[r.id] = parent
+
+    merged_ids = {m.risk_id for m in merged}
+    expanded = expand_with_siblings(merged_ids, expansion_graph, risk_lookup)
+    stats["expanded_candidates"] = len(expanded)
+
+    if not expanded:
+        return merged, stats
+
+    found_risk_chunks: dict[str, set[int]] = {}
+    for cr in chunk_results:
+        for candidate in cr.accepted:
+            cid = candidate.risk_id.split(" ")[0].strip()
+            found_risk_chunks.setdefault(cid, set()).add(cr.chunk_index)
+
+    groups = group_for_grounding(
+        expanded, found_risk_chunks, risk_to_parent, len(chunks),
+    )
+    stats["expansion_groups"] = len(groups)
+
+    def _ground_group(group):
+        return ground_risk_group(
+            chunks=chunks,
+            chunk_indices=group.chunk_indices,
+            risks=list(group.risk_lookup.values()),
+            client=client,
+            model=config.model,
+            document=str(documents[0]) if documents else "",
+            call_collector=call_collector,
+        )
+
+    def _ground_group_multi(group, passes):
+        merged_results: dict[str, tuple[list[EvidenceSpan], str]] = {}
+        for _ in range(passes):
+            grounded = _ground_group(group)
+            for rid, (evidence, confidence) in grounded.items():
+                if rid not in merged_results:
+                    merged_results[rid] = (evidence, confidence)
+        return merged_results
+
+    expansion_matches: list[RiskMatch] = []
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {
+            pool.submit(
+                _ground_group_multi if expansion_passes > 1 else _ground_group,
+                g, *([expansion_passes] if expansion_passes > 1 else []),
+            ): g
+            for g in groups
+        }
+        for future in as_completed(futures):
+            grounded = future.result()
+            stats["expanded_grounded"] += len(grounded)
+            for rid, (evidence, confidence) in grounded.items():
+                info = risk_lookup.get(rid, {})
+                stub = ScoredCandidate(
+                    risk_id=rid,
+                    risk_name=info.get("name", ""),
+                    risk_description=info.get("description", ""),
+                )
+                expansion_matches.append(
+                    build_risk_match(
+                        stub,
+                        taxonomy=index.get_taxonomy(rid),
+                        accepted_by="expansion",
+                        grounding_confidence=confidence,
+                        evidence=evidence,
+                        confidence_override=0.0,
+                    )
+                )
+
+    if expansion_matches:
+        merged = merge_matches(merged + expansion_matches)
+
+    return merged, stats
 
 
 def run_extraction(
@@ -82,42 +352,25 @@ def run_extraction(
     client,
     config: LLMConfig,
     risks: list,
+    retrieval: RetrievalConfig | None = None,
+    *,
     ocr: bool = False,
-    chunk_max_tokens: int = 512,
-    top_n_accept: int = 10,
-    top_n_judge: int = 10,
-    min_score_floor: float = 0.70,
-    bi_encoder_model: str = "all-mpnet-base-v2",
-    query_instruction: str = "",
-    cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2",
-    bm25_rescue_rank: int = 0,
-    use_cross_encoder: bool = True,
-    rrf_min_score: float = 0.01,
-    colbert_model: str | None = None,
-    threshold_high: float | None = None,
-    threshold_low: float | None = None,
-    no_judge: bool = False,
-    no_grounding: bool = False,
-    judge_prompt: str = "judge_risk",
-    judge_context_tokens: int = 0,
-    expand_siblings: bool = False,
 ) -> ExtractionResult:
+    retrieval = retrieval or RetrievalConfig()
     timing: dict[str, float] = {}
     max_workers = config.max_concurrent
 
-    t0 = time.time()
-    parsed = [parse_document(doc, ocr=ocr) for doc in documents]
-    parsed = [p for p in parsed if p.content.strip()]
-    if not parsed:
-        logger.warning("All documents are empty after parsing")
-        return _empty_result(documents)
-    timing["parse_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "parse_ms"):
+        parsed = [parse_document(doc, ocr=ocr) for doc in documents]
+        parsed = [p for p in parsed if p.content.strip()]
+        if not parsed:
+            logger.warning("All documents are empty after parsing")
+            return _empty_result(documents)
 
-    t0 = time.time()
-    chunks = chunk_documents(parsed, max_tokens=chunk_max_tokens)
-    if not chunks:
-        return _empty_result(documents)
-    timing["chunk_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "chunk_ms"):
+        chunks = chunk_documents(parsed, max_tokens=retrieval.chunk_max_tokens)
+        if not chunks:
+            return _empty_result(documents)
 
     if not _document_discusses_agents([p.content for p in parsed]):
         original_count = len(risks)
@@ -129,37 +382,36 @@ def run_extraction(
                 filtered,
             )
 
-    t0 = time.time()
-    if not risks:
-        logger.error("No risks loaded from Nexus")
-        return _empty_result(documents)
-    index = RiskIndex(
-        risks,
-        bi_encoder_model=bi_encoder_model,
-        cross_encoder_model=cross_encoder_model if use_cross_encoder and not colbert_model else None,
-        colbert_model=colbert_model,
-        query_instruction=query_instruction,
-    )
-    timing["index_ms"] = (time.time() - t0) * 1000
-
-    t0 = time.time()
-    chunk_results = []
-    for i in range(len(chunks)):
-        cr = retrieve_chunk(
-            chunks,
-            i,
-            index,
-            top_n_accept=top_n_accept,
-            top_n_judge=top_n_judge,
-            min_score_floor=min_score_floor,
-            bm25_rescue_rank=bm25_rescue_rank,
-            use_cross_encoder=use_cross_encoder,
-            rrf_min_score=rrf_min_score if not use_cross_encoder else 0.0,
-            threshold_high=threshold_high,
-            threshold_low=threshold_low,
+    with timed(timing, "index_ms"):
+        if not risks:
+            logger.error("No risks loaded from Nexus")
+            return _empty_result(documents)
+        index = RiskIndex(
+            risks,
+            bi_encoder_model=retrieval.bi_encoder_model,
+            cross_encoder_model=retrieval.effective_cross_encoder_model,
+            colbert_model=retrieval.colbert_model,
+            query_instruction=retrieval.query_instruction,
+            cross_encoder_type=retrieval.cross_encoder_type,
         )
-        chunk_results.append(cr)
-    timing["retrieve_ms"] = (time.time() - t0) * 1000
+
+    with timed(timing, "retrieve_ms"):
+        chunk_results = []
+        for i in range(len(chunks)):
+            cr = retrieve_chunk(
+                chunks,
+                i,
+                index,
+                top_n_accept=retrieval.top_n_accept,
+                top_n_judge=retrieval.top_n_judge,
+                min_score_floor=retrieval.min_score_floor,
+                bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                use_cross_encoder=retrieval.use_cross_encoder,
+                rrf_min_score=retrieval.effective_rrf_min_score,
+                threshold_high=retrieval.threshold_high,
+                threshold_low=retrieval.threshold_low,
+            )
+            chunk_results.append(cr)
 
     call_collector: list[LLMCallRecord] = []
 
@@ -179,222 +431,36 @@ def run_extraction(
         for cr in chunk_results
     ]
 
-    t0 = time.time()
-    if no_judge:
-        for cr in chunk_results:
-            if cr.borderline:
-                cr.borderline_judged = list(cr.borderline)
-                cr.accepted.extend(cr.borderline)
-    elif use_cross_encoder:
-        judge_tasks = [
-            (i, cr) for i, cr in enumerate(chunk_results) if cr.borderline
-        ]
-        if judge_tasks:
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                futures = {
-                    pool.submit(_judge_one, i, cr, chunks, client, config.model, call_collector, judge_prompt, judge_context_tokens): i
-                    for i, cr in judge_tasks
-                }
-                for future in as_completed(futures):
-                    idx, judged = future.result()
-                    chunk_results[idx].borderline_judged = judged
-                    chunk_results[idx].accepted.extend(judged)
-    timing["judge_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "judge_ms"):
+        _run_judge(chunk_results, chunks, client, config, retrieval, call_collector)
 
-    t0 = time.time()
-    all_matches: list[RiskMatch] = []
-    all_filtered: list[FilteredCandidate] = []
-
-    if no_grounding:
-        for cr in chunk_results:
-            for candidate in cr.accepted:
-                if candidate in cr.borderline_judged:
-                    accepted_by = "auto_promoted" if no_judge else "llm_judge"
-                elif use_cross_encoder:
-                    accepted_by = "threshold"
-                else:
-                    accepted_by = "rrf"
-                conf_score = candidate.cross_encoder_score if use_cross_encoder else candidate.rrf_score
-                all_matches.append(
-                    RiskMatch(
-                        risk_id=candidate.risk_id,
-                        risk_name=candidate.risk_name,
-                        risk_description=candidate.risk_description,
-                        taxonomy=index.get_taxonomy(candidate.risk_id),
-                        confidence=conf_score,
-                        grounding_confidence="ungrounded",
-                        accepted_by=accepted_by,
-                        evidence=[],
-                        scores=RetrievalScores(
-                            bm25_rank=candidate.bm25_rank,
-                            embedding_distance=candidate.embedding_distance,
-                            cross_encoder_score=candidate.cross_encoder_score,
-                            rrf_score=candidate.rrf_score,
-                        ),
-                    )
-                )
+    if retrieval.no_grounding:
+        all_matches = _collect_ungrounded(chunk_results, index, retrieval)
+        all_filtered: list[FilteredCandidate] = []
         timing["grounding_ms"] = 0.0
         grounding_filtered = 0
     else:
-        total_candidates_for_grounding = 0
-        total_grounded = 0
+        with timed(timing, "grounding_ms"):
+            all_matches, all_filtered, grounding_filtered = _run_grounding(
+                chunk_results, chunks, client, config, retrieval, index, call_collector,
+                grounding_passes=retrieval.grounding_passes,
+            )
 
-        ground_tasks = [cr for cr in chunk_results if cr.accepted]
-        for cr in ground_tasks:
-            total_candidates_for_grounding += len(cr.accepted)
-
-        if ground_tasks:
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                futures = {
-                    pool.submit(_ground_one, cr, chunks, client, config.model, call_collector): cr
-                    for cr in ground_tasks
-                }
-                for future in as_completed(futures):
-                    cr, grounded = future.result()
-                    total_grounded += len(grounded)
-                    grounded_ids = set(grounded.keys())
-                    for candidate in cr.accepted:
-                        if use_cross_encoder:
-                            accepted_by = (
-                                "llm_judge"
-                                if candidate in cr.borderline_judged
-                                else "threshold"
-                            )
-                        else:
-                            accepted_by = "rrf"
-                        rid = candidate.risk_id
-                        if rid in grounded_ids:
-                            evidence, confidence = grounded[rid]
-                            conf_score = candidate.cross_encoder_score if use_cross_encoder else candidate.rrf_score
-                            all_matches.append(
-                                RiskMatch(
-                                    risk_id=rid,
-                                    risk_name=candidate.risk_name,
-                                    risk_description=candidate.risk_description,
-                                    taxonomy=index.get_taxonomy(rid),
-                                    confidence=conf_score,
-                                    grounding_confidence=confidence,
-                                    accepted_by=accepted_by,
-                                    evidence=evidence,
-                                    scores=RetrievalScores(
-                                        bm25_rank=candidate.bm25_rank,
-                                        embedding_distance=candidate.embedding_distance,
-                                        cross_encoder_score=candidate.cross_encoder_score,
-                                        rrf_score=candidate.rrf_score,
-                                    ),
-                                )
-                            )
-                        else:
-                            all_filtered.append(
-                                FilteredCandidate(
-                                    risk_id=rid,
-                                    risk_name=candidate.risk_name,
-                                    taxonomy=index.get_taxonomy(rid),
-                                    cross_encoder_score=candidate.cross_encoder_score,
-                                    rrf_score=candidate.rrf_score,
-                                    bm25_rank=candidate.bm25_rank,
-                                    accepted_by=accepted_by,
-                                    chunk_index=cr.chunk_index,
-                                )
-                            )
-        timing["grounding_ms"] = (time.time() - t0) * 1000
-        grounding_filtered = total_candidates_for_grounding - total_grounded
-
-    chunk_risk_ids: dict[int, list[str]] = {}
-    if no_grounding:
-        for cr in chunk_results:
-            for candidate in cr.accepted:
-                chunk_risk_ids.setdefault(cr.chunk_index, []).append(candidate.risk_id)
-    else:
-        for m in all_matches:
-            for ev in m.evidence:
-                chunk_risk_ids.setdefault(ev.chunk_index, []).append(m.risk_id)
+    chunk_risk_ids = _build_chunk_risk_map(chunk_results, all_matches, retrieval.no_grounding)
     for cs in chunk_summaries:
         cs.accepted_risk_ids = sorted(set(chunk_risk_ids.get(cs.index, [])))
 
-    t0 = time.time()
-    merged = merge_matches(all_matches)
-    timing["merge_ms"] = (time.time() - t0) * 1000
+    with timed(timing, "merge_ms"):
+        merged = merge_matches(all_matches)
 
     expansion_stats = {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}
-    if expand_siblings and not no_grounding and client is not None:
-        from concorde_policy_mapper.extract.expand import (
-            build_expansion_graph,
-            expand_with_siblings,
-            group_for_grounding,
-        )
-
-        t0 = time.time()
-        expansion_graph = build_expansion_graph(risks)
-        risk_lookup = {
-            r.id: {"name": r.name or "", "description": r.description or ""}
-            for r in risks
-        }
-        risk_to_parent = {}
-        for r in risks:
-            parent = getattr(r, "isPartOf", "") or ""
-            if parent:
-                risk_to_parent[r.id] = parent
-
-        merged_ids = {m.risk_id for m in merged}
-        expanded = expand_with_siblings(merged_ids, expansion_graph, risk_lookup)
-        expansion_stats["expanded_candidates"] = len(expanded)
-
-        if expanded:
-            found_risk_chunks: dict[str, set[int]] = {}
-            for cr in chunk_results:
-                for candidate in cr.accepted:
-                    cid = candidate.risk_id.split(" ")[0].strip()
-                    found_risk_chunks.setdefault(cid, set()).add(cr.chunk_index)
-
-            groups = group_for_grounding(
-                expanded, found_risk_chunks, risk_to_parent, len(chunks),
+    if retrieval.expand_siblings and not retrieval.no_grounding and client is not None:
+        with timed(timing, "expansion_ms"):
+            merged, expansion_stats = _run_expansion(
+                risks, merged, chunk_results, chunks, documents,
+                index, client, config, max_workers, call_collector,
+                expansion_passes=retrieval.expansion_passes,
             )
-            expansion_stats["expansion_groups"] = len(groups)
-
-            def _ground_group(group):
-                return ground_risk_group(
-                    chunks=chunks,
-                    chunk_indices=group.chunk_indices,
-                    risks=list(group.risk_lookup.values()),
-                    client=client,
-                    model=config.model,
-                    document=str(documents[0]) if documents else "",
-                    call_collector=call_collector,
-                )
-
-            expansion_matches: list[RiskMatch] = []
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                futures = {pool.submit(_ground_group, g): g for g in groups}
-                for future in as_completed(futures):
-                    group = futures[future]
-                    grounded = future.result()
-                    expansion_stats["expanded_grounded"] += len(grounded)
-                    for rid, (evidence, confidence) in grounded.items():
-                        info = risk_lookup.get(rid, {})
-                        expansion_matches.append(
-                            RiskMatch(
-                                risk_id=rid,
-                                risk_name=info.get("name", ""),
-                                risk_description=info.get("description", ""),
-                                taxonomy=index.get_taxonomy(rid),
-                                confidence=0.0,
-                                grounding_confidence=confidence,
-                                accepted_by="expansion",
-                                evidence=evidence,
-                                scores=RetrievalScores(
-                                    bm25_rank=0,
-                                    embedding_distance=0.0,
-                                    cross_encoder_score=0.0,
-                                    rrf_score=0.0,
-                                ),
-                            )
-                        )
-
-            if expansion_matches:
-                merged = merge_matches(merged + expansion_matches)
-
-        timing["expansion_ms"] = (time.time() - t0) * 1000
 
     total_stats = RetrievalStats(
         total_chunks=len(chunks),
@@ -415,23 +481,7 @@ def run_extraction(
         retrieval_stats=total_stats,
         metadata={
             "model": config.model,
-            "bi_encoder_model": bi_encoder_model,
-            "cross_encoder_model": cross_encoder_model if use_cross_encoder else None,
-            "use_cross_encoder": use_cross_encoder,
-            "colbert_model": colbert_model,
-            "chunk_max_tokens": chunk_max_tokens,
-            "top_n_accept": top_n_accept,
-            "top_n_judge": top_n_judge,
-            "min_score_floor": min_score_floor,
-            "threshold_high": threshold_high,
-            "threshold_low": threshold_low,
-            "bm25_rescue_rank": bm25_rescue_rank,
-            "rrf_min_score": rrf_min_score,
-            "judge_prompt": judge_prompt,
-            "no_judge": no_judge,
-            "no_grounding": no_grounding,
-            "judge_context_tokens": judge_context_tokens,
-            "expand_siblings": expand_siblings,
+            **retrieval.to_metadata(),
             "expansion_stats": expansion_stats,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         },

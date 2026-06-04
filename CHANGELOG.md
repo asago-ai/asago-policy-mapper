@@ -3,8 +3,41 @@
 ## [Unreleased]
 
 ### Added
-- **Mitigation recommendations**: each extracted risk now includes recommended mitigation actions from 5 frameworks (MIT AI Risk Repository, OWASP LLM Top 10, NIST AI RMF 600-1, Credo UCF, AIUC-1). Pre-built index maps 95 Atlas risks to ~5,190 action entries. Mitigations appear in JSON output (`mitigations` field on `RiskMatch`) and in the HTML report as an expandable section per risk.
-- **`scripts/build_mitigation_index.py`**: generates `data/atlas_risk_to_actions.yaml` by reading local MIT/OWASP action files and resolving NIST/Credo/AIUC-1 transitive cross-framework mappings from Nexus. Each action is categorized as `technical`, `operational`, or `governance` via rules in `data/mitigation_categories.yaml`.
+- **DSPy embedding instruction optimization** (`experiments/dspy_embedding/`): uses GEPA to optimize the query instruction prefix for instruction-aware embedding models (e.g. Qwen3-Embedding), maximizing risk-level retrieval recall
+- **`RiskIndex.set_query_instruction()`**: update the remote bi-encoder's query instruction without rebuilding the index
+- **Generative reranker support** (`--cross-encoder-type generative`): supports Qwen3-Reranker and similar models that use `/v1/chat/completions` with yes/no logprob scoring instead of `/v1/score`. Pass `--cross-encoder-type generative` with the model URL. Nemotron-rerank uses `/v1/score` and works with the default `--cross-encoder-type score`.
+- **`--grounding-passes N` flag**: runs per-chunk grounding N times and unions the results, reducing variance from LLM non-determinism. Stabilizes which base risks survive grounding, which in turn stabilizes expansion seeds.
+- **GT enrichment round 2**: +84 ai-risk-taxonomy risks across 15 policies (1435→1519 total, 206→290 AIR). All high-confidence keyword-matched expansion candidates from Qwen3-Reranker-4B run.
+
+### Changed
+- **New pipeline defaults**: `expand_siblings=True`, `grounding_passes=3`, `expansion_passes=3`. Multi-pass grounding reduces LLM non-determinism, stabilizing which risks survive grounding and expansion. Micro F1 0.717 on 27 policies (1519 GT risks).
+- **`--expansion-passes N` flag**: runs expansion grounding N times and unions the results, reducing variance from LLM non-determinism on borderline data-type variant risks.
+
+### Fixed
+- **`accepted_by` label bug**: when `no_judge=True` with grounding enabled, candidates were incorrectly tagged `"llm_judge"` instead of `"auto_promoted"`. The grounding path now uses the same `determine_accepted_by()` function as the no-grounding path.
+
+### Changed
+- **Pipeline decomplection** (steps from `docs/decomplection-analysis.md`):
+  - Extracted `determine_accepted_by()` and `build_risk_match()` pure functions — eliminates 3-way RiskMatch construction duplication and scattered `accepted_by` computation.
+  - Extracted `timed()` context manager — replaces 8 inline `t0 = time.time()` / `timing[...] = ...` pairs.
+  - Split `classify_candidates()` into `classify_by_rank()` and `classify_by_threshold()` with a thin dispatcher for backward compatibility.
+  - Extracted `_rrf_fuse()` shared function and `_make_score_normalizer()` factory from `RiskIndex` — eliminates RRF accumulation duplication between `hybrid_search` and `_hybrid_search_colbert`, and replaces inline score normalization branching with a factory resolved at init time.
+  - Bundled 18 retrieval parameters into `RetrievalConfig` dataclass with pre-resolved properties (`effective_cross_encoder_model`, `effective_rrf_min_score`) and `to_metadata()`. `run_extraction` now accepts `retrieval: RetrievalConfig` instead of individual keyword arguments.
+  - Extracted `_collect_ungrounded()` and `_run_grounding()` from `run_extraction` — reduces CC from 48 to ~25.
+  - Split `_call_with_retry()` into `_retry_with_validation()` (handles context overflow + validation errors) and the outer truncation retry loop.
+  - Extracted `_load_colbert()`, `_load_bi_encoder()`, `_load_cross_encoder()` factory functions from `RiskIndex.__init__` — reduces CC from 24 to ~8.
+  - Extracted `_pad_with_budget()` from `build_padded_text()` — separates token-budget padding from sentence-based padding.
+  - Extracted `_run_judge()` and `_build_chunk_risk_map()` from `run_extraction` — CC 38→24.
+  - Extracted `_resolve_via_crossmap()` from `enrich_with_mitigations` — deduplicates crossmap fallback for mitigations, threats, and consequences. CC 21→13.
+  - Extracted `_rescue_and_merge_scores()` from `hybrid_search` — CC 18→12.
+- **Decomplection analysis revised**: fixed inaccurate counts (18→23 params, 7→8 timing sites, 30→27 CLI params), replaced strategy pattern proposal for RiskIndex with lighter shared-function approach, replaced debug module globals entry with eval↔extraction schema drift concern, added caveat to RetrievalConfig that a dataclass alone is cosmetic without pre-resolving downstream decisions.
+- **Schema drift smoke test**: `test_extraction_result_schema_compatible_with_eval` constructs an `ExtractionResult` via Pydantic, serializes to JSON, and runs eval — catches silent breakage if extraction output fields drift from what eval reads.
+
+### Added
+- **`tests/test_llm.py`**: unit tests for low-coverage LLM utility functions — `_strip_titles`, `TokenTracker` methods (`add`, `_usage_values`, `to_dict`, `record_incident`, `set_stage`), `_track_completion`, `_extract_response_content`, `_truncate_messages`, and `_call_with_retry` outer loop (43 tests).
+- **Mitigation recommendations**: each extracted risk now includes recommended mitigation actions from 5 frameworks (MIT AI Risk Repository, OWASP LLM Top 10, NIST AI RMF 600-1, Credo UCF, AIUC-1). Pre-built index maps 83 Atlas risks to ~1,976 action entries via direct `action → atlas-*` mappings (no transitive cross-framework hops). Non-Atlas risks (Credo, MIT subdomains) resolve to Atlas equivalents via Nexus cross-framework mappings at enrichment time. Mitigations appear in JSON output (`mitigations` field on `RiskMatch` with `action_id`, `action_name`, `description`, `source`, `category`) and in the HTML report as an expandable section per risk, grouped by category (technical/operational/governance) then source.
+- **`scripts/build_mitigation_index.py`**: generates `data/atlas_risk_to_actions.yaml` from 5 direct mapping files. Each action is categorized as `technical`, `operational`, or `governance` via rules in `data/mitigation_categories.yaml`.
+- **Direct action→risk mapping files**: `data/nist_ai_rmf_actions_to_atlas_data.yaml` (212 NIST actions → 338 risk links), `data/credo_ucf_actions_to_atlas_data.yaml` (41 Credo controls → 115 risk links), `data/aiuc1_actions_to_atlas_data.yaml` (49 AIUC-1 requirements → 100 risk links). All hand-reviewed.
 - **`data/mitigation_categories.yaml`**: category assignment rules (MIT group → category, NIST RMF prefix → category, AIUC-1 principle → category) plus explicit assignments for OWASP and Credo actions.
 - **`data/mit_ai_risk_mitigation_to_atlas_data.yaml`**: maps 831 MIT AI Risk Repository controls to IBM Atlas risk IDs (MIT's own risk-to-mitigation mappings are not yet published; these were generated independently).
 - **`data/owasp_llm_2.0_actions_data.yaml`**: 80 structured mitigation actions extracted from OWASP LLM Top 10 v2.0, each mapped to Atlas risk IDs.

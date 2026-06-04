@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel
@@ -13,6 +14,30 @@ class ScoredCandidate(BaseModel):
     embedding_distance: float = 0.0
     cross_encoder_score: float = 0.0
     rrf_score: float = 0.0
+
+
+DPV_RISK_CONTROLS = Literal[
+    "AvoidanceControl",
+    "MitigationControl",
+    "ModificationControl",
+    "MonitorControl",
+    "InterruptionControl",
+    "InterventionControl",
+    "ReductionControl",
+    "ResolutionControl",
+    "InvestigationControl",
+    "OverrideControl",
+    "TransferControl",
+]
+
+
+class MitigationRef(BaseModel):
+    action_id: str
+    action_name: str | None = None
+    description: str | None = None
+    source: str
+    category: Literal["technical", "operational", "governance"] | None = None
+    risk_control: DPV_RISK_CONTROLS | None = None
 
 
 class EvidenceSpan(BaseModel):
@@ -42,6 +67,12 @@ class RiskMatch(BaseModel):
     accepted_by: str
     evidence: list[EvidenceSpan]
     scores: RetrievalScores
+    mitigations: list[MitigationRef] = []
+    threat: str | None = None
+    threat_source: str | None = None
+    vulnerability: str | None = None
+    consequence: str | None = None
+    impact: str | None = None
 
 
 class RetrievalStats(BaseModel):
@@ -119,3 +150,66 @@ class _RiskEvidence(BaseModel):
     grounded: bool
     confidence: Literal["high", "medium", "low"]
     quotes: list[str]
+
+
+@dataclass
+class RetrievalConfig:
+    bi_encoder_model: str = "all-mpnet-base-v2"
+    query_instruction: str = (
+        "Given a text passage from an AI governance policy document, retrieve AI risk"
+        " descriptions that are relevant to the concepts, requirements, or concerns"
+        " discussed in the passage"
+    )
+    cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2"
+    cross_encoder_type: str = "score"
+    colbert_model: str | None = None
+    chunk_max_tokens: int = 512
+    top_n_accept: int = 10
+    top_n_judge: int = 10
+    min_score_floor: float = 0.70
+    threshold_high: float | None = None
+    threshold_low: float | None = None
+    bm25_rescue_rank: int = 0
+    rrf_min_score: float = 0.01
+    use_cross_encoder: bool = True
+    no_judge: bool = False
+    no_grounding: bool = False
+    judge_prompt: str = "judge_risk"
+    judge_context_tokens: int = 0
+    expand_siblings: bool = True
+    grounding_passes: int = 3
+    expansion_passes: int = 3
+
+    @property
+    def effective_cross_encoder_model(self) -> str | None:
+        if not self.use_cross_encoder or self.colbert_model:
+            return None
+        return self.cross_encoder_model
+
+    @property
+    def effective_rrf_min_score(self) -> float:
+        return self.rrf_min_score if not self.use_cross_encoder else 0.0
+
+    def to_metadata(self) -> dict:
+        return {
+            "bi_encoder_model": self.bi_encoder_model,
+            "cross_encoder_model": self.effective_cross_encoder_model,
+            "cross_encoder_type": self.cross_encoder_type,
+            "use_cross_encoder": self.use_cross_encoder,
+            "colbert_model": self.colbert_model,
+            "chunk_max_tokens": self.chunk_max_tokens,
+            "top_n_accept": self.top_n_accept,
+            "top_n_judge": self.top_n_judge,
+            "min_score_floor": self.min_score_floor,
+            "threshold_high": self.threshold_high,
+            "threshold_low": self.threshold_low,
+            "bm25_rescue_rank": self.bm25_rescue_rank,
+            "rrf_min_score": self.rrf_min_score,
+            "judge_prompt": self.judge_prompt,
+            "no_judge": self.no_judge,
+            "no_grounding": self.no_grounding,
+            "judge_context_tokens": self.judge_context_tokens,
+            "expand_siblings": self.expand_siblings,
+            "grounding_passes": self.grounding_passes,
+            "expansion_passes": self.expansion_passes,
+        }

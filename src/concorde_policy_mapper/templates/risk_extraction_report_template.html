@@ -259,6 +259,15 @@
                   <div class="flex items-center cursor-pointer hover:bg-gray-50 px-3 py-2" @click="expanded = !expanded">
                     <div class="flex-1 min-w-0 pr-3">
                       <span class="font-semibold text-gray-900" x-text="risk.risk_name"></span>
+                      <span x-show="risk.taxonomy" class="ml-1.5 px-1.5 py-0.5 rounded text-xs font-mono"
+                            :class="{
+                              'bg-sky-100 text-sky-800': risk.taxonomy === 'ibm-risk-atlas',
+                              'bg-teal-100 text-teal-800': risk.taxonomy === 'credo-ucf',
+                              'bg-violet-100 text-violet-800': risk.taxonomy === 'mit-ai-risk-repository',
+                              'bg-lime-100 text-lime-800': risk.taxonomy === 'air-2024',
+                              'bg-gray-100 text-gray-700': !['ibm-risk-atlas','credo-ucf','mit-ai-risk-repository','air-2024'].includes(risk.taxonomy),
+                            }"
+                            x-text="risk.taxonomy"></span>
                     </div>
                     <div class="w-20 text-right pr-3">
                       <span class="px-2 py-0.5 rounded text-xs font-mono font-semibold"
@@ -290,6 +299,32 @@
                     <div>
                       <p class="text-xs text-gray-400 uppercase mb-1">Description</p>
                       <p class="text-sm text-gray-700" x-text="risk.risk_description"></p>
+                    </div>
+                    <!-- Causal chain (DPV) -->
+                    <div x-show="risk.threat || risk.consequence">
+                      <p class="tip text-xs text-gray-400 uppercase mb-1"
+                         data-tip="DPV causal chain: what event causes this risk (Threat), what system weakness is exploited (Vulnerability), what happens if materialized (Consequence), and who is harmed (Impact).">Causal Chain</p>
+                      <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div x-show="risk.threat" class="rounded p-2 bg-red-50 border border-red-100">
+                          <span class="font-semibold text-red-700">Threat</span>
+                          <p class="text-red-900 mt-0.5" x-text="risk.threat"></p>
+                          <p x-show="risk.threat_source" class="text-red-600 mt-1 opacity-75">
+                            <span class="font-medium">Source:</span> <span x-text="risk.threat_source"></span>
+                          </p>
+                        </div>
+                        <div x-show="risk.vulnerability" class="rounded p-2 bg-orange-50 border border-orange-100">
+                          <span class="font-semibold text-orange-700">Vulnerability</span>
+                          <p class="text-orange-900 mt-0.5" x-text="risk.vulnerability"></p>
+                        </div>
+                        <div x-show="risk.consequence" class="rounded p-2 bg-yellow-50 border border-yellow-100">
+                          <span class="font-semibold text-yellow-700">Consequence</span>
+                          <p class="text-yellow-900 mt-0.5" x-text="risk.consequence"></p>
+                        </div>
+                        <div x-show="risk.impact" class="rounded p-2 bg-rose-50 border border-rose-100">
+                          <span class="font-semibold text-rose-700">Impact</span>
+                          <p class="text-rose-900 mt-0.5" x-text="risk.impact"></p>
+                        </div>
+                      </div>
                     </div>
                     <!-- Score breakdown -->
                     <div x-show="risk.scores">
@@ -325,6 +360,51 @@
                               <span>&middot;</span>
                               <span class="font-mono" x-text="'chunk ' + ev.chunk_index"></span>
                             </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                    <!-- Mitigations -->
+                    <div x-show="(risk.mitigations || []).length > 0" x-data="{ mitOpen: false }">
+                      <p class="tip text-xs text-gray-400 uppercase mb-1 cursor-pointer select-none" @click="mitOpen = !mitOpen"
+                         data-tip="Recommended mitigation actions from NIST, OWASP, MIT, Credo, and AIUC-1 frameworks, categorized as technical (engineering deploys), operational (ops/QA executes), or governance (leadership/compliance owns).">
+                        Mitigations
+                        <span class="text-gray-500 font-mono" x-text="'(' + (risk.mitigations || []).length + ')'"></span>
+                        <template x-for="cat in ['technical','operational','governance']" :key="cat">
+                          <span class="ml-1 px-1 py-0.5 rounded text-xs"
+                                :class="cat === 'technical' ? 'bg-blue-50 text-blue-700' : cat === 'operational' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'"
+                                x-text="cat[0].toUpperCase() + ':' + (risk.mitigations || []).filter(m => m.category === cat).length"
+                                x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0"></span>
+                        </template>
+                        <svg class="w-3 h-3 inline ml-1 text-gray-400 chevron"
+                             :class="mitOpen ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </p>
+                      <div x-show="mitOpen" class="space-y-2">
+                        <template x-for="cat in ['technical','operational','governance']" :key="cat">
+                          <div x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0">
+                            <p class="text-xs font-semibold mt-1 mb-0.5"
+                               :class="cat === 'technical' ? 'text-blue-700' : cat === 'operational' ? 'text-amber-700' : 'text-purple-700'"
+                               x-text="cat.charAt(0).toUpperCase() + cat.slice(1)"></p>
+                            <template x-for="src in [...new Set((risk.mitigations || []).filter(m => m.category === cat).map(m => m.source))].sort()" :key="src">
+                              <div class="ml-2 mb-1">
+                                <p class="text-xs text-gray-500" x-text="src"></p>
+                                <div class="flex flex-wrap gap-1">
+                                  <template x-for="m in (risk.mitigations || []).filter(m => m.category === cat && m.source === src)" :key="m.action_id">
+                                    <div class="tip rounded text-xs p-1.5 mb-1"
+                                         :class="cat === 'technical' ? 'bg-blue-50 text-blue-800' : cat === 'operational' ? 'bg-amber-50 text-amber-800' : 'bg-purple-50 text-purple-800'"
+                                         :data-tip="m.action_id">
+                                      <span class="font-semibold" x-text="m.action_name || m.action_id"></span>
+                                      <span x-show="m.risk_control" class="ml-1 px-1 py-0.5 rounded text-xs opacity-60 font-normal bg-gray-200 text-gray-700"
+                                            x-text="m.risk_control?.replace('Control','')"></span>
+                                      <p x-show="m.description" class="mt-0.5 text-xs opacity-80 font-normal" x-text="m.description"></p>
+                                    </div>
+                                  </template>
+                                </div>
+                              </div>
+                            </template>
                           </div>
                         </template>
                       </div>

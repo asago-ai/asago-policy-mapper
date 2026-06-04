@@ -74,7 +74,7 @@ class _RemoteBiEncoder:
     def encode(self, texts: list[str], normalize: bool = True) -> np.ndarray:
         all_embeddings = []
         for start in range(0, len(texts), self._batch_size):
-            batch = texts[start : start + self._batch_size]
+            batch = texts[start: start + self._batch_size]
             response = self._client.embeddings.create(
                 model=self._model,
                 input=batch,
@@ -133,20 +133,210 @@ class _RemoteCrossEncoder:
         return np.array([d["score"] for d in scores_data], dtype=np.float64)
 
 
+_GENERATIVE_RERANKER_INSTRUCTION = (
+    "Given a text passage from an AI governance policy document, determine "
+    "whether the document is relevant to the AI risk description"
+)
+
+_GENERATIVE_RERANKER_SYSTEM = (
+    'Judge whether the Document meets the requirements based on the Query '
+    'and the Instruct provided. Note that the answer can only be "yes" or "no".'
+)
+
+
+class _RemoteGenerativeReranker:
+    """Wraps a generative reranker (e.g. Qwen3-Reranker) via /v1/completions with logprobs.
+
+    Uses raw completions with a manually constructed prompt to avoid vLLM
+    chat template issues with the Qwen3 reranker's enable_thinking parameter.
+    """
+
+    def __init__(self, url: str):
+        import httpx
+
+        base_url, self._model = _parse_remote_url(url)
+        self._completions_url = base_url + "/completions"
+        self._client = httpx.Client(timeout=120.0)
+
+    def predict(self, pairs: list[tuple[str, str]]) -> np.ndarray:
+        import math
+
+        if not pairs:
+            return np.array([])
+        scores = []
+        for risk_desc, chunk_text in pairs:
+            prompt = (
+                f"<|im_start|>system\n{_GENERATIVE_RERANKER_SYSTEM}<|im_end|>\n"
+                f"<|im_start|>user\n"
+                f"<Instruct>: {_GENERATIVE_RERANKER_INSTRUCTION}\n\n"
+                f"<Query>: {chunk_text}\n\n"
+                f"<Document>: {risk_desc}"
+                f"<|im_end|>\n"
+                f"<|im_start|>assistant\n<think>\n\n</think>\n\n"
+            )
+            response = self._client.post(
+                self._completions_url,
+                json={
+                    "model": self._model,
+                    "prompt": prompt,
+                    "max_tokens": 1,
+                    "temperature": 0.0,
+                    "logprobs": 5,
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
+            top = data["choices"][0].get("logprobs", {}).get("top_logprobs", [{}])[0]
+            true_logprob = top.get("yes", -10.0)
+            false_logprob = top.get("no", -10.0)
+            true_score = math.exp(true_logprob)
+            false_score = math.exp(false_logprob)
+            score = true_score / (true_score + false_score) if (true_score + false_score) > 0 else 0.0
+            scores.append(score)
+        return np.array(scores, dtype=np.float64)
+
+
 def _maxsim(query_tokens: np.ndarray, doc_tokens: np.ndarray) -> float:
     """ColBERT MaxSim: for each query token, find max cosine similarity with any doc token, then sum."""
     sim = np.dot(query_tokens, doc_tokens.T)
     return float(sim.max(axis=1).sum())
 
 
+def _rrf_fuse(
+        results_a: list[ScoredCandidate],
+        results_b: list[ScoredCandidate],
+        rrf_k: int = 60,
+) -> tuple[dict[str, float], dict[str, ScoredCandidate], dict[str, int]]:
+    rrf_scores: dict[str, float] = {}
+    candidate_data: dict[str, ScoredCandidate] = {}
+    bm25_ranks: dict[str, int] = {}
+
+    for rank, c in enumerate(results_a, 1):
+        rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
+        candidate_data[c.risk_id] = c
+        bm25_ranks[c.risk_id] = rank
+
+    for rank, c in enumerate(results_b, 1):
+        rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
+        if c.risk_id not in candidate_data:
+            candidate_data[c.risk_id] = c
+
+    return rrf_scores, candidate_data, bm25_ranks
+
+
+def _make_score_normalizer(*, is_nli=False, apply_sigmoid=False):
+    if is_nli:
+        def normalize(raw):
+            if raw.ndim == 2:
+                exp_scores = np.exp(raw - np.max(raw, axis=1, keepdims=True))
+                softmax = exp_scores / exp_scores.sum(axis=1, keepdims=True)
+                return softmax[:, -1]
+            return raw
+
+        return normalize
+    elif apply_sigmoid:
+        def normalize(raw):
+            return 1.0 / (1.0 + np.exp(-raw))
+
+        return normalize
+    else:
+        def normalize(raw):
+            return np.clip(raw.astype(np.float64), 0.0, 1.0)
+
+        return normalize
+
+
+def _load_colbert(model_name, descriptions):
+    if _is_remote(model_name):
+        raise ValueError(
+            "ColBERT models cannot be served remotely (vLLM returns pooled "
+            "embeddings, not token-level). Use --bi-encoder-model for remote "
+            "embedding models."
+        )
+    import torch
+    colbert = SentenceTransformer(
+        model_name,
+        model_kwargs={"torch_dtype": torch.bfloat16},
+    )
+    raw = colbert.encode(
+        descriptions, output_value="token_embeddings",
+        show_progress_bar=False, batch_size=32,
+    )
+    doc_embeddings = []
+    for emb in raw:
+        arr = emb.cpu().float().numpy() if hasattr(emb, "cpu") else np.array(emb, dtype=np.float32)
+        arr = arr / np.linalg.norm(arr, axis=1, keepdims=True)
+        doc_embeddings.append(arr)
+    logger.info("ColBERT index built: %d risks, %s", len(descriptions), model_name)
+    return colbert, doc_embeddings
+
+
+def _load_bi_encoder(model_name, descriptions, query_instruction=""):
+    if _is_remote(model_name):
+        remote = _RemoteBiEncoder(model_name, query_instruction=query_instruction)
+        try:
+            embeddings = remote.encode(descriptions, normalize=True)
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to encode corpus via remote bi-encoder at {model_name}: {e}"
+            ) from e
+        logger.info("Remote bi-encoder index built: %d risks, %s", len(descriptions), model_name)
+        return None, remote, embeddings
+    local = SentenceTransformer(model_name)
+    embeddings = local.encode(descriptions, normalize_embeddings=True, show_progress_bar=False)
+    return local, None, embeddings
+
+
+def _load_cross_encoder(model_name, cross_encoder_type="score"):
+    if _is_remote(model_name):
+        if cross_encoder_type == "generative":
+            logger.info("Remote generative reranker: %s", model_name)
+            return None, _RemoteGenerativeReranker(model_name), False, False
+        logger.info("Remote cross-encoder: %s", model_name)
+        return None, _RemoteCrossEncoder(model_name), False, False
+    local = CrossEncoder(model_name)
+    logger.info("Local cross-encoder: %s", model_name)
+    return local, None, model_name in _SIGMOID_MODELS, model_name in _NLI_MODELS
+
+
+def _rescue_and_merge_scores(reranked, rrf_candidates, bm25_rescue_rank):
+    if bm25_rescue_rank > 0:
+        reranked_ids = {c.risk_id for c in reranked}
+        for c in rrf_candidates:
+            if (
+                    c.risk_id not in reranked_ids
+                    and 0 < c.bm25_rank <= bm25_rescue_rank
+            ):
+                reranked.append(c)
+
+    rrf_lookup = {c.risk_id: c for c in rrf_candidates}
+    results = []
+    for c in reranked:
+        source = rrf_lookup.get(c.risk_id)
+        if source:
+            results.append(
+                c.model_copy(
+                    update={
+                        "rrf_score": source.rrf_score,
+                        "bm25_rank": source.bm25_rank,
+                        "embedding_distance": source.embedding_distance,
+                    }
+                )
+            )
+        else:
+            results.append(c)
+    return results
+
+
 class RiskIndex:
     def __init__(
-        self,
-        risks: list,
-        bi_encoder_model: str = _DEFAULT_BI_ENCODER,
-        cross_encoder_model: str | None = _DEFAULT_CROSS_ENCODER,
-        colbert_model: str | None = None,
-        query_instruction: str = "",
+            self,
+            risks: list,
+            bi_encoder_model: str = _DEFAULT_BI_ENCODER,
+            cross_encoder_model: str | None = _DEFAULT_CROSS_ENCODER,
+            colbert_model: str | None = None,
+            query_instruction: str = "",
+            cross_encoder_type: str = "score",
     ):
         self._risk_ids: list[str] = []
         self._risk_meta: dict[str, dict] = {}
@@ -187,66 +377,29 @@ class RiskIndex:
         descriptions = [f"{r.name or ''}: {r.description or ''}" for r in risks]
 
         if colbert_model:
-            if _is_remote(colbert_model):
-                raise ValueError(
-                    "ColBERT models cannot be served remotely (vLLM returns pooled "
-                    "embeddings, not token-level). Use --bi-encoder-model for remote "
-                    "embedding models."
-                )
-            import torch
-            self._colbert = SentenceTransformer(
-                colbert_model,
-                model_kwargs={"torch_dtype": torch.bfloat16},
-            )
-            raw = self._colbert.encode(
-                descriptions, output_value="token_embeddings",
-                show_progress_bar=False, batch_size=32,
-            )
-            self._colbert_doc_embeddings = []
-            for emb in raw:
-                arr = emb.cpu().float().numpy() if hasattr(emb, "cpu") else np.array(emb, dtype=np.float32)
-                arr = arr / np.linalg.norm(arr, axis=1, keepdims=True)
-                self._colbert_doc_embeddings.append(arr)
+            self._colbert, self._colbert_doc_embeddings = _load_colbert(colbert_model, descriptions)
             self._bi_encoder = None
             self._cross_encoder = None
             self._apply_sigmoid = False
             self._is_nli = False
-            logger.info("ColBERT index built: %d risks, %s", len(risks), colbert_model)
         else:
             self._colbert = None
+            self._bi_encoder, self._remote_bi_encoder, self._embeddings = _load_bi_encoder(
+                bi_encoder_model, descriptions, query_instruction,
+            )
 
-            if _is_remote(bi_encoder_model):
-                self._bi_encoder = None
-                try:
-                    self._remote_bi_encoder = _RemoteBiEncoder(
-                        bi_encoder_model, query_instruction=query_instruction,
-                    )
-                    self._embeddings = self._remote_bi_encoder.encode(descriptions, normalize=True)
-                except Exception as e:
-                    raise RuntimeError(
-                        f"Failed to encode corpus via remote bi-encoder at {bi_encoder_model}: {e}"
-                    ) from e
-                logger.info("Remote bi-encoder index built: %d risks, %s", len(risks), bi_encoder_model)
-            else:
-                self._bi_encoder = SentenceTransformer(bi_encoder_model)
-                self._embeddings = self._bi_encoder.encode(
-                    descriptions, normalize_embeddings=True, show_progress_bar=False
+            if cross_encoder_model:
+                self._cross_encoder, self._remote_cross_encoder, self._apply_sigmoid, self._is_nli = (
+                    _load_cross_encoder(cross_encoder_model, cross_encoder_type)
                 )
-
-            if cross_encoder_model and _is_remote(cross_encoder_model):
-                self._cross_encoder = None
-                self._remote_cross_encoder = _RemoteCrossEncoder(cross_encoder_model)
-                self._apply_sigmoid = False
-                self._is_nli = False
-                logger.info("Remote cross-encoder: %s", cross_encoder_model)
-            elif cross_encoder_model:
-                self._cross_encoder = CrossEncoder(cross_encoder_model)
-                self._apply_sigmoid = cross_encoder_model in _SIGMOID_MODELS
-                self._is_nli = cross_encoder_model in _NLI_MODELS
             else:
                 self._cross_encoder = None
                 self._apply_sigmoid = False
                 self._is_nli = False
+
+            self._score_normalizer = _make_score_normalizer(
+                is_nli=self._is_nli, apply_sigmoid=self._apply_sigmoid,
+            )
 
     @property
     def risk_count(self) -> int:
@@ -262,6 +415,18 @@ class RiskIndex:
 
     def get_taxonomy(self, risk_id: str) -> str:
         return self._risk_meta.get(risk_id, {}).get("taxonomy", "")
+
+    def set_query_instruction(self, instruction: str) -> None:
+        """Update the query instruction on the remote bi-encoder.
+
+        Only query encoding is affected — corpus embeddings are unchanged.
+        """
+        if self._remote_bi_encoder is None:
+            raise ValueError(
+                "set_query_instruction requires a remote bi-encoder. "
+                "Use a URL as --bi-encoder-model."
+            )
+        self._remote_bi_encoder._query_instruction = instruction
 
     def search_bm25(self, text: str, top_k: int = 100) -> list[ScoredCandidate]:
         if not self._bm25:
@@ -341,7 +506,7 @@ class RiskIndex:
         return results
 
     def rerank(
-        self, text: str, candidates: list[ScoredCandidate], top_k: int = 50
+            self, text: str, candidates: list[ScoredCandidate], top_k: int = 50
     ) -> list[ScoredCandidate]:
         if not candidates or (not self._cross_encoder and not self._remote_cross_encoder):
             return []
@@ -354,14 +519,7 @@ class RiskIndex:
         else:
             raw_scores = self._cross_encoder.predict(pairs)
         raw_scores = np.array(raw_scores)
-        if self._is_nli and raw_scores.ndim == 2:
-            exp_scores = np.exp(raw_scores - np.max(raw_scores, axis=1, keepdims=True))
-            softmax = exp_scores / exp_scores.sum(axis=1, keepdims=True)
-            scores = softmax[:, -1]
-        elif self._apply_sigmoid:
-            scores = 1.0 / (1.0 + np.exp(-raw_scores))
-        else:
-            scores = np.clip(raw_scores.astype(np.float64), 0.0, 1.0)
+        scores = self._score_normalizer(raw_scores)
         scored = sorted(
             zip(candidates, scores), key=lambda x: x[1], reverse=True
         )
@@ -375,14 +533,14 @@ class RiskIndex:
         return results
 
     def hybrid_search(
-        self,
-        text: str,
-        top_k: int = 50,
-        bm25_top_k: int = 100,
-        semantic_top_k: int = 100,
-        rrf_k: int = 60,
-        bm25_rescue_rank: int = 0,
-        rrf_min_score: float = 0.0,
+            self,
+            text: str,
+            top_k: int = 50,
+            bm25_top_k: int = 100,
+            semantic_top_k: int = 100,
+            rrf_k: int = 60,
+            bm25_rescue_rank: int = 0,
+            rrf_min_score: float = 0.0,
     ) -> list[ScoredCandidate]:
         if self._colbert is not None:
             return self._hybrid_search_colbert(text, top_k, bm25_top_k, rrf_k, bm25_rescue_rank)
@@ -393,21 +551,10 @@ class RiskIndex:
         if not bm25_results and not semantic_results:
             return []
 
-        rrf_scores: dict[str, float] = {}
-        candidate_data: dict[str, ScoredCandidate] = {}
-        bm25_ranks: dict[str, int] = {}
-        semantic_distances: dict[str, float] = {}
-
-        for rank, c in enumerate(bm25_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            candidate_data[c.risk_id] = c
-            bm25_ranks[c.risk_id] = rank
-
-        for rank, c in enumerate(semantic_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            if c.risk_id not in candidate_data:
-                candidate_data[c.risk_id] = c
-            semantic_distances[c.risk_id] = c.embedding_distance
+        rrf_scores, candidate_data, bm25_ranks = _rrf_fuse(
+            bm25_results, semantic_results, rrf_k=rrf_k,
+        )
+        semantic_distances = {c.risk_id: c.embedding_distance for c in semantic_results}
 
         sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)
         rrf_candidates = []
@@ -432,42 +579,15 @@ class RiskIndex:
             ][:top_k]
 
         reranked = self.rerank(text, rrf_candidates, top_k=top_k)
-
-        if bm25_rescue_rank > 0:
-            reranked_ids = {c.risk_id for c in reranked}
-            for c in rrf_candidates:
-                if (
-                    c.risk_id not in reranked_ids
-                    and c.bm25_rank > 0
-                    and c.bm25_rank <= bm25_rescue_rank
-                ):
-                    reranked.append(c)
-
-        rrf_lookup = {c.risk_id: c for c in rrf_candidates}
-        results = []
-        for c in reranked:
-            source = rrf_lookup.get(c.risk_id)
-            if source:
-                results.append(
-                    c.model_copy(
-                        update={
-                            "rrf_score": source.rrf_score,
-                            "bm25_rank": source.bm25_rank,
-                            "embedding_distance": source.embedding_distance,
-                        }
-                    )
-                )
-            else:
-                results.append(c)
-        return results
+        return _rescue_and_merge_scores(reranked, rrf_candidates, bm25_rescue_rank)
 
     def _hybrid_search_colbert(
-        self,
-        text: str,
-        top_k: int = 50,
-        bm25_top_k: int = 100,
-        rrf_k: int = 60,
-        bm25_rescue_rank: int = 0,
+            self,
+            text: str,
+            top_k: int = 50,
+            bm25_top_k: int = 100,
+            rrf_k: int = 60,
+            bm25_rescue_rank: int = 0,
     ) -> list[ScoredCandidate]:
         """Hybrid search using ColBERT MaxSim + BM25 with RRF fusion.
 
@@ -480,21 +600,10 @@ class RiskIndex:
         if not bm25_results and not colbert_results:
             return []
 
-        rrf_scores: dict[str, float] = {}
-        candidate_data: dict[str, ScoredCandidate] = {}
-        bm25_ranks: dict[str, int] = {}
-        colbert_scores: dict[str, float] = {}
-
-        for rank, c in enumerate(bm25_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            candidate_data[c.risk_id] = c
-            bm25_ranks[c.risk_id] = rank
-
-        for rank, c in enumerate(colbert_results, 1):
-            rrf_scores[c.risk_id] = rrf_scores.get(c.risk_id, 0) + 1 / (rrf_k + rank)
-            if c.risk_id not in candidate_data:
-                candidate_data[c.risk_id] = c
-            colbert_scores[c.risk_id] = c.cross_encoder_score
+        rrf_scores, candidate_data, bm25_ranks = _rrf_fuse(
+            bm25_results, colbert_results, rrf_k=rrf_k,
+        )
+        colbert_scores = {c.risk_id: c.cross_encoder_score for c in colbert_results}
 
         sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)[:top_k]
 

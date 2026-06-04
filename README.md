@@ -58,6 +58,85 @@ The pipeline extracts **risk-level** risks (IBM Risk Atlas, Credo UCF, AIR 2024,
 
 Category-level eval answers "did we find the right risk themes?" — more forgiving than risk-level since finding *any* bias-related risk satisfies the NIST `harmful-bias-or-homogenization` category.
 
+## Recommended Models
+
+The pipeline uses three models: a **bi-encoder** for initial semantic retrieval, a **cross-encoder** for reranking, and an **LLM** for judging and grounding. The defaults run locally without GPU, but quality improves significantly with better models served remotely via vLLM.
+
+### Quick Reference
+
+| Tier | Bi-encoder | Cross-encoder | How to run | IR F1 |
+|------|-----------|--------------|------------|-------|
+| **Best quality** | Qwen3-Embedding-4B | GTE-reranker-modernbert-base | GPU cluster via vLLM | 0.465 |
+| **Good quality** | google/EmbeddingGemma-300M | GTE-reranker-modernbert-base | GPU cluster via vLLM | 0.443 |
+| **Local (no GPU)** | all-mpnet-base-v2 | ms-marco-MiniLM-L-12-v2 | CPU, runs anywhere | 0.351 |
+
+F1 scores are from IR-only evaluation (no LLM judge/grounding) on 27 policies. With LLM stages enabled, the local default achieves F1=0.719 end-to-end; with sibling expansion (`--expand-siblings`), Qwen3+GTE achieves F1=0.753.
+
+### Bi-encoders
+
+**Qwen3-Embedding-4B** (recommended) — instruction-aware, 2560-dim, 8K context. Best first-stage retrieval: higher precision than other bi-encoders at comparable recall. Requires a query instruction and remote serving via vLLM.
+
+**google/EmbeddingGemma-300M** — 300M params, good quality without instructions. Slightly better recall than mpnet (0.895 vs 0.871).
+
+**all-mpnet-base-v2** (default) — 110M params, runs locally on CPU. Good baseline but instruction-unaware.
+
+### Cross-encoders
+
+**Alibaba-NLP/gte-reranker-modernbert-base** (recommended) — AUC=0.759 on pipeline-mined negatives. Genuinely discriminates relevant from irrelevant candidates. Outputs calibrated scores (no sigmoid needed). Serve via vLLM's `/v1/score` endpoint.
+
+**cross-encoder/ms-marco-MiniLM-L-12-v2** (default) — AUC=0.498 on pipeline-mined negatives (essentially random). Functions as a volume reduction filter rather than a semantic discriminator. Runs locally. Works well enough end-to-end because the LLM grounding stage provides the actual precision filtering.
+
+### Configuration Examples
+
+Pass a **model name** to run locally (downloaded on first use), or a **URL** to use a remote model served via vLLM.
+
+**Best quality** (Qwen3 + GTE, both on GPU cluster):
+
+```bash
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://localhost:8000/v1 --model my-model \
+  --bi-encoder-model https://qwen3-embedding-serving.example.com/v1/embeddings \
+  --cross-encoder-model https://gte-reranker-serving.example.com/v1/score \
+  --query-instruction "Instruct: Given a text passage from an AI governance policy document, retrieve AI risk descriptions that are relevant to the concepts, requirements, or concerns discussed in the passage\nQuery: " \
+  --expand-siblings
+```
+
+**Good quality** (EmbeddingGemma + GTE, remote):
+
+```bash
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://localhost:8000/v1 --model my-model \
+  --bi-encoder-model https://embeddinggemma-serving.example.com/v1/embeddings \
+  --cross-encoder-model https://gte-reranker-serving.example.com/v1/score
+```
+
+**Local with GTE reranker** (bi-encoder local, cross-encoder local — needs GPU for GTE):
+
+```bash
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://localhost:8000/v1 --model my-model \
+  --cross-encoder-model Alibaba-NLP/gte-reranker-modernbert-base
+```
+
+**Local defaults** (no GPU needed, models downloaded automatically):
+
+```bash
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --base-url http://localhost:8000/v1 --model my-model
+```
+
+**IR-only** (no LLM needed — useful for quick evaluation):
+
+```bash
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --no-judge --no-grounding
+```
+
 ## Setup
 
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
