@@ -33,4 +33,13 @@ class EmbeddingRetriever(dspy.Module):
             for c in candidates:
                 retrieved_ids.add(c.risk_id)
 
-        return dspy.Prediction(risk_ids=sorted(retrieved_ids))
+        sorted_ids = sorted(retrieved_ids)
+
+        # Call the predictor so GEPA can trace the instruction and reflect on it.
+        # The LLM output is discarded — only the retrieval results matter.
+        self.retrieve(
+            chunk_text=chunk_texts[0] if chunk_texts else "",
+            risk_ids=sorted_ids,
+        )
+
+        return dspy.Prediction(risk_ids=sorted_ids)
