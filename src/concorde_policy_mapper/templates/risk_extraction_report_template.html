@@ -291,6 +291,32 @@
                       <p class="text-xs text-gray-400 uppercase mb-1">Description</p>
                       <p class="text-sm text-gray-700" x-text="risk.risk_description"></p>
                     </div>
+                    <!-- Causal chain (DPV) -->
+                    <div x-show="risk.threat || risk.consequence">
+                      <p class="tip text-xs text-gray-400 uppercase mb-1"
+                         data-tip="DPV causal chain: what event causes this risk (Threat), what system weakness is exploited (Vulnerability), what happens if materialized (Consequence), and who is harmed (Impact).">Causal Chain</p>
+                      <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div x-show="risk.threat" class="rounded p-2 bg-red-50 border border-red-100">
+                          <span class="font-semibold text-red-700">Threat</span>
+                          <p class="text-red-900 mt-0.5" x-text="risk.threat"></p>
+                          <p x-show="risk.threat_source" class="text-red-600 mt-1 opacity-75">
+                            <span class="font-medium">Source:</span> <span x-text="risk.threat_source"></span>
+                          </p>
+                        </div>
+                        <div x-show="risk.vulnerability" class="rounded p-2 bg-orange-50 border border-orange-100">
+                          <span class="font-semibold text-orange-700">Vulnerability</span>
+                          <p class="text-orange-900 mt-0.5" x-text="risk.vulnerability"></p>
+                        </div>
+                        <div x-show="risk.consequence" class="rounded p-2 bg-yellow-50 border border-yellow-100">
+                          <span class="font-semibold text-yellow-700">Consequence</span>
+                          <p class="text-yellow-900 mt-0.5" x-text="risk.consequence"></p>
+                        </div>
+                        <div x-show="risk.impact" class="rounded p-2 bg-rose-50 border border-rose-100">
+                          <span class="font-semibold text-rose-700">Impact</span>
+                          <p class="text-rose-900 mt-0.5" x-text="risk.impact"></p>
+                        </div>
+                      </div>
+                    </div>
                     <!-- Score breakdown -->
                     <div x-show="risk.scores">
                       <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="Retrieval pipeline score components for this risk candidate.">Score Breakdown</p>
