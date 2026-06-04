@@ -397,6 +397,8 @@
                                          :class="cat === 'technical' ? 'bg-blue-50 text-blue-800' : cat === 'operational' ? 'bg-amber-50 text-amber-800' : 'bg-purple-50 text-purple-800'"
                                          :data-tip="m.action_id">
                                       <span class="font-semibold" x-text="m.action_name || m.action_id"></span>
+                                      <span x-show="m.risk_control" class="ml-1 px-1 py-0.5 rounded text-xs opacity-60 font-normal bg-gray-200 text-gray-700"
+                                            x-text="m.risk_control?.replace('Control','')"></span>
                                       <p x-show="m.description" class="mt-0.5 text-xs opacity-80 font-normal" x-text="m.description"></p>
                                     </div>
                                   </template>
