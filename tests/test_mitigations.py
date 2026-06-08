@@ -196,13 +196,6 @@ def _make_nexus_kg(tmp_path):
 def test_build_action_descriptions_from_mock_nexus(tmp_path):
     kg = _make_nexus_kg(tmp_path)
 
-    # MIT controls
-    (kg / "mit_ai_risk_repository_data_controls.yaml").write_text(
-        yaml.dump({"controls": [
-            {"id": "mit-ctrl-001", "description": "Monitor model drift"},
-            {"id": "mit-ctrl-002", "description": "Validate training data"},
-        ]})
-    )
     # NIST actions
     (kg / "nist_ai_rmf_actions_data.yaml").write_text(
         yaml.dump({"actions": [
@@ -227,12 +220,10 @@ def test_build_action_descriptions_from_mock_nexus(tmp_path):
 
     descs = build_action_descriptions(str(tmp_path), data_dir=data_dir)
 
-    assert descs["mit-ctrl-001"] == "Monitor model drift"
-    assert descs["mit-ctrl-002"] == "Validate training data"
     assert descs["GV-1.2-003"] == "Establish AI governance"
     assert descs["aiuc1-req-a1"] == "Ensure transparency"
     assert descs["owasp-act-01-01"] == "Constrain model inputs"
-    assert len(descs) == 5
+    assert len(descs) == 3
 
 
 def test_build_action_descriptions_missing_files(tmp_path):
@@ -243,25 +234,6 @@ def test_build_action_descriptions_missing_files(tmp_path):
     )
     assert descs == {}
 
-
-def test_build_action_descriptions_credo_filter(tmp_path):
-    """Only entries whose id starts with 'credo-act-' are loaded from credo.yaml."""
-    kg = _make_nexus_kg(tmp_path)
-
-    (kg / "credo.yaml").write_text(
-        yaml.dump({"actions": [
-            {"id": "credo-act-001", "description": "Audit model fairness"},
-            {"id": "credo-risk-016", "description": "Should be excluded (risk, not action)"},
-            {"id": "credo-ctrl-005", "description": "Should be excluded (ctrl, not action)"},
-        ]})
-    )
-
-    descs = build_action_descriptions(str(tmp_path))
-
-    assert "credo-act-001" in descs
-    assert descs["credo-act-001"] == "Audit model fairness"
-    assert "credo-risk-016" not in descs
-    assert "credo-ctrl-005" not in descs
 
 
 def test_build_action_descriptions_skips_entries_without_id_or_description(tmp_path):
@@ -294,10 +266,10 @@ def test_build_risk_crossmap_basic(tmp_path):
     mappings_dir = _make_nexus_kg(tmp_path) / "mappings"
     mappings_dir.mkdir()
 
-    (mappings_dir / "credo-ucf.sssom_from_tsv_data.yaml").write_text(
+    (mappings_dir / "mit-ai-risk-repository_ibm-risk-atlas_from_tsv_data.yaml").write_text(
         yaml.dump({"entries": [
             {
-                "id": "credo-risk-016",
+                "id": "mit-risk-042",
                 "close_mappings": ["atlas-hallucination"],
                 "exact_mappings": ["atlas-prompt-injection"],
             },
@@ -306,8 +278,8 @@ def test_build_risk_crossmap_basic(tmp_path):
 
     crossmap = build_risk_crossmap(str(tmp_path))
 
-    assert "credo-risk-016" in crossmap
-    assert crossmap["credo-risk-016"] == {"atlas-hallucination", "atlas-prompt-injection"}
+    assert "mit-risk-042" in crossmap
+    assert crossmap["mit-risk-042"] == {"atlas-hallucination", "atlas-prompt-injection"}
 
 
 def test_build_risk_crossmap_bidirectional(tmp_path):
@@ -347,10 +319,10 @@ def test_build_risk_crossmap_multiple_predicates_merge(tmp_path):
     mappings_dir = _make_nexus_kg(tmp_path) / "mappings"
     mappings_dir.mkdir()
 
-    (mappings_dir / "credo-ucf.sssom_from_tsv_data.yaml").write_text(
+    (mappings_dir / "mit-ai-risk-repository_ibm-risk-atlas_from_tsv_data.yaml").write_text(
         yaml.dump({"entries": [
             {
-                "id": "credo-risk-001",
+                "id": "mit-risk-001",
                 "close_mappings": ["atlas-hallucination"],
                 "broad_mappings": ["atlas-data-poisoning"],
                 "exact_mappings": ["atlas-hallucination"],  # duplicate, should deduplicate
@@ -360,4 +332,4 @@ def test_build_risk_crossmap_multiple_predicates_merge(tmp_path):
 
     crossmap = build_risk_crossmap(str(tmp_path))
 
-    assert crossmap["credo-risk-001"] == {"atlas-hallucination", "atlas-data-poisoning"}
+    assert crossmap["mit-risk-001"] == {"atlas-hallucination", "atlas-data-poisoning"}

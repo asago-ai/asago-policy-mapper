@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- **Trim mitigation sources to 3 frameworks**: dropped MIT AI Risk Repository (831 actions, 60% of index) and Credo UCF (41 controls) from the mitigation index. Kept NIST AI RMF 600-1, OWASP LLM Top 10 v2.0, and AIUC-1. Index reduced from 1,693 to 552 action-risk links across 80 risks (was 83). Max mitigations per risk drops from 162 to 26. MIT was dominated by governance questionnaires with ~24% sourced from NIST anyway; Credo overlapped heavily with NIST policy guidance.
+
 ### Added
 - **DSPy embedding instruction optimization** (`experiments/dspy_embedding/`): uses GEPA to optimize the query instruction prefix for instruction-aware embedding models (e.g. Qwen3-Embedding), maximizing risk-level retrieval recall
 - **`RiskIndex.set_query_instruction()`**: update the remote bi-encoder's query instruction without rebuilding the index
@@ -35,11 +38,10 @@
 
 ### Added
 - **`tests/test_llm.py`**: unit tests for low-coverage LLM utility functions — `_strip_titles`, `TokenTracker` methods (`add`, `_usage_values`, `to_dict`, `record_incident`, `set_stage`), `_track_completion`, `_extract_response_content`, `_truncate_messages`, and `_call_with_retry` outer loop (43 tests).
-- **Mitigation recommendations**: each extracted risk now includes recommended mitigation actions from 5 frameworks (MIT AI Risk Repository, OWASP LLM Top 10, NIST AI RMF 600-1, Credo UCF, AIUC-1). Pre-built index maps 83 Atlas risks to ~1,976 action entries via direct `action → atlas-*` mappings (no transitive cross-framework hops). Non-Atlas risks (Credo, MIT subdomains) resolve to Atlas equivalents via Nexus cross-framework mappings at enrichment time. Mitigations appear in JSON output (`mitigations` field on `RiskMatch` with `action_id`, `action_name`, `description`, `source`, `category`) and in the HTML report as an expandable section per risk, grouped by category (technical/operational/governance) then source.
-- **`scripts/build_mitigation_index.py`**: generates `data/atlas_risk_to_actions.yaml` from 5 direct mapping files. Each action is categorized as `technical`, `operational`, or `governance` via rules in `data/mitigation_categories.yaml`.
-- **Direct action→risk mapping files**: `data/nist_ai_rmf_actions_to_atlas_data.yaml` (212 NIST actions → 338 risk links), `data/credo_ucf_actions_to_atlas_data.yaml` (41 Credo controls → 115 risk links), `data/aiuc1_actions_to_atlas_data.yaml` (49 AIUC-1 requirements → 100 risk links). All hand-reviewed.
-- **`data/mitigation_categories.yaml`**: category assignment rules (MIT group → category, NIST RMF prefix → category, AIUC-1 principle → category) plus explicit assignments for OWASP and Credo actions.
-- **`data/mit_ai_risk_mitigation_to_atlas_data.yaml`**: maps 831 MIT AI Risk Repository controls to IBM Atlas risk IDs (MIT's own risk-to-mitigation mappings are not yet published; these were generated independently).
+- **Mitigation recommendations**: each extracted risk now includes recommended mitigation actions from 3 frameworks (OWASP LLM Top 10, NIST AI RMF 600-1, AIUC-1). Pre-built index maps 80 Atlas risks to ~552 action entries via direct `action → atlas-*` mappings (no transitive cross-framework hops). Non-Atlas risks resolve to Atlas equivalents via Nexus cross-framework mappings at enrichment time. Mitigations appear in JSON output (`mitigations` field on `RiskMatch` with `action_id`, `action_name`, `description`, `source`, `category`) and in the HTML report as an expandable section per risk, grouped by category (technical/operational/governance) then source.
+- **`scripts/build_mitigation_index.py`**: generates `data/atlas_risk_to_actions.yaml` from 3 direct mapping files. Each action is categorized as `technical`, `operational`, or `governance` via rules in `data/mitigation_categories.yaml`.
+- **Direct action→risk mapping files**: `data/nist_ai_rmf_actions_to_atlas_data.yaml` (212 NIST actions → 338 risk links), `data/aiuc1_actions_to_atlas_data.yaml` (49 AIUC-1 requirements → 100 risk links). All hand-reviewed.
+- **`data/mitigation_categories.yaml`**: category assignment rules (NIST RMF prefix → category, AIUC-1 principle → category) plus explicit assignments for OWASP actions.
 - **`data/owasp_llm_2.0_actions_data.yaml`**: 80 structured mitigation actions extracted from OWASP LLM Top 10 v2.0, each mapped to Atlas risk IDs.
 - **`--no-judge` flag**: skips LLM judge stage; auto-promotes borderline candidates to accepted.
 - **`--no-grounding` flag**: skips LLM grounding stage; accepted candidates become matches with empty evidence. Both flags can be used independently or together. `--base-url`/`--model` are optional when both are set.

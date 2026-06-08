@@ -59,7 +59,6 @@ def build_action_descriptions(
     descs: dict[str, str] = {}
 
     sources = [
-        (kg / "mit_ai_risk_repository_data_controls.yaml", "controls"),
         (kg / "nist_ai_rmf_actions_data.yaml", "actions"),
         (kg / "aiuc1_data.yaml", "rules"),
         (data_dir / "owasp_llm_2.0_actions_data.yaml", "actions"),
@@ -75,17 +74,6 @@ def build_action_descriptions(
             if eid and desc:
                 descs[eid] = desc.strip()
 
-    credo_path = kg / "credo.yaml"
-    if credo_path.exists():
-        with open(credo_path) as f:
-            raw = yaml.safe_load(f)
-        for entry in raw.get("actions", []):
-            eid = entry.get("id", "")
-            if eid.startswith("credo-act-"):
-                desc = entry.get("description")
-                if desc:
-                    descs[eid] = desc.strip()
-
     return descs
 
 
@@ -95,7 +83,6 @@ def build_risk_crossmap(nexus_base_dir: str) -> dict[str, set[str]]:
     crossmap: dict[str, set[str]] = {}
 
     mapping_files = [
-        "credo-ucf.sssom_from_tsv_data.yaml",
         "mit-ai-risk-repository_ibm-risk-atlas_from_tsv_data.yaml",
     ]
     predicates = ("close_mappings", "related_mappings", "broad_mappings", "exact_mappings")

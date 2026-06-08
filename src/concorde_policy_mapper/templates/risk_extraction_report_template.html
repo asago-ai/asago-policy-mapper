@@ -367,7 +367,7 @@
                     <!-- Mitigations -->
                     <div x-show="(risk.mitigations || []).length > 0" x-data="{ mitOpen: false }">
                       <p class="tip text-xs text-gray-400 uppercase mb-1 cursor-pointer select-none" @click="mitOpen = !mitOpen"
-                         data-tip="Recommended mitigation actions from NIST, OWASP, MIT, Credo, and AIUC-1 frameworks, categorized as technical (engineering deploys), operational (ops/QA executes), or governance (leadership/compliance owns).">
+                         data-tip="Recommended mitigation actions from NIST, OWASP, and AIUC-1 frameworks, categorized as technical (engineering deploys), operational (ops/QA executes), or governance (leadership/compliance owns).">
                         Mitigations
                         <span class="text-gray-500 font-mono" x-text="'(' + (risk.mitigations || []).length + ')'"></span>
                         <template x-for="cat in ['technical','operational','governance']" :key="cat">
