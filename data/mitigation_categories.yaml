@@ -22,12 +22,6 @@
 # ── Structural rules ──────────────────────────────────────────────────────
 # Applied automatically by the build script based on action ID structure.
 
-mit_groups:
-  "1": {category: governance,  risk_control: AvoidanceControl}     # Organizational Governance
-  "2": {category: technical,   risk_control: MitigationControl}    # Technical & Security
-  "3": {category: operational, risk_control: MonitorControl}       # Operational Process
-  "4": {category: governance,  risk_control: MonitorControl}       # Transparency & Accountability
-
 nist_prefixes:
   GV: {category: governance,  risk_control: AvoidanceControl}      # Govern — governance decisions
   MP: {category: operational, risk_control: MonitorControl}        # Map — risk identification
@@ -147,46 +141,3 @@ actions:
   owasp-llm-act-10-14: {category: operational, risk_control: MonitorControl}        # Use centralized ML model registry
   owasp-llm-act-10-15: {category: operational, risk_control: MonitorControl}        # Implement automated MLOps deployment governance
 
-  # ── Credo UCF ─────────────────────────────────────────────────────────
-
-  credo-act-control-001: {category: technical,   risk_control: MitigationControl}     # Establish AI system access controls
-  credo-act-control-002: {category: technical,   risk_control: MitigationControl}     # Implement AI asset protection framework
-  credo-act-control-003: {category: operational, risk_control: MonitorControl}        # Establish security validation framework
-  credo-act-control-004: {category: operational, risk_control: MonitorControl}        # Implement continuous security testing system
-  credo-act-control-005: {category: technical,   risk_control: MitigationControl}     # Implement AI security defense system
-  credo-act-control-006: {category: operational, risk_control: ModificationControl}   # Establish AI system integration framework
-  credo-act-control-007: {category: operational, risk_control: MonitorControl}        # Implement AI system lifecycle management
-  credo-act-control-009: {category: governance,  risk_control: MonitorControl}        # Establish AI system documentation framework
-  credo-act-control-010: {category: operational, risk_control: MonitorControl}        # Implement AI system monitoring and logging
-  credo-act-control-011: {category: governance,  risk_control: MonitorControl}        # Establish AI decision explanation framework
-  credo-act-control-012: {category: operational, risk_control: MonitorControl}        # Establish performance testing and validation
-  credo-act-control-013: {category: operational, risk_control: MonitorControl}        # Implement performance monitoring and robustness
-  credo-act-control-014: {category: operational, risk_control: MonitorControl}        # Establish fairness testing and validation
-  credo-act-control-015: {category: operational, risk_control: ResolutionControl}     # Implement fairness monitoring and remediation
-  credo-act-control-016: {category: governance,  risk_control: AvoidanceControl}      # Establish universal access and performance design
-  credo-act-control-017: {category: governance,  risk_control: AvoidanceControl}      # Establish content safety policy and boundaries
-  credo-act-control-018: {category: technical,   risk_control: MitigationControl}     # Implement content moderation system
-  credo-act-control-019: {category: operational, risk_control: ResolutionControl}     # Implement content safety incident response
-  credo-act-control-020: {category: operational, risk_control: MonitorControl}        # Establish information quality assurance
-  credo-act-control-021: {category: governance,  risk_control: AvoidanceControl}      # Establish frontier AI safety framework
-  credo-act-control-022: {category: operational, risk_control: MonitorControl}        # Implement adversarial testing and red team
-  credo-act-control-023: {category: operational, risk_control: MonitorControl}        # Implement system usage monitoring and prevention
-  credo-act-control-024: {category: operational, risk_control: MonitorControl}        # Implement AI system usage verification
-  credo-act-control-025: {category: governance,  risk_control: MonitorControl}        # Implement AI system disclosure requirements
-  credo-act-control-026: {category: governance,  risk_control: MitigationControl}     # Implement a privacy protection framework
-  credo-act-control-027: {category: operational, risk_control: ResolutionControl}     # Implement privacy incident detection and response
-  credo-act-control-028: {category: governance,  risk_control: ResolutionControl}     # Establish user rights and recourse framework
-  credo-act-control-029: {category: governance,  risk_control: AvoidanceControl}      # Implement AI literacy and competency program
-  credo-act-control-030: {category: governance,  risk_control: InterventionControl}   # Establish human-AI interaction safety framework
-  credo-act-control-031: {category: operational, risk_control: MonitorControl}        # Implement psychological impact management
-  credo-act-control-032: {category: governance,  risk_control: MonitorControl}        # Implement environmental impact management
-  credo-act-control-033: {category: governance,  risk_control: MonitorControl}        # Establish third-party assessment and management
-  credo-act-control-034: {category: governance,  risk_control: AvoidanceControl}      # Establish AI legal compliance process
-  credo-act-control-035: {category: governance,  risk_control: MonitorControl}        # Establish societal impact assessment framework
-  credo-act-control-036: {category: governance,  risk_control: AvoidanceControl}      # Establish responsible development and deployment
-  credo-act-control-037: {category: technical,   risk_control: MonitorControl}        # Implement AI alignment validation system
-  credo-act-control-038: {category: governance,  risk_control: MonitorControl}        # Establish AI risk management system
-  credo-act-control-039: {category: governance,  risk_control: AvoidanceControl}      # Establish data governance and management
-  credo-act-control-040: {category: governance,  risk_control: MonitorControl}        # Establish documentation sharing mechanism
-  credo-act-control-041: {category: governance,  risk_control: MonitorControl}        # Implement a risk reporting mechanism
-  credo-act-control-042: {category: operational, risk_control: ResolutionControl}     # Establish general purpose incident response
