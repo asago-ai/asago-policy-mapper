@@ -51,10 +51,12 @@ def group_chunks(chunks: list[Chunk], max_group_size: int = 5) -> list[ChunkGrou
     split: list[ChunkGroup] = []
     for g in groups:
         for i in range(0, len(g.chunk_indices), max_group_size):
-            split.append(ChunkGroup(
-                chunk_indices=g.chunk_indices[i : i + max_group_size],
-                section=g.section,
-            ))
+            split.append(
+                ChunkGroup(
+                    chunk_indices=g.chunk_indices[i : i + max_group_size],
+                    section=g.section,
+                )
+            )
 
     return split
 
@@ -123,11 +125,13 @@ def generate_queries(
             continue
         for query in response.queries:
             if query.strip():
-                results.append(QueryResult(
-                    query=query.strip(),
-                    chunk_indices=list(group.chunk_indices),
-                    section=group.section,
-                ))
+                results.append(
+                    QueryResult(
+                        query=query.strip(),
+                        chunk_indices=list(group.chunk_indices),
+                        section=group.section,
+                    )
+                )
 
     if return_fallbacks:
         return results, fallback_indices

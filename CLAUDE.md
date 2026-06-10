@@ -88,6 +88,16 @@ uv run concorde-policy-mapper extract policy.pdf -o output/ --no-judge --no-grou
   --bi-encoder-model https://bge-m3-model-serving.apps.example.com/v1/embeddings \
   --cross-encoder-model https://gte-reranker-model-serving.apps.example.com/v1/score
 
+# LLM-generated queries for retrieval (A/B test)
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus --query-gen \
+  --base-url <url> --model <model>
+
+# Query-gen IR-only (isolate retrieval quality, no judge/grounding)
+uv run concorde-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus --query-gen --no-judge --no-grounding \
+  --base-url <url> --model <model>
+
 # Rebuild mitigation index (after data file changes)
 python scripts/build_mitigation_index.py
 ```
@@ -116,6 +126,8 @@ Documents → parse_document() → chunk_documents() → per-chunk retrieve → 
 10. **Causal synthesis** (`attribute.py`) — LLM synthesizes domain-specific causal chains (`threat`/`threat_source`/`vulnerability`/`consequence`/`impact`) for each matched risk, grounded in the evidence-anchored chunks. Parallel via ThreadPoolExecutor. Disabled with `--no-causal-synthesis`; static YAML chains from `data/atlas_risk_threats.yaml` and `data/atlas_risk_consequences.yaml` serve as fallback for any fields not populated.
 11. **Mitigations** (`mitigations.py`) — Post-processing: enrich each matched risk with recommended mitigation actions from a pre-built index (`data/atlas_risk_to_actions.yaml`)
 
+With `--query-gen`, steps 5-6 are replaced by LLM query generation (`querygen.py`): chunks are grouped by section (up to 5 per group), each group is sent to the LLM to generate 1-3 search queries in risk-taxonomy vocabulary, and those queries are used for `hybrid_search`. All candidates are treated as accepted (no cross-encoder, no judge). Failed groups fall back to standard `retrieve_chunk`. Grounding (step 7) naturally filters irrelevant candidates per-chunk.
+
 With `--no-cross-encoder`, steps 5-6 are replaced by RRF score floor filtering (no LLM judging).
 
 With `--no-judge`, step 6 is skipped (borderline candidates auto-promoted to accepted). With `--no-grounding`, step 7 is skipped (accepted candidates become matches without evidence). Both can be combined for pure IR evaluation — no LLM calls at all.
@@ -132,7 +144,7 @@ Category-level taxonomy mapping (NIST, OWASP, AILuminate) is handled at eval tim
 
 ### Prompt Templates (`templates/prompts/`)
 
-Jinja2 template pairs (`_system.j2` + `_user.j2`): `judge_risk`, `ground_evidence`, `ground_variants`. Loaded by `prompts.py::render_prompt()`.
+Jinja2 template pairs (`_system.j2` + `_user.j2`): `judge_risk`, `ground_evidence`, `ground_variants`, `generate_queries`. Loaded by `prompts.py::render_prompt()`.
 
 ### Evaluation (`evals/eval.py`)
 

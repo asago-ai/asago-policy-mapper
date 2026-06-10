@@ -5,7 +5,6 @@ from concorde_policy_mapper.extract.parse import Chunk
 from concorde_policy_mapper.extract.querygen import (
     ChunkGroup,
     GeneratedQueries,
-    QueryResult,
     generate_queries,
     group_chunks,
 )
@@ -43,10 +42,7 @@ def test_group_chunks_by_section():
 
 
 def test_group_chunks_size_cap_splits():
-    chunks = [
-        Chunk(text=f"chunk {i}", source="doc.pdf", index=i, section="Big")
-        for i in range(8)
-    ]
+    chunks = [Chunk(text=f"chunk {i}", source="doc.pdf", index=i, section="Big") for i in range(8)]
     groups = group_chunks(chunks, max_group_size=3)
     assert len(groups) == 3
     assert groups[0].chunk_indices == [0, 1, 2]
@@ -81,10 +77,7 @@ def test_group_chunks_none_at_start():
 
 
 def test_group_chunks_all_none_degrades_to_windows():
-    chunks = [
-        Chunk(text=f"chunk {i}", source="doc.pdf", index=i, section=None)
-        for i in range(7)
-    ]
+    chunks = [Chunk(text=f"chunk {i}", source="doc.pdf", index=i, section=None) for i in range(7)]
     groups = group_chunks(chunks, max_group_size=3)
     assert len(groups) == 3
     assert groups[0].chunk_indices == [0, 1, 2]
@@ -121,10 +114,7 @@ def test_group_chunks_empty():
 
 
 def test_group_chunks_none_merges_respects_size_cap():
-    chunks = [
-        Chunk(text=f"chunk {i}", source="doc.pdf", index=i, section="A")
-        for i in range(4)
-    ] + [
+    chunks = [Chunk(text=f"chunk {i}", source="doc.pdf", index=i, section="A") for i in range(4)] + [
         Chunk(text="null chunk", source="doc.pdf", index=4, section=None),
     ]
     groups = group_chunks(chunks, max_group_size=3)
@@ -150,9 +140,11 @@ def test_generate_queries_basic():
         Chunk(text="Protected groups need equal treatment.", source="doc.pdf", index=1, section="Bias"),
     ]
     groups = [ChunkGroup(chunk_indices=[0, 1], section="Bias")]
-    client = _make_mock_client([
-        ["Unfair treatment in AI decisions based on protected characteristics"],
-    ])
+    client = _make_mock_client(
+        [
+            ["Unfair treatment in AI decisions based on protected characteristics"],
+        ]
+    )
 
     results = generate_queries(chunks, groups, client, "test-model")
 
@@ -183,10 +175,12 @@ def test_generate_queries_multiple_groups():
         ChunkGroup(chunk_indices=[0], section="A"),
         ChunkGroup(chunk_indices=[1], section="B"),
     ]
-    client = _make_mock_client([
-        ["data privacy in AI training"],
-        ["adversarial attacks on AI systems"],
-    ])
+    client = _make_mock_client(
+        [
+            ["data privacy in AI training"],
+            ["adversarial attacks on AI systems"],
+        ]
+    )
 
     results = generate_queries(chunks, groups, client, "test-model")
 
@@ -230,9 +224,7 @@ def test_generate_queries_fallback_on_failure():
     client = MagicMock()
     client.chat.completions.create = MagicMock(side_effect=fail_group_a)
 
-    results, fallback_indices = generate_queries(
-        chunks, groups, client, "test-model", return_fallbacks=True
-    )
+    results, fallback_indices = generate_queries(chunks, groups, client, "test-model", return_fallbacks=True)
 
     assert len(results) == 1
     assert results[0].chunk_indices == [1]
