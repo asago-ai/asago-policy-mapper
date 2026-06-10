@@ -502,7 +502,6 @@ def test_run_extraction_expand_siblings(mock_config, tmp_path):
         if response_model and hasattr(response_model, "__args__"):
             inner = response_model.__args__[0]
             if inner == _RiskEvidence:
-                _ = [r.get("risk_id", "") for r in kwargs["messages"][-1].get("content", "").split("risk_id") if r]
                 return [
                     _RiskEvidence(
                         risk_id=rid,
@@ -553,9 +552,9 @@ def test_run_extraction_expand_siblings(mock_config, tmp_path):
 
     assert isinstance(result, ExtractionResult)
     assert result.metadata["expand_siblings"] is True
-    _ = [r for r in result.risks if r.accepted_by == "expansion"]
+    expansion_risks = [r for r in result.risks if r.accepted_by == "expansion"]
     expansion_stats = result.metadata.get("expansion_stats", {})
-    assert expansion_stats.get("expanded_candidates", 0) >= 0
+    assert expansion_stats.get("expanded_candidates", 0) >= len(expansion_risks)
 
 
 @pytest.mark.slow
