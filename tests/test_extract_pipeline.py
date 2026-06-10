@@ -552,7 +552,7 @@ def test_run_extraction_expand_siblings(mock_config, tmp_path):
 
     assert isinstance(result, ExtractionResult)
     assert result.metadata["expand_siblings"] is True
-    expansion_risks = [r for r in result.risks if r.accepted_by == "expansion"]
+    _ = [r for r in result.risks if r.accepted_by == "expansion"]
     expansion_stats = result.metadata.get("expansion_stats", {})
     assert expansion_stats.get("expanded_candidates", 0) >= len(expansion_risks)
 
