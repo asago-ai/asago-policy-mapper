@@ -211,24 +211,24 @@ def test_generate_queries_records_llm_calls():
 
 def test_generate_queries_fallback_on_failure():
     chunks = [
-        Chunk(text="AI text", source="doc.pdf", index=0, section="A"),
-        Chunk(text="More AI text", source="doc.pdf", index=1, section="B"),
+        Chunk(text="Privacy concerns in AI", source="doc.pdf", index=0, section="A"),
+        Chunk(text="Security risks in ML", source="doc.pdf", index=1, section="B"),
     ]
     groups = [
         ChunkGroup(chunk_indices=[0], section="A"),
         ChunkGroup(chunk_indices=[1], section="B"),
     ]
 
-    call_count = [0]
-
-    def failing_then_ok(**kwargs):
-        call_count[0] += 1
-        if call_count[0] == 1:
+    def fail_group_a(**kwargs):
+        # Determine which group by inspecting the message content
+        msgs = kwargs.get("messages", [])
+        text = "".join(m.get("content", "") for m in msgs if isinstance(m, dict))
+        if "Privacy concerns" in text:
             raise Exception("LLM timeout")
         return GeneratedQueries(queries=["query for B"])
 
     client = MagicMock()
-    client.chat.completions.create = MagicMock(side_effect=failing_then_ok)
+    client.chat.completions.create = MagicMock(side_effect=fail_group_a)
 
     results, fallback_indices = generate_queries(
         chunks, groups, client, "test-model", return_fallbacks=True

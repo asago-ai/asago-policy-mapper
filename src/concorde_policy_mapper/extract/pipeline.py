@@ -29,9 +29,11 @@ from concorde_policy_mapper.extract.models import (
     _CausalChain,
 )
 from concorde_policy_mapper.extract.parse import chunk_documents, parse_document
+from concorde_policy_mapper.extract.querygen import generate_queries, group_chunks
 from concorde_policy_mapper.extract.retrieve import (
     ChunkResult,
     build_chunk_contexts,
+    classify_candidates,
     judge_borderline,
     retrieve_chunk,
 )
@@ -614,24 +616,100 @@ def run_extraction(
         )
 
     call_collector: list[LLMCallRecord] = []
+    fallback_chunk_indices: set[int] = set()
+    query_results = []
+
+    if retrieval.query_gen:
+        with timed(timing, "query_gen_ms"):
+            groups = group_chunks(chunks)
+            query_results, fallback_list = generate_queries(
+                chunks,
+                groups,
+                client,
+                config.model,
+                call_collector=call_collector,
+                max_workers=max_workers,
+                return_fallbacks=True,
+            )
+            fallback_chunk_indices = set(fallback_list)
+            logger.info(
+                "Query generation: %d queries from %d groups, %d fallback chunks",
+                len(query_results),
+                len(groups),
+                len(fallback_chunk_indices),
+            )
 
     with timed(timing, "retrieve_ms"):
-        chunk_results: list[ChunkResult] = []
-        for i in range(len(chunks)):
-            cr = retrieve_chunk(
-                chunks,
-                i,
-                index,
-                top_n_accept=retrieval.top_n_accept,
-                top_n_judge=retrieval.top_n_judge,
-                min_score_floor=retrieval.min_score_floor,
-                bm25_rescue_rank=retrieval.bm25_rescue_rank,
-                use_cross_encoder=retrieval.use_cross_encoder,
-                rrf_min_score=retrieval.effective_rrf_min_score,
-                threshold_high=retrieval.threshold_high,
-                threshold_low=retrieval.threshold_low,
-            )
-            chunk_results.append(cr)
+        chunk_results: list[ChunkResult] = [None] * len(chunks)  # type: ignore[list-item]
+
+        if retrieval.query_gen:
+            for qr in query_results:
+                candidates = index.hybrid_search(
+                    qr.query,
+                    top_k=50,
+                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                    rrf_min_score=retrieval.rrf_min_score or 0.015,
+                )
+                for ci in qr.chunk_indices:
+                    chunk = chunks[ci]
+                    if chunk_results[ci] is not None:
+                        existing_ids = {c.risk_id for c in chunk_results[ci].accepted}
+                        for c in candidates:
+                            if c.risk_id not in existing_ids:
+                                chunk_results[ci].accepted.append(c)
+                                existing_ids.add(c.risk_id)
+                    else:
+                        chunk_results[ci] = ChunkResult(
+                            chunk_index=ci,
+                            source=chunk.source,
+                            page=chunk.page,
+                            section=chunk.section,
+                            accepted=list(candidates),
+                            borderline=[],
+                            borderline_judged=[],
+                            stats={
+                                "candidates_retrieved": len(candidates),
+                                "auto_accepted": len(candidates),
+                                "borderline": 0,
+                                "discarded": 0,
+                                "bm25_rescued": 0,
+                            },
+                        )
+
+            retrieval_indices = fallback_chunk_indices | {
+                i for i in range(len(chunks)) if chunk_results[i] is None
+            }
+            for i in sorted(retrieval_indices):
+                cr = retrieve_chunk(
+                    chunks,
+                    i,
+                    index,
+                    top_n_accept=retrieval.top_n_accept,
+                    top_n_judge=retrieval.top_n_judge,
+                    min_score_floor=retrieval.min_score_floor,
+                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                    use_cross_encoder=retrieval.use_cross_encoder,
+                    rrf_min_score=retrieval.effective_rrf_min_score,
+                    threshold_high=retrieval.threshold_high,
+                    threshold_low=retrieval.threshold_low,
+                )
+                chunk_results[i] = cr
+        else:
+            for i in range(len(chunks)):
+                cr = retrieve_chunk(
+                    chunks,
+                    i,
+                    index,
+                    top_n_accept=retrieval.top_n_accept,
+                    top_n_judge=retrieval.top_n_judge,
+                    min_score_floor=retrieval.min_score_floor,
+                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                    use_cross_encoder=retrieval.use_cross_encoder,
+                    rrf_min_score=retrieval.effective_rrf_min_score,
+                    threshold_high=retrieval.threshold_high,
+                    threshold_low=retrieval.threshold_low,
+                )
+                chunk_results[i] = cr
 
     if index.variant_map and retrieval.no_grounding:
         for cr in chunk_results:
@@ -655,15 +733,18 @@ def run_extraction(
     ]
 
     with timed(timing, "judge_ms"):
-        _run_judge(
-            chunk_results,
-            chunks,
-            client,
-            config,
-            retrieval,
-            call_collector,
-            chunk_contexts=chunk_contexts,
-        )
+        if retrieval.query_gen:
+            fallback_results = [chunk_results[i] for i in sorted(fallback_chunk_indices)]
+            if fallback_results:
+                _run_judge(
+                    fallback_results, chunks, client, config, retrieval, call_collector,
+                    chunk_contexts=chunk_contexts,
+                )
+        else:
+            _run_judge(
+                chunk_results, chunks, client, config, retrieval, call_collector,
+                chunk_contexts=chunk_contexts,
+            )
 
     if retrieval.no_grounding:
         all_matches = _collect_ungrounded(chunk_results, index, retrieval)
@@ -751,6 +832,17 @@ def run_extraction(
             **retrieval.to_metadata(),
             "expansion_stats": expansion_stats,
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            **(
+                {
+                    "query_gen_queries": [
+                        {"query": qr.query, "chunk_indices": qr.chunk_indices, "section": qr.section}
+                        for qr in query_results
+                    ],
+                    "query_gen_fallback_chunks": sorted(fallback_chunk_indices),
+                }
+                if retrieval.query_gen
+                else {}
+            ),
         },
         chunks=chunk_summaries,
         llm_calls=call_collector,
