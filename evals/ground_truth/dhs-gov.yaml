@@ -382,3 +382,29 @@ risks:
       benefits
   - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
       medical condition, disability, emotional state, or future behavior predictions
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'US citizens must be afforded the right to opt-out of face recognition for non-law-enforcement uses'
+    section: 'Face Recognition Specific Rules'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'AI-related incidents must be reported through established channels'
+    section: 'Incident Reporting'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'Discriminatory decision-making — Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality, medical condition, disability, emotional state, or future behavior predictions'
+    section: 'Prohibited Uses'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'hardened against compromise and malicious activity'
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'AI Governance Board — departmental oversight of AI risk and policy'
+    section: 'Governance'
+  - text: 'AI-related incidents must be reported through established channels'
+    section: 'Incident Reporting'

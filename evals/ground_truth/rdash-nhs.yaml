@@ -411,3 +411,48 @@ risks:
   evidence:
   - text: Ensure confidential patient information is processed legally, ethically and appropriately.
   - text: ChatGPT (and other as per 5.4) must not be used to process patient-identifiable information, confidential or business sensitive data, or make clinical decisions.
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: 'no intervention should be carried out without either the individual’s informed consent, or the powers included in a legal framework, or by order of the court.'
+    section: '8.2 Mental Capacity Act (2005)'
+  - text: 'ensure that the rights of individual are protected'
+    section: '8.2 Mental Capacity Act (2005)'
+- id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: 'Fake online engagement (fake reviews, fake grassroots support)'
+  evidence:
+  - text: 'it can produce inaccurate, biased or false information'
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: 'it can produce inaccurate, biased or false information.'
+    section: '5.4 Freely available artificial intelligence apps and technologies'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'Document decisions and rationale clearly in patient records.'
+  - text: 'artificial intelligence outcomes or outputs must be reviewed by a human; you cannot rely solely on the use of artificial intelligence for decision-making, there must be substantial involvement from an appropriately qualified human'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'Including the potential to produce biased, discriminatory, or harmful content'
+    section: '5.5 Use of ChatGPT (and other as per 5.4) on trust devices'
+  - text: 'Potential for incorrect or biased outputs from artificial intelligence systems.'
+    section: '11.1.4 Risks of over-reliance on artificial intelligence'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'be aware of any copyright and intellectual property considerations.'
+  - text: 'The UK’s National Cyber Security Centre (NCSC) states that you should not enter sensitive information (such as personal details or company intellectual property) into chatbots'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'it can produce inaccurate, biased or false information. (Passage 18)'
+  - text: 'Potential for incorrect or biased outputs from artificial intelligence systems. (Passage 36)'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'Assess the safety risks associated with artificial intelligence systems used in clinical settings.'
+    section: '4.5 Clinical safety officer'
+  - text: 'Users are responsible for verifying outputs and ensuring that any content generated is appropriate, accurate, and compliant with relevant governance standards.'
+    section: '5.5 Use of ChatGPT (and other as per 5.4) on trust devices'

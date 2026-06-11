@@ -597,3 +597,30 @@ risks:
   name: Unauthorized processing - Demographic data
   evidence:
   - text: discriminatorily classify people based on their social behavior, socioeconomic status, or sensitive personal information such as race or ethnicity
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: 'AI systems that pose a significant risk to a person''s health, safety, or civil rights will be evaluated with additional scrutiny and risk-mitigation analysis.'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'AI systems should have measures in place addressing traceability during their lifecycles.'
+    section: '3.1d Transparency'
+  - text: 'AI systems must include capabilities that support informed oversight and control.'
+    section: '3.1b Accountability and Reliability'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'Technical robustness and safety require that AI systems preemptively address risks including, but not limited to, the unpredictability of AI performance and cybersecurity.'
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'AI systems must include capabilities that support informed oversight and control.'
+    section: '3.1b Accountability and Reliability'
+  - text: 'we will establish mechanisms for human intervention to ensure proper oversight, validity of AI outcomes'
+    section: '3.2. We will ensure that there is proper human oversight throughout the lifecycle of an AI system.'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'Intellectual property concerns arise at all phases of AI development and use, including data selection and acquisition, model training and development, and operations and output.'
+    section: '3.5. We will ensure that our AI respects and protects our own and others'' confidential information and intellectual property.'

@@ -250,3 +250,16 @@ risks:
   evidence:
   - text: Data used to train and deploy AI systems must be proportionate, handled in conformity with applicable data protection laws.
   - text: We make sure that the AI we develop, use and deploy are designed in a way that minimises known security threats, through appropriate technical and organisational measures.
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'auditing for accountability, bias and risks implicated by specific AI models'
+    section: '4.3. Monitor'
+  - text: 'adopting tools for bias check as part of model-development practices'
+    section: '4.3. Monitor'
+  - text: 'We strive to avoid creating unfair biases and reinforcing or exacerbating existing biases.'
+    section: '3. RESPONSIBLE AI GUIDING PRINCIPLES'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'We make sure that the AI we develop, use and deploy are designed in a way that minimises known security threats, through appropriate technical and organisational measures.'

@@ -335,3 +335,19 @@ risks:
   name: Compromised confidential information (Slattery et al., 2024; IBM, 2024;AI, 2023)
   evidence:
   - text: eBay's AI systems should be secure and protected from unauthorized access, tampering, and any other form of malicious intervention, in accordance with eBay's Information Security Policy and Standards.
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'AI decisions must not discriminate based on age, gender, race, sexual orientation, religion, or any other protected characteristic.'
+  - text: 'They should not cause harm, mislead users, or create unfair or biased outcomes.'
+  - text: 'To ensure fairness, we must build AI systems with fairness and bias issues in mind, test and monitor AI systems regularly'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'eBay''s AI systems should be secure and protected from unauthorized access, tampering, and any other form of malicious intervention, in accordance with eBay''s Information Security Policy and Standards.'
+  - text: 'eBay recognizes that AI technology comes with unique security risks that require constant attention to stay ahead of these risks.'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'Every AI system should consistently produce the expected outcome and task it is designed for, across various conditions and in a way that minimizes unpredictability and hallucinations.'
+    section: '3.1 Reliability, Safety, and Security: Build trustworthy AI systems that are reliable, safe, and secure'

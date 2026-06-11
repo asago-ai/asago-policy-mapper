@@ -99,3 +99,28 @@ risks:
   evidence:
   - text: Anyone who uses AI tools in our editorial workflow is responsible for the accuracy and integrity of the resulting work.
   - text: Maintaining the standards in this policy is a shared obligation across our editorial operation.
+- id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: 'Fake online engagement (fake reviews, fake grassroots support)'
+  evidence:
+  - text: 'We do not publish AI-generated images, audio, or video as authentic documentation of real events.'
+  - text: 'We do not alter documentary media in ways that change their meaning.'
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: 'We do not publish AI-generated images, audio, or video as authentic documentation of real events.'
+    section: 'Images, audio, and video'
+  - text: 'We do not alter documentary media in ways that change their meaning.'
+    section: 'Images, audio, and video'
+  - text: 'is responsible for the accuracy and integrity of the resulting work.'
+    section: 'Accountability is non-negotiable'
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'AI output is never treated as an authoritative source. Everything must be verified.'
+  - text: 'We don’t publish claims based solely on AI-generated summaries, and reporters may not represent any material as “reviewed” unless they have examined it directly.'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'We do not publish AI-generated images, audio, or video as authentic documentation of real events.'
+  - text: 'AI tools must not be used to generate, extract, or summarize material that is then attributed to a named source, whether as a direct quote, a paraphrase, or a characterization of someone’s views.'
+  - text: 'We don’t publish claims based solely on AI-generated summaries'

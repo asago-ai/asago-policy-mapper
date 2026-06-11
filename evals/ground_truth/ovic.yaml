@@ -423,3 +423,29 @@ risks:
   evidence:
   - text: The Standards set out the mandatory requirements to protect public sector information across all security domains including governance, information, personnel, information communications technology
       and physical security.
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'IPP 1 sets out that an organisation must only collect personal information if it is necessary to fulfill one or more of its functions.'
+    section: 'Collection of personal information'
+  - text: 'The collection must be lawful, fair and not unreasonably intrusive.'
+    section: 'Collection of personal information'
+  - text: 'This section applies to VPS organisations covered by Part 3 of the *Privacy and Data Protection Act 2014* (PDP Act).'
+    section: 'Information privacy requirements'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'implementing a formal process for the ongoing monitoring and review of risks and controls.'
+  - text: 'Ensure that risks and controls are regularly reviewed and monitored.'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'It risks unfair decisions being made about them based on information created by Generative AI, that may be inaccurate or of a diminished quality.'
+    section: 'OVIC’s minimum expectations'
+- id: credo-risk-038
+  name: 'Compromised confidential information (Slattery et al., 2024; IBM, 2024;AI, 2023)'
+  evidence:
+  - text: 'assess the information security risks to the confidentiality, integrity and availability of public sector information and systems proposed to be used by the enterprise Generative AI tool'
+    section: 'Information security requirements'
+  - text: 'The adoption and use of Generative AI tools may magnify existing information privacy and information security risks for VPS organisations, and create new ones'
+    section: 'Use of enterprise Generative AI tools in the Victorian public sector'

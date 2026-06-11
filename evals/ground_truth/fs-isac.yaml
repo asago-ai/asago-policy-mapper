@@ -328,3 +328,36 @@ risks:
   evidence:
   - text: Remove references to IP , NPI, PII
     section: Responsibility
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'Monitoring is a common section in Acceptable Use Policies, trusting but verifying compliance with the policy.'
+    section: 'Monitoring'
+  - text: 'The company has the right to monitor the use of these systems per applicable laws and regulations.'
+    section: 'Monitoring'
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'Management may occasionally verify that the use of these systems adheres to the directives outlined in this document.'
+    section: 'Monitoring'
+- id: credo-risk-038
+  name: 'Compromised confidential information (Slattery et al., 2024; IBM, 2024;AI, 2023)'
+  evidence:
+  - text: 'The service may preserve the queries, which hackers could breach and release.'
+    section: 'Confidentiality'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'May give access to IP or systems'
+    section: 'Confidentiality'
+  - text: 'Any information that someone may use to reverse engineer or give access to IP or systems'
+    section: 'Confidentiality'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'Distortion of statistics or other facts may lead to employees making public claims or key decisions based on erroneous information.'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'Generative AI systems are far from perfect, especially with fact-based output. These systems may ''hallucinate'' when their answers appear convincing but are completely wrong.'
+  - text: 'Given that the accuracy of generative AI is imperfect, the firm strongly encourages employees to manually verify the output before use.'

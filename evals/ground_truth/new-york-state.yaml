@@ -488,3 +488,41 @@ risks:
   evidence:
   - text: Use of AI to generate content with the intent to deceive users.
   - text: Using an AI-powered chatbot that is not identified as such and that intentionally deceives users.
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'The use of AI, even if not subject to this policy, must be in compliance with applicable New York State and ITS policies and standards and New York and federal law.'
+    section: '4.1 Use of AI'
+  - text: 'Disposal of the data once the purpose of using the data has been fulfilled'
+    section: '4.7 Privacy'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'SE must be aware that systemic, computational, and human biases may impact AI systems'
+    section: '4.3 Fairness and Equity'
+  - text: 'promoting accountability, safety, and equity'
+    section: '1.0 Purpose and Benefits'
+  - text: 'validate continuing reliability, safety, and fairness.'
+    section: '4.2 Human Oversight'
+- id: credo-risk-024
+  name: Civil liability
+  evidence:
+  - text: 'The Risk Assessment must include a review of all security, privacy, legal, reputational,  and competency risks'
+    section: '4.5 AI Risk Assessment and Management'
+- id: credo-risk-038
+  name: 'Compromised confidential information (Slattery et al., 2024; IBM, 2024;AI, 2023)'
+  evidence:
+  - text: 'The Risk Assessment must include a review of all security, privacy, legal, reputational,  and competency risks'
+    section: '4.5 AI Risk Assessment and Management'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'Use of AI to generate content with the intent to deceive users.'
+  - text: 'Use of non-vetted data to generate content without human review and without disclosure.'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'validate continuing reliability, safety, and fairness.'
+    section: '4.2 Human Oversight'
+  - text: 'Open standards, model lifecycle management, and regular retraining of AI systems are all important elements that SEs should consider.'
+    section: '4.9 Technology'

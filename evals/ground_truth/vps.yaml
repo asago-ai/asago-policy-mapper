@@ -533,3 +533,24 @@ risks:
   evidence:
   - text: You copy and paste the email chain into a Generative AI tool and ask it to draft a response for you.
   - text: The information you provided to the Generative AI tool is sensitive and not publicly available. The tool may inappropriately share this information with other users.
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'It may also be a breach of privacy to use someone’s photo without their consent. (Passage 27)'
+  - text: 'The Office of the Victorian Information Commissioner can assist with data protection and personal information matters (Passage 10)'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'there is limited, or no, way to explain how Generative AI content is produced. (Passage 7)'
+  - text: 'you also have no way of explaining how the offers were compared and how the Generative AI tool arrived at the ranking for each vendor. (Passage 28)'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'Incomplete or inaccurate training data will lead to incorrect and potentially harmful AI-generated outputs that can be discriminatory, unfair,  unjust or incompatible with human rights.'
+    section: 'When using Generative AI tools'
+  - text: 'if training datasets contain biased or inaccurate information, generated content can inherit these biases and inaccuracies.'
+    section: 'Why safe and responsible use of Generative AI is important'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'Generative AI models can also be used to automate and generate believable outputs that harm, deceive and damage (including at scale), for example generating content such as fake images, compelling lies and sophisticated phishing schemes.'

@@ -495,3 +495,34 @@ risks:
   evidence:
   - text: use biometric categorization systems that infer sensitive personal attributes
   - text: replicate or amplify systemic and societal discriminations, biases and stereotypes - in particular around gender and race
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: 'assesses the potential negative short- and long-term secondary impacts that the use of AI solutions may have on the safety, dignity, agency and respect for the fundamental rights of affected people'
+  - text: 'the ICRC will refrain from using, deploying or providing AI systems that: deploy subliminal, manipulative, or deceptive techniques to distort behaviour and impair informed decision-making'
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: 'The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data'
+    section: '5.1. A humanitarian and principled approach'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'meaningful traceability, disclosure and notification measures are put in place in relation to the use of AI systems'
+    section: '6.3. Transparency and ''explainability'''
+  - text: 'continuous monitoring, assessment and reporting on the procurement, use, management and review of AI solutions'
+    section: '6.4.  Responsibility and accountability'
+  - text: 'supported by effective evaluation and auditing processes to ensure the ICRC''s AI systems and tools comply with this policy.'
+    section: '6.4.  Responsibility and accountability'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'Risks of misuse, abuse, infiltration and attacks against AI systems and potential related harms and damage are systematically considered'
+  - text: 'the potential impact on the safety, dignity and rights of affected populations and users'
+- id: credo-risk-038
+  name: 'Compromised confidential information (Slattery et al., 2024; IBM, 2024;AI, 2023)'
+  evidence:
+  - text: 'Risks of misuse, abuse, infiltration and attacks against AI systems and potential related harms and damage are systematically considered'
+    section: '6.2. Safety and security'
+  - text: 'ICRC staff and users do not input any critical humanitarian information, other confidential and/or strictly confidential information, or any proprietary information protected by intellectual property rights when using external or commercial online AI services.'
+    section: '6.4.  Responsibility and accountability'

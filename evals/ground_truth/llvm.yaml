@@ -110,3 +110,14 @@ risks:
   name: AI pursuing its own goals in conflict with human goals or values (Slattery et al., 2024)
   evidence:
   - text: it bans agents that take action in our digital spaces without human approval
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'there must be a
+**human in the loop**'
+  - text: 'Contributors must read and review all LLM-generated code or text before they
+ask other project members to review it.'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'Using AI tools to regenerate copyrighted material does not remove the copyright, and contributors are responsible for ensuring that such material does not appear in their contributions.'

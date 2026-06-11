@@ -267,3 +267,24 @@ risks:
   name: Lack of capability or robustness
   evidence:
   - text: assess the risks and limitations of generative Artificial Intelligence (AI) tools
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'Staff are reminded that any use of AI tools must comply with all applicable legal obligations,  in particular  the EU  Artificial  Intelligence  Act (Regulation (EU) 2024/1624).'
+    section: '1. INTRODUCTION'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'Generative AI may produce outputs that are factually incorrect, incomplete or biased'
+    section: '2.3. [Rule n°3] Always critically assess AI outputs for accuracy and bias.'
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'Staff must always verify all AI-generated content, even when it appears coherent and confident, before using it further in Commission work.'
+  - text: 'Treat AI-generated content only as an initial draft: revise, adapt, and validate it (including the sources and references mentioned in the output) before use.'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'Lack of transparency on the origin of materials used for training generative AI models raises concerns related to intellectual property (IP) rights'
+  - text: 'It is possible that copyright protected information has been used for training the AI model and ends up being reproduced in the output.'
+  - text: 'Always assess whether generated output might violate intellectual property rights.'

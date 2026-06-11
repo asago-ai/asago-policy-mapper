@@ -56,3 +56,8 @@ risks:
   - text: 3.10. 'Personal Data' means any information that is about, or can be related to, an identifiable individual. It includes any information that can be linked to an individual or used to directly
       or indirectly identify an individual, natural person.
   - text: Personal Data shall be considered Confidential Information regardless of the source. Personal Data is Protected Data.
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'Cisco reserves the right to audit Supplier''s AI/ML governance program before deciding whether to grant the requested permission and on a regular basis (with a notice period of 14 days) after a permission has been granted.'
+    section: '2. Supplier''s Use of Artificial Intelligence and Machine Learning.'

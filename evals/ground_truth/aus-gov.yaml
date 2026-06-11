@@ -294,3 +294,35 @@ risks:
   evidence:
   - text: The AI is designed to use personal or sensitive data 1 or security classified information 2 .
   - text: introduce or exacerbate any privacy or security risks.
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: 'The use, misuse or failure of AI could lead to more than insignificant harm to individuals, communities, organisations, the environment or the collective rights of cultural groups including First Nations peoples.'
+  - text: 'The use of AI will materially influence administrative decisions that affect individuals, communities, organisations, the environment or the collective rights of cultural groups including First Nations peoples.'
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'The AI is designed to use personal or sensitive data 1  or security classified information 2 .'
+    section: 'Criteria and areas of consideration'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'It embeds the principles of fairness, transparency, and accountability into a set of technical requirements and guidelines.'
+    section: 'AI technical standard'
+  - text: 'ADM systems can also perpetuate or even amplify existing biases, leading to unfair or discriminatory outcomes for certain groups of people.'
+    section: 'Automated decision-making'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'disruption of the management and operation of critical infrastructure;'
+    section: 'AI incident'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'including intellectual property'
+    section: 'AI incident'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'malfunction of one or more AI systems'
+    section: 'AI incident'

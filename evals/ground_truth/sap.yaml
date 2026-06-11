@@ -646,3 +646,34 @@ risks:
   name: Discrimination in employment, benefits, or services - Sexual orientation
   evidence:
   - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)? (Passage 28)
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: 'Ensure used AI methods do not result in inaccuracies detrimental to data subjects'' rights.'
+    section: 'Bias'
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'The use of data for testing must comply with DPP Policy.'
+    section: '·  Where feasible, a fairness function shall be used.'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'The data sets and the processes that produce an AI system''s decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be documented to allow for traceability and transparency.'
+    section: 'Transparency & Explainability'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'Intentionally harmful impacts on users and/ or those directly and indirectly affected by the system.'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'systems which undermine human debate or democratic electoral systems.'
+    section: 'Undermine Debate'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'AI systems automating decisions must be tested extensively to avoid unintended behaviour.'
+    section: 'Human Agency & Oversight'
+  - text: 'to ensure the system behaves as intended by the developers and does not have any unintended behaviour, outputs, or usage.'
+    section: 'Human Agency & Oversight'

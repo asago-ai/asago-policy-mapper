@@ -766,3 +766,60 @@ risks:
   name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
   - text: Personal data is defined in the UK GDPR as 'any information relating to an identified or identifiable natural person ('data subject')
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: 'This is particularly important where use of the AI will have a legal effect on someone e.g. marking summative assessment, processing an application.'
+    section: 'Data Protection principles and AI'
+- id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: 'Fake online engagement (fake reviews, fake grassroots support)'
+  evidence:
+  - text: 'AI tools are known to hallucinate, namely supplying information that has no basis in reality, or else reproducing information that is out of date or is misinformation.'
+  - text: 'Passage 18'
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: 'AI tools can produce unreliable information'
+    section: 'Bias and discrimination risks with AI'
+  - text: 'AI tools are known to hallucinate, namely supplying information that has no basis in reality, or else reproducing information that is out of date or is misinformation.'
+    section: 'Cybersecurity AI rules'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'Auditing and Monitoring : Consider how the use and outputs of AI will be monitored and reviewed.'
+    section: 'Bias and discrimination AI issues'
+  - text: 'Transparency and explainability'
+    section: 'Will apply to - personal data, employment and working practices, competition'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics.'
+    section: 'What is the Equality Act?'
+  - text: 'Fairness, bias and discrimination'
+    section: 'Will apply to - personal data, employment and working practices, competition'
+  - text: 'equality act, including bias and discrimination'
+    section: 'What this guidance is for'
+- id: credo-risk-024
+  name: Civil liability
+  evidence:
+  - text: 'A breach of confidentiality may cause financial losses, reputational damage, can expose the School to serious liability'
+    section: 'Confidentiality requirements'
+  - text: 'legal and regulatory issues'
+    section: 'What this guidance is for'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'Don''t ask an AI tool to do something malicious or illegal.'
+  - text: 'Never ask an AI to perform tasks that are malicious or that may compromise other people or data that is not yours.'
+- id: credo-risk-038
+  name: 'Compromised confidential information (Slattery et al., 2024; IBM, 2024;AI, 2023)'
+  evidence:
+  - text: 'A breach of confidentiality may cause financial losses, reputational damage, can expose the School to serious liability and you may incur disciplinary sanctions.'
+    section: 'Confidentiality requirements'
+  - text: 'cybersecurity'
+    section: 'What this guidance is for'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'copyright'
+    section: 'What this guidance is for'

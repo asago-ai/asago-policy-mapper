@@ -188,3 +188,11 @@ risks:
   name: Lack of capability or robustness
   evidence:
   - text: AIgenerated content can distort and misrepresent information, lack context, and create convincing but false statements.
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'it can also produce content that infringes on intellectual property rights'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'AIgenerated content can distort and misrepresent information, lack context, and create convincing but false statements.'

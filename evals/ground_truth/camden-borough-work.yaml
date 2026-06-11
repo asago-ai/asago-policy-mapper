@@ -263,3 +263,22 @@ risks:
   - text: OpenAl employees can see anything you put into ChatGPT, and conversations are reviewed by their Al trainers to help improve their systems. This means they are not secure.
   - text: Never give personal or sensitive information to AI bots.
   - text: Personal information (yours or anyone else's) such as names, addresses, or any information that could be used to identify someone.
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'the data bias mentioned above can still perpetuate biases that exist in society and end up gamifying learning.'
+    section: '3. Data Protection Implications'
+  - text: 'Bias can occur if the underlying training data used to train the AI model contains prejudiced information or reflects societal biases.'
+    section: 'Terms relating to AI'
+  - text: 'This bias can be unintentionally learned and perpetuated by the AI bot, leading to discriminatory or skewed responses.'
+    section: 'Terms relating to AI'
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'You must always check any answers or outputs you get. Don''t assume it is correct, and don''t use it without reading it first.'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'AI bots will attempt to give an answer to a prompt even if it doesn''t have the right data , which means it will sometimes give incorrect information or answers that make no sense which are referred to ''hallucinations''.'
+  - text: 'Hallucinations refer to the generation of outputs or responses that are imaginative or unrealistic.'
+  - text: 'AI models, including language models like GPT-3, can sometimes generate text that goes beyond the given prompt or the available knowledge, resulting in creative or nonsensical responses.'

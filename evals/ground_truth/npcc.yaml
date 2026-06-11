@@ -332,3 +332,15 @@ risks:
   name: Discrimination in employment, benefits, or services - Race
   evidence:
   - text: models have been built on data that led them to act disproportionately against a community or race.
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'All use of AI will comply with applicable laws, standards, and regulations.'
+  - text: 'ensuring the use is recorded centrally in the National ROPA.'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'undertaking regular reviews of the accuracy, reliability, security, safety, performance, evidence-based decision capability and feedback ability of all AI.'
+    section: '3 Governance of AI and the AI Principles'
+  - text: 'All AI will have a human or automatic means of being stopped if it displays unintended or undesired outputs.'
+    section: '2 Principles of AI in Policing'

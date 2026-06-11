@@ -297,3 +297,22 @@ risks:
   - text: This includes but is not limited to copying, pasting, typing, or in any way submitting personal information (e.g., names, contact information, dates of birth, social security numbers, etc.) about
       employees, students, and other members of the St. John’s community into AI tools.
   - text: Inputs into AI prompts via text, speech, images, or any other means must be anonymized to avoid disclosing confidential University information.
+- id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: 'Fake online engagement (fake reviews, fake grassroots support)'
+  evidence:
+  - text: 'These technologies must not be used to create content that is inappropriate, discriminatory, deceptive, or otherwise harmful to others or to the University.'
+  - text: 'Passage 4'
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: 'All AI-generated content must be carefully reviewed for accuracy, appropriateness, and bias before relying on it for work purposes.'
+    section: 'Policy'
+  - text: 'Fact-checking information is necessary before answers are considered absolute and used in any decision-making capacity.'
+    section: 'Policy'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'AI users are responsible for ensuring that the AI-generated content aligns with the University’s mission and values, and should actively work to identify and mitigate biases in AI systems.'
+    section: 'Policy'
+  - text: 'Biases are inherent in AI, especially when using Generative AI tools.'
+    section: 'Policy'

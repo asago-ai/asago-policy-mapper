@@ -368,3 +368,12 @@ risks:
   - text: 'Staff must not include student details or upload student work into GenAI tools without explicit permission. This prevents personal data from being collected, stored, accessed, and shared
 
       without consent.'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'GenAI can generate incorrect responses based on probabilities and biases.'
+    section: '4. Guidelines for Implementation'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'Academic staff should not use GenAI tools to detect students'' use of GenAI, as these tools are unreliable'

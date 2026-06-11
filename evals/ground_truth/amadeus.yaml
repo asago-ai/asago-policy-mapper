@@ -499,3 +499,70 @@ risks:
   evidence:
   - text: Biometric  categorization to  infer  sensitive  personal  traits.  For example,  using  AI  to  categorize passengers by their facial images to infer their race.
     section: PROHIBITED PRACTICES
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: 'protecting health, safety and fundamental rights as described in many charters, declarations and constitutions around the globe'
+    section: '1. What is AI Ethics at Amadeus?'
+  - text: 'ensure that you are not developing a prohibited use case'
+    section: 'Embracing the transformative potential of AI for the travel industry in an ethical fashion'
+  - text: 'comply with many technical and organizational requirements before they would legally be allowed to go on the market or be put into service.'
+    section: 'Embracing the transformative potential of AI for the travel industry in an ethical fashion'
+- id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: 'Fake online engagement (fake reviews, fake grassroots support)'
+  evidence:
+  - text: 'Do not use GenAI Tools to create text, audio, or visual content for purposes of committing fraud or to misrepresent an individual''s identity.'
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: 'Outputs created by GenAI tools may provide fictitious answers sometimes referred to as ''hallucinations'', false information or answers.'
+    section: '2.3. Be critical of outputs and carefully use them'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'Design AI tools to automatically log events throughout their lifecycle.'
+    section: '2.5. Accountability: People should be accountable for AI tools'
+  - text: 'These logs are critical to maintaining the traceability of the AI tool''s operations and should be capable of capturing any events that could result in risks or system modifications.'
+    section: '2.5. Accountability: People should be accountable for AI tools'
+  - text: 'always liaise with Legal on whether and how long we should keep logs of the tool, so that we can adequately monitor it  over time'
+    section: 'III. GENERAL RULES FOR DEPLOYMENT/USE OF ALL AI TOOLS'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'non-discrimination and fairness'
+    section: '4. Alignment of our AI Ethics Principles with the AI Act'
+  - text: 'ensure that care and scrutiny are present to avoid and monitor issues such as bias.'
+    section: '2.5. Accountability: People should be accountable for AI tools'
+  - text: 'Do not rely on or use information that you suspect to be inaccurate, inappropriate or biased (e.g. information that discriminates against individuals on the basis of race, color, religion, sex, national original age, disability, marital status etc.)'
+    section: '2.3. Be critical of outputs and carefully use them'
+- id: credo-risk-027
+  name: 'Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)'
+  evidence:
+  - text: 'implement technical measures to protect our systems from faults, internal and external threats, including data poisoning and adversarial attacks aimed at manipulating AI outputs.'
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: 'Perform regular maintenance and monitoring of AI tools'
+    section: '2.2. Reliability and safety: AI tools should perform reliably and safely'
+  - text: 'Provide a feedback mechanism for deployers and other stakeholders to report performance issues.'
+    section: '2.2. Reliability and safety: AI tools should perform reliably and safely'
+  - text: 'Knowing what AI is, how it works, and its potential applications.'
+    section: '5. Ensuring appropriate understanding of AI'
+- id: credo-risk-039
+  name: AI model and intellectual property theft
+  evidence:
+  - text: 'it comes with certain risks to confidential and sensitive information, intellectual property and corporate values.'
+    section: 'IV. ADDITIONAL SPECIFIC RULES FOR USAGE OF GENERATIVE AI TOOLS: THE GENERATIVE AI ACCEPTABLE USE POLICY'
+- id: mit-ai-risk-subdomain-3.2
+  name: Pollution of information ecosystem and loss of consensus reality
+  evidence:
+  - text: 'Outputs created by GenAI tools may provide fictitious answers sometimes referred to as ''hallucinations'', false information or answers.'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'technical  robustness and  safety'
+    section: '4. Alignment of our AI Ethics Principles with the AI Act'
+  - text: 'respond safely to unanticipated conditions'
+    section: '2.2. Reliability and safety: AI tools should perform reliably and safely'
+  - text: 'ensure AI tools can respond safely in unanticipated situations without unexpected performance failures'
+    section: '2.2. Reliability and safety: AI tools should perform reliably and safely'

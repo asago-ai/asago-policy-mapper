@@ -556,3 +556,60 @@ risks:
   - text: No policing data should ever be put into AI on a personal device or account.
   - text: Such actions risk unauthorised data exposure and breach of Force policy.
   - text: keep personal information secure, and out of the AI unless absolutely necessary.
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: '5.4 AI use in the Criminal Justice System'
+    section: 'Contents'
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: 'Verify AI-generated content before use'
+    section: 'All Leicestershire Police Staff and Officers'
+- id: atlas-data-acquisition
+  name: Data acquisition restrictions
+  evidence:
+  - text: 'Any data marked or implicitly classified as SECRET or TOP SECRET. Any material classified at these levels, whether explicitly marked or implicitly understood, is strictly prohibited from AI ingestion.'
+  - text: 'Covert Human Intelligence Sources (CHIS) Related Information'
+  - text: 'Avoid inputting prohibited or sensitive information into AI systems.'
+- id: credo-risk-007
+  name: 'Inadequate observability (Slatteryet al., 2024)'
+  evidence:
+  - text: 'Ensure all outputs are reviewed and clearly attributed.'
+    section: '3. Be Transparent When Required'
+  - text: 'ensure that all deployments of this technology are subject to robust oversight and risk management processes'
+    section: '1. Statement of Purpose'
+  - text: 'Monitors system usage'
+    section: 'IT and Digital Services Team'
+- id: credo-risk-010
+  name: 'Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)'
+  evidence:
+  - text: 'Certain groups may be disproportionately represented-or excluded-in Al-generated outputs.'
+    section: 'Overrepresentation or Underrepresentation'
+  - text: 'The Board will consider the tools compliance in respect of this policy and any national guidance, alongside the ethics of its use and any steps taken by the tool or intended users to mitigate any identified risks.'
+    section: '4.3 New AI Tools'
+  - text: 'Be alert to potential bias, stereotyping, or inappropriate content in Copilot outputs.'
+    section: '5.3 What should I consider when using AI?'
+- id: credo-risk-024
+  name: Civil liability
+  evidence:
+  - text: 'the responsibility and liability remain with the police decision maker.'
+  - text: 'AI can never be used as a defence or rationale for a poor decision.'
+- id: credo-risk-038
+  name: 'Compromised confidential information (Slattery et al., 2024; IBM, 2024;AI, 2023)'
+  evidence:
+  - text: 'Follow all data handling and information security policies.'
+    section: '2. Protect Confidentiality'
+  - text: 'Avoid inputting highly sensitive operational details, such as specific tactics in active use, uncorroborated intelligence, or detailed profiles of ongoing covert operations.'
+    section: '5.2 Prohibited Information Types'
+  - text: 'NPCC Cyber Standard - Artificial Intelligence'
+    section: '1. Statement of Purpose'
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: 'Voice-based AI tools may struggle with background noise, regional accents, or unclear speech, leading to transcription errors or misinterpretation.'
+    section: 'Audio Input Limitations'
+  - text: 'Connectivity issues can disrupt access, reduce performance, or cause data loss.'
+    section: '- Internet Dependence'
+  - text: 'Performance in other languages may be less accurate or fluent, potentially affecting usability and interpretation.'
+    section: 'Multilingual Performance'
