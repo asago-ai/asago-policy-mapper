@@ -1,9 +1,3 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
 Concorde Policy Mapper extracts AI risks from policy documents using the IBM AI Atlas Nexus risk taxonomy (~524 risks). It uses hybrid retrieval (BM25 + semantic embeddings + cross-encoder reranking) to match document chunks against Nexus risks, then LLM-judges borderline candidates and grounds accepted ones with evidence quotes.
 
 ## Commands
@@ -171,4 +165,4 @@ Runs `concorde-policy-mapper extract` as a subprocess per policy in a battery YA
 ## Development
 
 - DO NOT skip updating the changelog with any changes made
-- DO NOT skip updating CLAUDE.md and the README.md when changes require it
+- DO NOT skip updating AGENTS.md and the README.md when changes require it
