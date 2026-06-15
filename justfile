@@ -16,6 +16,11 @@ test-all:
 test-slow:
     uv run pytest tests/ -m slow
 
+tidy: format lint type-check
+
+type-check:
+    uv run mypy src/concorde_policy_mapper/
+
 lint:
     uv run ruff check src/ tests/
 

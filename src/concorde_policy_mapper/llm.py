@@ -30,7 +30,7 @@ class SlimModel(BaseModel):
     @classmethod
     def model_json_schema(cls, *args: Any, **kwargs: Any) -> dict[str, Any]:
         schema = super().model_json_schema(*args, **kwargs)
-        return _strip_titles(schema)
+        return _strip_titles(schema)  # type: ignore[no-any-return]
 
 
 _SAFETY_MARGIN = 64
@@ -195,9 +195,9 @@ def _extract_reduced_max_tokens(exc: Exception) -> int | None:
     return new_max if new_max >= 256 else None
 
 
-def _extract_response_content(completion) -> str | None:
+def _extract_response_content(completion: Any) -> str | None:
     try:
-        return completion.choices[0].message.content
+        return completion.choices[0].message.content  # type: ignore[no-any-return]
     except (AttributeError, IndexError):
         return None
 
@@ -302,7 +302,7 @@ def _call_with_retry(
 
     for attempt in range(_MAX_TRUNCATION_RETRIES + 1):
         try:
-            return _retry_with_validation(
+            return _retry_with_validation(  # type: ignore[no-any-return]
                 do_call,
                 kwargs,
                 config,
@@ -330,6 +330,7 @@ def _call_with_retry(
             current_messages = shorter
             kwargs["messages"] = shorter
             _apply_budget(kwargs, config)
+    raise RuntimeError("_call_with_retry exhausted truncation retries without returning")
 
 
 def _track_completion(tracker: TokenTracker, completion) -> None:
@@ -361,4 +362,4 @@ def _wrap_with_tracking(client: instructor.Instructor, tracker: TokenTracker, co
         _track_completion(tracker, completion)
         return result
 
-    client.chat.completions.create = tracked_create
+    client.chat.completions.create = tracked_create  # type: ignore[method-assign,assignment]

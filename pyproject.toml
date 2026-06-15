@@ -49,7 +49,20 @@ dev = [
     "pytest-crap>=0.3.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.11",
+    "mypy>=1.15",
+    "types-PyYAML>=6.0",
 ]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["rank_bm25.*", "nltk.*", "ai_atlas_nexus.*"]
+ignore_missing_imports = true
 
 [tool.ruff]
 target-version = "py311"
