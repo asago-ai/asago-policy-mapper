@@ -19,7 +19,7 @@ dependencies = [
     "nltk>=3.8",
     "numpy",
     "mlflow>=2.17",
-    "pylate>=1.0.0",
+    "aiohttp>=3.14.0",
 ]
 
 [project.optional-dependencies]

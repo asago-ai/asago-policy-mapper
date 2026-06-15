@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Security
+- **Remove `pylate` dependency** (GHSA-g4r7-86gm-pgqc, high): pylate was declared as a direct dependency but never imported — ColBERT support uses `sentence-transformers` directly. Removing it eliminates the transitive `sqlitedict` unsafe-deserialization vulnerability.
+- **Pin `aiohttp>=3.14.0`** (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8, medium): fixes cross-origin redirect cookie leak and untrusted-data deserialization in aiohttp (transitive via instructor/mlflow).
+
 ### Added
 - **`--temperature`, `--top-p`, `--top-k` CLI flags**: LLM sampling parameters are now configurable via CLI (and battery runner). Temperature defaults to `0.0` (previous hardcoded value). `top_p` and `top_k` are omitted from API calls when not set. `top_k` is passed via `extra_body` for vLLM compatibility. Use `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4's recommended settings.
 
