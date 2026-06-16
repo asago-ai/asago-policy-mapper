@@ -14,6 +14,16 @@
 - **`ground_variants` prompt templates** (`ground_variants_system.j2`, `ground_variants_user.j2`): Jinja2 templates for the variant-selective grounding LLM call.
 - **Variant collapse in `RiskIndex`**: `_collapse_variants()` collapses 82 variant risks (IDs containing `---`) into 11 synthetic parent entries for indexing. `expand_variants()` and `variant_map` property expose the variant→parent mapping for post-retrieval expansion.
 - **`build_chunk_contexts` refactor**: pre-computes enriched context text for each chunk by expanding to neighbors, replacing inline `_pad_with_budget()` calls. Used by variant grounding and judge context padding.
+- **`--query-gen` flag (default: on)**: LLM-powered query generation for retrieval. Groups chunks by document section (up to 5 per group), generates 1-3 search queries in risk-taxonomy vocabulary via LLM, and uses those for `hybrid_search`. Bypasses cross-encoder and judge stages. Failed groups fall back to standard per-chunk retrieval. Disable with `--no-query-gen`. New module: `extract/querygen.py`.
+
+### Changed
+- **Query-gen is now the default retrieval mode**: A/B testing showed query-gen improves AIR recall (0.492→0.688) and best AIR F1 (0.438→0.480) with only −0.020 overall F1 tradeoff (0.711→0.691). YAML description rewrites are redundant with query-gen (±0.012 F1, within noise).
+- **Grounding prompts improved**: "direct quotes" → "specific passages" for better LLM extraction; added `rejection_reason` field for diagnostics when risks are not grounded.
+
+### Fixed
+- **Expansion fix**: `found_risk_chunks` now populated from merged match evidence (not just `chunk_results.accepted`), so variant IDs from variant grounding correctly map to their source chunks for sibling expansion.
+- **Variant→parent fallback in expansion**: `expand_with_siblings` now resolves variant IDs (e.g. `discrimination---race`) to their collapsed parent for expansion graph lookup.
+- **`--temperature`, `--top-p`, `--top-k` CLI flags**: LLM sampling parameters are now configurable via CLI (and battery runner). Temperature defaults to `0.0` (previous hardcoded value). `top_p` and `top_k` are omitted from API calls when not set. `top_k` is passed via `extra_body` for vLLM compatibility. Use `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4's recommended settings.
 
 ### Changed
 - **Trim mitigation sources to 3 frameworks**: dropped MIT AI Risk Repository (831 actions, 60% of index) and Credo UCF (41 controls) from the mitigation index. Kept NIST AI RMF 600-1, OWASP LLM Top 10 v2.0, and AIUC-1. Index reduced from 1,693 to 552 action-risk links across 80 risks (was 83). Max mitigations per risk drops from 162 to 26. MIT was dominated by governance questionnaires with ~24% sourced from NIST anyway; Credo overlapped heavily with NIST policy guidance.

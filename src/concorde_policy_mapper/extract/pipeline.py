@@ -29,6 +29,7 @@ from concorde_policy_mapper.extract.models import (
     _CausalChain,
 )
 from concorde_policy_mapper.extract.parse import chunk_documents, parse_document
+from concorde_policy_mapper.extract.querygen import generate_queries, group_chunks
 from concorde_policy_mapper.extract.retrieve import (
     ChunkResult,
     build_chunk_contexts,
@@ -443,6 +444,8 @@ def _run_expansion(
     max_workers,
     call_collector,
     expansion_passes: int = 1,
+    variant_map: dict | None = None,
+    chunk_contexts=None,
 ) -> tuple[list[RiskMatch], dict]:
     from concorde_policy_mapper.extract.expand import (
         build_expansion_graph,
@@ -471,6 +474,9 @@ def _run_expansion(
         for candidate in cr.accepted:
             cid = candidate.risk_id.split(" ")[0].strip()
             found_risk_chunks.setdefault(cid, set()).add(cr.chunk_index)
+    for m in merged:
+        for ev in m.evidence:
+            found_risk_chunks.setdefault(m.risk_id, set()).add(ev.chunk_index)
 
     groups = group_for_grounding(
         expanded,
@@ -526,6 +532,18 @@ def _run_expansion(
                         confidence_override=0.0,
                     )
                 )
+
+    if expansion_matches and variant_map:
+        expansion_matches = _run_variant_grounding(
+            expansion_matches,
+            chunks,
+            variant_map,
+            client,
+            config,
+            call_collector,
+            chunk_contexts=chunk_contexts,
+            max_workers=max_workers,
+        )
 
     if expansion_matches:
         merged = merge_matches(merged + expansion_matches)
@@ -614,24 +632,100 @@ def run_extraction(
         )
 
     call_collector: list[LLMCallRecord] = []
+    fallback_chunk_indices: set[int] = set()
+    query_results: list = []
+
+    if retrieval.query_gen:
+        with timed(timing, "query_gen_ms"):
+            groups = group_chunks(chunks)
+            qg_result = generate_queries(
+                chunks,
+                groups,
+                client,
+                config.model,
+                call_collector=call_collector,
+                max_workers=max_workers,
+                return_fallbacks=True,
+            )
+            assert isinstance(qg_result, tuple)
+            query_results, fallback_list = qg_result
+            fallback_chunk_indices = set(fallback_list)
+            logger.info(
+                "Query generation: %d queries from %d groups, %d fallback chunks",
+                len(query_results),
+                len(groups),
+                len(fallback_chunk_indices),
+            )
 
     with timed(timing, "retrieve_ms"):
-        chunk_results: list[ChunkResult] = []
-        for i in range(len(chunks)):
-            cr = retrieve_chunk(
-                chunks,
-                i,
-                index,
-                top_n_accept=retrieval.top_n_accept,
-                top_n_judge=retrieval.top_n_judge,
-                min_score_floor=retrieval.min_score_floor,
-                bm25_rescue_rank=retrieval.bm25_rescue_rank,
-                use_cross_encoder=retrieval.use_cross_encoder,
-                rrf_min_score=retrieval.effective_rrf_min_score,
-                threshold_high=retrieval.threshold_high,
-                threshold_low=retrieval.threshold_low,
-            )
-            chunk_results.append(cr)
+        chunk_results: list[ChunkResult] = [None] * len(chunks)  # type: ignore[list-item]
+
+        if retrieval.query_gen:
+            for qr in query_results:
+                candidates = index.hybrid_search(
+                    qr.query,
+                    top_k=50,
+                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                    rrf_min_score=retrieval.rrf_min_score or 0.015,
+                )
+                for ci in qr.chunk_indices:
+                    chunk = chunks[ci]
+                    if chunk_results[ci] is not None:
+                        existing_ids = {c.risk_id for c in chunk_results[ci].accepted}
+                        for c in candidates:
+                            if c.risk_id not in existing_ids:
+                                chunk_results[ci].accepted.append(c)
+                                existing_ids.add(c.risk_id)
+                    else:
+                        chunk_results[ci] = ChunkResult(
+                            chunk_index=ci,
+                            source=chunk.source,
+                            page=chunk.page,
+                            section=chunk.section,
+                            accepted=list(candidates),
+                            borderline=[],
+                            borderline_judged=[],
+                            stats={
+                                "candidates_retrieved": len(candidates),
+                                "auto_accepted": len(candidates),
+                                "borderline": 0,
+                                "discarded": 0,
+                                "bm25_rescued": 0,
+                            },
+                        )
+
+            retrieval_indices = fallback_chunk_indices | {i for i in range(len(chunks)) if chunk_results[i] is None}
+            for i in sorted(retrieval_indices):
+                cr = retrieve_chunk(
+                    chunks,
+                    i,
+                    index,
+                    top_n_accept=retrieval.top_n_accept,
+                    top_n_judge=retrieval.top_n_judge,
+                    min_score_floor=retrieval.min_score_floor,
+                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                    use_cross_encoder=retrieval.use_cross_encoder,
+                    rrf_min_score=retrieval.effective_rrf_min_score,
+                    threshold_high=retrieval.threshold_high,
+                    threshold_low=retrieval.threshold_low,
+                )
+                chunk_results[i] = cr
+        else:
+            for i in range(len(chunks)):
+                cr = retrieve_chunk(
+                    chunks,
+                    i,
+                    index,
+                    top_n_accept=retrieval.top_n_accept,
+                    top_n_judge=retrieval.top_n_judge,
+                    min_score_floor=retrieval.min_score_floor,
+                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                    use_cross_encoder=retrieval.use_cross_encoder,
+                    rrf_min_score=retrieval.effective_rrf_min_score,
+                    threshold_high=retrieval.threshold_high,
+                    threshold_low=retrieval.threshold_low,
+                )
+                chunk_results[i] = cr
 
     if index.variant_map and retrieval.no_grounding:
         for cr in chunk_results:
@@ -720,6 +814,8 @@ def run_extraction(
                 max_workers,
                 call_collector,
                 expansion_passes=retrieval.expansion_passes,
+                variant_map=index.variant_map if index.variant_map else None,
+                chunk_contexts=chunk_contexts,
             )
 
     if not retrieval.no_causal_synthesis and client is not None:
@@ -751,6 +847,17 @@ def run_extraction(
             **retrieval.to_metadata(),
             "expansion_stats": expansion_stats,
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            **(
+                {
+                    "query_gen_queries": [
+                        {"query": qr.query, "chunk_indices": qr.chunk_indices, "section": qr.section}
+                        for qr in query_results
+                    ],
+                    "query_gen_fallback_chunks": sorted(fallback_chunk_indices),
+                }
+                if retrieval.query_gen
+                else {}
+            ),
         },
         chunks=chunk_summaries,
         llm_calls=call_collector,

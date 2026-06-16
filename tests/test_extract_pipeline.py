@@ -59,6 +59,7 @@ def test_run_extraction_returns_extraction_result(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
         ocr=False,
     )
 
@@ -79,6 +80,7 @@ def test_run_extraction_empty_document(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
         ocr=False,
     )
 
@@ -121,6 +123,7 @@ def test_run_extraction_multiple_documents(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
         ocr=False,
     )
 
@@ -141,6 +144,7 @@ def test_run_extraction_metadata(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
         ocr=False,
     )
 
@@ -162,6 +166,7 @@ def test_run_extraction_populates_chunks(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
         ocr=False,
     )
 
@@ -192,6 +197,7 @@ def test_run_extraction_populates_llm_calls(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
         ocr=False,
     )
 
@@ -215,7 +221,7 @@ def test_run_extraction_no_judge_no_grounding(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
-        retrieval=RetrievalConfig(no_judge=True, no_grounding=True),
+        retrieval=RetrievalConfig(no_judge=True, no_grounding=True, query_gen=False),
         ocr=False,
     )
 
@@ -248,7 +254,7 @@ def test_run_extraction_no_grounding_with_judge(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
-        retrieval=RetrievalConfig(no_grounding=True),
+        retrieval=RetrievalConfig(no_grounding=True, query_gen=False),
         ocr=False,
     )
 
@@ -283,6 +289,7 @@ def test_run_extraction_no_judge_no_grounding_no_cross_encoder(mock_config, tmp_
             no_grounding=True,
             use_cross_encoder=False,
             rrf_min_score=0.001,
+            query_gen=False,
         ),
         ocr=False,
     )
@@ -311,7 +318,7 @@ def test_run_extraction_no_cross_encoder(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
-        retrieval=RetrievalConfig(use_cross_encoder=False, rrf_min_score=0.01),
+        retrieval=RetrievalConfig(use_cross_encoder=False, rrf_min_score=0.01, query_gen=False),
         ocr=False,
     )
 
@@ -398,7 +405,7 @@ def test_run_extraction_no_judge_with_grounding_accepted_by(mock_config, tmp_pat
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
-        retrieval=RetrievalConfig(no_judge=True, no_grounding=False),
+        retrieval=RetrievalConfig(no_judge=True, no_grounding=False, query_gen=False),
         ocr=False,
     )
 
@@ -546,7 +553,7 @@ def test_run_extraction_expand_siblings(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=EXPANSION_RISKS,
-        retrieval=RetrievalConfig(expand_siblings=True, no_judge=True),
+        retrieval=RetrievalConfig(expand_siblings=True, no_judge=True, query_gen=False),
         ocr=False,
     )
 
@@ -574,7 +581,7 @@ def test_run_extraction_expand_no_siblings_when_no_grounding(mock_config, tmp_pa
         client=mock_client,
         config=mock_config,
         risks=EXPANSION_RISKS,
-        retrieval=RetrievalConfig(expand_siblings=True, no_judge=True, no_grounding=True),
+        retrieval=RetrievalConfig(expand_siblings=True, no_judge=True, no_grounding=True, query_gen=False),
         ocr=False,
     )
 
@@ -603,7 +610,7 @@ def test_run_extraction_judge_with_cross_encoder(mock_config, tmp_path):
         client=mock_client,
         config=mock_config,
         risks=MOCK_RISKS,
-        retrieval=RetrievalConfig(no_grounding=True),
+        retrieval=RetrievalConfig(no_grounding=True, query_gen=False),
         ocr=False,
     )
 
@@ -697,3 +704,44 @@ def test_run_causal_synthesis_skips_empty_results():
 
     assert result[0].threat is None
     assert result[0].impact is None
+
+
+# --- query-gen integration test ---
+
+
+@pytest.mark.slow
+def test_run_extraction_query_gen_no_judge_no_grounding(mock_config, tmp_path):
+    """With query_gen + no_judge + no_grounding, LLM generates queries and all candidates become ungrounded matches."""
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "AI policy document about data governance and risk management. "
+        "We must ensure bias detection and mitigation strategies are in place. "
+        "Training data integrity is critical for model reliability."
+    )
+
+    from concorde_policy_mapper.extract.querygen import GeneratedQueries
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = GeneratedQueries(
+        queries=["AI bias and fairness risks", "Training data integrity risks"]
+    )
+
+    result = run_extraction(
+        documents=[doc],
+        client=mock_client,
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=True, no_judge=True, no_grounding=True),
+        ocr=False,
+    )
+
+    assert isinstance(result, ExtractionResult)
+    assert result.metadata["query_gen"] is True
+    assert "query_gen_queries" in result.metadata
+    assert len(result.metadata["query_gen_queries"]) > 0
+    assert "query_gen_fallback_chunks" in result.metadata
+    assert len(result.llm_calls) > 0
+    assert any(c.stage == "query_gen" for c in result.llm_calls)
+    for risk in result.risks:
+        assert risk.evidence == []
+        assert risk.grounding_confidence == "ungrounded"
