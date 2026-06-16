@@ -343,14 +343,10 @@ def _run_expansion(
 
     expansion_matches: list[RiskMatch] = []
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures = {
-            pool.submit(
-                _ground_group_multi if expansion_passes > 1 else _ground_group,
-                g,
-                *([expansion_passes] if expansion_passes > 1 else []),
-            ): g
-            for g in groups
-        }
+        if expansion_passes > 1:
+            futures = {pool.submit(_ground_group_multi, g, expansion_passes): g for g in groups}
+        else:
+            futures = {pool.submit(_ground_group, g): g for g in groups}
         for future in as_completed(futures):
             grounded = future.result()
             stats["expanded_grounded"] += len(grounded)

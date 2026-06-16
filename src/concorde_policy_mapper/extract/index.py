@@ -76,7 +76,7 @@ class _RemoteBiEncoder:
         return text
 
     def encode(self, texts: list[str], normalize: bool = True) -> np.ndarray:
-        all_embeddings = []
+        all_embeddings: list[list[float]] = []
         for start in range(0, len(texts), self._batch_size):
             batch = texts[start : start + self._batch_size]
             response = self._client.embeddings.create(
@@ -307,7 +307,9 @@ def _load_cross_encoder(model_name, cross_encoder_type="score"):
     return local, None, model_name in _SIGMOID_MODELS, model_name in _NLI_MODELS
 
 
-def _rescue_and_merge_scores(reranked, rrf_candidates, bm25_rescue_rank):
+def _rescue_and_merge_scores(
+    reranked: list[ScoredCandidate], rrf_candidates: list[ScoredCandidate], bm25_rescue_rank: int
+) -> list[ScoredCandidate]:
     if bm25_rescue_rank > 0:
         reranked_ids = {c.risk_id for c in reranked}
         for c in rrf_candidates:
@@ -422,7 +424,7 @@ class RiskIndex:
         return self._colbert is not None
 
     def get_taxonomy(self, risk_id: str) -> str:
-        return self._risk_meta.get(risk_id, {}).get("taxonomy", "")
+        return str(self._risk_meta.get(risk_id, {}).get("taxonomy", ""))
 
     def set_query_instruction(self, instruction: str) -> None:
         """Update the query instruction on the remote bi-encoder.
@@ -463,6 +465,7 @@ class RiskIndex:
         if self._remote_bi_encoder is not None:
             query_emb = self._remote_bi_encoder.encode_query(text, normalize=True)
         else:
+            assert self._bi_encoder is not None  # guaranteed by early return above
             query_emb = self._bi_encoder.encode(text, normalize_embeddings=True)
         similarities = np.dot(self._embeddings, query_emb)
         top_indices = np.argsort(similarities)[::-1][:top_k]
@@ -519,6 +522,7 @@ class RiskIndex:
         if self._remote_cross_encoder is not None:
             raw_scores = self._remote_cross_encoder.predict(pairs)
         else:
+            assert self._cross_encoder is not None  # guaranteed by early return above
             raw_scores = self._cross_encoder.predict(pairs)
         raw_scores = np.array(raw_scores)
         scores = self._score_normalizer(raw_scores)
@@ -558,7 +562,7 @@ class RiskIndex:
         )
         semantic_distances = {c.risk_id: c.embedding_distance for c in semantic_results}
 
-        sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)
+        sorted_ids = sorted(rrf_scores, key=lambda k: rrf_scores[k], reverse=True)
         rrf_candidates = []
         for rid in sorted_ids[: top_k * 2]:
             c = candidate_data[rid]
@@ -604,7 +608,7 @@ class RiskIndex:
         )
         colbert_scores = {c.risk_id: c.cross_encoder_score for c in colbert_results}
 
-        sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)[:top_k]
+        sorted_ids = sorted(rrf_scores, key=lambda k: rrf_scores[k], reverse=True)[:top_k]
 
         results = []
         for rid in sorted_ids:

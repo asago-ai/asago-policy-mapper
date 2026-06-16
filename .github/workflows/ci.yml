@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  lint:
+  tidy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,8 +14,9 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --group dev
-      - run: uv run ruff check src/ tests/
       - run: uv run ruff format --check src/ tests/
+      - run: uv run ruff check src/ tests/
+      - run: uv run mypy src/concorde_policy_mapper/
 
   test:
     runs-on: ubuntu-latest

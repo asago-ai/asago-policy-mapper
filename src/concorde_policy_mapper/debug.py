@@ -25,7 +25,7 @@ def _next_call_num() -> int:
         return _call_counter
 
 
-def _slug_from_context(context: dict | None) -> str:
+def _slug_from_context(context: dict[str, str] | None) -> str:
     if not context:
         return ""
     for key in ("policy_concept", "risk_name", "risk_id"):
@@ -34,9 +34,9 @@ def _slug_from_context(context: dict | None) -> str:
     return ""
 
 
-def _extract_response(response) -> dict | list | str:
+def _extract_response(response: object) -> dict | list | str:
     if hasattr(response, "model_dump"):
-        return response.model_dump()
+        return response.model_dump()  # type: ignore[no-any-return]
     if isinstance(response, list):
         return [r.model_dump() if hasattr(r, "model_dump") else r for r in response]
     return str(response)

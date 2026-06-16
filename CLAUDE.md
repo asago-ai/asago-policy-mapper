@@ -17,6 +17,9 @@ uv run pytest -m "not slow"
 uv run pytest tests/test_extract_pipeline.py
 uv run pytest tests/test_extract_retrieve.py::test_classify_candidates -v
 
+# Format + lint + type check (all static checks)
+just tidy
+
 # Lint
 uv run ruff check src/ tests/
 just lint
@@ -30,6 +33,13 @@ just format
 
 # Format single file
 uv run ruff format path/to/file.py
+
+# Type check
+uv run mypy src/concorde_policy_mapper/
+just type-check
+
+# Type check single file
+uv run mypy path/to/file.py
 
 # Extract risks from a document
 uv run concorde-policy-mapper extract policy.pdf -o output/ \

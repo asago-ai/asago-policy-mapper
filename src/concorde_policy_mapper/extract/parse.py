@@ -220,7 +220,7 @@ def chunk_documents(
                 merge_peers=True,
                 serializer_provider=_get_serializer_provider(),
             )
-            doc_chunks = list(chunker.chunk(dl_doc=doc.doc))
+            doc_chunks = list(chunker.chunk(dl_doc=doc.doc))  # type: ignore[arg-type]
 
             if not doc_chunks:
                 chunks.append(Chunk(text=doc.content, source=doc.source, index=0))

@@ -17,12 +17,12 @@ nltk.download("punkt_tab", quiet=True)
 
 def _sent_tokenize(text: str) -> list[str]:
     try:
-        return nltk.sent_tokenize(text)
+        return nltk.sent_tokenize(text)  # type: ignore[no-any-return]  # nltk lacks py.typed
     except Exception:
         return [text] if text.strip() else []
 
 
-def _pad_with_budget(chunks, chunk_index, max_tokens):
+def _pad_with_budget(chunks: list[Chunk], chunk_index: int, max_tokens: int) -> str:
     chunk = chunks[chunk_index]
     source = chunk.source
     core_tokens = len(chunk.text.split())
