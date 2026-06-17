@@ -4,7 +4,7 @@ import logging
 import time
 from dataclasses import dataclass
 
-import nltk
+import spacy
 
 from concorde_policy_mapper.extract.models import LLMCallRecord, ScoredCandidate, _JudgeVerdict
 from concorde_policy_mapper.extract.parse import Chunk
@@ -12,14 +12,14 @@ from concorde_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
 
-nltk.download("punkt_tab", quiet=True)
+_nlp = spacy.blank("en")
+_nlp.add_pipe("sentencizer")
 
 
 def _sent_tokenize(text: str) -> list[str]:
-    try:
-        return nltk.sent_tokenize(text)  # type: ignore[no-any-return]  # nltk lacks py.typed
-    except Exception:
-        return [text] if text.strip() else []
+    if not text.strip():
+        return []
+    return [sent.text for sent in _nlp(text).sents]
 
 
 def build_chunk_contexts(
