@@ -221,3 +221,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Prevent default staging (permissions/allow) from User to be committed, while can always `git add --force .claude/settings.json` when needed
+.claude/settings.json
