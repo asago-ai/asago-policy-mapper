@@ -16,7 +16,7 @@ dependencies = [
     "ai-atlas-nexus @ git+https://github.com/IBM/ai-atlas-nexus.git@main",
     "sentence-transformers>=3.0",
     "rank-bm25>=0.2",
-    "nltk>=3.8",
+    "spacy>=3.7",
     "numpy",
     "mlflow>=2.17",
     "aiohttp>=3.14.0",
@@ -61,7 +61,7 @@ check_untyped_defs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["rank_bm25.*", "nltk.*", "ai_atlas_nexus.*"]
+module = ["rank_bm25.*", "ai_atlas_nexus.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
