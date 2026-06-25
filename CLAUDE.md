@@ -46,73 +46,20 @@ uv run mypy path/to/file.py
 
 ## Architecture
 
-### Extraction Pipeline (`extract/pipeline.py::run_extraction`)
+### Extraction Pipeline
 
-```
-Documents → parse_document() → chunk_documents() → per-chunk retrieve → judge → ground → variant_ground → merge → causal synthesis
-                                                                    ↑ ThreadPoolExecutor (steps 6-7b)
-```
+The pipeline in `extract/pipeline.py` has several alternative modes controlled by CLI flags — when modifying one path, be aware the others exist:
 
-`run_extraction(documents, client, config, risks, retrieval, *, ocr)` accepts a `RetrievalConfig` dataclass (defined in `models.py`) that bundles all retrieval/IR parameters with pre-resolved properties (`effective_cross_encoder_model`, `effective_rrf_min_score`) and a `to_metadata()` method for the output JSON.
+- **Default (query-gen on):** LLM generates search queries per section group, all candidates go to grounding. Disable with `--no-query-gen` to use per-chunk BM25+semantic retrieval with cross-encoder reranking and LLM judging.
+- `--no-cross-encoder`: RRF score floor filtering replaces cross-encoder reranking (no LLM judging)
+- `--no-judge`: borderline candidates auto-promoted (skips LLM judge)
+- `--no-grounding`: accepted candidates become matches without evidence extraction
+- `--no-judge --no-grounding`: pure IR evaluation — no LLM calls at all
+- `--no-causal-synthesis`: skips causal chain synthesis; static YAML chains from `data/` used as fallback
 
-1. **Parse** (`parse.py`) — Docling converts PDF/DOCX/HTML to markdown; plain text passes through
-2. **Chunk** (`parse.py`) — HybridChunker splits into ~512-token chunks preserving page/section metadata
-3. **Agentic filter** — If document lacks agent-related terminology, agentic risks are excluded from the catalog
-4. **Index** (`index.py`) — `RiskIndex` builds BM25 + bi-encoder embeddings + optional cross-encoder over risk-level taxonomies only. RRF fusion is shared via `_rrf_fuse()` between bi-encoder and ColBERT paths. Score normalization uses a `_make_score_normalizer()` factory resolved at init time. Variant risks (IDs containing `---`) are collapsed into synthetic parent entries via `_collapse_variants()` for indexing; `expand_variants()` and `variant_map` property expose the mapping for post-retrieval expansion.
-5. **Retrieve** (`retrieve.py`) — Per-chunk: BM25 + semantic → RRF fusion → cross-encoder rerank → classify into accepted/borderline/discarded. Classification dispatches to `classify_by_rank()` or `classify_by_threshold()` based on `threshold_high`.
-6. **Judge** (`retrieve.py`) — LLM judges borderline candidates using padded text (adjacent chunk context). `--judge-context-tokens` controls the context window size (default: sentence-based padding; set to e.g. 512 to give the judge a wider window when using smaller chunks). Parallel via ThreadPoolExecutor
-7. **Ground** (`attribute.py`) — LLM extracts evidence quotes + confidence (high/medium/low) for accepted candidates; ungrounded ones filtered out. Parallel via ThreadPoolExecutor. Multi-pass grounding (default 3 passes, `--grounding-passes`) unions results across passes to reduce LLM non-determinism. Match construction uses `build_risk_match()` and `determine_accepted_by()` pure functions to avoid duplication across grounding/no-grounding/expansion paths.
-7b. **Variant grounding** (`attribute.py::ground_variants()`) — For collapsed parent risks (e.g. `unauthorized-processing`) that survived grounding, a specialized LLM call determines which specific variant sub-types (e.g. `---biometric-data`, `---health-data`) have evidence in the chunk. Parent matches are replaced by only the grounded variant matches. In `--no-grounding` mode, blind expansion is used instead (all variants emitted for IR-only eval).
-8. **Merge** (`merge.py`) — Deduplicate matches across chunks, keep best confidence and top-3 evidence spans
-9. **Expand** (`expand.py`) — Sibling expansion (enabled by default): expands found risks to parent siblings + cross-taxonomy mappings, then grounds the expanded set against relevant document chunks. Variant IDs (e.g. `---race`) resolve to their collapsed parent for expansion graph lookup, so finding `discrimination-in-employment---race` bridges to siblings like `classification-of-individuals`. Expanded parent risks go through variant grounding (step 7b) before merging. Multi-pass expansion grounding (default 3 passes, `--expansion-passes`) unions results to stabilize data-type variant recovery.
-10. **Causal synthesis** (`attribute.py`) — LLM synthesizes domain-specific causal chains (`threat`/`threat_source`/`vulnerability`/`consequence`/`impact`) for each matched risk, grounded in the evidence-anchored chunks. Parallel via ThreadPoolExecutor. Disabled with `--no-causal-synthesis`; static YAML chains from `data/atlas_risk_threats.yaml` and `data/atlas_risk_consequences.yaml` serve as fallback for any fields not populated.
-11. **Mitigations** (`mitigations.py`) — Post-processing: enrich each matched risk with recommended mitigation actions from a pre-built index (`data/atlas_risk_to_actions.yaml`)
+**Variant collapsing:** Risk IDs containing `---` (e.g. `unauthorized-processing---biometric-data`) are collapsed into synthetic parent entries for indexing. After grounding, a variant grounding step determines which specific sub-types have evidence. This affects how risk IDs flow through the entire pipeline — don't treat `---` IDs as regular risks.
 
-By default (query-gen on), steps 5-6 are replaced by LLM query generation (`querygen.py`): chunks are grouped by section (up to 5 per group), each group is sent to the LLM to generate 1-3 search queries in risk-taxonomy vocabulary, and those queries are used for `hybrid_search`. All candidates are treated as accepted (no cross-encoder, no judge). Failed groups fall back to standard `retrieve_chunk`. Grounding (step 7) naturally filters irrelevant candidates per-chunk. Disable with `--no-query-gen`.
-
-With `--no-cross-encoder`, steps 5-6 are replaced by RRF score floor filtering (no LLM judging).
-
-With `--no-judge`, step 6 is skipped (borderline candidates auto-promoted to accepted). With `--no-grounding`, step 7 is skipped (accepted candidates become matches without evidence). Both can be combined for pure IR evaluation — no LLM calls at all.
-
-Category-level taxonomy mapping (NIST, OWASP, AILuminate) is handled at eval time via a static SSSOM mapping, not during extraction.
-
-### LLM Integration (`llm.py`)
-
-- `create_client()` wraps OpenAI with `instructor` (JSON mode) for structured Pydantic outputs
-- `TokenTracker` accumulates usage across stages; `LLMConfig` holds connection details
-- Automatic retry on validation errors (appends error hint), context overflow detection (reduces max_tokens), and prompt truncation on incomplete output
-- Sampling parameters (`temperature`, `top_p`, `top_k`) are injected by the tracking wrapper from `LLMConfig` defaults — call sites don't set them directly. `top_k` is passed via `extra_body` for vLLM compatibility.
-- All LLM calls default to `temperature=0.0`; override with `--temperature`, `--top-p`, `--top-k` CLI flags (e.g. `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4)
-
-### Prompt Templates (`templates/prompts/`)
-
-Jinja2 template pairs (`_system.j2` + `_user.j2`): `judge_risk`, `ground_evidence`, `ground_variants`, `generate_queries`. Loaded by `prompts.py::render_prompt()`.
-
-### Evaluation (`evals/eval.py`)
-
-Two-tier evaluation:
-- **Tier 1 (risk-level)**: Compares extracted risk IDs against ground truth YAML. Computes precision/recall/F1 overall and per-taxonomy. 27 ground truth files in `evals/ground_truth/` (1519 risks) — risk-level only (no category-level entries).
-- **Tier 2 (category-level)**: Derives NIST/OWASP/AILuminate/ASI categories from risk IDs via `data/risk_to_category.sssom.tsv` (SSSOM mapping, 802 entries). Computes P/R/F1 per category taxonomy. Only uses strong predicates (exact/close/broadMatch), excludes relatedMatch.
-
-### Cross-Taxonomy Mapping (`data/risk_to_category.sssom.tsv`)
-
-Static SSSOM file mapping 486 risk-level risks to 4 category-level taxonomies (NIST AI RMF 12 risks, OWASP LLM 10 risks, AILuminate 12 risks, OWASP ASI 10 risks). Built from Nexus mapping files + manually reviewed gap-fill for IBM agentic risks, Credo, MIT, and AIR 2024 (314 risks via group-level inheritance).
-
-### Mitigation Index (`data/atlas_risk_to_actions.yaml`)
-
-Pre-built lookup mapping 80 Atlas risk IDs to ~552 recommended mitigation actions across 3 frameworks. Generated by `scripts/build_mitigation_index.py` from direct `action → atlas-*` mapping files:
-
-- **OWASP LLM Top 10 v2.0** (114 action-risk links) — `data/owasp_llm_2.0_actions_data.yaml`
-- **NIST AI RMF 600-1** (338 action-risk links) — `data/nist_ai_rmf_actions_to_atlas_data.yaml`
-- **AIUC-1** (100 action-risk links) — `data/aiuc1_actions_to_atlas_data.yaml`
-
-All mappings are direct `hasRelatedRisk: atlas-*` — no transitive cross-framework hops. Each action is categorized as `technical` (engineering deploys), `operational` (ops/QA executes), or `governance` (leadership/compliance owns) via rules in `data/mitigation_categories.yaml`. NIST by RMF function prefix (GV=governance, MP/MS=operational, MG=technical), AIUC-1 by principle letter (a-b=technical, c-d=operational, e-f=governance), and OWASP via explicit per-action assignments.
-
-Regenerate after data file changes: `python scripts/build_mitigation_index.py`
-
-### Battery Runner (`run_extract_battery.py`)
-
-Runs `asago-policy-mapper extract` as a subprocess per policy in a battery YAML config, with parallel execution (default 6 workers). Auto-evaluates against ground truth, generates per-run HTML reports, and a battery summary with per-taxonomy heatmaps.
+**Multi-pass grounding:** Grounding and expansion each run multiple passes (default 3) and union results to reduce LLM non-determinism. Do not remove the extra passes — they stabilize which risks survive grounding.
 
 ## Key Conventions
 
@@ -126,12 +73,8 @@ Runs `asago-policy-mapper extract` as a subprocess per policy in a battery YAML 
 
 ## Retrieval Architecture Notes
 
-- The cross-encoder (ms-marco-MiniLM) has AUC ~0.50 on pipeline-mined negatives — it does not discriminate semantically. It functions as a volume reduction filter: randomly rejecting ~70% of candidates, with the grounding stage catching the noise. See `experiments/EXPERIMENT_LOG.md` for details.
-- Candidate selection supports both rank-based (`--top-n-accept`, `--top-n-judge`) and legacy threshold-based (`--threshold-high`, `--threshold-low`) modes. Default is rank-based with top_n_accept=10, top_n_judge=10, min_score_floor=0.70, bm25_rescue_rank=0 (disabled), rrf_min_score=0.015. These defaults are tuned for recall with GTE-reranker-modernbert-base or no-cross-encoder mode.
-- Multi-pass grounding (default 3 passes) and expansion (default 3 passes) reduce LLM non-determinism by running each grounding call multiple times and taking the union. This stabilizes which base risks survive grounding (affecting expansion seeds) and which expansion candidates get accepted.
-- ColBERT late-interaction models are supported via `--colbert-model` (replaces bi-encoder + cross-encoder with a single model using MaxSim scoring)
-- Modern cross-encoders (GTE, BGE) output calibrated scores — the pipeline skips sigmoid normalisation for these (see `_SIGMOID_MODELS` in `index.py`). Score normalisation is resolved at index init time via `_make_score_normalizer()` which returns a callable (NLI softmax, sigmoid, or clip-to-[0,1]).
-- Embedding/reranking models can be served on GPU via vLLM's embedding/scoring API on the cluster. Pass a URL as `--bi-encoder-model` (uses `/v1/embeddings`) or `--cross-encoder-model` (uses `/v1/score`). ColBERT models (`--colbert-model`) are local-only — vLLM returns pooled embeddings, not token-level
+- The default cross-encoder (ms-marco-MiniLM) has AUC ~0.50 on pipeline-mined negatives — it does not discriminate semantically. It functions as a volume reduction filter; the grounding stage provides the actual precision filtering. Do not attempt to tune or rely on its scores for ranking. See `experiments/EXPERIMENT_LOG.md` for details.
+- Do not use cross-encoder scores for hard negative mining — use pipeline-mined negatives from `grounding_filtered_candidates` instead. Eval datasets MUST use pipeline-mined negatives (from actual battery runs), not cross-encoder-mined negatives — the latter are biased toward the mining model's specific failure modes.
 
 ## Dependency Pins
 
@@ -142,8 +85,6 @@ Runs `asago-policy-mapper extract` as a subprocess per policy in a battery YAML 
 
 - Always update `experiments/EXPERIMENT_LOG.md` with results after running any experiment or battery that produces new data points
 - Include MLflow experiment name and run ID in experiment log entries when MLflow tracking is enabled (e.g., `**MLflow:** experiment=risk-extraction, run_id=abc123`)
-- Cross-encoder scores are random on pipeline-mined negatives (AUC ~0.50) — the ms-marco cross-encoder does NOT discriminate semantically; it acts as a volume reduction filter. Do not rely on cross-encoder scores for hard negative mining — use pipeline-mined negatives from `grounding_filtered_candidates` instead.
-- Cross-encoder eval datasets MUST use pipeline-mined negatives (from actual battery runs), not cross-encoder-mined negatives. The latter are biased toward the mining model's specific failure modes.
 
 ## Development
 
