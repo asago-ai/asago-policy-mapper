@@ -81,7 +81,7 @@ All mappings are direct `hasRelatedRisk: atlas-*` — no transitive cross-framew
 
 ### Prompt Templates
 
-LLM prompts are Jinja2 template files (`*_system.j2` + `*_user.j2`) in `src/asago_policy_mapper/templates/prompts/` (loaded by `prompts.py::render_prompt()`), including `judge_risk`, `judge_risk_gepa`, `judge_risk_gepa_demos`, `ground_evidence`, `ground_variants`, `ground_group`, `generate_queries`, and `causal_synthesis`.
+LLM prompts are Jinja2 templates in `src/asago_policy_mapper/templates/prompts/` (rendered by `prompts.py::render_prompt()`). Each prompt requires a `*_user.j2` template and may optionally define a `*_system.j2` template; current prompt names with user templates are `judge_risk`, `judge_risk_gepa_demos`, `generate_queries`, `ground_evidence`, `ground_variants`, `ground_group`, and `causal_synthesis`.
 
 ## LLM Integration
 
