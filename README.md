@@ -41,15 +41,41 @@ risk_extraction:
 
 The service parses and chunks input documents, then uses hybrid retrieval (keyword and semantic search) against the Nexus risk catalogue to identify candidate risks directly from the policy text. By default, an LLM generates search queries from chunk groups in risk-taxonomy vocabulary (disable with `--no-query-gen` to use raw chunk text). An LLM then grounds accepted candidates with evidence spans.
 
+```mermaid
+flowchart LR
+    docs@{ shape: doc, label: "Documents" } --> parse[Parse]
+    parse --> chunk[Chunk]
+    chunk --> filter[Filter\nagentic]
+    filter --> index[Index]
+    chunk --> qgen@{ shape: st-rect, label: "Query gen" }
+    qgen --> retrieve[Retrieve]
+    index --> retrieve
+    chunk -.->|--no-query-gen| retrieve
+    retrieve --> judge@{ shape: st-rect, label: "Judge" }
+    retrieve -.->|--no-judge| ground
+    judge --> ground@{ shape: st-rect, label: "Ground" }
+    ground --> vg@{ shape: st-rect, label: "Variant\nground" }
+    retrieve -.->|--no-grounding| merge
+    vg --> merge[Merge]
+    merge --> expand@{ shape: st-rect, label: "Expand" }
+    expand --> causal@{ shape: st-rect, label: "Causal\nsynthesis" }
+    expand -.->|--no-causal-synthesis| miti
+    causal -.->|CLI post‑processing| miti[Mitigations]
+```
+
 1. **Parse** — Docling converts PDF/DOCX/HTML to markdown
 2. **Chunk** — Split into ~512-token chunks with page/section metadata
-3. **Index** — Build BM25 + bi-encoder + cross-encoder index over Nexus risks. Variant risks (IDs containing `---`) are collapsed into synthetic parent entries for indexing.
-4. **Retrieve** — By default, LLM query generation groups chunks by section and generates 1-3 search queries per group for hybrid search. With `--no-query-gen`: per-chunk hybrid search with RRF fusion and cross-encoder reranking.
-5. **Judge** — LLM judges borderline candidates (parallel; skipped in query-gen mode)
-6. **Ground** — LLM extracts evidence passages and confidence (parallel, multi-pass)
-7. **Variant ground** — For collapsed parent risks that survived grounding, a specialized LLM call selects only the specifically evidenced variant sub-types
-8. **Merge** — Deduplicate across chunks, keep top-3 evidence spans
-9. **Expand** — Sibling expansion: found risks are expanded to parent siblings + cross-taxonomy mappings, then grounded against relevant document chunks
+3. **Filter agentic risks** — If the document does not contain agent-related terminology, agentic risks are removed from the catalogue before indexing
+4. **Index** — Build BM25 + bi-encoder + cross-encoder index over Nexus risks. Variant risks (IDs containing `---`) are collapsed into synthetic parent entries for indexing.
+5. **Query gen** *(optional, on by default)* — LLM generates 1-3 search queries per section group in risk-taxonomy vocabulary (parallel; disable with `--no-query-gen`)
+6. **Retrieve** — Hybrid search using generated queries (or, with `--no-query-gen`, per-chunk BM25 + semantic search with RRF fusion and cross-encoder reranking)
+7. **Judge** — LLM judges borderline candidates (parallel; only applies to fallback chunks in query-gen mode, since query-gen chunks bypass borderline classification)
+8. **Ground** — LLM extracts evidence passages and confidence (parallel, multi-pass)
+9. **Variant ground** — For collapsed parent risks that survived grounding, a specialized LLM call selects only the specifically evidenced variant sub-types
+10. **Merge** — Deduplicate across chunks, keep top-3 evidence spans
+11. **Expand** — Sibling expansion: found risks are expanded to parent siblings + cross-taxonomy mappings, then grounded against relevant document chunks (parallel)
+12. **Causal synthesis** — LLM synthesizes threat-source → threat → vulnerability → consequence → impact chains per matched risk (parallel; disable with `--no-causal-synthesis`)
+13. **Mitigations** — CLI post-processing: enriches results with mitigation actions and risk cross-maps from Nexus (not part of the extraction pipeline)
 
 ### Two-Tier Evaluation
 
@@ -59,6 +85,32 @@ The pipeline extracts **risk-level** risks (IBM Risk Atlas, Credo UCF, AIR 2024,
 - **Tier 2 (category-level)**: risk IDs are mapped to category-level taxonomies (NIST AI RMF, OWASP Top 10 LLM, OWASP ASI) via a static SSSOM cross-taxonomy mapping (`data/risk_to_category.sssom.tsv`), then precision/recall/F1 is computed per category taxonomy
 
 Category-level eval answers "did we find the right risk themes?" — more forgiving than risk-level since finding *any* bias-related risk satisfies the NIST `harmful-bias-or-homogenization` category.
+
+### Cross-Taxonomy Mapping
+
+`data/risk_to_category.sssom.tsv` is a static SSSOM file mapping 486 risk-level risks to 4 category-level taxonomies (NIST AI RMF 12 risks, OWASP LLM 10 risks, AILuminate 12 risks, OWASP ASI 10 risks). Built from Nexus mapping files + manually reviewed gap-fill for IBM agentic risks, Credo, MIT, and AIR 2024 (314 risks via group-level inheritance). Contains 802 entries; only strong predicates (exact/close/broadMatch) are used at eval time — relatedMatch is excluded.
+
+### Mitigation Index
+
+`data/atlas_risk_to_actions.yaml` maps 80 Atlas risk IDs to ~552 recommended mitigation actions across 3 frameworks:
+
+- **OWASP LLM Top 10 v2.0** (114 action-risk links) — `data/owasp_llm_2.0_actions_data.yaml`
+- **NIST AI RMF 600-1** (338 action-risk links) — `data/nist_ai_rmf_actions_to_atlas_data.yaml`
+- **AIUC-1** (100 action-risk links) — `data/aiuc1_actions_to_atlas_data.yaml`
+
+All mappings are direct `hasRelatedRisk: atlas-*` — no transitive cross-framework hops. Each action is categorized as `technical`, `operational`, or `governance` via rules in `data/mitigation_categories.yaml`. Regenerate after data file changes: `python scripts/build_mitigation_index.py`
+
+### Prompt Templates
+
+LLM prompts are Jinja2 templates in `src/asago_policy_mapper/templates/prompts/` (rendered by `prompts.py::render_prompt()`). Each prompt requires a `*_user.j2` template and may optionally define a `*_system.j2` template; current prompt names with user templates are `judge_risk`, `judge_risk_gepa_demos`, `generate_queries`, `ground_evidence`, `ground_variants`, `ground_group`, and `causal_synthesis`.
+
+## LLM Integration
+
+All LLM calls go through `llm.py`, which wraps the OpenAI client with [instructor](https://github.com/instructor-ai/instructor) for structured Pydantic outputs. `TokenTracker` accumulates token usage across pipeline stages; `LLMConfig` holds connection details.
+
+- Automatic retry on validation errors (appends error hint), context overflow detection (reduces `max_tokens`), and prompt truncation on incomplete output
+- Sampling parameters (`temperature`, `top_p`, `top_k`) are injected by the tracking wrapper from `LLMConfig` defaults — call sites don't set them directly. `top_k` is passed via `extra_body` for vLLM compatibility.
+- All LLM calls default to `temperature=0.0`; override with `--temperature`, `--top-p`, `--top-k` CLI flags (e.g. `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4)
 
 ## Recommended Models
 
@@ -87,6 +139,10 @@ F1 scores are from IR-only evaluation (no LLM judge/grounding) on 27 policies. W
 **Alibaba-NLP/gte-reranker-modernbert-base** (recommended) — AUC=0.759 on pipeline-mined negatives. Genuinely discriminates relevant from irrelevant candidates. Outputs calibrated scores (no sigmoid needed). Serve via vLLM's `/v1/score` endpoint.
 
 **cross-encoder/ms-marco-MiniLM-L-12-v2** (default) — AUC=0.498 on pipeline-mined negatives (essentially random). Functions as a volume reduction filter rather than a semantic discriminator. Runs locally. Works well enough end-to-end because the LLM grounding stage provides the actual precision filtering.
+
+### ColBERT
+
+ColBERT late-interaction models are supported via `--colbert-model` (replaces bi-encoder + cross-encoder with a single model using MaxSim scoring). ColBERT models are local-only — vLLM returns pooled embeddings, not token-level.
 
 ### Configuration Examples
 
