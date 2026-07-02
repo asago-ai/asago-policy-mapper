@@ -277,8 +277,56 @@ python scripts/build_mitigation_index.py
 ## Tests
 
 ```bash
+# Unit tests (fast, no external dependencies)
 uv run pytest
+just test
+
+# Slow tests (loads embedding models)
+just test-slow
+
+# LLM integration tests (requires a local LLM server)
+just test-llm
 ```
+
+### LLM Integration Tests
+
+Integration tests marked `@pytest.mark.llm` exercise the full extraction pipeline against a real OpenAI-compatible LLM server. They validate pipeline mechanics (structured output, retries, token tracking, multi-stage orchestration) — not output quality.
+
+**With Ollama:**
+
+```bash
+ollama pull gemma3:1b
+just test-llm
+```
+
+**With vLLM (CPU, Docker/Podman):**
+
+```bash
+# Start vLLM server (mounts ~/.cache/huggingface for model caching)
+just vllm-start
+
+# With podman instead of docker
+just container_runtime=podman vllm-start
+
+# Run tests
+LLM_BASE_URL=http://localhost:8000/v1 \
+LLM_MODEL=Qwen/Qwen2.5-1.5B-Instruct \
+just test-llm
+
+# Stop when done
+just vllm-stop
+```
+
+The vLLM image (`v0.24.0`) is multi-arch (amd64 + arm64) — on Apple Silicon the ARM64 variant is pulled automatically. The HuggingFace model cache is mounted from the host, so the model is downloaded only once.
+
+**Configuration:**
+
+| Env var | Default | Description |
+|---------|---------|-------------|
+| `LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible API endpoint |
+| `LLM_MODEL` | `gemma3:1b` | Model name (Ollama) or HuggingFace ID (vLLM) |
+
+Tests skip gracefully when no server is available.
 
 ## License
 

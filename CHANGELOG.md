@@ -2,7 +2,25 @@
 
 ## [Unreleased]
 
+### Changed
+- **vLLM CI**: HuggingFace model cache uses separate `actions/cache/restore` + `actions/cache/save` steps (replaces deprecated `save-always`). Cache save and permission fix (`chown`) run with `if: always()` so they persist even when tests fail. Same restore/save pattern applied to Ollama model cache.
+- **CI concurrency**: `test-llm-ollama` and `test-llm-vllm` jobs use `concurrency` groups per branch (`cancel-in-progress: true`) to prevent parallel runs from racing on cache saves.
+- **`just vllm-start`**: removed vLLM torch compile cache volume mount (AOT artifacts are not reusable across hosts in vLLM v0.24.0 CPU backend).
+
+### Added
+- **LLM integration tests** (`@pytest.mark.llm`): 9 tests covering structured output, judge, grounding, query gen, causal synthesis, and E2E paths against a local LLM (Ollama/vLLM). Enable with `--test-llm`; configure via `LLM_BASE_URL`/`LLM_MODEL`.
+
+### Changed
+- **Ollama CI**: cache model directory via `actions/cache` (custom `OLLAMA_MODELS` path); restart server with cached models.
+- **vLLM CI**: switched model from `RedHatAI/gemma-3-1b-it-quantized.w8a8` to `Qwen/Qwen2.5-1.5B-Instruct` (Apache 2.0, not gated, ~3x faster on CPU with BF16); cache HuggingFace models via `actions/cache`; image pinned to `v0.24.0`; `VLLM_CPU_KVCACHE_SPACE` bumped to 4; `--disable-frontend-multiprocessing` to avoid shared-memory broadcast hangs on CI runners.
+- **`just vllm-start`/`vllm-stop`**: local vLLM CPU server recipes (Docker/Podman).
+- **`just test-llm`**: recipe for running LLM integration tests locally.
+- **LLM test assertions**: positive/negative risk matching (R-BIAS found, R-ROBOT rejected, R-TRANSPARENCY available).
+- **CI jobs**: `test-llm-ollama` and `test-llm-vllm` run on every push/PR.
+- **Configurable Instructor mode**: `create_client(mode=...)` supports `JSON_SCHEMA` for server-side constrained decoding.
+
 ### Fixed
+- **Pin `numpy<2.5`**: numpy 2.5.0 ships PEP 695 type stubs that mypy cannot parse when targeting Python 3.11. Pinned to <2.5 until mypy adds support.
 - **Data files now bundled in package**: moved `data/` directory from repo root into `src/asago_policy_mapper/data/` so data files (mitigation index, risk threats/consequences, cross-mappings, SSSOM category mappings) are included in the wheel. Previously, pip-installed users got empty mitigations and missing category-level eval because `Path(__file__).parents[3]` resolved to `site-packages/` instead of the repo root.
 
 ### Docs

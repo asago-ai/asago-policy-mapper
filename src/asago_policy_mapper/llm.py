@@ -169,10 +169,11 @@ def budget_max_tokens(
 def create_client(
     config: LLMConfig,
     tracker: TokenTracker | None = None,
+    mode: instructor.Mode = instructor.Mode.JSON,
 ) -> instructor.Instructor:
     client = instructor.from_openai(
         OpenAI(base_url=config.base_url, api_key=config.api_key),
-        mode=instructor.Mode.JSON,
+        mode=mode,
     )
     if tracker is not None:
         _wrap_with_tracking(client, tracker, config)
