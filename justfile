@@ -1,5 +1,5 @@
 container_runtime := "docker"
-vllm_model := "RedHatAI/gemma-3-1b-it-quantized.w8a8"
+vllm_model := "Qwen/Qwen2.5-1.5B-Instruct"
 vllm_image := "docker.io/vllm/vllm-openai-cpu:v0.24.0"
 
 no_cross_encoder := ""

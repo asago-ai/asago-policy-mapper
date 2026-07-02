@@ -310,7 +310,7 @@ just container_runtime=podman vllm-start
 
 # Run tests
 LLM_BASE_URL=http://localhost:8000/v1 \
-LLM_MODEL=RedHatAI/gemma-3-1b-it-quantized.w8a8 \
+LLM_MODEL=Qwen/Qwen2.5-1.5B-Instruct \
 just test-llm
 
 # Stop when done

@@ -40,6 +40,8 @@ jobs:
 
   test-llm-ollama:
     runs-on: ubuntu-latest
+    env:
+      OLLAMA_MODELS: /home/runner/.ollama-models
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8
@@ -48,8 +50,17 @@ jobs:
       - run: uv sync --group dev
       - name: Install Ollama
         run: curl -fsSL https://ollama.com/install.sh | sh
-      - name: Pull model
-        run: ollama pull gemma3:1b
+      - name: Cache Ollama model
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ${{ env.OLLAMA_MODELS }}
+          key: ollama-gemma3-1b
+      - name: Start Ollama and pull model
+        run: |
+          sudo systemctl stop ollama 2>/dev/null || true
+          ollama serve &
+          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 1; done
+          ollama pull gemma3:1b
       - name: Run LLM integration tests
         env:
           LLM_BASE_URL: "http://localhost:11434/v1"
@@ -68,7 +79,7 @@ jobs:
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/huggingface
-          key: hf-gemma3-1b-w8a8
+          key: hf-qwen2.5-1.5b-instruct
       - name: Start vLLM-CPU server
         run: |
           docker run --rm --detach \
@@ -78,8 +89,9 @@ jobs:
             -v ~/.cache/huggingface:/root/.cache/huggingface \
             -e VLLM_CPU_KVCACHE_SPACE=4 \
             docker.io/vllm/vllm-openai-cpu:v0.24.0 \
-            --model RedHatAI/gemma-3-1b-it-quantized.w8a8 \
-            --max-model-len 4096
+            --model Qwen/Qwen2.5-1.5B-Instruct \
+            --max-model-len 4096 \
+            --dtype bfloat16
           docker logs -f vllm-server &
           LOGS_PID=$!
           echo "Waiting for vLLM health endpoint..."
@@ -100,5 +112,5 @@ jobs:
       - name: Run LLM integration tests
         env:
           LLM_BASE_URL: "http://localhost:8000/v1"
-          LLM_MODEL: "RedHatAI/gemma-3-1b-it-quantized.w8a8"
+          LLM_MODEL: "Qwen/Qwen2.5-1.5B-Instruct"
         run: uv run pytest --test-llm -m llm -v --timeout=120
