@@ -31,10 +31,10 @@ vllm-start:
       -p 8000:8000 \
       -v ~/.cache/huggingface:/root/.cache/huggingface \
       -e VLLM_CPU_KVCACHE_SPACE=4 \
+      -e VLLM_ENABLE_V1_MULTIPROCESSING=0 \
       {{ vllm_image }} \
       --model {{ vllm_model }} \
-      --max-model-len 4096 \
-      --disable-frontend-multiprocessing
+      --max-model-len 4096
     @echo "Waiting for vLLM to be ready..."
     @for i in $(seq 1 90); do \
       curl -sf http://localhost:8000/health > /dev/null 2>&1 && echo "vLLM is ready." && break; \

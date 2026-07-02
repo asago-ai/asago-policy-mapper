@@ -88,11 +88,11 @@ jobs:
             -p 8000:8000 \
             -v ~/.cache/huggingface:/root/.cache/huggingface \
             -e VLLM_CPU_KVCACHE_SPACE=4 \
+            -e VLLM_ENABLE_V1_MULTIPROCESSING=0 \
             docker.io/vllm/vllm-openai-cpu:v0.24.0 \
             --model Qwen/Qwen2.5-1.5B-Instruct \
             --max-model-len 4096 \
-            --dtype bfloat16 \
-            --disable-frontend-multiprocessing
+            --dtype bfloat16
           docker logs -f vllm-server &
           LOGS_PID=$!
           echo "Waiting for vLLM health endpoint..."
