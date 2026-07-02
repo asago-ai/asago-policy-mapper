@@ -95,15 +95,15 @@ jobs:
         run: |
           docker run --rm --detach \
             --name vllm-server \
-            --shm-size=4g \
+            --shm-size=2g \
             -p 8000:8000 \
             -v ~/.cache/huggingface:/root/.cache/huggingface \
             -v ~/.cache/vllm:/root/.cache/vllm \
-            -e VLLM_CPU_KVCACHE_SPACE=4 \
+            -e VLLM_CPU_KVCACHE_SPACE=1 \
             -e VLLM_ENABLE_V1_MULTIPROCESSING=0 \
             docker.io/vllm/vllm-openai-cpu:v0.24.0 \
             --model Qwen/Qwen2.5-1.5B-Instruct \
-            --max-model-len 4096 \
+            --max-model-len 2048 \
             --dtype bfloat16
           docker logs -f vllm-server &
           LOGS_PID=$!
