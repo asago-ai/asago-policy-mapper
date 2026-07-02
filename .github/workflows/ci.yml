@@ -91,12 +91,6 @@ jobs:
         with:
           path: ~/.cache/vllm
           key: vllm-compile-qwen2.5-1.5b-v0.24.0
-      - name: Debug vLLM cache contents
-        run: |
-          echo "=== ~/.cache/vllm contents ==="
-          find ~/.cache/vllm -type f -ls 2>/dev/null || echo "(empty or missing)"
-          echo "=== total size ==="
-          du -sh ~/.cache/vllm 2>/dev/null || echo "(missing)"
       - name: Start vLLM-CPU server
         run: |
           docker run --rm --detach \
@@ -127,18 +121,11 @@ jobs:
             sleep 5
           done
           kill $LOGS_PID 2>/dev/null || true
-      - name: Debug vLLM cache after startup
-        if: always()
-        run: |
-          echo "=== ~/.cache/vllm contents after startup ==="
-          find ~/.cache/vllm -type f -ls 2>/dev/null || echo "(empty or missing)"
-          echo "=== total size ==="
-          du -sh ~/.cache/vllm 2>/dev/null || echo "(missing)"
-      # - name: Run LLM integration tests
-      #   env:
-      #     LLM_BASE_URL: "http://localhost:8000/v1"
-      #     LLM_MODEL: "Qwen/Qwen2.5-1.5B-Instruct"
-      #   run: uv run pytest --test-llm -m llm -v
+      - name: Run LLM integration tests
+        env:
+          LLM_BASE_URL: "http://localhost:8000/v1"
+          LLM_MODEL: "Qwen/Qwen2.5-1.5B-Instruct"
+        run: uv run pytest --test-llm -m llm -v
       - name: Fix cache directory permissions
         if: always()
         run: |
