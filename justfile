@@ -1,3 +1,7 @@
+container_runtime := "docker"
+vllm_model := "RedHatAI/gemma-3-1b-it-quantized.w8a8"
+vllm_image := "docker.io/vllm/vllm-openai-cpu:v0.24.0"
+
 no_cross_encoder := ""
 rrf_min_score := ""
 no_mlflow := ""
@@ -8,13 +12,41 @@ top_p := ""
 top_k := ""
 
 test:
-    uv run pytest tests/ -m "not slow"
+    uv run pytest tests/ -rs -m "not slow"
 
 test-all:
-    uv run pytest tests/
+    uv run pytest tests/ -rs
 
 test-slow:
-    uv run pytest tests/ -m slow
+    uv run pytest tests/ -rs -m slow
+
+test-llm *args:
+    uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short --timeout=120 -W ignore::DeprecationWarning {{ args }}
+
+vllm-start:
+    {{ container_runtime }} run -d --name vllm-server \
+      --security-opt seccomp=unconfined \
+      --cap-add SYS_NICE \
+      --shm-size=4g \
+      -p 8000:8000 \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      -e VLLM_CPU_KVCACHE_SPACE=4 \
+      {{ vllm_image }} \
+      --model {{ vllm_model }} \
+      --max-model-len 4096
+    @echo "Waiting for vLLM to be ready..."
+    @for i in $(seq 1 90); do \
+      curl -sf http://localhost:8000/health > /dev/null 2>&1 && echo "vLLM is ready." && break; \
+      printf "  attempt %s/90\n" "$i"; \
+      sleep 5; \
+    done
+    @echo ""
+    @echo "Run tests with:"
+    @echo "  LLM_BASE_URL=http://localhost:8000/v1 LLM_MODEL={{ vllm_model }} just test-llm"
+
+vllm-stop:
+    -{{ container_runtime }} stop vllm-server
+    -{{ container_runtime }} rm vllm-server
 
 tidy: format lint type-check
 

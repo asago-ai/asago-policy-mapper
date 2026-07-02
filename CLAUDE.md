@@ -41,6 +41,11 @@ just type-check
 # Type check single file
 uv run mypy path/to/file.py
 
+# Run LLM integration tests (requires Ollama or vLLM)
+# env: LLM_BASE_URL=http://localhost:11434/v1  LLM_MODEL=gemma3:1b
+uv run pytest --test-llm -m llm -v --timeout=120
+just test-llm
+
 # See README.md for full CLI usage examples (extract, eval, battery, remote models)
 ```
 

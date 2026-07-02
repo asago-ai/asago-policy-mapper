@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+- **LLM integration tests** (`@pytest.mark.llm`): 9 tests covering structured output, judge, grounding, query gen, causal synthesis, and E2E paths against a local LLM (Ollama/vLLM). Enable with `--test-llm`; configure via `LLM_BASE_URL`/`LLM_MODEL`.
+
+### Changed
+- **vLLM CI**: cache HuggingFace models via `actions/cache`; image pinned to `v0.24.0`; `VLLM_CPU_KVCACHE_SPACE` bumped to 4.
+- **`just vllm-start`/`vllm-stop`**: local vLLM CPU server recipes (Docker/Podman).
+- **`just test-llm`**: recipe for running LLM integration tests locally.
+- **LLM test assertions**: positive/negative risk matching (R-BIAS found, R-ROBOT rejected, R-TRANSPARENCY available).
+- **CI jobs**: `test-llm-ollama` and `test-llm-vllm` run on every push/PR.
+- **Configurable Instructor mode**: `create_client(mode=...)` supports `JSON_SCHEMA` for server-side constrained decoding.
+
 ### Fixed
 - **Data files now bundled in package**: moved `data/` directory from repo root into `src/asago_policy_mapper/data/` so data files (mitigation index, risk threats/consequences, cross-mappings, SSSOM category mappings) are included in the wheel. Previously, pip-installed users got empty mitigations and missing category-level eval because `Path(__file__).parents[3]` resolved to `site-packages/` instead of the repo root.
 

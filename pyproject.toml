@@ -40,7 +40,10 @@ allow-direct-references = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["slow: tests that load embedding models (~11-14s each)"]
+markers = [
+    "slow: tests that load embedding models (~11-14s each)",
+    "llm: integration tests requiring a live LLM server (Ollama or vLLM)",
+]
 
 [dependency-groups]
 dev = [
@@ -51,6 +54,7 @@ dev = [
     "ruff>=0.11",
     "mypy>=1.15",
     "types-PyYAML>=6.0",
+    "pytest-timeout>=2.4.0",
 ]
 
 [tool.mypy]
