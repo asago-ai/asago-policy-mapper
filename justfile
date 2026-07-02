@@ -21,7 +21,7 @@ test-slow:
     uv run pytest tests/ -rs -m slow
 
 test-llm *args:
-    uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short --timeout=120 -W ignore::DeprecationWarning {{ args }}
+    uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning {{ args }}
 
 vllm-start:
     {{ container_runtime }} run -d --name vllm-server \

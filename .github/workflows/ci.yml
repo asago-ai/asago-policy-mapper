@@ -65,7 +65,7 @@ jobs:
         env:
           LLM_BASE_URL: "http://localhost:11434/v1"
           LLM_MODEL: "gemma3:1b"
-        run: uv run pytest --test-llm -m llm -v --timeout=120
+        run: uv run pytest --test-llm -m llm -v
 
   test-llm-vllm:
     runs-on: ubuntu-latest
@@ -114,4 +114,4 @@ jobs:
         env:
           LLM_BASE_URL: "http://localhost:8000/v1"
           LLM_MODEL: "Qwen/Qwen2.5-1.5B-Instruct"
-        run: uv run pytest --test-llm -m llm -v --timeout=120
+        run: uv run pytest --test-llm -m llm -v

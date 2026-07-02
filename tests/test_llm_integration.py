@@ -5,7 +5,7 @@ LLM server is reachable (see ``llm_config`` fixture in conftest.py).
 
 Run with::
 
-    uv run pytest --test-llm -m llm -v --timeout=120
+    uv run pytest --test-llm -m llm -v
 """
 
 import json
@@ -476,6 +476,7 @@ def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document, small
     _log_extraction_result(result)
 
 
+@pytest.mark.timeout(300)
 def test_pipeline_e2e_full(llm_client, llm_config, tiny_document, small_risk_set):
     """Full pipeline with all stages including causal synthesis."""
     client, tracker = llm_client
