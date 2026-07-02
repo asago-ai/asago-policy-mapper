@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/vllm
-          key: vllm-compile-qwen2.5-1.5b-v0.24.0-v2
+          key: vllm-compile-qwen2.5-1.5b-v0.24.0
       - name: Start vLLM-CPU server
         run: |
           docker run --rm --detach \
@@ -142,4 +142,4 @@ jobs:
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/vllm
-          key: vllm-compile-qwen2.5-1.5b-v0.24.0-v2
+          key: vllm-compile-qwen2.5-1.5b-v0.24.0
