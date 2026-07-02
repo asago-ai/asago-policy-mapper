@@ -103,7 +103,7 @@ jobs:
             -e VLLM_ENABLE_V1_MULTIPROCESSING=0 \
             docker.io/vllm/vllm-openai-cpu:v0.24.0 \
             --model Qwen/Qwen2.5-1.5B-Instruct \
-            --max-model-len 2048 \
+            --max-model-len 4096 \
             --dtype bfloat16
           docker logs -f vllm-server &
           LOGS_PID=$!
