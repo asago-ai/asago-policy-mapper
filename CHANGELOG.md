@@ -7,7 +7,7 @@
 
 ### Changed
 - **Ollama CI**: cache model directory via `actions/cache` (custom `OLLAMA_MODELS` path); restart server with cached models.
-- **vLLM CI**: switched model from `RedHatAI/gemma-3-1b-it-quantized.w8a8` to `Qwen/Qwen2.5-1.5B-Instruct` (Apache 2.0, not gated, ~3x faster on CPU with BF16); cache HuggingFace models via `actions/cache`; image pinned to `v0.24.0`; `VLLM_CPU_KVCACHE_SPACE` bumped to 4.
+- **vLLM CI**: switched model from `RedHatAI/gemma-3-1b-it-quantized.w8a8` to `Qwen/Qwen2.5-1.5B-Instruct` (Apache 2.0, not gated, ~3x faster on CPU with BF16); cache HuggingFace models via `actions/cache`; image pinned to `v0.24.0`; `VLLM_CPU_KVCACHE_SPACE` bumped to 4; `--disable-frontend-multiprocessing` to avoid shared-memory broadcast hangs on CI runners.
 - **`just vllm-start`/`vllm-stop`**: local vLLM CPU server recipes (Docker/Podman).
 - **`just test-llm`**: recipe for running LLM integration tests locally.
 - **LLM test assertions**: positive/negative risk matching (R-BIAS found, R-ROBOT rejected, R-TRANSPARENCY available).

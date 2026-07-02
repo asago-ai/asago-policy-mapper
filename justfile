@@ -33,7 +33,8 @@ vllm-start:
       -e VLLM_CPU_KVCACHE_SPACE=4 \
       {{ vllm_image }} \
       --model {{ vllm_model }} \
-      --max-model-len 4096
+      --max-model-len 4096 \
+      --disable-frontend-multiprocessing
     @echo "Waiting for vLLM to be ready..."
     @for i in $(seq 1 90); do \
       curl -sf http://localhost:8000/health > /dev/null 2>&1 && echo "vLLM is ready." && break; \

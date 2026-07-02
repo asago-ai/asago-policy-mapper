@@ -91,7 +91,8 @@ jobs:
             docker.io/vllm/vllm-openai-cpu:v0.24.0 \
             --model Qwen/Qwen2.5-1.5B-Instruct \
             --max-model-len 4096 \
-            --dtype bfloat16
+            --dtype bfloat16 \
+            --disable-frontend-multiprocessing
           docker logs -f vllm-server &
           LOGS_PID=$!
           echo "Waiting for vLLM health endpoint..."
