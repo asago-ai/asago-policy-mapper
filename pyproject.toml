@@ -68,10 +68,6 @@ plugins = ["pydantic.mypy"]
 module = ["rank_bm25.*", "ai_atlas_nexus.*"]
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-module = ["numpy.*"]
-follow_imports = "silent"
-
 [tool.ruff]
 target-version = "py311"
 line-length = 120
