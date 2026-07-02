@@ -80,6 +80,13 @@ jobs:
         with:
           path: ~/.cache/huggingface
           key: hf-qwen2.5-1.5b-instruct
+          save-always: true
+      - name: Cache vLLM torch compile artifacts
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ~/.cache/vllm
+          key: vllm-compile-qwen2.5-1.5b-v0.24.0
+          save-always: true
       - name: Start vLLM-CPU server
         run: |
           docker run --rm --detach \
@@ -87,6 +94,7 @@ jobs:
             --shm-size=4g \
             -p 8000:8000 \
             -v ~/.cache/huggingface:/root/.cache/huggingface \
+            -v ~/.cache/vllm:/root/.cache/vllm \
             -e VLLM_CPU_KVCACHE_SPACE=4 \
             -e VLLM_ENABLE_V1_MULTIPROCESSING=0 \
             docker.io/vllm/vllm-openai-cpu:v0.24.0 \
@@ -110,6 +118,7 @@ jobs:
           done
           kill $LOGS_PID 2>/dev/null || true
           sudo chown -R $(id -u):$(id -g) ~/.cache/huggingface
+          sudo chown -R $(id -u):$(id -g) ~/.cache/vllm
       - name: Run LLM integration tests
         env:
           LLM_BASE_URL: "http://localhost:8000/v1"

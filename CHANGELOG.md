@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+- **vLLM CI**: cache torch compile artifacts (`~/.cache/vllm`) via `actions/cache` with `save-always: true` to persist even when tests fail; mount into container as `-v ~/.cache/vllm:/root/.cache/vllm`. Eliminates ~250s AOT compilation/warmup on cache-hit runs. Also added `save-always: true` to the HuggingFace model cache.
+- **`just vllm-start`**: mount vLLM torch compile cache volume for faster local restarts.
+
 ### Added
 - **LLM integration tests** (`@pytest.mark.llm`): 9 tests covering structured output, judge, grounding, query gen, causal synthesis, and E2E paths against a local LLM (Ollama/vLLM). Enable with `--test-llm`; configure via `LLM_BASE_URL`/`LLM_MODEL`.
 

@@ -30,6 +30,7 @@ vllm-start:
       --shm-size=4g \
       -p 8000:8000 \
       -v ~/.cache/huggingface:/root/.cache/huggingface \
+      -v ~/.cache/vllm:/root/.cache/vllm \
       -e VLLM_CPU_KVCACHE_SPACE=4 \
       -e VLLM_ENABLE_V1_MULTIPROCESSING=0 \
       {{ vllm_image }} \
