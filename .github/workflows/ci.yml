@@ -40,6 +40,9 @@ jobs:
 
   test-llm-ollama:
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-llm-ollama-${{ github.ref }}
+      cancel-in-progress: true
     env:
       OLLAMA_MODELS: /home/runner/.ollama-models
     steps:
@@ -75,6 +78,9 @@ jobs:
 
   test-llm-vllm:
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-llm-vllm-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8
@@ -92,6 +98,7 @@ jobs:
           path: ~/.cache/vllm
           key: vllm-compile-qwen2.5-1.5b-v0.24.0
       - name: Start vLLM-CPU server
+        id: vllm-start
         run: |
           docker run --rm --detach \
             --name vllm-server \
@@ -138,7 +145,7 @@ jobs:
           path: ~/.cache/huggingface
           key: hf-qwen2.5-1.5b-instruct
       - name: Save vLLM torch compile cache
-        if: always()
+        if: always() && steps.vllm-start.outcome == 'success'
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/vllm
