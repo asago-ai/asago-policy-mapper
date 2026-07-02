@@ -85,6 +85,7 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 
 - `ai-atlas-nexus` is pinned to `@main`
 - `torch<2.12` and `transformers<5.6` — newer versions introduce an MPS-incompatible `rt_detr_v2` layout model in docling's PDF pipeline on Apple Silicon
+- `numpy<2.5` — numpy 2.5.0 ships PEP 695 type stubs that mypy cannot parse when `python_version` targets 3.11
 
 ## Experiments
 

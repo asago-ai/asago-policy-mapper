@@ -17,7 +17,7 @@ dependencies = [
     "sentence-transformers>=3.0",
     "rank-bm25>=0.2",
     "spacy>=3.7",
-    "numpy",
+    "numpy<2.5",
     "mlflow>=2.17",
     "aiohttp>=3.14.0",
 ]

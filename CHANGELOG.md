@@ -15,6 +15,7 @@
 - **Configurable Instructor mode**: `create_client(mode=...)` supports `JSON_SCHEMA` for server-side constrained decoding.
 
 ### Fixed
+- **Pin `numpy<2.5`**: numpy 2.5.0 ships PEP 695 type stubs that mypy cannot parse when targeting Python 3.11. Pinned to <2.5 until mypy adds support.
 - **Data files now bundled in package**: moved `data/` directory from repo root into `src/asago_policy_mapper/data/` so data files (mitigation index, risk threats/consequences, cross-mappings, SSSOM category mappings) are included in the wheel. Previously, pip-installed users got empty mitigations and missing category-level eval because `Path(__file__).parents[3]` resolved to `site-packages/` instead of the repo root.
 
 ### Docs
