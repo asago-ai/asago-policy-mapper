@@ -3,9 +3,9 @@
 ## [Unreleased]
 
 ### Changed
-- **vLLM CI**: cache torch compile artifacts (`~/.cache/vllm`) using separate `actions/cache/restore` + `actions/cache/save` steps (replaces deprecated `save-always`). Cache save and permission fix (`chown`) run with `if: always()` so they persist even when tests fail. Mount into container as `-v ~/.cache/vllm:/root/.cache/vllm`. Eliminates ~175s inductor compilation on cache-hit runs. Same restore/save pattern applied to HuggingFace model cache and Ollama model cache.
-- **CI concurrency**: `test-llm-ollama` and `test-llm-vllm` jobs use `concurrency` groups per branch (`cancel-in-progress: true`) to prevent parallel runs from racing on cache saves. vLLM compile cache only saves when the server started successfully.
-- **`just vllm-start`**: mount vLLM torch compile cache volume for faster local restarts.
+- **vLLM CI**: HuggingFace model cache uses separate `actions/cache/restore` + `actions/cache/save` steps (replaces deprecated `save-always`). Cache save and permission fix (`chown`) run with `if: always()` so they persist even when tests fail. Same restore/save pattern applied to Ollama model cache.
+- **CI concurrency**: `test-llm-ollama` and `test-llm-vllm` jobs use `concurrency` groups per branch (`cancel-in-progress: true`) to prevent parallel runs from racing on cache saves.
+- **`just vllm-start`**: removed vLLM torch compile cache volume mount (AOT artifacts are not reusable across hosts in vLLM v0.24.0 CPU backend).
 
 ### Added
 - **LLM integration tests** (`@pytest.mark.llm`): 9 tests covering structured output, judge, grounding, query gen, causal synthesis, and E2E paths against a local LLM (Ollama/vLLM). Enable with `--test-llm`; configure via `LLM_BASE_URL`/`LLM_MODEL`.
