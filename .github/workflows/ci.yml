@@ -50,8 +50,8 @@ jobs:
       - run: uv sync --group dev
       - name: Install Ollama
         run: curl -fsSL https://ollama.com/install.sh | sh
-      - name: Cache Ollama model
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      - name: Restore Ollama model cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ${{ env.OLLAMA_MODELS }}
           key: ollama-gemma3-1b
@@ -66,6 +66,12 @@ jobs:
           LLM_BASE_URL: "http://localhost:11434/v1"
           LLM_MODEL: "gemma3:1b"
         run: uv run pytest --test-llm -m llm -v
+      - name: Save Ollama model cache
+        if: always()
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ${{ env.OLLAMA_MODELS }}
+          key: ollama-gemma3-1b
 
   test-llm-vllm:
     runs-on: ubuntu-latest
@@ -75,18 +81,16 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --group dev
-      - name: Cache HuggingFace models
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      - name: Restore HuggingFace models cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/huggingface
           key: hf-qwen2.5-1.5b-instruct
-          save-always: true
-      - name: Cache vLLM torch compile artifacts
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      - name: Restore vLLM torch compile cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: ~/.cache/vllm
-          key: vllm-compile-qwen2.5-1.5b-v0.24.0
-          save-always: true
+          key: vllm-compile-qwen2.5-1.5b-v0.24.0-v2
       - name: Start vLLM-CPU server
         run: |
           docker run --rm --detach \
@@ -117,10 +121,25 @@ jobs:
             sleep 5
           done
           kill $LOGS_PID 2>/dev/null || true
-          sudo chown -R $(id -u):$(id -g) ~/.cache/huggingface
-          sudo chown -R $(id -u):$(id -g) ~/.cache/vllm
       - name: Run LLM integration tests
         env:
           LLM_BASE_URL: "http://localhost:8000/v1"
           LLM_MODEL: "Qwen/Qwen2.5-1.5B-Instruct"
         run: uv run pytest --test-llm -m llm -v
+      - name: Fix cache directory permissions
+        if: always()
+        run: |
+          sudo chown -R $(id -u):$(id -g) ~/.cache/huggingface 2>/dev/null || true
+          sudo chown -R $(id -u):$(id -g) ~/.cache/vllm 2>/dev/null || true
+      - name: Save HuggingFace models cache
+        if: always()
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-qwen2.5-1.5b-instruct
+      - name: Save vLLM torch compile cache
+        if: always()
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ~/.cache/vllm
+          key: vllm-compile-qwen2.5-1.5b-v0.24.0-v2

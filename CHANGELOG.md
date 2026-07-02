@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Changed
-- **vLLM CI**: cache torch compile artifacts (`~/.cache/vllm`) via `actions/cache` with `save-always: true` to persist even when tests fail; mount into container as `-v ~/.cache/vllm:/root/.cache/vllm`. Eliminates ~250s AOT compilation/warmup on cache-hit runs. Also added `save-always: true` to the HuggingFace model cache.
+- **vLLM CI**: cache torch compile artifacts (`~/.cache/vllm`) using separate `actions/cache/restore` + `actions/cache/save` steps (replaces deprecated `save-always`). Cache save and permission fix (`chown`) run with `if: always()` so they persist even when tests fail. Mount into container as `-v ~/.cache/vllm:/root/.cache/vllm`. Eliminates ~250s AOT compilation/warmup on cache-hit runs. Same restore/save pattern applied to HuggingFace model cache and Ollama model cache.
 - **`just vllm-start`**: mount vLLM torch compile cache volume for faster local restarts.
 
 ### Added
