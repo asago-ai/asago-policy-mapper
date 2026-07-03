@@ -425,7 +425,7 @@ def _log_extraction_result(result: ExtractionResult) -> None:
 
 def test_pipeline_e2e_no_querygen(llm_client, llm_config, tiny_document, small_risk_set):
     """Full pipeline without query generation: retrieval -> judge -> grounding."""
-    client, _tracker = llm_client
+    client, _ = llm_client
 
     result = run_extraction(
         documents=[tiny_document],
@@ -455,7 +455,7 @@ def test_pipeline_e2e_no_querygen(llm_client, llm_config, tiny_document, small_r
 
 def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document, small_risk_set):
     """Full pipeline with query generation (default path)."""
-    client, _tracker = llm_client
+    client, _ = llm_client
 
     result = run_extraction(
         documents=[tiny_document],
@@ -485,7 +485,7 @@ def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document, small
 @pytest.mark.timeout(300)
 def test_pipeline_e2e_full(llm_client, llm_config, tiny_document, small_risk_set):
     """Full pipeline with all stages including causal synthesis."""
-    client, _tracker = llm_client
+    client, _ = llm_client
 
     result = run_extraction(
         documents=[tiny_document],
