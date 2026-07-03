@@ -1,4 +1,4 @@
-"""Integration tests exercising real LLM calls via Ollama or vLLM.
+"""Integration tests exercising real LLM calls via Ollama (or similar real LLM endpoint).
 
 All tests are marked ``@pytest.mark.llm`` and skipped automatically when no
 LLM server is reachable (see ``llm_config`` fixture below).
@@ -168,7 +168,7 @@ def llm_client(llm_config):
     """Instructor client using JSON_SCHEMA mode for server-side constrained decoding.
 
     Unlike the default Mode.JSON (schema in prompt), Mode.JSON_SCHEMA makes
-    Ollama/vLLM enforce the schema at the token level, for small models (i.e. Gemma3)
+    Ollama enforces the schema at the token level, for small models (i.e. Gemma3)
     """
     tracker = TokenTracker()
     client = create_client(llm_config, tracker=tracker, mode=instructor.Mode.JSON_SCHEMA)
@@ -419,7 +419,7 @@ def _log_extraction_result(result: ExtractionResult) -> None:
 
 def test_pipeline_e2e_no_querygen(llm_client, llm_config, tiny_document, small_risk_set):
     """Full pipeline without query generation: retrieval -> judge -> grounding."""
-    client, tracker = llm_client
+    client, _tracker = llm_client
 
     result = run_extraction(
         documents=[tiny_document],
@@ -449,7 +449,7 @@ def test_pipeline_e2e_no_querygen(llm_client, llm_config, tiny_document, small_r
 
 def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document, small_risk_set):
     """Full pipeline with query generation (default path)."""
-    client, tracker = llm_client
+    client, _tracker = llm_client
 
     result = run_extraction(
         documents=[tiny_document],
@@ -479,7 +479,7 @@ def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document, small
 @pytest.mark.timeout(300)
 def test_pipeline_e2e_full(llm_client, llm_config, tiny_document, small_risk_set):
     """Full pipeline with all stages including causal synthesis."""
-    client, tracker = llm_client
+    client, _tracker = llm_client
 
     result = run_extraction(
         documents=[tiny_document],

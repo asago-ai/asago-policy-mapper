@@ -41,7 +41,7 @@ just type-check
 # Type check single file
 uv run mypy path/to/file.py
 
-# Run LLM integration tests (requires Ollama or vLLM)
+# Run LLM integration tests (requires Ollama or similar)
 # env: LLM_BASE_URL=http://localhost:11434/v1  LLM_MODEL=gemma3:1b
 uv run pytest --test-llm -m llm -v
 just test-llm

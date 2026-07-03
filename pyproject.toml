@@ -42,7 +42,7 @@ allow-direct-references = true
 testpaths = ["tests"]
 markers = [
     "slow: tests that load embedding models (~11-14s each)",
-    "llm: integration tests requiring a live LLM server (Ollama or vLLM)",
+    "llm: integration tests requiring a live LLM server (e.g. Ollama)",
 ]
 
 [dependency-groups]
