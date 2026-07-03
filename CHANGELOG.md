@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Security
+- **Ollama CI install**: pin install script to immutable Git blob SHA (`710292ff…`, v0.31.1) and pass `OLLAMA_VERSION=0.31.1` instead of piping the live `ollama.com/install.sh` URL. Eliminates supply-chain risk from mutable remote script.
+
 ### Changed
 - **vLLM CI**: HuggingFace model cache uses separate `actions/cache/restore` + `actions/cache/save` steps (replaces deprecated `save-always`). Cache save and permission fix (`chown`) run with `if: always()` so they persist even when tests fail. Same restore/save pattern applied to Ollama model cache.
 - **CI concurrency**: `test-llm-ollama` and `test-llm-vllm` jobs use `concurrency` groups per branch (`cancel-in-progress: true`) to prevent parallel runs from racing on cache saves.

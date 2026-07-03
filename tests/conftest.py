@@ -13,14 +13,14 @@ from asago_policy_mapper.llm import LLMConfig
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--test-llm", action="store_true", default=False, help="Run LLM integration tests (requires a live LLM server)"
+        "--test-llm", action="store_true", default=False, help="Enable LLM integration tests (requires a live LLM server)"
     )
 
 
 def pytest_collection_modifyitems(config, items):
     if config.getoption("--test-llm"):
         return
-    skip_llm = pytest.mark.skip(reason="LLM tests disabled by default — pass --test-llm to enable")
+    skip_llm = pytest.mark.skip(reason="LLM tests disabled by default; pass --test-llm to enable")
     for item in items:
         if "llm" in item.keywords:
             item.add_marker(skip_llm)
