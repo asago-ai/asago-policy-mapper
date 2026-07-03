@@ -6,6 +6,7 @@
 - **vLLM CI**: HuggingFace model cache uses separate `actions/cache/restore` + `actions/cache/save` steps (replaces deprecated `save-always`). Cache save and permission fix (`chown`) run with `if: always()` so they persist even when tests fail. Same restore/save pattern applied to Ollama model cache.
 - **CI concurrency**: `test-llm-ollama` and `test-llm-vllm` jobs use `concurrency` groups per branch (`cancel-in-progress: true`) to prevent parallel runs from racing on cache saves.
 - **`just vllm-start`**: removed vLLM torch compile cache volume mount (AOT artifacts are not reusable across hosts in vLLM v0.24.0 CPU backend).
+- **vLLM CI startup**: set `VLLM_CPU_CI_ENV=1` to use eager backend instead of inductor, skipping JIT kernel compilation during warmup (undocumented internal vLLM variable, may change).
 
 ### Added
 - **LLM integration tests** (`@pytest.mark.llm`): 9 tests covering structured output, judge, grounding, query gen, causal synthesis, and E2E paths against a local LLM (Ollama/vLLM). Enable with `--test-llm`; configure via `LLM_BASE_URL`/`LLM_MODEL`.

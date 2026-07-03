@@ -92,6 +92,8 @@ jobs:
           path: ~/.cache/huggingface
           key: hf-qwen2.5-1.5b-instruct
       - name: Start vLLM-CPU server
+        # VLLM_CPU_CI_ENV: undocumented internal vLLM variable (platforms/cpu.py).
+        # Switches torch.compile backend from inductor → eager, skipping JIT kernel compilation during warmup. May be removed in future releases.
         run: |
           docker run --rm --detach \
             --name vllm-server \
@@ -100,6 +102,7 @@ jobs:
             -v ~/.cache/huggingface:/root/.cache/huggingface \
             -e VLLM_CPU_KVCACHE_SPACE=1 \
             -e VLLM_ENABLE_V1_MULTIPROCESSING=0 \
+            -e VLLM_CPU_CI_ENV=1 \
             docker.io/vllm/vllm-openai-cpu:v0.24.0 \
             --model Qwen/Qwen2.5-1.5B-Instruct \
             --max-model-len 4096 \
