@@ -2,24 +2,20 @@
 
 ## [Unreleased]
 
-### Removed
-- **vLLM integration test support**: removed `test-llm-vllm` CI job, `just vllm-start`/`vllm-stop` recipes, and all vLLM references from test/dev docs. Ollama is the sole LLM integration test backend.
-
-### Security
-- **Ollama CI install**: pin install script to immutable Git blob SHA (`710292ff…`, v0.31.1) and pass `OLLAMA_VERSION=0.31.1` instead of piping the live `ollama.com/install.sh` URL. Eliminates supply-chain risk from mutable remote script.
+### Added
+- **LLM integration tests**: new `tests/test_llm_integration.py` with 9 tests exercising real LLM calls via Ollama (or any OpenAI-compatible server). Covers structured output smoke tests, component-level tests (`judge_borderline`, `ground_and_extract_evidence`, `generate_queries`, `synthesize_causal_chain`), and full E2E pipeline runs (with/without query-gen, with causal synthesis). All tests are marked `@pytest.mark.llm` and skipped by default — pass `--test-llm` to enable.
+- **CI: Ollama LLM test job** (`test-llm-ollama`): new GitHub Actions job that installs Ollama, caches the `gemma3:1b` model, and runs the LLM integration tests. Uses concurrency groups to prevent cache races.
+- **`just test-llm` recipe**: convenience target for running LLM integration tests locally.
+- **`pytest-timeout` dev dependency**: guards LLM tests against hangs (default 120s per test, 300s for full E2E).
 
 ### Changed
-- **Ollama CI**: cache model directory via `actions/cache` (custom `OLLAMA_MODELS` path); restart server with cached models. Uses `concurrency` group per branch (`cancel-in-progress: true`) to prevent parallel runs from racing on cache saves. Separate `actions/cache/restore` + `actions/cache/save` steps (replaces deprecated `save-always`); cache save and permission fix (`chown`) run with `if: always()` so they persist even when tests fail.
-- **`just test-llm`**: recipe for running LLM integration tests locally.
-- **LLM test assertions**: positive/negative risk matching (R-BIAS found, R-ROBOT rejected, R-TRANSPARENCY available).
-- **CI jobs**: `test-llm-ollama` runs on every push/PR.
-- **Configurable Instructor mode**: `create_client(mode=...)` supports `JSON_SCHEMA` for server-side constrained decoding.
-
-### Added
-- **LLM integration tests** (`@pytest.mark.llm`): 9 tests covering structured output, judge, grounding, query gen, causal synthesis, and E2E paths against a local LLM (Ollama). Enable with `--test-llm`; configure via `LLM_BASE_URL`/`LLM_MODEL`.
+- **`create_client` accepts `mode` parameter**: allows callers to select the Instructor mode (e.g. `Mode.JSON_SCHEMA` for server-side constrained decoding with Ollama). Defaults to `Mode.JSON` (existing behavior).
+- **Test skip reporting**: all `just test` / CI pytest invocations now pass `-rs` to show skip reasons.
 
 ### Fixed
-- **Pin `numpy<2.5`**: numpy 2.5.0 ships PEP 695 type stubs that mypy cannot parse when targeting Python 3.11. Pinned to <2.5 until mypy adds support.
+- **Pin `numpy<2.5`**: numpy 2.5.0 ships PEP 695 type stubs (`type X = ...`) that mypy cannot parse when `python_version` targets 3.11, breaking CI type checks.
+
+### Fixed
 - **Data files now bundled in package**: moved `data/` directory from repo root into `src/asago_policy_mapper/data/` so data files (mitigation index, risk threats/consequences, cross-mappings, SSSOM category mappings) are included in the wheel. Previously, pip-installed users got empty mitigations and missing category-level eval because `Path(__file__).parents[3]` resolved to `site-packages/` instead of the repo root.
 
 ### Docs
