@@ -13,7 +13,10 @@ from asago_policy_mapper.llm import LLMConfig
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--test-llm", action="store_true", default=False, help="Enable LLM integration tests (requires a live LLM server)"
+        "--test-llm",
+        action="store_true",
+        default=False,
+        help="Enable LLM integration tests (requires a live LLM server)",
     )
 
 
