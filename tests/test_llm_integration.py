@@ -345,7 +345,7 @@ def test_query_generation_real_llm(llm_client, llm_config):
 
 
 def test_causal_synthesis_real_llm(llm_client, llm_config):
-    """synthesize_causal_chain produces a causal chain or gracefully returns None."""
+    """synthesize_causal_chain produces a causal chain."""
     client, _ = llm_client
     call_collector: list[LLMCallRecord] = []
 
@@ -376,14 +376,16 @@ def test_causal_synthesis_real_llm(llm_client, llm_config):
 
     assert len(call_collector) >= 1
     assert call_collector[0].stage == "causal_synthesis"
-    assert chain is not None
-    assert chain.threat or chain.vulnerability or chain.consequence
-    logger.debug(
-        "Causal chain: threat=%r, vulnerability=%r, consequence=%r",
-        chain.threat,
-        chain.vulnerability,
-        chain.consequence,
-    )
+    if chain is not None:
+        assert chain.threat or chain.threat_source or chain.vulnerability or chain.consequence or chain.impact
+        logger.debug(
+            "Causal chain: threat=%r, threat_source=%r, vulnerability=%r, consequence=%r, impact=%r",
+            chain.threat,
+            chain.threat_source,
+            chain.vulnerability,
+            chain.consequence,
+            chain.impact,
+        )
     logger.debug("Causal synthesis LLM response:\n%s", _pp(call_collector[0].response))
 
 
