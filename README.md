@@ -278,7 +278,7 @@ python scripts/build_mitigation_index.py
 
 ```bash
 # Unit tests (fast, no external dependencies)
-uv run pytest
+uv run pytest tests/ -rs -m "not slow"
 just test
 
 # Slow tests (loads embedding models)
