@@ -1,7 +1,7 @@
 """Integration tests exercising real LLM calls via Ollama or vLLM.
 
 All tests are marked ``@pytest.mark.llm`` and skipped automatically when no
-LLM server is reachable (see ``llm_config`` fixture in conftest.py).
+LLM server is reachable (see ``llm_config`` fixture below).
 
 Run with::
 
@@ -168,7 +168,7 @@ def llm_client(llm_config):
     """Instructor client using JSON_SCHEMA mode for server-side constrained decoding.
 
     Unlike the default Mode.JSON (schema in prompt), Mode.JSON_SCHEMA makes
-    Ollama/vLLM enforce the schema at the token level, for small models (ie Gemma3)
+    Ollama/vLLM enforce the schema at the token level, for small models (i.e. Gemma3)
     """
     tracker = TokenTracker()
     client = create_client(llm_config, tracker=tracker, mode=instructor.Mode.JSON_SCHEMA)
