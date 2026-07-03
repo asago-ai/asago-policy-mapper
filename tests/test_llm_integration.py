@@ -1,7 +1,7 @@
 """Integration tests exercising real LLM calls via Ollama (or similar real LLM endpoint).
 
-All tests are marked ``@pytest.mark.llm`` and skipped automatically when no
-LLM server is reachable (see ``llm_config`` fixture below).
+All tests are marked ``@pytest.mark.llm`` and skipped by default unless ``--test-llm`` is passed,
+and also skipped automatically when no LLM server is reachable (see ``llm_config`` fixture below).
 
 Run with::
 
@@ -148,9 +148,13 @@ def llm_config():
 
     try:
         probe = OpenAI(base_url=base_url, api_key="none")
-        probe.models.list()
+        available = probe.models.list()
     except Exception:
         pytest.skip(f"LLM server not available at {base_url}")
+
+    available_ids = {m.id for m in available.data}
+    if model not in available_ids:
+        pytest.fail(f"Model {model!r} not available on {base_url} (available: {sorted(available_ids)})")
 
     return LLMConfig(
         base_url=base_url,
@@ -168,7 +172,7 @@ def llm_client(llm_config):
     """Instructor client using JSON_SCHEMA mode for server-side constrained decoding.
 
     Unlike the default Mode.JSON (schema in prompt), Mode.JSON_SCHEMA makes
-    Ollama enforces the schema at the token level, for small models (i.e. Gemma3)
+    Ollama enforce the schema at the token level, for small models (i.e. Gemma3)
     """
     tracker = TokenTracker()
     client = create_client(llm_config, tracker=tracker, mode=instructor.Mode.JSON_SCHEMA)
