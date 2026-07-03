@@ -97,7 +97,7 @@ jobs:
         run: |
           docker run --rm --detach \
             --name vllm-server \
-            --shm-size=2g \
+            --shm-size=4g \
             -p 8000:8000 \
             -v ~/.cache/huggingface:/root/.cache/huggingface \
             -e VLLM_CPU_KVCACHE_SPACE=1 \
