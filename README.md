@@ -277,8 +277,36 @@ python scripts/build_mitigation_index.py
 ## Tests
 
 ```bash
-uv run pytest
+# Unit tests (fast, no external dependencies)
+uv run pytest tests/ -rs -m "not slow"
+just test
+
+# Slow tests (loads embedding models)
+just test-slow
+
+# LLM integration tests (requires a local LLM server)
+just test-llm
 ```
+
+### LLM Integration Tests
+
+Integration tests marked `@pytest.mark.llm` exercise the full extraction pipeline against a real OpenAI-compatible LLM server. They validate pipeline mechanics (structured output, retries, token tracking, multi-stage orchestration) — not output quality.
+
+**With Ollama:**
+
+```bash
+ollama pull gemma3:1b
+just test-llm
+```
+
+**Configuration:**
+
+| Env var | Default | Description |
+|---------|---------|-------------|
+| `LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible API endpoint |
+| `LLM_MODEL` | `gemma3:1b` | Model name (Ollama tag) |
+
+Tests skip gracefully when no server is available.
 
 ## License
 

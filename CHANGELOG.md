@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added
+- **LLM integration tests**: new `tests/test_llm_integration.py` with 9 tests exercising real LLM calls via Ollama (or any OpenAI-compatible server). Covers structured output smoke tests, component-level tests (`judge_borderline`, `ground_and_extract_evidence`, `generate_queries`, `synthesize_causal_chain`), and full E2E pipeline runs (with/without query-gen, with causal synthesis). All tests are marked `@pytest.mark.llm` and skipped by default — pass `--test-llm` to enable.
+- **CI: Ollama LLM test job** (`test-llm-ollama`): new GitHub Actions job that installs Ollama, caches the `gemma3:1b` model, and runs the LLM integration tests. Uses concurrency groups to prevent cache races.
+- **`just test-llm` recipe**: convenience target for running LLM integration tests locally.
+- **`pytest-timeout` dev dependency**: guards LLM tests against hangs (default 120s per test, 300s for full E2E).
+
+### Changed
+- **`create_client` accepts `mode` parameter**: allows callers to select the Instructor mode (e.g. `Mode.JSON_SCHEMA` for server-side constrained decoding with Ollama). Defaults to `Mode.JSON` (existing behavior).
+- **Test skip reporting**: all `just test` / CI pytest invocations now pass `-rs` to show skip reasons.
+
+### Fixed
+- **Pin `numpy<2.5`**: numpy 2.5.0 ships PEP 695 type stubs (`type X = ...`) that mypy cannot parse when `python_version` targets 3.11, breaking CI type checks.
+
 ### Fixed
 - **Data files now bundled in package**: moved `data/` directory from repo root into `src/asago_policy_mapper/data/` so data files (mitigation index, risk threats/consequences, cross-mappings, SSSOM category mappings) are included in the wheel. Previously, pip-installed users got empty mitigations and missing category-level eval because `Path(__file__).parents[3]` resolved to `site-packages/` instead of the repo root.
 

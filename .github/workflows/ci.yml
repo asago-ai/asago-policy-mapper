@@ -13,10 +13,11 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
+      - run: sudo apt-get install -y just
       - run: uv sync --group dev
-      - run: uv run ruff format --check src/ tests/
-      - run: uv run ruff check src/ tests/
-      - run: uv run mypy src/asago_policy_mapper/
+      - run: just format --check
+      - run: just lint
+      - run: just type-check
 
   test:
     runs-on: ubuntu-latest
@@ -25,8 +26,9 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
+      - run: sudo apt-get install -y just
       - run: uv sync --group dev
-      - run: uv run pytest -m "not slow"
+      - run: just test
 
   test-slow:
     runs-on: ubuntu-latest
@@ -35,5 +37,47 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
+      - run: sudo apt-get install -y just
       - run: uv sync --group dev
-      - run: uv run pytest -m slow
+      - run: just test-slow
+
+  test-llm-ollama:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: test-llm-ollama-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      OLLAMA_MODELS: /home/runner/.ollama-models
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8
+        with:
+          enable-cache: true
+      - run: sudo apt-get install -y just
+      - run: uv sync --group dev
+      - name: Install Ollama
+        # Pin install script to a Git blob SHA (immutable) instead of piping the live URL.
+        # To update: find the commit for the new release tag with
+        #   gh api repos/ollama/ollama/git/ref/tags/<TAG> --jq '.object.sha'
+        run: curl -fsSL https://raw.githubusercontent.com/ollama/ollama/710292ff4f191d8da9f6a4230804fbc693338d4a/scripts/install.sh | OLLAMA_VERSION=0.31.1 sh
+      - name: Restore Ollama model cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ${{ env.OLLAMA_MODELS }}
+          key: ollama-gemma3-1b
+      - name: Start Ollama and pull model
+        run: |
+          sudo systemctl stop ollama 2>/dev/null || true
+          ollama serve &
+          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 1; done
+          ollama pull gemma3:1b
+      - name: Run LLM integration tests
+        env:
+          LLM_BASE_URL: "http://localhost:11434/v1"
+          LLM_MODEL: "gemma3:1b"
+        run: just test-llm
+      - name: Save Ollama model cache
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ${{ env.OLLAMA_MODELS }}
+          key: ollama-gemma3-1b
