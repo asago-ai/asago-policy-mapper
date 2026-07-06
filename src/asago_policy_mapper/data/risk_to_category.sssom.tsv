@@ -7,7 +7,7 @@
 #  credo: https://www.credoai.com/
 #  mit: https://airisk.mit.edu/
 #mapping_set_id: risk_to_category
-#mapping_set_description: Maps specific AI risks to category-level taxonomy risks (NIST AI RMF, OWASP Top 10 LLM, AILuminate)
+#mapping_set_description: Maps specific AI risks to category-level taxonomy risks (NIST AI RMF, OWASP Top 10 LLM, AILuminate, OWASP ASI)
 #license: https://creativecommons.org/licenses/by/4.0/
 
 subject_id	subject_source	predicate_id	object_id	object_source	mapping_justification
@@ -75,38 +75,38 @@ credo-risk-036	credo-ucf	skos:relatedMatch	ail-privacy	ailuminate-v1.0	credo-ucf
 credo-risk-036	credo-ucf	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
 credo-risk-036	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
 credo-risk-036	credo-ucf	skos:relatedMatch	nist-data-privacy	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
-credo-risk-036	credo-ucf	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-036	credo-ucf	skos:closeMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	Compromised PII is definitionally sensitive information disclosure
 credo-risk-036	credo-ucf	skos:relatedMatch	llm052025-improper-output-handling	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-036	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-037	credo-ucf	skos:relatedMatch	ail-privacy	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-037	credo-ucf	skos:relatedMatch	ail-suicide-and-self-harm	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
 credo-risk-037	credo-ucf	skos:relatedMatch	nist-data-privacy	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-037	credo-ucf	skos:closeMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
-credo-risk-037	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-037	credo-ucf	skos:broadMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	# Compromised sensitive info includes system prompt exposure
 credo-risk-038	credo-ucf	skos:relatedMatch	ail-privacy	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-038	credo-ucf	skos:relatedMatch	nist-information-security	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-038	credo-ucf	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
-credo-risk-038	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-038	credo-ucf	skos:broadMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	# Compromised confidential info includes system prompt exposure
 credo-risk-039	credo-ucf	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-039	credo-ucf	skos:relatedMatch	nist-intellectual-property	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-040	credo-ucf	skos:relatedMatch	nist-information-security	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-040	credo-ucf	skos:relatedMatch	llm042025-data-and-model-poisoning	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-040	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
-credo-risk-040	credo-ucf	skos:relatedMatch	llm082025-vector-and-embedding-weaknesses	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-040	credo-ucf	skos:broadMatch	llm082025-vector-and-embedding-weaknesses	owasp-llm-2.0	# Security weaknesses include exploitable vector/embedding pipelines
 credo-risk-041	credo-ucf	skos:relatedMatch	nist-information-security	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
-credo-risk-041	credo-ucf	skos:relatedMatch	llm042025-data-and-model-poisoning	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-041	credo-ucf	skos:broadMatch	llm042025-data-and-model-poisoning	owasp-llm-2.0	Adversarial attacks include data/model poisoning as an attack vector
 credo-risk-041	credo-ucf	skos:relatedMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
 credo-risk-047	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
-credo-risk-047	credo-ucf	skos:relatedMatch	llm032025-supply-chain	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-047	credo-ucf	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	Insufficient upstream transparency is a supply chain vulnerability
 credo-risk-048	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
-credo-risk-048	credo-ucf	skos:relatedMatch	llm032025-supply-chain	owasp-llm-2.0	credo-ucf.sssom_from_tsv_data.yaml
+credo-risk-048	credo-ucf	skos:broadMatch	llm032025-supply-chain	owasp-llm-2.0	Third-party model/compute dependencies are supply chain risks
 credo-risk-049	credo-ucf	skos:relatedMatch	nist-value-chain-and-component-integration	nist-ai-rmf	credo-ucf.sssom_from_tsv_data.yaml
 atlas-attribute-inference-attack	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-attribute-inference-attack	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-attribute-inference-attack	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
 atlas-confidential-data-in-prompt	ibm-risk-atlas	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
 atlas-confidential-data-in-prompt	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
-atlas-confidential-data-in-prompt	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-confidential-data-in-prompt	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	Confidential data in prompts creates a disclosure vector via LLM context
 atlas-confidential-information-in-data	ibm-risk-atlas	skos:relatedMatch	ail-intellectual-property	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
 atlas-confidential-information-in-data	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-confidential-information-in-data	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
@@ -192,7 +192,7 @@ atlas-legal-accountability	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist
 atlas-legal-accountability	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-legal-accountability	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-membership-inference-attack	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
-atlas-membership-inference-attack	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-membership-inference-attack	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	Membership inference attacks disclose whether data was in training set
 atlas-model-usage-rights	ibm-risk-atlas	skos:relatedMatch	ail-specialized-advice	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
 atlas-model-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-model-usage-rights	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
@@ -212,9 +212,9 @@ atlas-over-or-under-reliance	ibm-risk-atlas	skos:relatedMatch	llm052025-improper
 atlas-over-or-under-reliance	ibm-risk-atlas	skos:relatedMatch	llm062025-excessive-agency	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
 atlas-personal-information-in-data	ibm-risk-atlas	skos:relatedMatch	ail-privacy	ailuminate-v1.0	ailuminate-v1.0.sssom_from_tsv_data.yaml
 atlas-personal-information-in-data	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
-atlas-personal-information-in-data	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-personal-information-in-data	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	PII in training data creates risk of sensitive information disclosure
 atlas-personal-information-in-prompt	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
-atlas-personal-information-in-prompt	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-personal-information-in-prompt	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	PII in prompts creates a disclosure vector via LLM context
 atlas-poor-model-accuracy	ibm-risk-atlas	skos:broadMatch	nist-human-ai-configuration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-poor-model-accuracy	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-poor-model-accuracy	ibm-risk-atlas	skos:broadMatch	nist-value-chain-and-component-integration	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
@@ -225,7 +225,7 @@ atlas-prompt-leaking	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-informat
 atlas-prompt-priming	ibm-risk-atlas	skos:broadMatch	nist-information-security	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-prompt-priming	ibm-risk-atlas	skos:broadMatch	llm01-prompt-injection	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
 atlas-reidentification	ibm-risk-atlas	skos:broadMatch	nist-data-privacy	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
-atlas-reidentification	ibm-risk-atlas	skos:relatedMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
+atlas-reidentification	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	Re-identification from de-anonymized data is a form of sensitive info disclosure
 atlas-revealing-confidential-information	ibm-risk-atlas	skos:broadMatch	nist-intellectual-property	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
 atlas-revealing-confidential-information	ibm-risk-atlas	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	ibm2owasp_from_tsv_data.yaml
 atlas-spreading-disinformation	ibm-risk-atlas	skos:broadMatch	nist-information-integrity	nist-ai-rmf	ibm2nistgenai_from_tsv_data.yaml
@@ -784,7 +784,7 @@ atlas-sharing-info-user-agentic	ibm-risk-atlas	skos:relatedMatch	asi09-human-age
 atlas-impact-human-agency-agentic	ibm-risk-atlas	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Agent autonomy undermines human thinking → trust exploitation
 atlas-impact-human-dignity-agentic	ibm-risk-atlas	skos:relatedMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Agent capability affects self-worth → trust dynamic
 atlas-over-or-under-reliance-on-ai-agents-agentic	ibm-risk-atlas	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Trust calibration failure → trust exploitation
-atlas-redundant-actions-agentic	ibm-risk-atlas	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Infinite loops / wasted compute → cascading failures
+atlas-redundant-actions-agentic	ibm-risk-atlas	skos:broadMatch	asi08-cascading-failures	owasp-asi	# Infinite action loops directly trigger cascading failures
 atlas-unexplainable-untraceable-actions-agentic	ibm-risk-atlas	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Untraceable actions → rogue agent detection problem
 atlas-accountability-agentic	ibm-risk-atlas	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Can't assign responsibility → rogue agent governance gap
 atlas-lack-of-ai-agent-transparency-agentic	ibm-risk-atlas	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Opaque agent → rogue agent detection problem
@@ -794,7 +794,7 @@ atlas-reproducibility-agentic	ibm-risk-atlas	skos:relatedMatch	asi08-cascading-f
 atlas-prompt-injection	ibm-risk-atlas	skos:broadMatch	asi01-agent-goal-hijack	owasp-asi	# Prompt injection is the foundational attack ASI01 extends to agent goals
 atlas-jailbreaking	ibm-risk-atlas	skos:relatedMatch	asi01-agent-goal-hijack	owasp-asi	# Jailbreaking can redirect agent objectives
 atlas-prompt-priming	ibm-risk-atlas	skos:relatedMatch	asi01-agent-goal-hijack	owasp-asi	# Priming biases agent reasoning chains
-atlas-prompt-leaking	ibm-risk-atlas	skos:relatedMatch	asi07-insecure-inter-agent-communication	owasp-asi	# Leaking system prompts → insecure communication/context exposure
+atlas-prompt-leaking	ibm-risk-atlas	skos:relatedMatch	asi07-insecure-inter-agent-communication	owasp-asi	# Prompt leaking is typically human-to-model, not inter-agent
 atlas-data-poisoning	ibm-risk-atlas	skos:broadMatch	asi06-memory-and-context-poisoning	owasp-asi	# Data poisoning → memory/context poisoning in agent systems
 atlas-data-contamination	ibm-risk-atlas	skos:relatedMatch	asi06-memory-and-context-poisoning	owasp-asi	# Contaminated training data → poisoned agent context
 atlas-hallucination	ibm-risk-atlas	skos:relatedMatch	asi02-tool-misuse-and-exploitation	owasp-asi	# Hallucinations in agentic context lead to tool misuse
@@ -802,14 +802,14 @@ atlas-evasion-attack	ibm-risk-atlas	skos:relatedMatch	asi01-agent-goal-hijack	ow
 atlas-extraction-attack	ibm-risk-atlas	skos:relatedMatch	asi03-identity-and-privilege-abuse	owasp-asi	# Model extraction → identity/privilege information leak
 atlas-over-or-under-reliance	ibm-risk-atlas	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Over-reliance on AI → human-agent trust exploitation
 credo-risk-002	credo-ucf	skos:closeMatch	asi10-rogue-agents	owasp-asi	# AI pursuing own goals vs human values → rogue agent behaviour
-credo-risk-003	credo-ucf	skos:relatedMatch	asi05-unexpected-code-execution	owasp-asi	# Dangerous capabilities including code execution
+credo-risk-003	credo-ucf	skos:broadMatch	asi05-unexpected-code-execution	owasp-asi	# Dangerous capabilities including unintended code execution
 credo-risk-003	credo-ucf	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Dangerous capabilities → rogue agent potential
 credo-risk-016	credo-ucf	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Over-reliance → human-agent trust exploitation
 credo-risk-018	credo-ucf	skos:broadMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Deceptive AI → trust exploitation
 credo-risk-019	credo-ucf	skos:relatedMatch	asi09-human-agent-trust-exploitation	owasp-asi	# Loss of autonomy via agent trust dynamics
 credo-risk-033	credo-ucf	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Inadequate capabilities → cascading failure source
 credo-risk-034	credo-ucf	skos:relatedMatch	asi10-rogue-agents	owasp-asi	# Can't oversee agents → rogue behaviour undetected
-credo-risk-035	credo-ucf	skos:relatedMatch	asi08-cascading-failures	owasp-asi	# Non-robust systems → cascading failures
+credo-risk-035	credo-ucf	skos:broadMatch	asi08-cascading-failures	owasp-asi	# Non-robust agent components are the primary source of cascading failures
 credo-risk-040	credo-ucf	skos:relatedMatch	asi06-memory-and-context-poisoning	owasp-asi	# Security weaknesses → memory/context exploitation vector
 credo-risk-041	credo-ucf	skos:broadMatch	asi01-agent-goal-hijack	owasp-asi	# Adversarial attacks including agent goal hijacking
 mit-ai-risk-subdomain-2.2	mit-ai-risk-repository	skos:broadMatch	nist-information-security	nist-ai-rmf	# AI system security vulnerabilities and attacks; directly covers infosec
@@ -831,3 +831,11 @@ credo-risk-040	credo-ucf	skos:broadMatch	nist-information-security	nist-ai-rmf	#
 credo-risk-041	credo-ucf	skos:broadMatch	nist-information-security	nist-ai-rmf	# Adversarial attack vulnerability is a specific information security risk
 credo-risk-013	credo-ucf	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Harmful/toxic content generation includes obscene and abusive content
 credo-risk-013	credo-ucf	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Harmful/toxic content includes dangerous and hateful content
+atlas-prompt-leaking	ibm-risk-atlas	skos:closeMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	# Prompt leak attack extracts system prompt — near-identical to LLM07
+atlas-harmful-code-generation	ibm-risk-atlas	skos:broadMatch	llm052025-improper-output-handling	owasp-llm-2.0	# LLM-generated harmful code is an improper output that can execute downstream
+atlas-data-poisoning	ibm-risk-atlas	skos:broadMatch	llm082025-vector-and-embedding-weaknesses	owasp-llm-2.0	# Data poisoning in RAG context manifests as vector/embedding poisoning
+atlas-context-overload-attack	ibm-risk-atlas	skos:broadMatch	llm102025-unbounded-consumption	owasp-llm-2.0	# Token overloading causes resource exhaustion — direct DoS vector
+atlas-redundant-actions-agentic	ibm-risk-atlas	skos:broadMatch	llm102025-unbounded-consumption	owasp-llm-2.0	# Infinite agent action loops cause unbounded resource consumption
+atlas-harmful-code-generation	ibm-risk-atlas	skos:broadMatch	asi05-unexpected-code-execution	owasp-asi	# Harmful code generation is a specific trigger for unexpected code execution
+atlas-sharing-info-tools-agentic	ibm-risk-atlas	skos:relatedMatch	asi07-insecure-inter-agent-communication	owasp-asi	# Data leakage to tools is related but distinct from communication channel security
+mit-ai-risk-subdomain-7.6	mit-ai-risk-repository	skos:broadMatch	asi08-cascading-failures	owasp-asi	# Definition explicitly covers cascading failures in multi-agent systems

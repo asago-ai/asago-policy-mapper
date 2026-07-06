@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Fixed
+- **OWASP SSSOM mapping gaps**: 7 OWASP categories had zero strong-predicate mappings from tier 1 risks, making them invisible to category-level evaluation. Added new strong mappings (e.g. `atlas-prompt-leaking` → LLM07 closeMatch, `atlas-context-overload-attack` → LLM10 broadMatch, `atlas-harmful-code-generation` → ASI05 broadMatch) and upgraded 5 existing relatedMatch entries to broadMatch. Fills gaps for LLM07, LLM08, LLM10, ASI05, ASI08 (5 of 7). LLM05 (Improper Output Handling) and ASI07 (Insecure Inter-Agent Communication) remain without strong mappings — no existing tier 1 risk captures these engineering-level concerns at broadMatch or better. Updated SSSOM description to include OWASP ASI.
+- **OWASP SSSOM mapping upgrades**: upgraded 10 additional relatedMatch entries to broadMatch/closeMatch where the semantic relationship is genuinely strong (e.g. `atlas-membership-inference-attack` → LLM02 broadMatch, `atlas-harmful-code-generation` → LLM05 broadMatch, `credo-risk-036` → LLM02 closeMatch). All 10 OWASP LLM 2.0 categories now have strong-predicate mappings (LLM05 gap filled). Total strong-mapped risks increased from 130 to 140.
+
+### Fixed
 - **Data files now bundled in package**: moved `data/` directory from repo root into `src/asago_policy_mapper/data/` so data files (mitigation index, risk threats/consequences, cross-mappings, SSSOM category mappings) are included in the wheel. Previously, pip-installed users got empty mitigations and missing category-level eval because `Path(__file__).parents[3]` resolved to `site-packages/` instead of the repo root.
 
 ### Docs
