@@ -8,6 +8,7 @@ from asago_policy_mapper.evals.eval import (
     _load_risk_to_category_map,
     _sanitise_risk_id,
     evaluate_extraction,
+    get_owasp_llm_risk_subset,
 )
 from asago_policy_mapper.extract.models import (
     ExtractionResult,
@@ -576,3 +577,102 @@ def test_extraction_result_schema_compatible_with_eval(tmp_path):
         f"Schema drift: ExtractionResult JSON no longer matches what eval reads. "
         f"matched={metrics['matched']}, missing={metrics['missing']}, spurious={metrics['spurious']}"
     )
+
+
+# --- OWASP subset eval tests ---
+
+
+def test_get_owasp_llm_risk_subset():
+    """get_owasp_llm_risk_subset returns risk IDs with strong OWASP LLM 2.0 mappings."""
+    subset = get_owasp_llm_risk_subset()
+    assert isinstance(subset, set)
+    assert len(subset) > 0
+    assert "atlas-prompt-injection" in subset
+    assert "atlas-hallucination" in subset
+
+
+def test_owasp_subset_eval(tmp_path):
+    """Subset eval only counts OWASP-mapped risks."""
+    gt = tmp_path / "gt.yaml"
+    gt.write_text("risk_ids:\n  - atlas-prompt-injection\n  - atlas-hallucination\n  - atlas-data-bias\n")
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(
+        json.dumps(
+            {
+                "risks": [
+                    {"risk_id": "atlas-prompt-injection", "taxonomy": "ibm-risk-atlas"},
+                    {"risk_id": "atlas-hallucination", "taxonomy": "ibm-risk-atlas"},
+                    {"risk_id": "atlas-data-bias", "taxonomy": "ibm-risk-atlas"},
+                    {"risk_id": "atlas-copyright-infringement", "taxonomy": "ibm-risk-atlas"},
+                ]
+            }
+        )
+    )
+
+    owasp_subset = get_owasp_llm_risk_subset()
+    result = evaluate_extraction(gt, ext, risk_subset=owasp_subset)
+
+    assert "subset_eval" in result
+    se = result["subset_eval"]
+    assert se["subset"] == "owasp-llm-2.0"
+    # prompt-injection and hallucination are OWASP-mapped; data-bias is not
+    assert se["total_expected"] == 2
+    assert se["matched"] == 2
+    assert se["recall"] == 1.0
+    # Full eval still includes all risks
+    assert result["total_expected"] == 3
+
+
+def test_owasp_subset_empty(tmp_path):
+    """When no GT risks map to OWASP, subset metrics are zeros."""
+    gt = tmp_path / "gt.yaml"
+    gt.write_text("risk_ids:\n  - atlas-data-bias\n  - atlas-impact-on-jobs\n")
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(json.dumps({"risks": [{"risk_id": "atlas-data-bias", "taxonomy": "ibm-risk-atlas"}]}))
+
+    owasp_subset = get_owasp_llm_risk_subset()
+    result = evaluate_extraction(gt, ext, risk_subset=owasp_subset)
+
+    se = result["subset_eval"]
+    assert se["total_expected"] == 0
+    assert se["total_extracted"] == 0
+    assert se["matched"] == 0
+    assert se["f1"] == 0.0
+
+
+def test_owasp_subset_with_full(tmp_path):
+    """Both full and subset results are present and independent."""
+    gt = tmp_path / "gt.yaml"
+    gt.write_text("risk_ids:\n  - atlas-prompt-injection\n  - atlas-data-bias\n  - atlas-impact-on-jobs\n")
+    ext = tmp_path / "risk-extraction.json"
+    ext.write_text(
+        json.dumps(
+            {
+                "risks": [
+                    {"risk_id": "atlas-prompt-injection", "taxonomy": "ibm-risk-atlas"},
+                    {"risk_id": "atlas-data-bias", "taxonomy": "ibm-risk-atlas"},
+                ]
+            }
+        )
+    )
+
+    owasp_subset = get_owasp_llm_risk_subset()
+    result = evaluate_extraction(gt, ext, risk_subset=owasp_subset)
+
+    # Full eval: 2 matched out of 3 expected
+    assert result["matched"] == 2
+    assert result["total_expected"] == 3
+
+    # Subset eval: 1 matched out of 1 expected (only prompt-injection is OWASP-mapped)
+    se = result["subset_eval"]
+    assert se["matched"] == 1
+    assert se["total_expected"] == 1
+    assert se["recall"] == 1.0
+    assert se["precision"] == 1.0
+    assert se["f1"] == 1.0
+
+
+def test_owasp_subset_not_present_without_flag(tmp_ground_truth, tmp_extraction):
+    """Without risk_subset, no subset_eval key is present."""
+    result = evaluate_extraction(tmp_ground_truth, tmp_extraction)
+    assert "subset_eval" not in result

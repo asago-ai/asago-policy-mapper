@@ -1,0 +1,4 @@
+model: gemma-4-26b-a4b-it
+runs:
+  - /Users/hjrnunes/Downloads/redhat-ai-policy-and-code-assistant-guidelines.md
+  - /Users/hjrnunes/Downloads/redhat-ai-policy-and-ai-generated-content-guidelines.md

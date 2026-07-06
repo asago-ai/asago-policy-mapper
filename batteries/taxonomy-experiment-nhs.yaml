@@ -1,0 +1,4 @@
+model: gemma-4-26b-a4b-it
+runs:
+  - policy_examples/guy-nhs.pdf
+  - policy_examples/rdash-nhs.md

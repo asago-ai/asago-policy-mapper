@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- **OWASP-subset eval mode**: new `--owasp-subset` flag on `eval` CLI command and battery runner computes risk-level F1/P/R restricted to risks with strong OWASP LLM 2.0 SSSOM mappings. Results appear under `subset_eval` key in eval output. Battery runner prints aggregate OWASP subset metrics and logs them to MLflow (`owasp_subset/recall`, `owasp_subset/precision`, `owasp_subset/f1`).
+
 ### Fixed
 - **Data files now bundled in package**: moved `data/` directory from repo root into `src/asago_policy_mapper/data/` so data files (mitigation index, risk threats/consequences, cross-mappings, SSSOM category mappings) are included in the wheel. Previously, pip-installed users got empty mitigations and missing category-level eval because `Path(__file__).parents[3]` resolved to `site-packages/` instead of the repo root.
 

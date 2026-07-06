@@ -227,7 +227,13 @@ def run_one(
     return name, ok, "", proc.returncode, elapsed
 
 
-def run_eval(name: str, runs_dir: Path, min_recall: float = 0.80, min_precision: float = 0.60) -> dict | None:
+def run_eval(
+    name: str,
+    runs_dir: Path,
+    min_recall: float = 0.80,
+    min_precision: float = 0.60,
+    risk_subset: set[str] | None = None,
+) -> dict | None:
     gt_path = GROUND_TRUTH_DIR / f"{name}.yaml"
     if not gt_path.exists():
         return None
@@ -235,7 +241,12 @@ def run_eval(name: str, runs_dir: Path, min_recall: float = 0.80, min_precision:
     if not extracted_path.exists():
         return None
     result = evaluate_extraction(
-        gt_path, extracted_path, policy_name=name, min_recall=min_recall, min_precision=min_precision
+        gt_path,
+        extracted_path,
+        policy_name=name,
+        min_recall=min_recall,
+        min_precision=min_precision,
+        risk_subset=risk_subset,
     )
     eval_path = runs_dir / name / "eval.json"
     eval_path.write_text(json.dumps(result, indent=2))
@@ -493,6 +504,11 @@ def main():
         "--mlflow-experiment", default="risk-extraction", help="MLflow experiment name (default: risk-extraction)"
     )
     parser.add_argument("--no-mlflow", action="store_true", help="Disable MLflow tracking")
+    parser.add_argument(
+        "--owasp-subset",
+        action="store_true",
+        help="Also compute metrics for OWASP LLM 2.0-mapped risks only",
+    )
     args = parser.parse_args()
 
     battery_path = args.battery if args.battery.is_absolute() else PACKAGE_DIR / args.battery
@@ -645,10 +661,16 @@ def main():
     elapsed_total = time.monotonic() - t_battery
 
     # --- Eval ---
+    owasp_risk_subset: set[str] | None = None
+    if args.owasp_subset:
+        from asago_policy_mapper.evals.eval import get_owasp_llm_risk_subset
+
+        owasp_risk_subset = get_owasp_llm_risk_subset()
+
     eval_results: dict[str, dict] = {}
     for name, _ in runs:
         if name not in failed:
-            ev = run_eval(name, runs_dir)
+            ev = run_eval(name, runs_dir, risk_subset=owasp_risk_subset)
             if ev is not None:
                 eval_results[name] = ev
 
@@ -700,6 +722,11 @@ def main():
                     child_metrics[f"{tax}/recall"] = td["recall"]
                     child_metrics[f"{tax}/precision"] = td["precision"]
                     child_metrics[f"{tax}/f1"] = td["f1"]
+                se = ev.get("subset_eval")
+                if se:
+                    child_metrics["owasp_subset/recall"] = se["recall"]
+                    child_metrics["owasp_subset/precision"] = se["precision"]
+                    child_metrics["owasp_subset/f1"] = se["f1"]
                 eval_path = runs_dir / name / "eval.json"
                 if eval_path.exists():
                     child_artifacts.append(eval_path)
@@ -780,6 +807,25 @@ def main():
                 f = 2 * p * r / (p + r) if p + r > 0 else 0.0
                 print(f"{tax:<{tw}}  {e:>6}  {m:>5}  {p:>7.3f}  {r:>7.3f}  {f:>7.3f}")
 
+        # OWASP subset aggregate
+        owasp_subset_agg: dict | None = None
+        if owasp_risk_subset is not None:
+            sub_agg: dict[str, int] = {"expected": 0, "extracted": 0, "matched": 0}
+            for ev in eval_results.values():
+                se = ev.get("subset_eval")
+                if se:
+                    sub_agg["expected"] += se["total_expected"]
+                    sub_agg["extracted"] += se["total_extracted"]
+                    sub_agg["matched"] += se["matched"]
+            m, e, x = sub_agg["matched"], sub_agg["expected"], sub_agg["extracted"]
+            spur = x - m
+            sp = m / (m + spur) if m + spur > 0 else 0.0
+            sr = m / e if e > 0 else 0.0
+            sf = 2 * sp * sr / (sp + sr) if sp + sr > 0 else 0.0
+            owasp_subset_agg = {**sub_agg, "precision": round(sp, 3), "recall": round(sr, 3), "f1": round(sf, 3)}
+            print("\nOWASP LLM 2.0 Subset Aggregate:")
+            print(f"  Expected: {e}  Matched: {m}  Precision: {sp:.3f}  Recall: {sr:.3f}  F1: {sf:.3f}")
+
         battery_summary = {
             "battery": battery_name,
             "model": model,
@@ -799,6 +845,8 @@ def main():
                 for tax, a in tax_agg.items()
             },
         }
+        if owasp_subset_agg is not None:
+            battery_summary["owasp_subset_aggregate"] = owasp_subset_agg
         summary_path = runs_dir / "battery-summary.json"
         summary_path.write_text(json.dumps(battery_summary, indent=2))
 
@@ -830,6 +878,11 @@ def main():
                     parent_metrics[f"{tax}/recall"] = r
                     parent_metrics[f"{tax}/precision"] = p
                     parent_metrics[f"{tax}/f1"] = f
+
+            if owasp_subset_agg is not None:
+                parent_metrics["owasp_subset/recall"] = owasp_subset_agg["recall"]
+                parent_metrics["owasp_subset/precision"] = owasp_subset_agg["precision"]
+                parent_metrics["owasp_subset/f1"] = owasp_subset_agg["f1"]
 
         log_metrics(tracking_ctx, parent_metrics)
 
