@@ -227,7 +227,8 @@ uv run asago-policy-mapper eval output/ -g evals/ground_truth/policy-name.yaml
 ### Run a battery of extractions
 
 ```bash
-just run-risk-extract-battery batteries/risk-selected.yaml <base-url> <model>
+uv run python run_extract_battery.py batteries/risk-selected.yaml \
+  --base-url <base-url> --model <model> -j 6
 ```
 
 Runs extraction + eval across all policies in the battery config, generates per-run reports and a summary with per-taxonomy heatmaps.
@@ -235,19 +236,19 @@ Runs extraction + eval across all policies in the battery config, generates per-
 ### Advanced Usage
 
 ```bash
-# Battery with more options (direct invocation)
-python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --model <model> -j 6
-
 # Battery with MLflow tracking disabled
-just no_mlflow="1" run-risk-extract-battery batteries/risk-selected.yaml <base-url> <model>
+uv run python run_extract_battery.py batteries/risk-selected.yaml \
+  --base-url <url> --model <model> --no-mlflow
 
 # Battery with custom MLflow experiment name
-python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --model <model> --mlflow-experiment my-experiment
+uv run python run_extract_battery.py batteries/risk-selected.yaml \
+  --base-url <url> --model <model> --mlflow-experiment my-experiment
 
 # IR-only mode (no LLM judge/grounding, no --base-url/--model needed)
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus --no-judge --no-grounding
-just no_judge="1" no_grounding="1" run-risk-extract-battery batteries/risk-selected.yaml
+uv run python run_extract_battery.py batteries/risk-selected.yaml \
+  --no-judge --no-grounding
 
 # Judge only, no grounding (test judge contribution in isolation)
 uv run asago-policy-mapper extract policy.pdf -o output/ \
@@ -279,13 +280,12 @@ python scripts/build_mitigation_index.py
 ```bash
 # Unit tests (fast, no external dependencies)
 uv run pytest tests/ -rs -m "not slow"
-just test
 
 # Slow tests (loads embedding models)
-just test-slow
+uv run pytest tests/ -rs -m slow
 
 # LLM integration tests (requires a local LLM server)
-just test-llm
+uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
 ```
 
 ### LLM Integration Tests
@@ -296,7 +296,7 @@ Integration tests marked `@pytest.mark.llm` exercise the full extraction pipelin
 
 ```bash
 ollama pull gemma3:1b
-just test-llm
+uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
 ```
 
 **Configuration:**

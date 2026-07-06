@@ -198,7 +198,8 @@ See `EXPERIMENT_LOG.md` for a chronological record of all experiments, configura
 After updating prompt templates with optimized instructions, run a full battery to measure end-to-end impact:
 
 ```bash
-just run-risk-extract-battery batteries/risk-selected.yaml
+uv run python run_extract_battery.py batteries/risk-selected.yaml \
+  --base-url <base-url> --model <model>
 ```
 
 Compare risk-level AND category-level P/R/F1 against the baseline. Current baseline: risk-level F1=0.708, NIST category F1=0.923.

@@ -13,11 +13,10 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
-      - run: sudo apt-get install -y just
       - run: uv sync --group dev
-      - run: just format --check
-      - run: just lint
-      - run: just type-check
+      - run: uv run ruff format --check src/ tests/
+      - run: uv run ruff check src/ tests/
+      - run: uv run mypy src/asago_policy_mapper/
 
   test:
     runs-on: ubuntu-latest
@@ -26,9 +25,8 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
-      - run: sudo apt-get install -y just
       - run: uv sync --group dev
-      - run: just test
+      - run: uv run pytest tests/ -rs -m "not slow"
 
   test-slow:
     runs-on: ubuntu-latest
@@ -37,9 +35,8 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
-      - run: sudo apt-get install -y just
       - run: uv sync --group dev
-      - run: just test-slow
+      - run: uv run pytest tests/ -rs -m slow
 
   test-llm-ollama:
     runs-on: ubuntu-latest
@@ -53,7 +50,6 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8
         with:
           enable-cache: true
-      - run: sudo apt-get install -y just
       - run: uv sync --group dev
       - name: Install Ollama
         # Pin install script to a Git blob SHA (immutable) instead of piping the live URL.
@@ -75,7 +71,7 @@ jobs:
         env:
           LLM_BASE_URL: "http://localhost:11434/v1"
           LLM_MODEL: "gemma3:1b"
-        run: just test-llm
+        run: uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
       - name: Save Ollama model cache
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:

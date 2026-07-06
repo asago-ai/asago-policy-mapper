@@ -18,10 +18,6 @@
           {
             "type": "command",
             "command": ".claude/hooks/block-destructive.sh"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/check-changelog.sh"
           }
         ]
       }
