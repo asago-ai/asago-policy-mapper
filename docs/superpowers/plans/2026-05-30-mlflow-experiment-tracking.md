@@ -709,36 +709,21 @@ git commit -m "feat: integrate MLflow tracking into battery runner"
 
 ---
 
-### Task 6: Update justfile and documentation
+### Task 6: Update documentation
 
 **Files:**
-- Modify: `justfile`
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: Add mlflow-experiment flag support to justfile**
-
-Update the `run-risk-extract-battery` recipe in `justfile` to pass through the `--no-mlflow` flag when needed. Add a new variable at the top:
-
-```just
-no_mlflow := ""
-```
-
-And update the recipe line to append:
-
-```just
-{{ if no_mlflow != "" { "--no-mlflow" } else { "" } }}
-```
-
-- [ ] **Step 2: Update CLAUDE.md**
+- [ ] **Step 1: Update CLAUDE.md**
 
 Add to the Commands section:
 
 ```markdown
 # Run battery with MLflow tracking disabled
-just no_mlflow="1" run-risk-extract-battery batteries/risk-selected.yaml <base-url> <model>
+uv run python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --model <model> --no-mlflow
 
 # Run battery with custom MLflow experiment name
-python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --model <model> --mlflow-experiment my-experiment
+uv run python run_extract_battery.py batteries/risk-selected.yaml --base-url <url> --model <model> --mlflow-experiment my-experiment
 ```
 
 Add to the Key Conventions section:
@@ -748,11 +733,11 @@ Add to the Key Conventions section:
 - Prompt templates are synced to the MLflow Prompt Registry at the start of each tracked battery run (hash-based dedup avoids duplicate versions).
 ```
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
-git add justfile CLAUDE.md
-git commit -m "docs: update justfile and CLAUDE.md for MLflow tracking"
+git add CLAUDE.md
+git commit -m "docs: update CLAUDE.md for MLflow tracking"
 ```
 
 ---
@@ -775,7 +760,7 @@ uv run mlflow server --port 5000 &
 Run a battery against it:
 
 ```bash
-MLFLOW_TRACKING_URI=http://localhost:5000 just run-risk-extract-battery batteries/risk-selected.yaml <base-url> <model>
+MLFLOW_TRACKING_URI=http://localhost:5000 uv run python run_extract_battery.py batteries/risk-selected.yaml --base-url <base-url> --model <model>
 ```
 
 Verify in the MLflow UI at http://localhost:5000:

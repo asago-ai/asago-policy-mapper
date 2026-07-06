@@ -8,43 +8,38 @@ uv sync
 
 # Run all tests
 uv run pytest
-just test
 
 # Run fast tests only (skip slow embedding-model tests)
-uv run pytest -m "not slow"
+uv run pytest -rs -m "not slow"
 
 # Run a single test file or specific test
 uv run pytest tests/test_extract_pipeline.py
 uv run pytest tests/test_extract_retrieve.py::test_classify_candidates -v
 
 # Format + lint + type check (all static checks)
-just tidy
+uv run ruff format src/ tests/ && uv run ruff check src/ tests/ && uv run mypy src/asago_policy_mapper/
 
 # Lint
 uv run ruff check src/ tests/
-just lint
 
 # Lint single file (with auto-fix)
 uv run ruff check --fix path/to/file.py
 
 # Format
 uv run ruff format src/ tests/
-just format
 
 # Format single file
 uv run ruff format path/to/file.py
 
 # Type check
 uv run mypy src/asago_policy_mapper/
-just type-check
 
 # Type check single file
 uv run mypy path/to/file.py
 
 # Run LLM integration tests (requires Ollama or similar)
 # env: LLM_BASE_URL=http://localhost:11434/v1  LLM_MODEL=gemma3:1b
-uv run pytest --test-llm -m llm -v
-just test-llm
+uv run pytest --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
 
 # See README.md for full CLI usage examples (extract, eval, battery, remote models)
 ```
@@ -95,5 +90,4 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 ## Development
 
 - `AGENTS.md` is a symlink to `CLAUDE.md` — they are the same file. Do not treat them as separate files or suggest deduplication.
-- DO NOT skip updating the changelog with any changes made
 - DO NOT skip updating `CLAUDE.md`/`AGENTS.md` and `README.md` when changes require it
