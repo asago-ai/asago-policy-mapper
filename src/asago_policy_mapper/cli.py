@@ -288,6 +288,9 @@ def eval_cmd(
     ),
     min_recall: float = typer.Option(0.80, "--min-recall", help="Minimum recall threshold"),
     min_precision: float = typer.Option(0.60, "--min-precision", help="Minimum precision threshold"),
+    owasp_subset: bool = typer.Option(
+        False, "--owasp-subset", help="Also compute metrics for OWASP LLM 2.0-mapped risks only"
+    ),
 ):
     """Evaluate a risk extraction run against ground truth."""
     json_path = run_dir / "risk-extraction.json"
@@ -308,7 +311,9 @@ def eval_cmd(
         typer.echo(f"Error: ground truth not found at {ground_truth}", err=True)
         raise typer.Exit(1)
 
-    from asago_policy_mapper.evals.eval import evaluate_extraction
+    from asago_policy_mapper.evals.eval import evaluate_extraction, get_owasp_llm_risk_subset
+
+    risk_filter = get_owasp_llm_risk_subset() if owasp_subset else None
 
     result = evaluate_extraction(
         ground_truth,
@@ -316,6 +321,7 @@ def eval_cmd(
         policy_name=run_dir.name,
         min_recall=min_recall,
         min_precision=min_precision,
+        risk_subset=risk_filter,
     )
 
     eval_path = run_dir / "eval.json"
@@ -349,5 +355,17 @@ def eval_cmd(
         typer.echo(f"  Missing:   {', '.join(result['missing'])}")
     if result["spurious"]:
         typer.echo(f"  Spurious:  {', '.join(result['spurious'])}")
+    if "subset_eval" in result:
+        se = result["subset_eval"]
+        typer.echo("\n  OWASP LLM 2.0 Subset:")
+        typer.echo(f"    Precision: {se['precision']:.3f}")
+        typer.echo(f"    Recall:    {se['recall']:.3f}")
+        typer.echo(f"    F1:        {se['f1']:.3f}")
+        typer.echo(f"    Matched:   {se['matched']}/{se['total_expected']} expected, {se['total_extracted']} extracted")
+        if se["missing"]:
+            typer.echo(f"    Missing:   {', '.join(se['missing'])}")
+        if se["spurious"]:
+            typer.echo(f"    Spurious:  {', '.join(se['spurious'])}")
+
     typer.echo(f"  Written to {eval_path}")
     typer.echo(f"  Report updated at {report_path}")

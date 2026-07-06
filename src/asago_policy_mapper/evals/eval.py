@@ -149,6 +149,7 @@ def evaluate_extraction(
     min_recall: float = 0.80,
     min_precision: float = 0.60,
     sssom_path: Path | None = None,
+    risk_subset: set[str] | None = None,
 ) -> dict:
     gt_data = yaml.safe_load(ground_truth_path.read_text())
     if "risks" in gt_data:
@@ -173,7 +174,7 @@ def evaluate_extraction(
     risk_to_cat = _load_risk_to_category_map(sssom_path)
     category_eval = _evaluate_categories(expected, extracted, risk_to_cat)
 
-    return {
+    result: dict = {
         "policy": policy_name,
         "total_expected": len(expected),
         "total_extracted": len(extracted),
@@ -185,6 +186,52 @@ def evaluate_extraction(
         "recall": round(recall, 3),
         "f1": round(f1, 3),
         "pass": recall >= min_recall and precision >= min_precision,
+        "per_taxonomy": per_taxonomy,
+        "category_eval": category_eval,
+    }
+
+    if risk_subset is not None:
+        result["subset_eval"] = _evaluate_subset(expected, extracted, risk_subset, taxonomy_map, risk_to_cat)
+
+    return result
+
+
+def get_owasp_llm_risk_subset(sssom_path: Path | None = None) -> set[str]:
+    """Return risk IDs that have strong (exact/close/broad) OWASP LLM 2.0 mappings."""
+    risk_to_cat = _load_risk_to_category_map(sssom_path)
+    return {rid for rid, cats in risk_to_cat.items() if "owasp-llm-2.0" in cats}
+
+
+def _evaluate_subset(
+    expected: set[str],
+    extracted: set[str],
+    risk_subset: set[str],
+    taxonomy_map: dict[str, str],
+    risk_to_cat: dict[str, dict[str, set[str]]],
+) -> dict:
+    """Compute risk-level and category-level metrics restricted to a risk subset."""
+    sub_expected = expected & risk_subset
+    sub_extracted = extracted & risk_subset
+    matched = sub_expected & sub_extracted
+    missing = sorted(sub_expected - sub_extracted)
+    spurious = sorted(sub_extracted - sub_expected)
+
+    precision, recall, f1 = _compute_prf(len(matched), len(sub_expected), len(sub_extracted))
+
+    per_taxonomy = _per_taxonomy_breakdown(sub_expected, sub_extracted, matched, taxonomy_map)
+    category_eval = _evaluate_categories(sub_expected, sub_extracted, risk_to_cat)
+
+    return {
+        "subset": "owasp-llm-2.0",
+        "total_expected": len(sub_expected),
+        "total_extracted": len(sub_extracted),
+        "matched": len(matched),
+        "matched_ids": sorted(matched),
+        "missing": missing,
+        "spurious": spurious,
+        "precision": round(precision, 3),
+        "recall": round(recall, 3),
+        "f1": round(f1, 3),
         "per_taxonomy": per_taxonomy,
         "category_eval": category_eval,
     }
