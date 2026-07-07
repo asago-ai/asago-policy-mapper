@@ -73,7 +73,7 @@ jobs:
           LLM_MODEL: "gemma3:1b"
         run: uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
       - name: Save Ollama model cache
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: ${{ env.OLLAMA_MODELS }}
           key: ollama-gemma3-1b
