@@ -175,6 +175,8 @@ class _CausalChains(BaseModel):
 @dataclass
 class RetrievalConfig:
     bi_encoder_model: str = "all-mpnet-base-v2"
+    bi_encoder_api_key: str = "none"
+    bi_encoder_model_name: str | None = None
     query_instruction: str = (
         "Given a text passage from an AI governance policy document, retrieve AI risk"
         " descriptions that are relevant to the concepts, requirements, or concerns"
