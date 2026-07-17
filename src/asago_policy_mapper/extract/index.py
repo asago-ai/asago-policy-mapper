@@ -62,11 +62,19 @@ class _RemoteBiEncoder:
     but documents (corpus) are encoded without it.
     """
 
-    def __init__(self, url: str, batch_size: int = 64, query_instruction: str = ""):
+    def __init__(
+        self,
+        url: str,
+        batch_size: int = 64,
+        query_instruction: str = "",
+        api_key: str = "none",
+        model_name: str | None = None,
+    ):
         from openai import OpenAI
 
-        base_url, self._model = _parse_remote_url(url)
-        self._client = OpenAI(base_url=base_url, api_key="none")
+        base_url, derived_model = _parse_remote_url(url)
+        self._model = model_name if model_name else derived_model
+        self._client = OpenAI(base_url=base_url, api_key=api_key)
         self._batch_size = batch_size
         self._query_instruction = query_instruction
 
@@ -281,9 +289,11 @@ def _load_colbert(model_name, descriptions):
     return colbert, doc_embeddings
 
 
-def _load_bi_encoder(model_name, descriptions, query_instruction=""):
+def _load_bi_encoder(model_name, descriptions, query_instruction="", api_key="none", remote_model_name=None):
     if _is_remote(model_name):
-        remote = _RemoteBiEncoder(model_name, query_instruction=query_instruction)
+        remote = _RemoteBiEncoder(
+            model_name, query_instruction=query_instruction, api_key=api_key, model_name=remote_model_name
+        )
         try:
             embeddings = remote.encode(descriptions, normalize=True)
         except Exception as e:
@@ -420,6 +430,8 @@ class RiskIndex:
         colbert_model: str | None = None,
         query_instruction: str = "",
         cross_encoder_type: str = "score",
+        bi_encoder_api_key: str = "none",
+        bi_encoder_model_name: str | None = None,
     ):
         self._risk_ids: list[str] = []
         self._risk_meta: dict[str, dict] = {}
@@ -469,6 +481,8 @@ class RiskIndex:
                 bi_encoder_model,
                 descriptions,
                 query_instruction,
+                api_key=bi_encoder_api_key,
+                remote_model_name=bi_encoder_model_name,
             )
 
             if cross_encoder_model:

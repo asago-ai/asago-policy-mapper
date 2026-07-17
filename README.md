@@ -148,13 +148,25 @@ ColBERT late-interaction models are supported via `--colbert-model` (replaces bi
 
 Pass a **model name** to run locally (downloaded on first use), or a **URL** to use a remote model served via vLLM.
 
+**Authentication:** Remote endpoints typically require an API key. Pass it via flag or env var:
+
+| Flag | Env var | Description |
+|------|---------|-------------|
+| `--api-key` | `POLICY_MAPPER_API_KEY` | LLM API key |
+| `--bi-encoder-api-key` | `POLICY_MAPPER_BI_ENCODER_API_KEY` | Bi-encoder API key |
+
+If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` to set it explicitly.
+
 **Best quality** (Qwen3 + GTE, both on GPU cluster):
 
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus \
-  --base-url http://localhost:8000/v1 --model my-model \
-  --bi-encoder-model https://qwen3-embedding-serving.example.com/v1/embeddings \
+  --base-url https://llm-serving.example.com/v1 --model my-model \
+  --api-key $LLM_API_KEY \
+  --bi-encoder-model https://qwen3-embedding-serving.example.com/v1 \
+  --bi-encoder-model-name Qwen3-Embedding-4B \
+  --bi-encoder-api-key $EMBEDDING_API_KEY \
   --cross-encoder-model https://gte-reranker-serving.example.com/v1/score \
   --query-instruction "Instruct: Given a text passage from an AI governance policy document, retrieve AI risk descriptions that are relevant to the concepts, requirements, or concerns discussed in the passage\nQuery: " \
   --expand-siblings
@@ -165,8 +177,10 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus \
-  --base-url http://localhost:8000/v1 --model my-model \
-  --bi-encoder-model https://embeddinggemma-serving.example.com/v1/embeddings \
+  --base-url https://llm-serving.example.com/v1 --model my-model \
+  --api-key $LLM_API_KEY \
+  --bi-encoder-model https://embeddinggemma-serving.example.com/v1 \
+  --bi-encoder-api-key $EMBEDDING_API_KEY \
   --cross-encoder-model https://gte-reranker-serving.example.com/v1/score
 ```
 

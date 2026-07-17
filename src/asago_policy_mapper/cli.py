@@ -52,6 +52,12 @@ def extract(
         None, "--threshold-low", help="Legacy: absolute discard threshold (overrides rank-based)"
     ),
     bi_encoder_model: str = typer.Option("all-mpnet-base-v2", "--bi-encoder-model", help="Bi-encoder model"),
+    bi_encoder_api_key: str = typer.Option(
+        "none", "--bi-encoder-api-key", envvar="POLICY_MAPPER_BI_ENCODER_API_KEY", help="Bi-encoder API key"
+    ),
+    bi_encoder_model_name: str = typer.Option(
+        None, "--bi-encoder-model-name", help="Bi-encoder model name (overrides name derived from endpoint URL)"
+    ),
     query_instruction: str = typer.Option(
         None,
         "--query-instruction",
@@ -183,6 +189,8 @@ def extract(
 
     retrieval = RetrievalConfig(
         bi_encoder_model=bi_encoder_model,
+        bi_encoder_api_key=bi_encoder_api_key,
+        bi_encoder_model_name=bi_encoder_model_name or None,
         query_instruction=query_instruction if query_instruction is not None else RetrievalConfig.query_instruction,
         cross_encoder_model=cross_encoder_model,
         cross_encoder_type=cross_encoder_type,

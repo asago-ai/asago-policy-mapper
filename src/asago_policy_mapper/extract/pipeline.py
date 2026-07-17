@@ -629,6 +629,8 @@ def run_extraction(
             colbert_model=retrieval.colbert_model,
             query_instruction=retrieval.query_instruction,
             cross_encoder_type=retrieval.cross_encoder_type,
+            bi_encoder_api_key=retrieval.bi_encoder_api_key,
+            bi_encoder_model_name=retrieval.bi_encoder_model_name,
         )
 
     call_collector: list[LLMCallRecord] = []

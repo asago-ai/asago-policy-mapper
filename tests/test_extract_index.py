@@ -240,6 +240,31 @@ def test_score_normalizer_nli_2d():
 
 
 @patch("openai.OpenAI")
+def test_remote_bi_encoder_model_name_override(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_openai_cls.return_value = mock_client
+    mock_client.embeddings.create.return_value = SimpleNamespace(data=[SimpleNamespace(index=0, embedding=[0.1, 0.2])])
+    encoder = _RemoteBiEncoder("https://my-endpoint-model-serving.apps.example.com/v1", model_name="actual-qwen3-model")
+    encoder.encode(["test"], normalize=False)
+    call_kwargs = mock_client.embeddings.create.call_args.kwargs
+    assert call_kwargs["model"] == "actual-qwen3-model"
+
+
+@patch("openai.OpenAI")
+def test_remote_bi_encoder_default_api_key(mock_openai_cls):
+    _RemoteBiEncoder("https://bge-m3-model-serving.apps.example.com/v1/embeddings")
+    mock_openai_cls.assert_called_once()
+    assert mock_openai_cls.call_args.kwargs["api_key"] == "none"
+
+
+@patch("openai.OpenAI")
+def test_remote_bi_encoder_custom_api_key(mock_openai_cls):
+    _RemoteBiEncoder("https://bge-m3-model-serving.apps.example.com/v1/embeddings", api_key="my-secret-token")
+    mock_openai_cls.assert_called_once()
+    assert mock_openai_cls.call_args.kwargs["api_key"] == "my-secret-token"
+
+
+@patch("openai.OpenAI")
 def test_remote_bi_encoder_encode(mock_openai_cls):
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
