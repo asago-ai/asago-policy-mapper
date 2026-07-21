@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
       - run: uv sync --group dev
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
       - run: uv sync --group dev
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
       - run: uv sync --group dev
@@ -47,7 +47,7 @@ jobs:
       OLLAMA_MODELS: /home/runner/.ollama-models
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v8
         with:
           enable-cache: true
       - run: uv sync --group dev
