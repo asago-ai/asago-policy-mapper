@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annotation View — Risk Extraction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    :root { color-scheme: light; }
+    [x-cloak] { display: none !important; }
+
+    /* Taxonomy color palette — 12 distinguishable hues */
+    .tax-0  { background: rgba(59,130,246,0.18); border-left: 3px solid #3b82f6; }
+    .tax-1  { background: rgba(16,185,129,0.18); border-left: 3px solid #10b981; }
+    .tax-2  { background: rgba(245,158,11,0.18); border-left: 3px solid #f59e0b; }
+    .tax-3  { background: rgba(239,68,68,0.18);  border-left: 3px solid #ef4444; }
+    .tax-4  { background: rgba(139,92,246,0.18); border-left: 3px solid #8b5cf6; }
+    .tax-5  { background: rgba(236,72,153,0.18); border-left: 3px solid #ec4899; }
+    .tax-6  { background: rgba(20,184,166,0.18); border-left: 3px solid #14b8a6; }
+    .tax-7  { background: rgba(249,115,22,0.18); border-left: 3px solid #f97316; }
+    .tax-8  { background: rgba(99,102,241,0.18); border-left: 3px solid #6366f1; }
+    .tax-9  { background: rgba(34,197,94,0.18);  border-left: 3px solid #22c55e; }
+    .tax-10 { background: rgba(168,85,247,0.18); border-left: 3px solid #a855f7; }
+    .tax-11 { background: rgba(6,182,212,0.18);  border-left: 3px solid #06b6d4; }
+
+    /* Highlight mark */
+    mark.annotation {
+      padding: 1px 2px;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+    mark.annotation:hover { filter: brightness(0.9); }
+    mark.annotation.ring-highlight {
+      outline: 3px solid #3b82f6;
+      outline-offset: 1px;
+    }
+
+    mark.unmatched {
+      background: rgba(156,163,175,0.25);
+      border-left: 3px solid #9ca3af;
+      border-bottom: 2px dashed #9ca3af;
+    }
+
+    /* GT classification colors */
+    mark.gt-matched {
+      background: rgba(34,197,94,0.22) !important;
+      border-left: 3px solid #22c55e !important;
+    }
+    mark.gt-spurious {
+      background: rgba(245,158,11,0.22) !important;
+      border-left: 3px solid #f59e0b !important;
+    }
+    .dark mark.gt-matched {
+      background: rgba(34,197,94,0.30) !important;
+    }
+    .dark mark.gt-spurious {
+      background: rgba(245,158,11,0.30) !important;
+    }
+
+    /* Sidebar */
+    .sidebar-item { transition: background 0.15s; }
+    .sidebar-item:hover { background: rgba(0,0,0,0.04); }
+    .sidebar-item.active { background: rgba(59,130,246,0.1); border-left: 3px solid #3b82f6; }
+
+    /* Section header — offset below the main sticky header (64px) */
+    .section-header {
+      position: sticky;
+      top: 64px;
+      z-index: 5;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Scroll offset for anchor targets */
+    html { scroll-padding-top: 80px; }
+
+    /* Dark overrides for marks */
+    .dark mark.annotation { filter: brightness(1.1); }
+    .dark .sidebar-item:hover { background: rgba(255,255,255,0.06); }
+    .dark .sidebar-item.active { background: rgba(96,165,250,0.15); border-left-color: #60a5fa; }
+    .dark mark.annotation.ring-highlight { outline-color: #60a5fa; }
+
+    /* Table rendering for docling tables */
+    .chunk-table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 8px 0;
+      font-size: 13px;
+    }
+    .chunk-table th, .chunk-table td {
+      border: 1px solid #e5e7eb;
+      padding: 4px 8px;
+      text-align: left;
+    }
+    .chunk-table th {
+      background: #f3f4f6;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .dark .chunk-table th { background: #374151; }
+    .dark .chunk-table th, .dark .chunk-table td { border-color: #4b5563; }
+
+    /* Occurrence navigator */
+    .occ-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+      font-size: 11px;
+    }
+    .occ-nav button {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #6b7280;
+    }
+    .occ-nav button:hover { background: #f3f4f6; }
+    .dark .occ-nav button { background: #374151; border-color: #4b5563; color: #9ca3af; }
+    .dark .occ-nav button:hover { background: #4b5563; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+
+<div x-data="annotationApp()" x-cloak class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-72 bg-white border-r border-gray-200 flex flex-col fixed h-full overflow-hidden z-20">
+    <!-- Sidebar header -->
+    <div class="p-4 border-b border-gray-200">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Risk Index</h2>
+      <input
+        type="text"
+        x-model="sidebarFilter"
+        placeholder="Filter by risk ID or taxonomy..."
+        class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+      <div class="mt-2 flex gap-1 flex-wrap">
+        <template x-for="tax in taxonomies" :key="tax">
+          <button
+            @click="toggleTaxFilter(tax)"
+            :class="taxFilterActive(tax) ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-gray-100 text-gray-600 border-gray-200'"
+            class="text-xs px-2 py-0.5 rounded border cursor-pointer"
+            x-text="tax"
+          ></button>
+        </template>
+      </div>
+    </div>
+
+    <!-- Risk list -->
+    <div class="flex-1 overflow-y-auto">
+      <template x-for="risk in filteredRisks()" :key="risk.risk_id">
+        <div
+          class="sidebar-item px-4 py-2 border-b border-gray-100 cursor-pointer"
+          :class="{ 'active': selectedRisk === risk.risk_id }"
+          @click="jumpToRisk(risk.risk_id)"
+        >
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-medium text-gray-800 truncate flex-1" x-text="risk.risk_name"></div>
+            <!-- Occurrence navigator -->
+            <template x-if="selectedRisk === risk.risk_id">
+              <div class="occ-nav" @click.stop>
+                <template x-if="occurrenceEls.length > 1">
+                  <button @click="prevOccurrence()" title="Previous">&larr;</button>
+                </template>
+                <span class="text-gray-500" x-text="occurrenceEls.length > 0 ? (currentOccIdx + 1) + '/' + occurrenceEls.length : '0 matched'"></span>
+                <template x-if="occurrenceEls.length > 1">
+                  <button @click="nextOccurrence()" title="Next">&rarr;</button>
+                </template>
+              </div>
+            </template>
+          </div>
+          <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+            <span x-text="risk.risk_id"></span>
+            <span class="mx-1">&middot;</span>
+            <span x-text="risk.taxonomy"></span>
+            <template x-if="gtMode && risk.classification">
+              <span class="ml-1 inline-flex items-center gap-1">
+                <span
+                  class="text-xs px-1.5 py-0 rounded font-semibold"
+                  :class="risk.classification === 'matched' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'"
+                  x-text="risk.classification === 'matched' ? 'TP' : 'FP'"
+                ></span>
+                <span
+                  class="text-xs px-1.5 py-0 rounded"
+                  :class="risk.classification === 'matched' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'"
+                  x-text="risk.classification === 'matched' ? '&#10003; in GT' : '? review'"
+                ></span>
+              </span>
+            </template>
+          </div>
+          <div class="text-xs text-gray-400 mt-0.5 flex items-center justify-between">
+            <span>
+              <span x-text="risk.evidence_count + ' evidence span' + (risk.evidence_count !== 1 ? 's' : '')"></span>
+              <span class="mx-1">&middot;</span>
+              <span x-text="(risk.confidence * 100).toFixed(0) + '%'"></span>
+            </span>
+            <!-- GT curation button -->
+            <template x-if="gtMode && risk.classification === 'spurious'">
+              <button
+                @click.stop="toggleGtChange(risk.risk_id, 'add')"
+                class="text-xs px-1.5 py-0 rounded cursor-pointer"
+                :class="gtChanges[risk.risk_id] === 'add' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-600 hover:bg-green-100'"
+                x-text="gtChanges[risk.risk_id] === 'add' ? '&#10003; added' : '+ add to GT'"
+              ></button>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Missed risks -->
+    <template x-if="gtMode && data.missed_risks && data.missed_risks.length > 0">
+      <div class="border-t border-gray-200">
+        <div class="px-4 py-2 bg-red-50 text-xs font-semibold text-red-700 uppercase">
+          In GT but not extracted &mdash; <span x-text="data.missed_risks.filter(m => gtChanges[m.risk_id] !== 'remove').length"></span>
+        </div>
+        <div class="max-h-48 overflow-y-auto">
+          <template x-for="missed in data.missed_risks" :key="missed.risk_id">
+            <div class="px-4 py-1.5 border-b border-gray-100 text-xs flex items-center justify-between">
+              <span class="flex items-center gap-1">
+                <span class="px-1.5 py-0 rounded font-semibold bg-red-100 text-red-700">FN</span>
+                <span :class="gtChanges[missed.risk_id] === 'remove' ? 'line-through text-gray-400' : 'text-red-600'" x-text="missed.risk_id"></span>
+              </span>
+              <button
+                @click.stop="toggleGtChange(missed.risk_id, 'remove')"
+                class="text-xs px-1.5 py-0 rounded cursor-pointer"
+                :class="gtChanges[missed.risk_id] === 'remove' ? 'bg-red-200 text-red-800' : 'bg-gray-200 text-gray-600 hover:bg-red-100'"
+                x-text="gtChanges[missed.risk_id] === 'remove' ? '&#10003; removed' : '- remove'"
+              ></button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <!-- Sidebar footer -->
+    <div class="p-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-500">
+      <span x-text="filteredRisks().length + '/' + riskIndex.length + ' risks'"></span>
+      <template x-if="gtMode && Object.keys(gtChanges).length > 0">
+        <button
+          @click="exportRevisedGT()"
+          class="ml-2 px-2 py-0.5 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700"
+          x-text="'Export revised GT (' + Object.keys(gtChanges).length + ' changes)'"
+        ></button>
+      </template>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 ml-72">
+    <!-- Summary banner -->
+    <header class="bg-white border-b border-gray-200 px-6 sticky top-0 z-10" :style="hasGT ? 'height:auto; padding:12px 24px' : 'height:64px; padding:16px 24px'">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">Annotation View</h1>
+          <p class="text-sm text-gray-500 mt-0.5" x-text="'Policy Document: ' + (data.source_document || 'unknown')"></p>
+        </div>
+        <div class="flex items-center gap-6 text-sm">
+          <!-- GT toggle -->
+          <template x-if="hasGT">
+            <div class="flex items-center gap-2 border-r border-gray-200 pr-6">
+              <label class="text-xs text-gray-600 font-medium">View:</label>
+              <button
+                @click="gtMode = false"
+                :class="!gtMode ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-gray-100 text-gray-600 border-gray-200'"
+                class="text-xs px-3 py-1 rounded border cursor-pointer"
+              >Extraction</button>
+              <button
+                @click="gtMode = true"
+                :class="gtMode ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-gray-100 text-gray-600 border-gray-200'"
+                class="text-xs px-3 py-1 rounded border cursor-pointer"
+              >Ground Truth</button>
+            </div>
+          </template>
+
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600" x-text="data.summary.total_risks"></div>
+            <div class="text-gray-500">Risks</div>
+          </div>
+
+          <!-- Taxonomy mode stats -->
+          <template x-if="!gtMode">
+            <div class="flex gap-6">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-600" x-text="data.summary.matched_spans"></div>
+                <div class="text-gray-500">Matched</div>
+              </div>
+              <div class="text-center" x-show="data.summary.unmatched_spans > 0">
+                <div class="text-2xl font-bold text-amber-500" x-text="data.summary.unmatched_spans"></div>
+                <div class="text-gray-500">Unmatched</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-gray-600" x-text="data.summary.total_chunks"></div>
+                <div class="text-gray-500">Chunks</div>
+              </div>
+            </div>
+          </template>
+
+          <!-- GT mode stats -->
+          <template x-if="gtMode && hasGT">
+            <div class="flex gap-6">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-600" x-text="data.summary.gt_matched"></div>
+                <div class="text-gray-500">TP <span class="text-gray-400">confirmed</span></div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-amber-500" x-text="data.summary.gt_spurious"></div>
+                <div class="text-gray-500">FP <span class="text-gray-400">review</span></div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-red-500" x-text="data.summary.gt_missing"></div>
+                <div class="text-gray-500">FN <span class="text-gray-400">missing</span></div>
+              </div>
+              <div class="text-center">
+                <div class="text-lg font-bold text-gray-700" x-text="'P=' + data.eval.precision.toFixed(2) + ' R=' + data.eval.recall.toFixed(2)"></div>
+                <div class="text-gray-500" x-text="'F1=' + data.eval.f1.toFixed(3)"></div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </header>
+
+    <!-- Document body -->
+    <div class="px-6 py-4 max-w-4xl" @click="handleAnnotationClick($event)">
+      <template x-for="(section, sIdx) in groupedSections" :key="sIdx">
+        <div class="mb-6">
+          <!-- Section heading -->
+          <div
+            class="section-header bg-gray-100 px-4 py-2 rounded-t-md mb-1 flex items-center justify-between"
+            :id="'section-' + sIdx"
+          >
+            <h3 class="text-sm font-semibold text-gray-700" x-text="section.title || 'Untitled Section'"></h3>
+            <span
+              class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"
+              x-text="section.riskIds.size + ' unique risk' + (section.riskIds.size !== 1 ? 's' : '')"
+              x-show="section.riskIds.size > 0"
+            ></span>
+          </div>
+
+          <!-- Chunks in this section -->
+          <template x-for="chunk in section.chunks" :key="chunk.index">
+            <div
+              class="bg-white border border-gray-200 rounded-b-md px-5 py-4 mb-2 leading-relaxed text-gray-800"
+              :id="'chunk-' + chunk.index"
+            >
+              <!-- Page indicator -->
+              <div x-show="chunk.page" class="text-xs text-gray-400 mb-2">
+                Page <span x-text="chunk.page"></span>
+              </div>
+
+              <!-- Chunk text with annotations -->
+              <div class="text-sm" x-html="renderChunk(chunk, gtMode)"></div>
+
+              <!-- Unmatched annotations shown below -->
+              <template x-for="ann in chunk.annotations.filter(a => !a.matched_in_text)" :key="ann.risk_id + '-unmatched-' + ann.evidence_text.slice(0,20)">
+                <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded text-sm">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-amber-500 text-xs font-semibold">&starf; UNMATCHED</span>
+                    <span class="text-gray-600 font-medium" x-text="ann.risk_name"></span>
+                    <span class="text-gray-400 text-xs" x-text="ann.risk_id"></span>
+                  </div>
+                  <div class="text-gray-500 text-xs italic" x-text="'\"' + ann.evidence_text.slice(0, 200) + (ann.evidence_text.length > 200 ? '...' : '') + '\"'"></div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </main>
+
+  <!-- Detail panel (popover) -->
+  <div
+    x-show="activeAnnotations.length > 0"
+    x-transition
+    @click.outside="activeAnnotations = []"
+    @keydown.escape.window="activeAnnotations = []"
+    class="fixed bottom-4 right-4 w-96 bg-white border border-gray-200 rounded-lg shadow-xl z-30 max-h-[60vh] overflow-y-auto"
+  >
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-xs text-gray-500" x-text="activeAnnotations.length + ' risk' + (activeAnnotations.length !== 1 ? 's' : '') + ' on this span'"></div>
+        <button @click="activeAnnotations = []" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+      </div>
+
+      <template x-for="(ann, aIdx) in activeAnnotations" :key="ann.risk_id">
+        <div :class="aIdx > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''">
+          <div class="mb-2">
+            <h4 class="font-semibold text-gray-900" x-text="ann.risk_name"></h4>
+            <p class="text-xs text-gray-500 mt-0.5" x-text="ann.risk_id"></p>
+          </div>
+
+          <!-- Taxonomy & confidence -->
+          <div class="flex gap-2 mb-2 flex-wrap">
+            <span class="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700" x-text="ann.taxonomy"></span>
+            <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700" x-text="(ann.confidence * 100).toFixed(0) + '% confidence'"></span>
+            <span
+              class="text-xs px-2 py-0.5 rounded"
+              :class="{
+                'bg-green-50 text-green-700': ann.grounding_confidence === 'high',
+                'bg-amber-50 text-amber-700': ann.grounding_confidence === 'medium',
+                'bg-red-50 text-red-700': ann.grounding_confidence === 'low'
+              }"
+              x-text="ann.grounding_confidence + ' grounding'"
+            ></span>
+          </div>
+
+          <!-- Description -->
+          <p class="text-sm text-gray-600 mb-2" x-text="ann.risk_description"></p>
+
+          <!-- Evidence quote -->
+          <div class="mb-2">
+            <div class="text-xs font-semibold text-gray-500 uppercase mb-1">Evidence</div>
+            <div class="text-sm text-gray-700 bg-gray-50 p-2 rounded border-l-2 border-gray-300 italic" x-text="ann.evidence_text"></div>
+          </div>
+
+          <!-- Fuzzy match warning -->
+          <div x-show="ann.is_fuzzy" class="mb-2 text-xs text-amber-600 flex items-center gap-1">
+            <span>&starf;</span> Fuzzy match
+          </div>
+
+          <!-- Causal chain -->
+          <template x-if="hasCausalChain(ann)">
+            <div class="mb-1">
+              <div class="text-xs font-semibold text-gray-500 uppercase mb-1">Causal Chain</div>
+              <div class="space-y-1">
+                <template x-for="field in causalChainFields(ann)" :key="field.label">
+                  <div class="flex items-start gap-2 text-sm">
+                    <span class="text-xs font-medium text-gray-500 w-24 flex-shrink-0 pt-0.5" x-text="field.label"></span>
+                    <span class="text-gray-700" x-text="field.value"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+
+<script>
+const data = __REPORT_DATA__;
+
+function annotationApp() {
+  const taxonomyColorMap = {};
+  let taxIdx = 0;
+  (data.chunks || []).forEach(c => {
+    (c.annotations || []).forEach(a => {
+      if (a.taxonomy && !(a.taxonomy in taxonomyColorMap)) {
+        taxonomyColorMap[a.taxonomy] = taxIdx % 12;
+        taxIdx++;
+      }
+    });
+  });
+
+  const riskMap = {};
+  const riskEvidenceIds = {};  // risk_id → [evidence_id, ...]
+  (data.chunks || []).forEach(c => {
+    (c.annotations || []).forEach(a => {
+      if (!a.matched_in_text) return;
+      if (!riskMap[a.risk_id]) {
+        riskMap[a.risk_id] = {
+          risk_id: a.risk_id,
+          risk_name: a.risk_name,
+          taxonomy: a.taxonomy,
+          confidence: a.confidence,
+          classification: a.classification || null,
+          evidence_count: 0,
+        };
+        riskEvidenceIds[a.risk_id] = [];
+      }
+      riskMap[a.risk_id].evidence_count++;
+      if (a.evidence_id && !riskEvidenceIds[a.risk_id].includes(a.evidence_id)) {
+        riskEvidenceIds[a.risk_id].push(a.evidence_id);
+      }
+    });
+  });
+  const riskIndex = Object.values(riskMap).sort((a, b) => a.risk_id.localeCompare(b.risk_id));
+
+  const taxonomies = [...new Set(riskIndex.map(r => r.taxonomy).filter(Boolean))].sort();
+
+  // Group chunks by section
+  const sectionGroups = [];
+  let currentSection = null;
+  (data.chunks || []).forEach(chunk => {
+    const title = chunk.section || 'Document';
+    if (!currentSection || currentSection.title !== title) {
+      currentSection = { title, chunks: [], riskIds: new Set() };
+      sectionGroups.push(currentSection);
+    }
+    currentSection.chunks.push(chunk);
+    (chunk.annotations || []).forEach(a => {
+      if (a.matched_in_text) currentSection.riskIds.add(a.risk_id);
+    });
+  });
+
+  return {
+    data,
+    riskIndex,
+    taxonomies,
+    groupedSections: sectionGroups,
+    sidebarFilter: '',
+    selectedTaxonomies: [],
+    hasGT: !!(data.eval),
+    gtMode: !!(data.eval),
+    gtChanges: {},
+    selectedRisk: null,
+    activeAnnotations: [],
+    occurrenceEls: [],
+    currentOccIdx: 0,
+    _currentEvIds: [],
+
+    toggleTaxFilter(tax) {
+      const idx = this.selectedTaxonomies.indexOf(tax);
+      if (idx >= 0) this.selectedTaxonomies.splice(idx, 1);
+      else this.selectedTaxonomies.push(tax);
+    },
+
+    taxFilterActive(tax) {
+      return this.selectedTaxonomies.includes(tax);
+    },
+
+    filteredRisks() {
+      let risks = this.riskIndex;
+      if (this.sidebarFilter) {
+        const q = this.sidebarFilter.toLowerCase();
+        risks = risks.filter(r =>
+          r.risk_id.toLowerCase().includes(q) ||
+          r.risk_name.toLowerCase().includes(q) ||
+          r.taxonomy.toLowerCase().includes(q)
+        );
+      }
+      if (this.selectedTaxonomies.length > 0) {
+        risks = risks.filter(r => this.selectedTaxonomies.includes(r.taxonomy));
+      }
+      return risks;
+    },
+
+    jumpToRisk(riskId) {
+      document.querySelectorAll('mark.ring-highlight').forEach(el => el.classList.remove('ring-highlight'));
+
+      this.selectedRisk = riskId;
+      this._currentEvIds = riskEvidenceIds[riskId] || [];
+      this.occurrenceEls = this._currentEvIds;
+      this.currentOccIdx = 0;
+
+      if (this._currentEvIds.length > 0) {
+        this._scrollToEvidence(0);
+      }
+    },
+
+    nextOccurrence() {
+      if (this._currentEvIds.length === 0) return;
+      this.currentOccIdx = (this.currentOccIdx + 1) % this._currentEvIds.length;
+      this._scrollToEvidence(this.currentOccIdx);
+    },
+
+    prevOccurrence() {
+      if (this._currentEvIds.length === 0) return;
+      this.currentOccIdx = (this.currentOccIdx - 1 + this._currentEvIds.length) % this._currentEvIds.length;
+      this._scrollToEvidence(this.currentOccIdx);
+    },
+
+    _scrollToEvidence(idx) {
+      document.querySelectorAll('mark.ring-highlight').forEach(el => el.classList.remove('ring-highlight'));
+
+      const evId = this._currentEvIds[idx];
+      if (!evId) return;
+
+      const marks = document.querySelectorAll('mark[data-evidence-ids~="' + evId + '"]');
+      if (marks.length === 0) return;
+
+      marks.forEach(el => el.classList.add('ring-highlight'));
+      marks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Open detail panel
+      const annsB64 = marks[0].getAttribute('data-anns');
+      if (annsB64) {
+        try {
+          const allAnns = JSON.parse(decodeURIComponent(escape(atob(annsB64))));
+          const match = allAnns.find(a => a.risk_id === this.selectedRisk);
+          if (match) this.activeAnnotations = [match];
+        } catch(e) { /* ignore */ }
+      }
+    },
+
+    renderChunk(chunk, _gtMode) {
+      const text = chunk.text || '';
+      const anns = (chunk.annotations || []).filter(a => a.matched_in_text && a.end > a.start);
+
+      // Process text with table rendering
+      const processed = this._processText(text, anns);
+      return processed;
+    },
+
+    _processText(text, anns) {
+      if (anns.length === 0) return this._renderPlainText(text);
+
+      // Interval splitting — collect boundary points
+      const points = new Set([0, text.length]);
+      anns.forEach(a => { points.add(a.start); points.add(a.end); });
+      const sorted = [...points].sort((a, b) => a - b);
+
+      // Build segments
+      const segments = [];
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const segStart = sorted[i];
+        const segEnd = sorted[i + 1];
+        if (segStart === segEnd) continue;
+
+        const covering = anns.filter(a => a.start <= segStart && a.end >= segEnd);
+        segments.push({
+          start: segStart,
+          end: segEnd,
+          content: text.slice(segStart, segEnd),
+          annotations: covering,
+        });
+      }
+
+      return segments.map(seg => {
+        if (seg.annotations.length === 0) return this._renderPlainText(seg.content);
+
+        // Skip whitespace-only segments
+        if (seg.content.trim().length === 0) return this._renderPlainText(seg.content);
+
+        // Color and metadata
+        const primary = seg.annotations[0];
+        let colorClass;
+        if (this.gtMode && primary.classification) {
+          colorClass = primary.classification === 'matched' ? 'gt-matched' : 'gt-spurious';
+        } else {
+          colorClass = 'tax-' + (taxonomyColorMap[primary.taxonomy] ?? 0);
+        }
+        // Deduplicate by risk_id per segment
+        const uniqueByRisk = [];
+        const seenRids = new Set();
+        seg.annotations.forEach(a => {
+          if (!seenRids.has(a.risk_id)) { seenRids.add(a.risk_id); uniqueByRisk.push(a); }
+        });
+        const allAnnsB64 = btoa(unescape(encodeURIComponent(JSON.stringify(uniqueByRisk))));
+        const allRiskIds = uniqueByRisk.map(a => a.risk_id);
+        const allEvIds = [...new Set(seg.annotations.map(a => a.evidence_id).filter(Boolean))];
+        const riskIdAttrs = allRiskIds.map(id => this.escapeAttr(id)).join(' ');
+        const evIdAttrs = allEvIds.map(id => this.escapeAttr(id)).join(' ');
+        const titleParts = uniqueByRisk.map(a => a.risk_name + ' (' + a.risk_id + ')');
+        return `<mark class="annotation ${colorClass}" data-risk-id="${riskIdAttrs}" data-evidence-ids="${evIdAttrs}" data-anns="${allAnnsB64}" title="${this.escapeAttr(titleParts.join(' | '))}">${this.escapeHtml(seg.content)}</mark>`;
+      }).join('');
+    },
+
+    _renderPlainText(text) {
+      // Render docling table blocks as HTML tables
+      const tableRegex = /<!-- table(?:: (.+?))? -->\n?\n?([\s\S]*?)<!-- \/table -->/g;
+      let result = '';
+      let lastIdx = 0;
+
+      let match;
+      while ((match = tableRegex.exec(text)) !== null) {
+        // Pre-table text
+        if (match.index > lastIdx) {
+          result += this._escapeAndWrap(text.slice(lastIdx, match.index));
+        }
+
+        const caption = match[1] || '';
+        const tableBody = match[2];
+
+        // Parse code-fenced rows
+        const rows = [];
+        const headers = new Set();
+        const rowRegex = /```\n([\s\S]*?)\n```/g;
+        let rowMatch;
+        while ((rowMatch = rowRegex.exec(tableBody)) !== null) {
+          const rowData = {};
+          rowMatch[1].split('\n').forEach(line => {
+            const colonIdx = line.indexOf(': ');
+            if (colonIdx > 0) {
+              const key = line.slice(0, colonIdx).trim();
+              const val = line.slice(colonIdx + 2).trim();
+              rowData[key] = val;
+              headers.add(key);
+            }
+          });
+          if (Object.keys(rowData).length > 0) rows.push(rowData);
+        }
+
+        if (rows.length > 0) {
+          const headerArr = [...headers];
+          let tableHtml = '';
+          if (caption) tableHtml += `<div class="text-xs text-gray-500 mb-1 font-medium">${this.escapeHtml(caption)}</div>`;
+          tableHtml += '<table class="chunk-table"><thead><tr>';
+          headerArr.forEach(h => { tableHtml += `<th>${this.escapeHtml(h)}</th>`; });
+          tableHtml += '</tr></thead><tbody>';
+          rows.forEach(row => {
+            tableHtml += '<tr>';
+            headerArr.forEach(h => { tableHtml += `<td>${this.escapeHtml(row[h] || '')}</td>`; });
+            tableHtml += '</tr>';
+          });
+          tableHtml += '</tbody></table>';
+          result += tableHtml;
+        } else {
+          result += this._escapeAndWrap(match[0]);
+        }
+
+        lastIdx = match.index + match[0].length;
+      }
+
+      // Trailing text
+      if (lastIdx < text.length) {
+        result += this._escapeAndWrap(text.slice(lastIdx));
+      }
+
+      return result;
+    },
+
+    _escapeAndWrap(text) {
+      if (!text) return '';
+      return '<span class="whitespace-pre-wrap">' + this.escapeHtml(text) + '</span>';
+    },
+
+    handleAnnotationClick(event) {
+      const mark = event.target.closest('mark.annotation');
+      if (!mark) return;
+      const annsB64 = mark.getAttribute('data-anns');
+      if (!annsB64) return;
+      try {
+        const allAnns = JSON.parse(decodeURIComponent(escape(atob(annsB64))));
+        if (!Array.isArray(allAnns) || allAnns.length === 0) return;
+
+        if (this.selectedRisk) {
+          // Selected risk first
+          const match = allAnns.find(a => a.risk_id === this.selectedRisk);
+          if (match) {
+            const rest = allAnns.filter(a => a.risk_id !== this.selectedRisk);
+            this.activeAnnotations = [match, ...rest];
+          } else {
+            this.activeAnnotations = allAnns;
+          }
+        } else {
+          // No selection — show all
+          this.activeAnnotations = allAnns;
+        }
+      } catch(e) { /* ignore parse errors */ }
+    },
+
+    openAnnotation(ann) {
+      this.activeAnnotation = ann;
+      this.selectedRisk = ann.risk_id;
+    },
+
+    hasCausalChain(ann) {
+      if (!ann || !ann.causal_chain) return false;
+      const cc = ann.causal_chain;
+      return cc.threat || cc.threat_source || cc.vulnerability || cc.consequence || cc.impact;
+    },
+
+    causalChainFields(ann) {
+      if (!ann || !ann.causal_chain) return [];
+      const cc = ann.causal_chain;
+      const fields = [
+        { label: 'Threat', value: cc.threat },
+        { label: 'Threat Source', value: cc.threat_source },
+        { label: 'Vulnerability', value: cc.vulnerability },
+        { label: 'Consequence', value: cc.consequence },
+        { label: 'Impact', value: cc.impact },
+      ];
+      return fields.filter(f => f.value);
+    },
+
+    toggleGtChange(riskId, action) {
+      if (this.gtChanges[riskId] === action) {
+        delete this.gtChanges[riskId];
+      } else {
+        this.gtChanges[riskId] = action;
+      }
+      this.gtChanges = { ...this.gtChanges };
+    },
+
+    exportRevisedGT() {
+      const originalIds = data.gt_risk_ids || [];
+      const revised = new Set(originalIds);
+
+      for (const [riskId, action] of Object.entries(this.gtChanges)) {
+        if (action === 'add') revised.add(riskId);
+        if (action === 'remove') revised.delete(riskId);
+      }
+
+      const sortedIds = [...revised].sort();
+      let yamlStr = 'risks:\n';
+      for (const rid of sortedIds) {
+        yamlStr += '- id: ' + rid + '\n';
+      }
+
+      const blob = new Blob([yamlStr], { type: 'text/yaml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = data.gt_filename || 'revised_gt.yaml';
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+
+    escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    },
+
+    escapeAttr(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/'/g, '&#39;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    },
+  };
+}
+</script>
+</body>
+</html>
