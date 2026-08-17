@@ -287,6 +287,66 @@ def extract(
     report_path = build_risk_extraction_report(result_data, output / "risk-extraction.html")
     typer.echo(f"Report written to {report_path}")
 
+    from asago_policy_mapper.extract.annotate import prepare_annotation_data
+    from asago_policy_mapper.extract.report import build_annotation_report
+
+    annotation_data = prepare_annotation_data(result_data, policy_files[0], ocr=ocr, chunk_max_tokens=chunk_max_tokens)
+    ann_path = build_annotation_report(annotation_data, output / "risk-annotation.html")
+    typer.echo(f"Annotation view written to {ann_path}")
+
+
+@app.command(name="annotate")
+def annotate_cmd(
+    run_dir: Path = typer.Argument(..., help="Directory containing risk-extraction.json"),
+    source_document: Path = typer.Argument(..., help="Original policy document (PDF, DOCX, etc.)"),
+    ground_truth: Path = typer.Option(None, "--ground-truth", "-g", help="Ground truth YAML for comparison mode"),
+    ocr: bool = typer.Option(False, "--ocr", help="Enable OCR for document conversion"),
+    chunk_max_tokens: int = typer.Option(512, "--chunk-max-tokens", help="Max tokens per chunk"),
+):
+    """Generate a document-centric annotation view from a completed extraction run."""
+    json_path = run_dir / "risk-extraction.json"
+    yaml_path = run_dir / "risk-extraction.yaml"
+    if json_path.exists():
+        extracted_path = json_path
+    elif yaml_path.exists():
+        extracted_path = yaml_path
+    else:
+        typer.echo(f"Error: no risk-extraction.json or .yaml found in {run_dir}", err=True)
+        raise typer.Exit(1)
+
+    extraction_data = (
+        json.loads(extracted_path.read_text())
+        if extracted_path.suffix == ".json"
+        else yaml.safe_load(extracted_path.read_text())
+    )
+
+    from asago_policy_mapper.extract.annotate import prepare_annotation_data
+    from asago_policy_mapper.extract.report import build_annotation_report
+
+    annotation_data = prepare_annotation_data(
+        extraction_data,
+        source_document,
+        ground_truth_path=ground_truth,
+        extracted_path=extracted_path,
+        ocr=ocr,
+        chunk_max_tokens=chunk_max_tokens,
+    )
+    ann_path = build_annotation_report(annotation_data, run_dir / "risk-annotation.html")
+
+    summary = annotation_data["summary"]
+    typer.echo(f"Annotation view: {summary['total_risks']} risks, {summary['total_evidence_spans']} evidence spans")
+    typer.echo(f"  Matched: {summary['matched_spans']}, Unmatched: {summary['unmatched_spans']}")
+    if annotation_data.get("eval"):
+        ev = annotation_data["eval"]
+        typer.echo(
+            f"  GT: {ev['matched']} matched, {len(ev['spurious'])} spurious, {len(ev['missing'])} missing"
+            f" — P={ev['precision']:.3f} R={ev['recall']:.3f} F1={ev['f1']:.3f}"
+        )
+        revised_dir = run_dir / "revised_gt"
+        revised_dir.mkdir(exist_ok=True)
+        typer.echo(f"  Save revised GT to: {revised_dir}/")
+    typer.echo(f"  Written to {ann_path}")
+
 
 @app.command(name="eval")
 def eval_cmd(

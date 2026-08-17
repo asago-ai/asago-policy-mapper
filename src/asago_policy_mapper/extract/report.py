@@ -37,3 +37,16 @@ def build_risk_extraction_report(data: dict, output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
     return output_path
+
+
+def build_annotation_report(data: dict, output_path: Path) -> Path:
+    html = (
+        (TEMPLATE_DIR / "annotation_report_template.html")
+        .read_text()
+        .replace("__REPORT_DATA__", json.dumps(data, default=str))
+    )
+    html = html.replace("</head>", _get_dark_snippet() + "\n</head>", 1)
+    html = html.replace("</body>", _DARK_TOGGLE + "\n</body>", 1)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html)
+    return output_path
