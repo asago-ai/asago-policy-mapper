@@ -66,6 +66,7 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 - `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points to a local clone of `github.com/IBM/ai-atlas-nexus`
 - Risk IDs are taxonomy-prefixed: `atlas-` → ibm-risk-atlas, `nist-` → nist-ai-rmf, `credo-` → credo-ucf, etc. (see `evals/eval.py::_TAXONOMY_PREFIXES`)
 - Excluded taxonomies (not loaded from Nexus): category-level (`nist-ai-rmf`, `owasp-llm-2.0`, `ailuminate-v1.0`, `owasp-asi`, `shieldgemma-taxonomy`) and others (`mit-ai-risk-repository-causal`, `ibm-granite-guardian`) — see `cli.py::EXCLUDED_TAXONOMIES`
+- `--custom-taxonomy` flag loads user-provided risk YAML files via `taxonomy.py`; custom risks are tier 1 (individual risks, not categories), appended to Nexus risks before extraction. No mitigations or cross-taxonomy mappings for custom risks.
 - `LLMCallRecord` captures every LLM call (messages, response, timing) in the ExtractionResult for analysis/debugging
 - `debug.py` writes per-call JSON files when `--debug <dir>` is passed
 - MLflow tracking is enabled by default in the battery runner; set `MLFLOW_TRACKING_URI` to point to your MLflow server. Pass `--no-mlflow` to disable.
