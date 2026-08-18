@@ -1,3 +1,4 @@
+import re
 import tempfile
 
 from typer.testing import CliRunner
@@ -5,6 +6,10 @@ from typer.testing import CliRunner
 from asago_policy_mapper.cli import app
 
 runner = CliRunner()
+
+
+def _strip_ansi(text: str) -> str:
+    return re.sub(r"\x1b\[[0-9;]*m", "", text)
 
 
 def test_extract_command_exists():
@@ -54,7 +59,7 @@ def test_extract_nonexistent_file():
 def test_extract_custom_taxonomy_flag_in_help():
     result = runner.invoke(app, ["extract", "--help"])
     assert result.exit_code == 0
-    assert "--custom-taxonomy" in result.stdout
+    assert "--custom-taxonomy" in _strip_ansi(result.stdout)
 
 
 def test_extract_invalid_custom_taxonomy():
