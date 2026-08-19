@@ -830,7 +830,6 @@ credo-risk-040	credo-ucf	skos:broadMatch	nist-information-security	nist-ai-rmf	#
 credo-risk-041	credo-ucf	skos:broadMatch	nist-information-security	nist-ai-rmf	# Adversarial attack vulnerability is a specific information security risk
 credo-risk-013	credo-ucf	skos:broadMatch	nist-obscene-degrading-and-or-abusive-content	nist-ai-rmf	# Harmful/toxic content generation includes obscene and abusive content
 credo-risk-013	credo-ucf	skos:broadMatch	nist-dangerous-violent-or-hateful-content	nist-ai-rmf	# Harmful/toxic content includes dangerous and hateful content
-# Session 1: OWASP LLM Top 10 mapping gap fill (2026-07-13)
 
 # System prompt leakage  -  prompt leaking is the exact definition of OWASP LLM07
 atlas-prompt-leaking	ibm-risk-atlas	skos:exactMatch	llm072025-system-prompt-leakage	owasp-llm-2.0	# Prompt leaking extracts system prompts  -  identical concept to OWASP LLM07
@@ -912,7 +911,6 @@ ai-risk-taxonomy-other-unauthorized-actions-on-behalf-of-users	ai-risk-taxonomy	
 # IP/trade secrets  -  LLM discloses proprietary information from training data
 ai-risk-taxonomy-ip-rights/-trade-secrets	ai-risk-taxonomy	skos:broadMatch	llm022025-sensitive-information-disclosure	owasp-llm-2.0	# LLM discloses trade secrets or IP from training data in output
 
-# === Session 2 adversarial review  -  new mappings ===
 
 # Model theft via extraction attacks
 atlas-extraction-attack	ibm-risk-atlas	skos:broadMatch	llm102025-unbounded-consumption	owasp-llm-2.0	# Model extraction/theft via excessive inference queries  -  explicitly covered by OWASP LLM10
