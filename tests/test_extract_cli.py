@@ -92,6 +92,8 @@ def test_extract_invalid_custom_taxonomy():
                 env={"POLICY_MAPPER_BASE_URL": "", "POLICY_MAPPER_MODEL": ""},
             )
     assert result.exit_code != 0
+    output = _strip_ansi(result.stdout + (result.stderr or ""))
+    assert "missing the 'taxonomy' block" in output
 
 
 def test_eval_command_exists():
