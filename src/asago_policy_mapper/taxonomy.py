@@ -6,9 +6,11 @@ from pathlib import Path
 import yaml
 from ai_atlas_nexus.ai_risk_ontology.datamodel.ai_risk_ontology import Risk
 
+from asago_policy_mapper.evals.eval import _TAXONOMY_PREFIXES
+
 logger = logging.getLogger(__name__)
 
-_BUILTIN_PREFIXES = ("atlas-", "nist-", "credo-", "mit-", "owasp-", "asi-")
+_BUILTIN_PREFIXES = tuple(prefix for prefix, _ in _TAXONOMY_PREFIXES)
 
 
 def load_custom_taxonomy(path: Path) -> list[Risk]:
