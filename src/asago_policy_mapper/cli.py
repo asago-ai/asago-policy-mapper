@@ -36,6 +36,9 @@ def extract(
     nexus_base_dir: str = typer.Option(
         None, "--nexus-base-dir", envvar="NEXUS_BASE_DIR", help="Path to ai-atlas-nexus repo"
     ),
+    custom_taxonomy: list[Path] = typer.Option(
+        [], "--custom-taxonomy", "-t", help="Custom taxonomy YAML file(s) to load alongside Nexus risks"
+    ),
     debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
     ocr: bool = typer.Option(False, "--ocr", help="Enable OCR for document conversion"),
@@ -179,10 +182,34 @@ def extract(
 
     output.mkdir(parents=True, exist_ok=True)
 
+    loaded_custom_risks: list = []
+    if custom_taxonomy:
+        from asago_policy_mapper.taxonomy import load_custom_taxonomy
+
+        for tax_path in custom_taxonomy:
+            try:
+                custom_risks = load_custom_taxonomy(tax_path)
+            except ValueError as e:
+                typer.echo(f"Error: {e}", err=True)
+                raise typer.Exit(1) from e
+            loaded_custom_risks.extend(custom_risks)
+            typer.echo(f"Loaded {len(custom_risks)} custom risks from {tax_path}")
+
     from ai_atlas_nexus import AIAtlasNexus
 
     nexus = AIAtlasNexus(base_dir=nexus_base_dir)
     all_risks = [r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES]
+
+    custom_risk_count = 0
+    if loaded_custom_risks:
+        seen_ids = {r.id for r in all_risks}
+        for cr in loaded_custom_risks:
+            if cr.id in seen_ids:
+                typer.echo(f"Warning: custom risk '{cr.id}' collides with an existing risk - skipping", err=True)
+            else:
+                all_risks.append(cr)
+                seen_ids.add(cr.id)
+                custom_risk_count += 1
 
     from asago_policy_mapper.extract.models import RetrievalConfig
     from asago_policy_mapper.extract.pipeline import run_extraction
@@ -215,7 +242,13 @@ def extract(
         query_gen=query_gen,
     )
 
-    typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
+    if custom_risk_count:
+        typer.echo(
+            f"Extracting risks from {len(policy_files)} document(s) "
+            f"({len(all_risks) - custom_risk_count} Nexus + {custom_risk_count} custom risks loaded)..."
+        )
+    else:
+        typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
 
     result = run_extraction(
         documents=policy_files,
