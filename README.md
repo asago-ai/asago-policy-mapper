@@ -289,6 +289,70 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 python scripts/build_mitigation_index.py
 ```
 
+## Custom Taxonomies
+
+You can provide your own risk taxonomy to extract against, alongside or instead of the built-in Nexus taxonomies. Custom risks go through the same retrieval, judging, and grounding pipeline as built-in risks.
+
+### YAML format
+
+```yaml
+# Required
+taxonomy:
+  id: my-taxonomy-id          # unique identifier, appears in extraction results
+  name: My Taxonomy Name      # human-readable name
+  description: "Optional description of the taxonomy"
+
+# Required: at least one risk
+risks:
+  - id: my-risk-001           # unique risk identifier
+    name: Risk Name            # human-readable name
+    description: >-            # description used for retrieval (min 10 chars recommended)
+      Full description of what this risk is about. The more detailed
+      and specific the description, the better retrieval quality.
+    concern: >-                # optional: additional context
+      Why this risk matters and what harm it causes.
+    risk_type: technical       # optional: "technical", "governance", "non-technical"
+```
+
+Required fields per risk: `id`, `name`, `description`. Optional fields: `concern`, `risk_type`.
+
+See `examples/custom-taxonomy-example.yaml` for a complete example with 5 risks.
+
+### CLI usage
+
+```bash
+# Extract with a custom taxonomy alongside Nexus risks
+uv run asago-policy-mapper extract policy.pdf -o output/ \
+  --base-url http://localhost:8000/v1 \
+  --model my-model \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --custom-taxonomy my-risks.yaml
+
+# Multiple custom taxonomies
+uv run asago-policy-mapper extract policy.pdf -o output/ \
+  --base-url http://localhost:8000/v1 \
+  --model my-model \
+  --nexus-base-dir /path/to/ai-atlas-nexus \
+  --custom-taxonomy risks-a.yaml \
+  --custom-taxonomy risks-b.yaml
+```
+
+Custom risks appear in extraction results with their taxonomy ID (e.g., `taxonomy: "my-taxonomy-id"`), grouped alongside built-in risks in the output report.
+
+### Validation
+
+The loader validates your YAML before extraction starts:
+- Missing or empty required fields produce clear error messages naming the specific risk
+- Duplicate risk IDs within the file are rejected
+- Very short descriptions (under 10 chars) trigger a warning
+- Risk IDs using built-in prefixes (`atlas-`, `nist-`, `owasp-`, etc.) trigger a collision warning
+
+### Limitations
+
+- Custom risks do not have OWASP or NIST cross-taxonomy mappings
+- Custom risks do not have mitigations or related actions
+- Cross-taxonomy mapping generation for custom risks is not yet supported
+
 ## Tests
 
 ```bash
