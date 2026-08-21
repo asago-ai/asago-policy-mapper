@@ -1,0 +1,73 @@
+# Custom Taxonomy Example - Red Hat AI Controls
+#
+# This file demonstrates the custom taxonomy format for asago-policy-mapper.
+# Use --custom-taxonomy to load it alongside built-in Nexus risks during extraction.
+#
+# Usage:
+#   asago-policy-mapper extract policy.pdf -o output/ \
+#       --custom-taxonomy examples/custom-taxonomy-example.yaml \
+#       --base-url http://localhost:8000/v1 --model gemma4-26b-a4b-it
+
+# Required: taxonomy metadata
+taxonomy:
+  id: red-hat-ai-controls           # unique identifier, appears in extraction results
+  name: Red Hat AI Controls          # human-readable name
+  description: >-                    # optional
+    Internal AI controls framework for Red Hat AI Safety,
+    covering model lifecycle governance and operational requirements.
+
+# Required: at least one risk
+risks:
+  - id: rh-ctrl-001
+    name: Model Card Completeness
+    description: >-
+      AI models deployed in production must have a complete model card
+      documenting training data, intended use, limitations, and evaluation
+      results. Model cards should follow the standard template and be
+      reviewed before deployment approval.
+    concern: >-
+      Incomplete model documentation prevents downstream users from
+      assessing model suitability for their use case and creates
+      compliance gaps during audits.
+
+  - id: rh-ctrl-002
+    name: Inference Endpoint Authentication
+    description: >-
+      All AI model inference endpoints must require authentication and
+      authorization before serving predictions. Endpoints exposed without
+      access controls risk unauthorized usage, data leakage, and abuse
+      of compute resources.
+
+  - id: rh-ctrl-003
+    name: Training Data Provenance
+    description: >-
+      Training datasets must have documented provenance including source,
+      collection methodology, licensing terms, and any preprocessing
+      applied. Data lineage must be traceable from raw source to the
+      final training split.
+    concern: >-
+      Without provenance tracking, organizations cannot verify compliance
+      with data usage agreements or identify potential bias sources
+      introduced during collection or preprocessing.
+    risk_type: governance            # optional: "technical", "governance", "non-technical"
+
+  - id: rh-ctrl-004
+    name: Model Performance Drift Monitoring
+    description: >-
+      Deployed AI models must be continuously monitored for performance
+      drift. Automated alerts should trigger when key metrics degrade
+      beyond defined thresholds, prompting retraining or rollback
+      decisions.
+    concern: >-
+      Undetected performance drift can lead to silently degraded
+      predictions affecting downstream business decisions.
+    risk_type: technical
+
+  - id: rh-ctrl-005
+    name: Adversarial Robustness Testing
+    description: >-
+      AI models handling sensitive or safety-critical tasks must undergo
+      adversarial robustness testing before production deployment.
+      Testing should cover known attack vectors relevant to the model
+      type and deployment context.
+    risk_type: technical
