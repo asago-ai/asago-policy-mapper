@@ -17,4 +17,5 @@ For each variant, respond with:
 - grounded: true ONLY if the text specifically discusses this variant's distinguishing sub-type, false otherwise
 - confidence: "high", "medium", or "low"
 - quotes: the specific passages from the chunk that evidence this PARTICULAR sub-type (empty list if not grounded)
-- rejection_reason: if not grounded, explain what specific evidence would be needed (empty string if grounded)
+
+Do not add extra fields. For ungrounded variants, set quotes to an empty list.

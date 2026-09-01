@@ -17,11 +17,13 @@ from asago_policy_mapper.extract.models import (
     _RiskEvidenceList,
 )
 from asago_policy_mapper.extract.pipeline import (
+    _cap_accepted_candidates,
     _run_causal_synthesis,
     build_risk_match,
     determine_accepted_by,
     run_extraction,
 )
+from asago_policy_mapper.extract.retrieve import ChunkResult
 
 
 def _make_risk(id, name, description, concern="", parent=""):
@@ -722,3 +724,22 @@ def test_run_extraction_query_gen_no_judge_no_grounding(mock_config, tmp_path):
     for risk in result.risks:
         assert risk.evidence == []
         assert risk.grounding_confidence == "ungrounded"
+
+
+def test_cap_accepted_candidates_keeps_highest_rrf():
+    low = ScoredCandidate(risk_id="low", risk_name="L", risk_description="", rrf_score=0.01)
+    high = ScoredCandidate(risk_id="high", risk_name="H", risk_description="", rrf_score=0.9)
+    mid = ScoredCandidate(risk_id="mid", risk_name="M", risk_description="", rrf_score=0.2)
+    cr = ChunkResult(
+        chunk_index=0,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[low, high, mid],
+        borderline=[],
+        borderline_judged=[],
+        stats={"auto_accepted": 3, "candidates_retrieved": 3},
+    )
+    _cap_accepted_candidates([cr], limit=2)
+    assert [c.risk_id for c in cr.accepted] == ["high", "mid"]
+    assert cr.stats["auto_accepted"] == 2

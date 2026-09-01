@@ -40,6 +40,18 @@ from asago_policy_mapper.llm import LLMConfig
 
 logger = logging.getLogger(__name__)
 
+_QUERY_GEN_MAX_CANDIDATES = 50
+
+
+def _cap_accepted_candidates(chunk_results: list[ChunkResult], limit: int) -> None:
+    """Keep the highest-RRF candidates when query-gen unions exceed the per-chunk cap."""
+    for cr in chunk_results:
+        if cr is None or len(cr.accepted) <= limit:
+            continue
+        cr.accepted = sorted(cr.accepted, key=lambda c: c.rrf_score, reverse=True)[:limit]
+        cr.stats["auto_accepted"] = len(cr.accepted)
+        cr.stats["candidates_retrieved"] = max(cr.stats.get("candidates_retrieved", 0), len(cr.accepted))
+
 
 @contextmanager
 def timed(timing, key):
@@ -213,6 +225,14 @@ def _run_grounding(
     ground_tasks = [cr for cr in chunk_results if cr.accepted]
     for cr in ground_tasks:
         total_candidates += len(cr.accepted)
+
+    logger.info(
+        "Grounding %d chunks with %d candidates (%d passes, batch_size=%d)",
+        len(ground_tasks),
+        total_candidates,
+        grounding_passes,
+        grounding_batch_size,
+    )
 
     if ground_tasks:
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
@@ -390,13 +410,18 @@ def _run_judge(
     chunk_contexts=None,
 ):
     max_workers = config.max_concurrent
+    judge_tasks = [(i, cr) for i, cr in enumerate(chunk_results) if cr.borderline]
+    logger.info(
+        "Judge: %d chunks with borderline candidates (no_judge=%s)",
+        len(judge_tasks),
+        retrieval.no_judge,
+    )
     if retrieval.no_judge:
         for cr in chunk_results:
             if cr.borderline:
                 cr.borderline_judged = list(cr.borderline)
                 cr.accepted.extend(cr.borderline)
     elif retrieval.use_cross_encoder:
-        judge_tasks = [(i, cr) for i, cr in enumerate(chunk_results) if cr.borderline]
         if judge_tasks:
             with ThreadPoolExecutor(max_workers=max_workers) as pool:
                 futures = {
@@ -485,6 +510,12 @@ def _run_expansion(
         len(chunks),
     )
     stats["expansion_groups"] = len(groups)
+    logger.info(
+        "Expansion: %d sibling candidates in %d groups (%d passes)",
+        stats["expanded_candidates"],
+        stats["expansion_groups"],
+        expansion_passes,
+    )
 
     def _ground_group(group):
         return ground_risk_group(
@@ -564,6 +595,7 @@ def _run_causal_synthesis(merged, chunks, client, config, max_workers, call_coll
         )
 
     results: dict[str, _CausalChain | None] = {}
+    logger.info("Causal synthesis: %d risks", len(merged))
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {pool.submit(_synthesize_one, m): m for m in merged}
         for future in as_completed(futures):
@@ -696,6 +728,8 @@ def run_extraction(
                             },
                         )
 
+            _cap_accepted_candidates(chunk_results, _QUERY_GEN_MAX_CANDIDATES)
+
             retrieval_indices = fallback_chunk_indices | {i for i in range(len(chunks)) if chunk_results[i] is None}
             for i in sorted(retrieval_indices):
                 cr = retrieve_chunk(
@@ -728,6 +762,13 @@ def run_extraction(
                     threshold_low=retrieval.threshold_low,
                 )
                 chunk_results[i] = cr
+
+    n_accepted = sum(len(cr.accepted) for cr in chunk_results if cr is not None)
+    logger.info(
+        "Retrieval complete: %d chunks, %d accepted candidates",
+        len(chunks),
+        n_accepted,
+    )
 
     if index.variant_map and retrieval.no_grounding:
         for cr in chunk_results:

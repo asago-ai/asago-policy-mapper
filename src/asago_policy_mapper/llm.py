@@ -175,8 +175,7 @@ def create_client(
         OpenAI(base_url=config.base_url, api_key=config.api_key),
         mode=mode,
     )
-    if tracker is not None:
-        _wrap_with_tracking(client, tracker, config)
+    _wrap_with_tracking(client, tracker if tracker is not None else TokenTracker(), config)
     return client
 
 
@@ -228,6 +227,7 @@ def _truncate_messages(messages: list[dict[str, str]]) -> list[dict[str, str]] |
 
 
 def _apply_budget(kwargs: dict, config: LLMConfig) -> None:
+    kwargs.setdefault("max_tokens", config.max_tokens)
     if config.max_context > 0:
         messages = kwargs.get("messages", [])
         requested = kwargs.get("max_tokens", config.max_tokens)

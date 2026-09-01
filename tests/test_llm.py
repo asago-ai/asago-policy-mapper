@@ -609,3 +609,35 @@ class TestRetryWithValidation:
         user_hints = [m for m in retry_messages if m["role"] == "user" and "Validation error:" in m["content"]]
         assert len(user_hints) == 1
         assert "bad field" in user_hints[0]["content"]
+
+
+# ---------------------------------------------------------------------------
+# _apply_budget
+# ---------------------------------------------------------------------------
+
+
+class TestApplyBudget:
+    def test_sets_max_tokens_when_max_context_is_zero(self):
+        from asago_policy_mapper.llm import _apply_budget
+
+        config = LLMConfig(base_url="http://test", model="test-model", max_tokens=8192, max_context=0)
+        kwargs: dict = {"messages": [{"role": "user", "content": "hello"}]}
+        _apply_budget(kwargs, config)
+        assert kwargs["max_tokens"] == 8192
+
+    def test_does_not_override_explicit_max_tokens(self):
+        from asago_policy_mapper.llm import _apply_budget
+
+        config = LLMConfig(base_url="http://test", model="test-model", max_tokens=8192, max_context=0)
+        kwargs: dict = {"messages": [{"role": "user", "content": "hello"}], "max_tokens": 256}
+        _apply_budget(kwargs, config)
+        assert kwargs["max_tokens"] == 256
+
+    def test_budgets_against_max_context(self):
+        from asago_policy_mapper.llm import _apply_budget
+
+        config = LLMConfig(base_url="http://test", model="test-model", max_tokens=8192, max_context=2048)
+        kwargs: dict = {"messages": [{"role": "user", "content": "hello"}]}
+        _apply_budget(kwargs, config)
+        assert kwargs["max_tokens"] < 8192
+        assert kwargs["max_tokens"] >= 256
