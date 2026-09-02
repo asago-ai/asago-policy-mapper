@@ -139,6 +139,9 @@ LLM_TEST_RISKS = [
     ),
 ]
 
+# Same three risks as SAMPLE_CANDIDATES, as taxonomy objects for run_extraction.
+LLM_QUERYGEN_RISKS = [r for r in LLM_TEST_RISKS if r.id in {"R-BIAS", "R-TRANSPARENCY", "R-ROBOT"}]
+
 
 @pytest.fixture(scope="session")
 def llm_config():
@@ -453,7 +456,7 @@ def test_pipeline_e2e_no_querygen(llm_client, llm_config, tiny_document, small_r
     _log_extraction_result(result)
 
 
-def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document, small_risk_set):
+def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document):
     """Full pipeline with query generation (default path)."""
     client, _ = llm_client
 
@@ -461,7 +464,7 @@ def test_pipeline_e2e_with_querygen(llm_client, llm_config, tiny_document, small
         documents=[tiny_document],
         client=client,
         config=llm_config,
-        risks=small_risk_set,
+        risks=LLM_QUERYGEN_RISKS,
         retrieval=RetrievalConfig(
             query_gen=True,
             grounding_passes=1,
