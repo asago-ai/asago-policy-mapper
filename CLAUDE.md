@@ -50,7 +50,7 @@ uv run pytest --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
 
 The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several alternative modes controlled by CLI flags — when modifying one path, be aware the others exist:
 
-- **Default (query-gen on):** LLM generates search queries per section group, all candidates go to grounding. Disable with `--no-query-gen` to use per-chunk BM25+semantic retrieval with cross-encoder reranking and LLM judging.
+- **Default (query-gen on):** LLM generates search queries per section group, candidates (capped at 50 per chunk by RRF after query union) go to grounding in batches of `--grounding-batch-size` (default 15). Disable with `--no-query-gen` to use per-chunk BM25+semantic retrieval with cross-encoder reranking and LLM judging.
 - `--no-cross-encoder`: RRF score floor filtering replaces cross-encoder reranking (no LLM judging)
 - `--no-judge`: borderline candidates auto-promoted (skips LLM judge)
 - `--no-grounding`: accepted candidates become matches without evidence extraction
@@ -59,7 +59,7 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 
 **Variant collapsing:** Risk IDs containing `---` (e.g. `unauthorized-processing---biometric-data`) are collapsed into synthetic parent entries for indexing. After grounding, a variant grounding step determines which specific sub-types have evidence. This affects how risk IDs flow through the entire pipeline — don't treat `---` IDs as regular risks.
 
-**Multi-pass grounding:** Grounding and expansion each run multiple passes (default 3) and union results to reduce LLM non-determinism. Do not remove the extra passes — they stabilize which risks survive grounding.
+**Multi-pass grounding:** Grounding and expansion each run multiple passes (default 3) and union results to reduce LLM non-determinism. Do not remove the extra passes — they stabilize which risks survive grounding. Grounding JSON is split into batches (`grounding_batch_size`, default 15) so responses stay within `LLMConfig.max_tokens` (always sent to the API, default 8192).
 
 ## Key Conventions
 

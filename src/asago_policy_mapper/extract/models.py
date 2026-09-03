@@ -202,7 +202,7 @@ class RetrievalConfig:
     grounding_passes: int = 3
     expansion_passes: int = 3
     no_causal_synthesis: bool = False
-    grounding_batch_size: int = 0
+    grounding_batch_size: int = 15
     query_gen: bool = True
 
     @property
@@ -238,5 +238,6 @@ class RetrievalConfig:
             "grounding_passes": self.grounding_passes,
             "expansion_passes": self.expansion_passes,
             "no_causal_synthesis": self.no_causal_synthesis,
+            "grounding_batch_size": self.grounding_batch_size,
             "query_gen": self.query_gen,
         }

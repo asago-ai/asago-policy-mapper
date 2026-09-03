@@ -17,5 +17,6 @@ For each risk, respond with:
 - risk_id: the exact risk ID from above
 - grounded: true if any passage discusses this risk, false otherwise
 - confidence: "high", "medium", or "low"
-- quotes: the specific passages that ground this risk (empty list if not grounded)
-- rejection_reason: if not grounded, briefly explain why (empty string if grounded)
+- quotes: if grounded is true, at least one exact substring from the passages; if grounded is false, an empty list
+
+Do not add extra fields. Do not write a rejection explanation.

@@ -109,6 +109,8 @@ LLM prompts are Jinja2 templates in `src/asago_policy_mapper/templates/prompts/`
 All LLM calls go through `llm.py`, which wraps the OpenAI client with [instructor](https://github.com/instructor-ai/instructor) for structured Pydantic outputs. `TokenTracker` accumulates token usage across pipeline stages; `LLMConfig` holds connection details.
 
 - Automatic retry on validation errors (appends error hint), context overflow detection (reduces `max_tokens`), and prompt truncation on incomplete output
+- `LLMConfig.max_tokens` (default 8192) is always sent on chat completions. Without this, vLLM treats omitted `max_tokens` as “fill the remaining context”, so grounding calls can generate for tens of minutes. Override with `--max-tokens` / `--max-context`.
+- Grounding splits candidate lists into `--grounding-batch-size` risks per call (default 15) so structured JSON fits in the output budget.
 - Sampling parameters (`temperature`, `top_p`, `top_k`) are injected by the tracking wrapper from `LLMConfig` defaults — call sites don't set them directly. `top_k` is passed via `extra_body` for vLLM compatibility.
 - All LLM calls default to `temperature=0.0`; override with `--temperature`, `--top-p`, `--top-k` CLI flags (e.g. `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4)
 

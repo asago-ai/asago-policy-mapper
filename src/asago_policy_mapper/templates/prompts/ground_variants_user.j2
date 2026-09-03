@@ -16,5 +16,6 @@ For each variant, respond with:
 - risk_id: the exact variant risk ID from above
 - grounded: true ONLY if the text specifically discusses this variant's distinguishing sub-type, false otherwise
 - confidence: "high", "medium", or "low"
-- quotes: the specific passages from the chunk that evidence this PARTICULAR sub-type (empty list if not grounded)
-- rejection_reason: if not grounded, explain what specific evidence would be needed (empty string if grounded)
+- quotes: if grounded is true, at least one exact substring from the chunk that evidences this PARTICULAR sub-type; if grounded is false, an empty list
+
+Do not add extra fields. Do not write a rejection explanation.

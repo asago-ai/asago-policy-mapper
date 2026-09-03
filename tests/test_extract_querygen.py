@@ -13,6 +13,7 @@ from asago_policy_mapper.extract.querygen import (
 def test_retrieval_config_query_gen_default_true():
     rc = RetrievalConfig()
     assert rc.query_gen is True
+    assert rc.grounding_batch_size == 15
 
 
 def test_retrieval_config_query_gen_in_metadata():

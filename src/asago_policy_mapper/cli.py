@@ -41,6 +41,10 @@ def extract(
     ),
     debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
+    max_tokens: int = typer.Option(8192, "--max-tokens", help="Max LLM output tokens per call (default: 8192)"),
+    max_context: int = typer.Option(
+        0, "--max-context", help="Model context window in tokens (0=do not budget against context)"
+    ),
     ocr: bool = typer.Option(False, "--ocr", help="Enable OCR for document conversion"),
     chunk_max_tokens: int = typer.Option(512, "--chunk-max-tokens", help="Max tokens per chunk (default: 512)"),
     top_n_accept: int = typer.Option(10, "--top-n-accept", help="Auto-accept top N candidates per chunk (rank-based)"),
@@ -106,6 +110,11 @@ def extract(
         "--grounding-passes",
         help="Number of per-chunk grounding passes; union of results reduces variance (default: 3)",
     ),
+    grounding_batch_size: int = typer.Option(
+        15,
+        "--grounding-batch-size",
+        help="Max candidate risks per grounding LLM call (default: 15; 0=no split)",
+    ),
     expansion_passes: int = typer.Option(
         3,
         "--expansion-passes",
@@ -160,6 +169,8 @@ def extract(
             model=model or "unused",
             api_key=api_key,
             max_concurrent=max_concurrent,
+            max_tokens=max_tokens,
+            max_context=max_context,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -172,6 +183,8 @@ def extract(
             model=model,
             api_key=api_key,
             max_concurrent=max_concurrent,
+            max_tokens=max_tokens,
+            max_context=max_context,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -237,6 +250,7 @@ def extract(
         judge_context_tokens=judge_context_tokens,
         expand_siblings=expand_siblings,
         grounding_passes=grounding_passes,
+        grounding_batch_size=grounding_batch_size,
         expansion_passes=expansion_passes,
         no_causal_synthesis=no_causal_synthesis,
         query_gen=query_gen,
