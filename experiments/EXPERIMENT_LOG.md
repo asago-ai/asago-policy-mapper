@@ -1103,3 +1103,23 @@ identified 84 high-confidence keyword-matched candidates as genuine GT gaps. Add
 Shipped as new defaults. Qwen3-Reranker is promising for ai-risk-taxonomy specifically
 but the precision cost on other taxonomies makes it unsuitable as a drop-in replacement.
 
+---
+
+## 2026-09-24: OpenAI/GTE Retrieval Comparison on St John’s
+
+**Description:** Compared the OpenAI cloud configuration using `text-embedding-3-large`
+with no cross-encoder against `Alibaba-NLP/gte-reranker-modernbert-base`, both with and
+without LLM query generation. All runs used GPT-6 Luna for judging and grounding.
+
+**Results:**
+
+| Configuration | Precision | Recall | F1 | Expected matched |
+|---|---:|---:|---:|---:|
+| OpenAI embeddings + RRF, query generation on | 0.677 | 0.863 | **0.759** | 44/51 |
+| GTE, query generation on | 0.597 | 0.843 | 0.699 | 43/51 |
+| GTE, query generation off | 0.589 | 0.647 | 0.617 | 33/51 |
+
+**Conclusion:** On this single policy, the no-cross-encoder configuration with query
+generation performed best. Disabling query generation substantially reduced GTE recall.
+The detailed commands and evaluator methodology are in
+`experiments/st-johns-openai-retrieval-comparison.md`. No MLflow run was used.
