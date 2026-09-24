@@ -108,8 +108,9 @@ LLM prompts are Jinja2 templates in `src/asago_policy_mapper/templates/prompts/`
 
 All LLM calls go through `llm.py`, which wraps the OpenAI client with [instructor](https://github.com/instructor-ai/instructor) for structured Pydantic outputs. `TokenTracker` accumulates token usage across pipeline stages; `LLMConfig` holds connection details.
 
-- Automatic retry on validation errors (appends error hint), context overflow detection (reduces `max_tokens`), and prompt truncation on incomplete output
-- `LLMConfig.max_tokens` (default 8192) is always sent on chat completions. Without this, vLLM treats omitted `max_tokens` as “fill the remaining context”, so grounding calls can generate for tens of minutes. Override with `--max-tokens` / `--max-context`.
+- Automatic retry on validation errors (appends error hint), context overflow detection (reduces the configured output-token parameter), and prompt truncation on incomplete output
+- `LLMConfig.max_tokens` (default 8192) is always sent on chat completions. Without this, vLLM treats omitted `max_tokens` as “fill the remaining context”, so grounding calls can generate for tens of minutes. Override the budget with `--max-tokens`, `POLICY_MAPPER_MAX_OUTPUT_TOKENS`, or `--max-context`.
+- The output-token parameter defaults to `max_tokens` for vLLM compatibility. For endpoints that require OpenAI's newer parameter, set `--output-token-parameter max_completion_tokens` or `POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens`. Only the selected parameter is sent.
 - Grounding splits candidate lists into `--grounding-batch-size` risks per call (default 15) so structured JSON fits in the output budget.
 - Sampling parameters (`temperature`, `top_p`, `top_k`) are injected by the tracking wrapper from `LLMConfig` defaults — call sites don't set them directly. `top_k` is passed via `extra_body` for vLLM compatibility.
 - All LLM calls default to `temperature=0.0`; override with `--temperature`, `--top-p`, `--top-k` CLI flags (e.g. `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4)
@@ -158,6 +159,29 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 | `--bi-encoder-api-key` | `POLICY_MAPPER_BI_ENCODER_API_KEY` | Bi-encoder API key |
 
 If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` to set it explicitly.
+
+**OpenAI cloud model** (GPT-6 Luna + OpenAI embeddings, no cross-encoder):
+
+```bash
+export OPENAI_API_KEY="..."
+export NEXUS_BASE_DIR="/path/to/ai-atlas-nexus"
+export POLICY_MAPPER_MAX_OUTPUT_TOKENS=8192
+export POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens
+
+uv run asago-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir "$NEXUS_BASE_DIR" \
+  --base-url https://api.openai.com/v1 \
+  --model gpt-6-luna \
+  --api-key "$OPENAI_API_KEY" \
+  --temperature 1.0 \
+  --bi-encoder-model https://api.openai.com/v1 \
+  --bi-encoder-model-name text-embedding-3-large \
+  --bi-encoder-api-key "$OPENAI_API_KEY" \
+  --no-cross-encoder \
+  --query-instruction ""
+```
+
+This project currently uses OpenAI's Chat Completions integration for the LLM. The explicit output-token setting selects `max_completion_tokens`, while `--query-instruction ""` disables the taxonomy-specific embedding instruction. See the [official GPT-6 Luna model documentation](https://developers.openai.com/api/docs/models/gpt-6-luna) for model and endpoint details.
 
 **Best quality** (Qwen3 + GTE, both on GPU cluster):
 
