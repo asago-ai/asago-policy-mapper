@@ -160,29 +160,6 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 
 If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` to set it explicitly.
 
-**OpenAI cloud model** (GPT-6 Luna + OpenAI embeddings, no cross-encoder):
-
-```bash
-export OPENAI_API_KEY="..."
-export NEXUS_BASE_DIR="/path/to/ai-atlas-nexus"
-export POLICY_MAPPER_MAX_OUTPUT_TOKENS=8192
-export POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens
-
-uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir "$NEXUS_BASE_DIR" \
-  --base-url https://api.openai.com/v1 \
-  --model gpt-6-luna \
-  --api-key "$OPENAI_API_KEY" \
-  --temperature 1.0 \
-  --bi-encoder-model https://api.openai.com/v1 \
-  --bi-encoder-model-name text-embedding-3-large \
-  --bi-encoder-api-key "$OPENAI_API_KEY" \
-  --no-cross-encoder \
-  --query-instruction ""
-```
-
-This project currently uses OpenAI's Chat Completions integration for the LLM. The explicit output-token setting selects `max_completion_tokens`, while `--query-instruction ""` disables the taxonomy-specific embedding instruction. See the [official GPT-6 Luna model documentation](https://developers.openai.com/api/docs/models/gpt-6-luna) for model and endpoint details.
-
 **Best quality** (Qwen3 + GTE, both on GPU cluster):
 
 ```bash
@@ -234,6 +211,29 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus \
   --no-judge --no-grounding
 ```
+
+**OpenAI cloud model** (GPT-6 Luna + OpenAI embeddings, no cross-encoder):
+
+```bash
+export OPENAI_API_KEY="..."
+export NEXUS_BASE_DIR="/path/to/ai-atlas-nexus"
+export POLICY_MAPPER_MAX_OUTPUT_TOKENS=8192
+export POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens
+
+uv run asago-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir "$NEXUS_BASE_DIR" \
+  --base-url https://api.openai.com/v1 \
+  --model gpt-6-luna \
+  --api-key "$OPENAI_API_KEY" \
+  --temperature 1.0 \
+  --bi-encoder-model https://api.openai.com/v1 \
+  --bi-encoder-model-name text-embedding-3-large \
+  --bi-encoder-api-key "$OPENAI_API_KEY" \
+  --no-cross-encoder \
+  --query-instruction ""
+```
+
+This project currently uses OpenAI's Chat Completions integration for the LLM. The explicit output-token setting selects `max_completion_tokens`, while `--query-instruction ""` disables the taxonomy-specific embedding instruction. See the [official GPT-6 Luna model documentation](https://developers.openai.com/api/docs/models/gpt-6-luna) for model and endpoint details.
 
 ## Setup
 
