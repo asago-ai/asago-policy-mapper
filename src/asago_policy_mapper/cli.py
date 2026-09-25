@@ -53,6 +53,12 @@ def extract(
         envvar="POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER",
         help="LLM output token parameter: max_tokens or max_completion_tokens (default: max_tokens)",
     ),
+    service_tier: str | None = typer.Option(
+        None,
+        "--service-tier",
+        envvar="POLICY_MAPPER_SERVICE_TIER",
+        help="Optional service tier passed unchanged to the LLM endpoint (default: omitted)",
+    ),
     max_context: int = typer.Option(
         0, "--max-context", help="Model context window in tokens (0=do not budget against context)"
     ),
@@ -193,6 +199,7 @@ def extract(
             max_concurrent=max_concurrent,
             max_tokens=max_tokens,
             output_token_parameter=output_token_parameter,
+            service_tier=service_tier,
             max_context=max_context,
             temperature=temperature,
             top_p=top_p,
@@ -208,6 +215,7 @@ def extract(
             max_concurrent=max_concurrent,
             max_tokens=max_tokens,
             output_token_parameter=output_token_parameter,
+            service_tier=service_tier,
             max_context=max_context,
             temperature=temperature,
             top_p=top_p,

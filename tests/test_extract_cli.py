@@ -72,6 +72,13 @@ def test_extract_output_token_parameter_flag_in_help():
     assert "max_completion_to" in output
 
 
+def test_extract_service_tier_flag_in_help():
+    result = runner.invoke(app, ["extract", "--help"])
+    assert result.exit_code == 0
+    output = _strip_ansi(result.stdout)
+    assert "--service-tier" in output
+
+
 def test_extract_invalid_custom_taxonomy():
     with tempfile.NamedTemporaryFile(suffix=".txt", mode="w", delete=False) as f:
         f.write("test policy")

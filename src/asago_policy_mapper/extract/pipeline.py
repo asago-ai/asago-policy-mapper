@@ -887,6 +887,7 @@ def run_extraction(
         retrieval_stats=total_stats,
         metadata={
             "model": config.model,
+            **({"service_tier": config.service_tier} if config.service_tier is not None else {}),
             **retrieval.to_metadata(),
             "expansion_stats": expansion_stats,
             "timestamp": datetime.now(timezone.utc).isoformat(),

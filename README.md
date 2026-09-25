@@ -111,6 +111,7 @@ All LLM calls go through `llm.py`, which wraps the OpenAI client with [instructo
 - Automatic retry on validation errors (appends error hint), context overflow detection (reduces the configured output-token parameter), and prompt truncation on incomplete output
 - `LLMConfig.max_tokens` (default 8192) is always sent on chat completions. Without this, vLLM treats omitted `max_tokens` as “fill the remaining context”, so grounding calls can generate for tens of minutes. Override the budget with `--max-tokens`, `POLICY_MAPPER_MAX_OUTPUT_TOKENS`, or `--max-context`.
 - The output-token parameter defaults to `max_tokens` for vLLM compatibility. For endpoints that require OpenAI's newer parameter, set `--output-token-parameter max_completion_tokens` or `POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens`. Only the selected parameter is sent.
+- An optional processing tier can be passed unchanged to the LLM endpoint with `--service-tier` or `POLICY_MAPPER_SERVICE_TIER`. For OpenAI, current examples include `default` (Standard), `flex`, and `fast`/`priority` (Fast mode); other API-compatible endpoints may support different values. If omitted, no parameter is sent and the endpoint/project default is used. This applies to LLM chat-completion calls; Batch API jobs are not currently supported by the mapper.
 - Grounding splits candidate lists into `--grounding-batch-size` risks per call (default 15) so structured JSON fits in the output budget.
 - Sampling parameters (`temperature`, `top_p`, `top_k`) are injected by the tracking wrapper from `LLMConfig` defaults — call sites don't set them directly. `top_k` is passed via `extra_body` for vLLM compatibility.
 - All LLM calls default to `temperature=0.0`; override with `--temperature`, `--top-p`, `--top-k` CLI flags (e.g. `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4)
@@ -229,6 +230,8 @@ export OPENAI_API_KEY="..."
 export NEXUS_BASE_DIR="/path/to/ai-atlas-nexus"
 export POLICY_MAPPER_MAX_OUTPUT_TOKENS=8192
 export POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens
+# Optional: default, flex, fast, or priority. Omit to use the project setting.
+export POLICY_MAPPER_SERVICE_TIER=default
 
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir "$NEXUS_BASE_DIR" \
