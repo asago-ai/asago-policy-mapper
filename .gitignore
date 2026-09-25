@@ -160,6 +160,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Tracked environment configuration templates (not runtime .env files)
+!examples/env/
+!examples/env/*.env.example
+
 # Spyder project settings
 .spyderproject
 .spyproject

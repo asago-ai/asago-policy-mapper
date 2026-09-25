@@ -157,8 +157,18 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 |------|---------|-------------|
 | `--api-key` | `POLICY_MAPPER_API_KEY` | LLM API key |
 | `--bi-encoder-api-key` | `POLICY_MAPPER_BI_ENCODER_API_KEY` | Bi-encoder API key |
+| `--bi-encoder-model` | `POLICY_MAPPER_BI_ENCODER_MODEL` | Bi-encoder endpoint URL or local model name |
+| `--bi-encoder-model-name` | `POLICY_MAPPER_BI_ENCODER_MODEL_NAME` | Explicit remote bi-encoder model name |
+| `--cross-encoder-model` | `POLICY_MAPPER_CROSS_ENCODER_MODEL` | Cross-encoder endpoint URL or local model name |
 
 If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` to set it explicitly.
+
+Reusable, secret-free environment templates are provided for the recommended GPU configuration and the OpenAI cloud configuration:
+
+- [`examples/env/best-quality.env.example`](examples/env/best-quality.env.example)
+- [`examples/env/openai-cloud.env.example`](examples/env/openai-cloud.env.example)
+
+Each file is a tracked template, not a runtime configuration. Copy the one you want to the ignored `.env` file at the repository root—or merge its settings into an existing `.env`—replace the placeholders there, and run the commented command with `uv --env-file .env`. Never commit the local `.env` containing real API keys.
 
 **Best quality** (Qwen3 + GTE, both on GPU cluster):
 

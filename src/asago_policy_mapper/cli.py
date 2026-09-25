@@ -69,12 +69,20 @@ def extract(
     threshold_low: float = typer.Option(
         None, "--threshold-low", help="Legacy: absolute discard threshold (overrides rank-based)"
     ),
-    bi_encoder_model: str = typer.Option("all-mpnet-base-v2", "--bi-encoder-model", help="Bi-encoder model"),
+    bi_encoder_model: str = typer.Option(
+        "all-mpnet-base-v2",
+        "--bi-encoder-model",
+        envvar="POLICY_MAPPER_BI_ENCODER_MODEL",
+        help="Bi-encoder model",
+    ),
     bi_encoder_api_key: str = typer.Option(
         "none", "--bi-encoder-api-key", envvar="POLICY_MAPPER_BI_ENCODER_API_KEY", help="Bi-encoder API key"
     ),
     bi_encoder_model_name: str = typer.Option(
-        None, "--bi-encoder-model-name", help="Bi-encoder model name (overrides name derived from endpoint URL)"
+        None,
+        "--bi-encoder-model-name",
+        envvar="POLICY_MAPPER_BI_ENCODER_MODEL_NAME",
+        help="Bi-encoder model name (overrides name derived from endpoint URL)",
     ),
     query_instruction: str = typer.Option(
         None,
@@ -82,7 +90,10 @@ def extract(
         help="Instruction prefix for query encoding (default: built-in policy-risk instruction)",
     ),
     cross_encoder_model: str = typer.Option(
-        "cross-encoder/ms-marco-MiniLM-L-12-v2", "--cross-encoder-model", help="Cross-encoder model"
+        "cross-encoder/ms-marco-MiniLM-L-12-v2",
+        "--cross-encoder-model",
+        envvar="POLICY_MAPPER_CROSS_ENCODER_MODEL",
+        help="Cross-encoder model",
     ),
     cross_encoder_type: str = typer.Option(
         "score",
