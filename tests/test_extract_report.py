@@ -69,6 +69,7 @@ def test_build_risk_extraction_report_creates_html(tmp_path):
     assert output.exists()
     html = output.read_text()
     assert "Model Bias" in html
+    assert html.count("risk-table-grid") >= 2
     assert "__REPORT_DATA__" not in html
 
 

@@ -82,6 +82,16 @@
       transition: width 0.3s ease;
       min-width: 2px;
     }
+
+    /* Keep the table header and expandable risk rows on identical tracks. */
+    .risk-table-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 7rem 6rem 7rem 5rem 1.5rem;
+      min-width: 48rem;
+      width: 100%;
+    }
+
+    .risk-table-grid th { white-space: nowrap; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
@@ -228,7 +238,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-xs text-gray-400 uppercase border-b border-gray-200">
+            <tr class="risk-table-grid px-3 text-left text-xs text-gray-400 uppercase border-b border-gray-200">
               <th class="pb-2 pr-3 cursor-pointer select-none" @click="toggleSort('risk_name')">
                 <span class="tip" data-tip="Name of the extracted risk from the Nexus knowledge graph.">Risk Name</span>
                 <span x-show="sortBy === 'risk_name'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
@@ -256,8 +266,8 @@
               <tr class="border-b border-gray-100" x-data="{ expanded: false }">
                 <td colspan="5" class="p-0">
                   <!-- Row header -->
-                  <div class="flex items-center cursor-pointer hover:bg-gray-50 px-3 py-2" @click="expanded = !expanded">
-                    <div class="flex-1 min-w-0 pr-3">
+                  <div class="risk-table-grid items-center cursor-pointer hover:bg-gray-50 px-3 py-2" @click="expanded = !expanded">
+                    <div class="min-w-0 pr-3">
                       <span class="font-semibold text-gray-900" x-text="risk.risk_name"></span>
                       <span x-show="risk.taxonomy" class="ml-1.5 px-1.5 py-0.5 rounded text-xs font-mono"
                             :class="{
