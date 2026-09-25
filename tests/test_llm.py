@@ -16,6 +16,7 @@ from asago_policy_mapper.llm import (
     _strip_titles,
     _track_completion,
     _truncate_messages,
+    _wrap_with_tracking,
 )
 
 # ---------------------------------------------------------------------------
@@ -701,3 +702,35 @@ class TestApplyBudget:
     def test_rejects_unknown_output_token_parameter(self):
         with pytest.raises(ValueError, match="output_token_parameter"):
             LLMConfig(base_url="http://test", model="test-model", output_token_parameter="tokens")
+
+    @pytest.mark.parametrize("service_tier", ["default", "flex", "fast", "priority", "vendor-specific"])
+    def test_accepts_arbitrary_service_tiers(self, service_tier):
+        config = LLMConfig(base_url="http://test", model="test-model", service_tier=service_tier)
+        assert config.service_tier == service_tier
+
+    def test_empty_service_tier_is_omitted(self):
+        config = LLMConfig(base_url="http://test", model="test-model", service_tier=" ")
+        assert config.service_tier is None
+
+    def test_service_tier_is_added_to_chat_completion_request(self):
+        client = MagicMock()
+        completion = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=2))
+        client.chat.completions.create_with_completion.return_value = ("parsed", completion)
+        config = LLMConfig(base_url="http://test", model="test-model", service_tier="flex")
+
+        _wrap_with_tracking(client, TokenTracker(), config)
+        result = client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
+
+        assert result == "parsed"
+        assert client.chat.completions.create_with_completion.call_args.kwargs["service_tier"] == "flex"
+
+    def test_service_tier_is_omitted_when_not_configured(self):
+        client = MagicMock()
+        completion = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=2))
+        client.chat.completions.create_with_completion.return_value = ("parsed", completion)
+        config = LLMConfig(base_url="http://test", model="test-model")
+
+        _wrap_with_tracking(client, TokenTracker(), config)
+        client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
+
+        assert "service_tier" not in client.chat.completions.create_with_completion.call_args.kwargs

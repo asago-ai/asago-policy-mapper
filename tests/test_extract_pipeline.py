@@ -71,6 +71,7 @@ def test_run_extraction_returns_extraction_result(mock_config, tmp_path):
     assert result.version == "0.3"
     assert result.source_documents == [str(doc)]
     assert result.retrieval_stats.total_chunks >= 1
+    assert "service_tier" not in result.metadata
 
 
 def test_run_extraction_empty_document(mock_config, tmp_path):
@@ -139,6 +140,7 @@ def test_run_extraction_multiple_documents(mock_config, tmp_path):
 def test_run_extraction_metadata(mock_config, tmp_path):
     doc = tmp_path / "test.txt"
     doc.write_text("AI risk document.")
+    mock_config.service_tier = "flex"
 
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
@@ -153,6 +155,7 @@ def test_run_extraction_metadata(mock_config, tmp_path):
     )
 
     assert result.metadata["model"] == "test-model"
+    assert result.metadata["service_tier"] == "flex"
     assert result.metadata["top_n_accept"] == 10
     assert result.metadata["top_n_judge"] == 10
 

@@ -97,6 +97,7 @@ def run_one(
     threshold_high: float | None = None,
     threshold_low: float | None = None,
     bi_encoder_model: str = "all-mpnet-base-v2",
+    bi_encoder_model_name: str | None = None,
     query_instruction: str | None = None,
     cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2",
     cross_encoder_type: str = "score",
@@ -152,6 +153,8 @@ def run_one(
         "--cross-encoder-type",
         cross_encoder_type,
     ]
+    if bi_encoder_model_name:
+        cmd.extend(["--bi-encoder-model-name", bi_encoder_model_name])
     if query_instruction:
         cmd.extend(["--query-instruction", query_instruction])
     cmd += [
@@ -410,7 +413,14 @@ def main():
     )
     parser.add_argument("--threshold-low", type=float, default=None, help="Legacy: absolute discard threshold")
     parser.add_argument(
-        "--bi-encoder-model", default="all-mpnet-base-v2", help="Bi-encoder model (default: all-mpnet-base-v2)"
+        "--bi-encoder-model",
+        default=os.environ.get("POLICY_MAPPER_BI_ENCODER_MODEL", "all-mpnet-base-v2"),
+        help="Bi-encoder model (default: $POLICY_MAPPER_BI_ENCODER_MODEL or all-mpnet-base-v2)",
+    )
+    parser.add_argument(
+        "--bi-encoder-model-name",
+        default=os.environ.get("POLICY_MAPPER_BI_ENCODER_MODEL_NAME"),
+        help="Bi-encoder model name (default: $POLICY_MAPPER_BI_ENCODER_MODEL_NAME)",
     )
     parser.add_argument(
         "--query-instruction",
@@ -419,8 +429,8 @@ def main():
     )
     parser.add_argument(
         "--cross-encoder-model",
-        default="cross-encoder/ms-marco-MiniLM-L-12-v2",
-        help="Cross-encoder model (default: cross-encoder/ms-marco-MiniLM-L-12-v2)",
+        default=os.environ.get("POLICY_MAPPER_CROSS_ENCODER_MODEL", "cross-encoder/ms-marco-MiniLM-L-12-v2"),
+        help="Cross-encoder model (default: $POLICY_MAPPER_CROSS_ENCODER_MODEL or cross-encoder/ms-marco-MiniLM-L-12-v2)",
     )
     parser.add_argument(
         "--cross-encoder-type",
@@ -569,6 +579,7 @@ def main():
             {
                 "model": model,
                 "bi_encoder_model": args.bi_encoder_model,
+                "bi_encoder_model_name": args.bi_encoder_model_name or "",
                 "cross_encoder_model": args.cross_encoder_model,
                 "top_n_accept": str(args.top_n_accept),
                 "top_n_judge": str(args.top_n_judge),
@@ -615,6 +626,7 @@ def main():
                 threshold_high=args.threshold_high,
                 threshold_low=args.threshold_low,
                 bi_encoder_model=args.bi_encoder_model,
+                bi_encoder_model_name=args.bi_encoder_model_name,
                 query_instruction=args.query_instruction,
                 cross_encoder_model=args.cross_encoder_model,
                 cross_encoder_type=args.cross_encoder_type,

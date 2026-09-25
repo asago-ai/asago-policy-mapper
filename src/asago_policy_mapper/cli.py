@@ -53,6 +53,12 @@ def extract(
         envvar="POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER",
         help="LLM output token parameter: max_tokens or max_completion_tokens (default: max_tokens)",
     ),
+    service_tier: str | None = typer.Option(
+        None,
+        "--service-tier",
+        envvar="POLICY_MAPPER_SERVICE_TIER",
+        help="Optional service tier passed unchanged to the LLM endpoint (default: omitted)",
+    ),
     max_context: int = typer.Option(
         0, "--max-context", help="Model context window in tokens (0=do not budget against context)"
     ),
@@ -69,12 +75,20 @@ def extract(
     threshold_low: float = typer.Option(
         None, "--threshold-low", help="Legacy: absolute discard threshold (overrides rank-based)"
     ),
-    bi_encoder_model: str = typer.Option("all-mpnet-base-v2", "--bi-encoder-model", help="Bi-encoder model"),
+    bi_encoder_model: str = typer.Option(
+        "all-mpnet-base-v2",
+        "--bi-encoder-model",
+        envvar="POLICY_MAPPER_BI_ENCODER_MODEL",
+        help="Bi-encoder model",
+    ),
     bi_encoder_api_key: str = typer.Option(
         "none", "--bi-encoder-api-key", envvar="POLICY_MAPPER_BI_ENCODER_API_KEY", help="Bi-encoder API key"
     ),
     bi_encoder_model_name: str = typer.Option(
-        None, "--bi-encoder-model-name", help="Bi-encoder model name (overrides name derived from endpoint URL)"
+        None,
+        "--bi-encoder-model-name",
+        envvar="POLICY_MAPPER_BI_ENCODER_MODEL_NAME",
+        help="Bi-encoder model name (overrides name derived from endpoint URL)",
     ),
     query_instruction: str = typer.Option(
         None,
@@ -82,7 +96,10 @@ def extract(
         help="Instruction prefix for query encoding (default: built-in policy-risk instruction)",
     ),
     cross_encoder_model: str = typer.Option(
-        "cross-encoder/ms-marco-MiniLM-L-12-v2", "--cross-encoder-model", help="Cross-encoder model"
+        "cross-encoder/ms-marco-MiniLM-L-12-v2",
+        "--cross-encoder-model",
+        envvar="POLICY_MAPPER_CROSS_ENCODER_MODEL",
+        help="Cross-encoder model",
     ),
     cross_encoder_type: str = typer.Option(
         "score",
@@ -182,6 +199,7 @@ def extract(
             max_concurrent=max_concurrent,
             max_tokens=max_tokens,
             output_token_parameter=output_token_parameter,
+            service_tier=service_tier,
             max_context=max_context,
             temperature=temperature,
             top_p=top_p,
@@ -197,6 +215,7 @@ def extract(
             max_concurrent=max_concurrent,
             max_tokens=max_tokens,
             output_token_parameter=output_token_parameter,
+            service_tier=service_tier,
             max_context=max_context,
             temperature=temperature,
             top_p=top_p,

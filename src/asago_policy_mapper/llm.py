@@ -50,6 +50,7 @@ class LLMConfig:
     max_retries: int = 3
     max_tokens: int = 8192
     output_token_parameter: str = "max_tokens"
+    service_tier: str | None = None
     max_concurrent: int = 32
     max_context: int = 0
 
@@ -57,6 +58,8 @@ class LLMConfig:
         if self.output_token_parameter not in _OUTPUT_TOKEN_PARAMETERS:
             allowed = ", ".join(_OUTPUT_TOKEN_PARAMETERS)
             raise ValueError(f"output_token_parameter must be one of: {allowed}")
+        if self.service_tier is not None:
+            self.service_tier = self.service_tier.strip() or None
         if self.max_context > 0 and self.max_tokens >= self.max_context:
             self.max_tokens = self.max_context - _SAFETY_MARGIN - _INSTRUCTOR_SCHEMA_OVERHEAD
 
@@ -374,6 +377,8 @@ def _wrap_with_tracking(client: instructor.Instructor, tracker: TokenTracker, co
 
     def tracked_create(**kwargs):
         kwargs.setdefault("temperature", config.temperature)
+        if config.service_tier is not None:
+            kwargs.setdefault("service_tier", config.service_tier)
         if config.top_p is not None:
             kwargs.setdefault("top_p", config.top_p)
         if config.top_k is not None:
