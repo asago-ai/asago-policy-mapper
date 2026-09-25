@@ -526,6 +526,34 @@ class TestRetryWithValidation:
         )
         assert any(i["kind"] == "context_overflow" for i in tracker.incidents)
 
+    def test_context_overflow_reduces_configured_completion_parameter(self):
+        overflow_msg = (
+            "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens"
+        )
+        exc = _make_retry_exc(overflow_msg)
+        do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_completion_tokens": 4096}
+        config = LLMConfig(
+            base_url="http://test",
+            model="test-model",
+            output_token_parameter="max_completion_tokens",
+        )
+
+        result = _retry_with_validation(
+            do_call,
+            kwargs,
+            config,
+            tracker=None,
+            original_messages=original,
+            current_messages=messages,
+            max_retries=1,
+        )
+        assert result == ("ok", "comp")
+        assert kwargs["max_completion_tokens"] == 4160
+        assert "max_tokens" not in kwargs
+
     def test_validation_error_retries_with_hint(self):
         exc = _make_retry_exc("some validation error")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
@@ -633,6 +661,34 @@ class TestApplyBudget:
         _apply_budget(kwargs, config)
         assert kwargs["max_tokens"] == 256
 
+    def test_uses_max_completion_tokens_when_configured(self):
+        from asago_policy_mapper.llm import _apply_budget
+
+        config = LLMConfig(
+            base_url="http://test",
+            model="test-model",
+            max_tokens=8192,
+            output_token_parameter="max_completion_tokens",
+        )
+        kwargs: dict = {"messages": [{"role": "user", "content": "hello"}]}
+        _apply_budget(kwargs, config)
+        assert kwargs["max_completion_tokens"] == 8192
+        assert "max_tokens" not in kwargs
+
+    def test_converts_explicit_legacy_parameter_when_configured(self):
+        from asago_policy_mapper.llm import _apply_budget
+
+        config = LLMConfig(
+            base_url="http://test",
+            model="test-model",
+            max_tokens=8192,
+            output_token_parameter="max_completion_tokens",
+        )
+        kwargs: dict = {"messages": [{"role": "user", "content": "hello"}], "max_tokens": 256}
+        _apply_budget(kwargs, config)
+        assert kwargs["max_completion_tokens"] == 256
+        assert "max_tokens" not in kwargs
+
     def test_budgets_against_max_context(self):
         from asago_policy_mapper.llm import _apply_budget
 
@@ -641,3 +697,7 @@ class TestApplyBudget:
         _apply_budget(kwargs, config)
         assert kwargs["max_tokens"] < 8192
         assert kwargs["max_tokens"] >= 256
+
+    def test_rejects_unknown_output_token_parameter(self):
+        with pytest.raises(ValueError, match="output_token_parameter"):
+            LLMConfig(base_url="http://test", model="test-model", output_token_parameter="tokens")

@@ -62,6 +62,16 @@ def test_extract_custom_taxonomy_flag_in_help():
     assert "--custom-taxonomy" in _strip_ansi(result.stdout)
 
 
+def test_extract_output_token_parameter_flag_in_help():
+    result = runner.invoke(app, ["extract", "--help"])
+    assert result.exit_code == 0
+    output = _strip_ansi(result.stdout)
+    # Typer's rich help renderer truncates long option names and values at the
+    # default terminal width.
+    assert "--output-token-pa" in output
+    assert "max_completion_to" in output
+
+
 def test_extract_invalid_custom_taxonomy():
     with tempfile.NamedTemporaryFile(suffix=".txt", mode="w", delete=False) as f:
         f.write("test policy")

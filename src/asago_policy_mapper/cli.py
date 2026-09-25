@@ -41,7 +41,18 @@ def extract(
     ),
     debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
-    max_tokens: int = typer.Option(8192, "--max-tokens", help="Max LLM output tokens per call (default: 8192)"),
+    max_tokens: int = typer.Option(
+        8192,
+        "--max-tokens",
+        envvar="POLICY_MAPPER_MAX_OUTPUT_TOKENS",
+        help="Max LLM output tokens per call (default: 8192)",
+    ),
+    output_token_parameter: str = typer.Option(
+        "max_tokens",
+        "--output-token-parameter",
+        envvar="POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER",
+        help="LLM output token parameter: max_tokens or max_completion_tokens (default: max_tokens)",
+    ),
     max_context: int = typer.Option(
         0, "--max-context", help="Model context window in tokens (0=do not budget against context)"
     ),
@@ -170,6 +181,7 @@ def extract(
             api_key=api_key,
             max_concurrent=max_concurrent,
             max_tokens=max_tokens,
+            output_token_parameter=output_token_parameter,
             max_context=max_context,
             temperature=temperature,
             top_p=top_p,
@@ -184,6 +196,7 @@ def extract(
             api_key=api_key,
             max_concurrent=max_concurrent,
             max_tokens=max_tokens,
+            output_token_parameter=output_token_parameter,
             max_context=max_context,
             temperature=temperature,
             top_p=top_p,

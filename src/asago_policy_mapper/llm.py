@@ -36,6 +36,7 @@ class SlimModel(BaseModel):
 
 _SAFETY_MARGIN = 64
 _MIN_OUTPUT_TOKENS = 256
+_OUTPUT_TOKEN_PARAMETERS = ("max_tokens", "max_completion_tokens")
 
 
 @dataclass
@@ -48,10 +49,14 @@ class LLMConfig:
     top_k: int | None = None
     max_retries: int = 3
     max_tokens: int = 8192
+    output_token_parameter: str = "max_tokens"
     max_concurrent: int = 32
     max_context: int = 0
 
     def __post_init__(self):
+        if self.output_token_parameter not in _OUTPUT_TOKEN_PARAMETERS:
+            allowed = ", ".join(_OUTPUT_TOKEN_PARAMETERS)
+            raise ValueError(f"output_token_parameter must be one of: {allowed}")
         if self.max_context > 0 and self.max_tokens >= self.max_context:
             self.max_tokens = self.max_context - _SAFETY_MARGIN - _INSTRUCTOR_SCHEMA_OVERHEAD
 
@@ -226,16 +231,33 @@ def _truncate_messages(messages: list[dict[str, str]]) -> list[dict[str, str]] |
     return truncated
 
 
+def _get_output_token_budget(kwargs: dict, config: LLMConfig) -> int:
+    """Read an explicit output budget, accepting either wire-format parameter."""
+    if config.output_token_parameter in kwargs:
+        return int(kwargs[config.output_token_parameter])
+    for parameter in _OUTPUT_TOKEN_PARAMETERS:
+        if parameter in kwargs:
+            return int(kwargs[parameter])
+    return config.max_tokens
+
+
+def _set_output_token_budget(kwargs: dict, config: LLMConfig, value: int) -> None:
+    """Write the configured output budget while removing the alternate parameter."""
+    for parameter in _OUTPUT_TOKEN_PARAMETERS:
+        kwargs.pop(parameter, None)
+    kwargs[config.output_token_parameter] = value
+
+
 def _apply_budget(kwargs: dict, config: LLMConfig) -> None:
-    kwargs.setdefault("max_tokens", config.max_tokens)
+    requested = _get_output_token_budget(kwargs, config)
     if config.max_context > 0:
         messages = kwargs.get("messages", [])
-        requested = kwargs.get("max_tokens", config.max_tokens)
-        kwargs["max_tokens"] = budget_max_tokens(
+        requested = budget_max_tokens(
             messages,
             config.max_context,
             requested,
         )
+    _set_output_token_budget(kwargs, config, requested)
 
 
 class _IncompleteOutput(Exception):
@@ -254,14 +276,15 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
         except InstructorRetryException as e:
             new_max = _extract_reduced_max_tokens(e)
             if new_max is not None:
-                old_max = kwargs.get("max_tokens", 8192)
-                logger.info("Context overflow, reducing max_tokens %d -> %d and retrying", old_max, new_max)
+                old_max = _get_output_token_budget(kwargs, config)
+                parameter = config.output_token_parameter
+                logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
                 if tracker:
                     tracker.record_incident(
-                        "context_overflow", f"Context overflow, reducing max_tokens {old_max} -> {new_max}"
+                        "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}"
                     )
                 kwargs["messages"] = copy.deepcopy(original_messages)
-                kwargs["max_tokens"] = new_max
+                _set_output_token_budget(kwargs, config, new_max)
                 _apply_budget(kwargs, config)
                 continue
             if val_attempt < max_retries:
