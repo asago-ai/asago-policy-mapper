@@ -198,34 +198,102 @@
              x-data="{
                sortBy: 'confidence',
                sortDesc: true,
-               filterAcceptedBy: 'all',
-               filterGrounding: 'all',
+               filterAcceptedBy: [],
+               filterGrounding: [],
+               filterTaxonomy: [],
                searchQuery: '',
              }">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
         <span class="tip" data-tip="All extracted risks with confidence scores, grounding verification, evidence spans, and retrieval score breakdowns.">Risks</span>
         <span class="tip-icon tip" data-tip="Sortable, filterable table of all extracted risks.">i</span>
-        <span class="ml-2 text-xs font-normal text-gray-400" x-text="`(${filteredRisks(data.risks, filterAcceptedBy, filterGrounding, searchQuery).length} shown)`"></span>
+        <span class="ml-2 text-xs font-normal text-gray-400" x-text="`(${filteredRisks(data.risks, filterAcceptedBy, filterGrounding, filterTaxonomy, searchQuery).length} shown)`"></span>
       </h2>
 
       <!-- Filter bar -->
       <div class="flex flex-wrap items-center gap-3 mb-4 text-sm">
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Accepted by:</label>
-          <select x-model="filterAcceptedBy" class="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
-            <option value="all">All</option>
-            <option value="threshold">Threshold</option>
-            <option value="llm_judge">LLM Judge</option>
-          </select>
+          <div class="relative" x-data="{ acceptedByOpen: false }" @click.outside="acceptedByOpen = false">
+            <button type="button" @click="acceptedByOpen = !acceptedByOpen"
+                    :aria-expanded="acceptedByOpen"
+                    class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+              <span x-text="acceptedByFilterLabel(filterAcceptedBy, data.risks)"></span>
+              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+            </button>
+            <div x-show="acceptedByOpen" x-transition
+                 class="absolute left-0 top-full z-30 mt-1 w-48 rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 role="group" aria-label="Accepted by">
+              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                <input type="checkbox" :checked="filterAcceptedBy.length === 0 || filterAcceptedBy.length === acceptedByOptions(data.risks).length"
+                       @change="filterAcceptedBy = []" class="rounded border-gray-300" />
+                <span>All</span>
+              </label>
+              <div class="my-1 border-t border-gray-100"></div>
+              <template x-for="option in acceptedByOptions(data.risks)" :key="option">
+                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                  <input type="checkbox" :value="option" x-model="filterAcceptedBy"
+                         class="rounded border-gray-300" />
+                  <span x-text="acceptedByLabel(option)"></span>
+                </label>
+              </template>
+            </div>
+          </div>
         </div>
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Grounding:</label>
-          <select x-model="filterGrounding" class="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
-            <option value="all">All</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+          <div class="relative" x-data="{ groundingOpen: false }" @click.outside="groundingOpen = false">
+            <button type="button" @click="groundingOpen = !groundingOpen"
+                    :aria-expanded="groundingOpen"
+                    class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+              <span x-text="groundingFilterLabel(filterGrounding, data.risks)"></span>
+              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+            </button>
+            <div x-show="groundingOpen" x-transition
+                 class="absolute left-0 top-full z-30 mt-1 w-48 rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 role="group" aria-label="Grounding">
+              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                <input type="checkbox" :checked="filterGrounding.length === 0 || filterGrounding.length === groundingOptions(data.risks).length"
+                       @change="filterGrounding = []" class="rounded border-gray-300" />
+                <span>All</span>
+              </label>
+              <div class="my-1 border-t border-gray-100"></div>
+              <template x-for="option in groundingOptions(data.risks)" :key="option">
+                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                  <input type="checkbox" :value="option" x-model="filterGrounding"
+                         class="rounded border-gray-300" />
+                  <span x-text="groundingLabel(option)"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <label class="text-gray-500 text-xs">Taxonomy:</label>
+          <div class="relative" x-data="{ taxonomyOpen: false }" @click.outside="taxonomyOpen = false">
+            <button type="button" @click="taxonomyOpen = !taxonomyOpen"
+                    :aria-expanded="taxonomyOpen"
+                    class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+              <span x-text="taxonomyFilterLabel(filterTaxonomy, data.risks)"></span>
+              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+            </button>
+            <div x-show="taxonomyOpen" x-transition
+                 class="absolute left-0 top-full z-30 mt-1 w-64 max-h-64 overflow-y-auto rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 role="group" aria-label="Taxonomy">
+              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                <input type="checkbox" :checked="filterTaxonomy.length === 0 || filterTaxonomy.length === taxonomyOptions(data.risks).length"
+                       @change="filterTaxonomy = []" class="rounded border-gray-300" />
+                <span>All</span>
+              </label>
+              <div class="my-1 border-t border-gray-100"></div>
+              <template x-for="option in taxonomyOptions(data.risks)" :key="option">
+                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                  <input type="checkbox" :value="option" x-model="filterTaxonomy"
+                         class="rounded border-gray-300" />
+                  <span x-text="taxonomyLabel(option)"></span>
+                </label>
+              </template>
+            </div>
+          </div>
         </div>
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Search:</label>
@@ -248,11 +316,11 @@
                 <span x-show="sortBy === 'confidence'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
               </th>
               <th class="pb-2 pr-3 cursor-pointer select-none" @click="toggleSort('grounding_confidence')">
-                <span class="tip" data-tip="LLM grounding verification result: high/medium/low confidence that the risk is actually discussed in the document.">Grounding</span>
+                <span class="tip" data-tip="LLM grounding result: high/medium/low confidence that the risk is discussed in the document; ungrounded means the grounding stage was skipped.">Grounding</span>
                 <span x-show="sortBy === 'grounding_confidence'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
               </th>
               <th class="pb-2 pr-3 cursor-pointer select-none" @click="toggleSort('accepted_by')">
-                <span class="tip" data-tip="How this risk was accepted: 'threshold' (auto-accepted above high threshold) or 'llm_judge' (borderline, verified by LLM).">Accepted By</span>
+                <span class="tip" data-tip="How this risk was accepted: threshold (cross-encoder threshold), llm_judge (borderline accepted by the LLM judge), rrf (retrieval-score threshold), auto_promoted (borderline accepted with judging disabled), or expansion (a grounded sibling risk).">Accepted By</span>
                 <span x-show="sortBy === 'accepted_by'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
               </th>
               <th class="pb-2 text-right cursor-pointer select-none" @click="toggleSort('evidence_count')">
@@ -262,7 +330,7 @@
             </tr>
           </thead>
           <tbody>
-            <template x-for="risk in sortedRisks(filteredRisks(data.risks, filterAcceptedBy, filterGrounding, searchQuery), sortBy, sortDesc)" :key="risk.risk_id">
+            <template x-for="risk in sortedRisks(filteredRisks(data.risks, filterAcceptedBy, filterGrounding, filterTaxonomy, searchQuery), sortBy, sortDesc)" :key="risk.risk_id">
               <tr class="border-b border-gray-100" x-data="{ expanded: false }">
                 <td colspan="5" class="p-0">
                   <!-- Row header -->
@@ -291,8 +359,8 @@
                     </div>
                     <div class="w-24 pr-3">
                       <span class="px-2 py-0.5 rounded text-xs"
-                            :class="risk.accepted_by === 'threshold' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'"
-                            x-text="risk.accepted_by"></span>
+                            :class="acceptedByColor(risk.accepted_by)"
+                            x-text="acceptedByLabel(risk.accepted_by)"></span>
                     </div>
                     <div class="w-16 text-right pr-3">
                       <span class="text-gray-600 font-mono text-xs" x-text="(risk.evidence || []).length"></span>
@@ -468,7 +536,7 @@
           </tbody>
         </table>
       </div>
-      <p x-show="filteredRisks(data.risks, filterAcceptedBy, filterGrounding, searchQuery).length === 0"
+      <p x-show="filteredRisks(data.risks, filterAcceptedBy, filterGrounding, filterTaxonomy, searchQuery).length === 0"
          class="text-center text-gray-400 py-8">No risks match the current filters.</p>
     </section>
 
@@ -813,17 +881,122 @@ function reportApp() {
         'high': 'bg-green-100 text-green-800',
         'medium': 'bg-amber-100 text-amber-800',
         'low': 'bg-red-100 text-red-800',
+        'ungrounded': 'bg-gray-100 text-gray-600',
       };
       return colors[level] || 'bg-gray-100 text-gray-600';
     },
 
-    filteredRisks(risks, acceptedBy, grounding, query) {
+    groundingOptions(risks) {
+      const values = [...new Set((risks || [])
+        .map(risk => risk.grounding_confidence)
+        .filter(value => typeof value === 'string' && value.length > 0))];
+      const commonOrder = ['high', 'medium', 'low', 'ungrounded'];
+      return [
+        ...commonOrder,
+        ...values.filter(value => !commonOrder.includes(value)).sort(),
+      ];
+    },
+
+    groundingLabel(value) {
+      if (typeof value !== 'string' || value.length === 0) return 'Unknown';
+      const labels = {
+        high: 'High',
+        medium: 'Medium',
+        low: 'Low',
+        ungrounded: 'Ungrounded',
+      };
+      return labels[value] || value.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+    },
+
+    groundingFilterLabel(selected, risks) {
+      const count = (selected || []).length;
+      const optionCount = this.groundingOptions(risks).length;
+      if (count === 0 || count === optionCount) return 'All';
+      if (count === 1) return this.groundingLabel(selected[0]);
+      return `${count} selected`;
+    },
+
+    taxonomyFilterValue(taxonomy) {
+      return typeof taxonomy === 'string' && taxonomy.length > 0 ? taxonomy : '__asago_no_taxonomy__';
+    },
+
+    taxonomyOptions(risks) {
+      const values = [...new Set((risks || [])
+        .map(risk => this.taxonomyFilterValue(risk.taxonomy)))];
+      return values.sort((a, b) => {
+        if (a === '__asago_no_taxonomy__') return 1;
+        if (b === '__asago_no_taxonomy__') return -1;
+        return a.localeCompare(b);
+      });
+    },
+
+    taxonomyLabel(value) {
+      return value === '__asago_no_taxonomy__' ? 'No taxonomy' : value;
+    },
+
+    taxonomyFilterLabel(selected, risks) {
+      const count = (selected || []).length;
+      const optionCount = this.taxonomyOptions(risks).length;
+      if (count === 0 || count === optionCount) return 'All';
+      if (count === 1) return this.taxonomyLabel(selected[0]);
+      return `${count} selected`;
+    },
+
+    acceptedByOptions(risks) {
+      const values = [...new Set((risks || [])
+        .map(risk => risk.accepted_by)
+        .filter(value => typeof value === 'string' && value.length > 0))];
+      const commonOrder = ['threshold', 'llm_judge', 'rrf', 'auto_promoted', 'expansion'];
+      return [
+        ...commonOrder,
+        ...values.filter(value => !commonOrder.includes(value)).sort(),
+      ];
+    },
+
+    acceptedByLabel(value) {
+      if (typeof value !== 'string' || value.length === 0) return 'Unknown';
+      const labels = {
+        threshold: 'Threshold',
+        llm_judge: 'LLM Judge',
+        rrf: 'RRF',
+        auto_promoted: 'Auto Promoted',
+        expansion: 'Expansion',
+      };
+      return labels[value] || value.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+    },
+
+    acceptedByFilterLabel(selected, risks) {
+      const count = (selected || []).length;
+      const optionCount = this.acceptedByOptions(risks).length;
+      if (count === 0 || count === optionCount) return 'All';
+      if (count === 1) return this.acceptedByLabel(selected[0]);
+      return `${count} selected`;
+    },
+
+    acceptedByColor(value) {
+      const colors = {
+        threshold: 'bg-green-100 text-green-800',
+        llm_judge: 'bg-amber-100 text-amber-800',
+        rrf: 'bg-sky-100 text-sky-800',
+        auto_promoted: 'bg-violet-100 text-violet-800',
+        expansion: 'bg-purple-100 text-purple-800',
+      };
+      return colors[value] || 'bg-gray-100 text-gray-700';
+    },
+
+    filteredRisks(risks, acceptedBy, grounding, taxonomy, query) {
       let result = risks || [];
-      if (acceptedBy !== 'all') {
-        result = result.filter(r => r.accepted_by === acceptedBy);
+      if ((acceptedBy || []).length > 0) {
+        const selected = new Set(acceptedBy);
+        result = result.filter(r => selected.has(r.accepted_by));
       }
-      if (grounding !== 'all') {
-        result = result.filter(r => r.grounding_confidence === grounding);
+      if ((grounding || []).length > 0) {
+        const selectedGrounding = new Set(grounding);
+        result = result.filter(r => selectedGrounding.has(r.grounding_confidence));
+      }
+      if ((taxonomy || []).length > 0) {
+        const selectedTaxonomy = new Set(taxonomy);
+        result = result.filter(r => selectedTaxonomy.has(this.taxonomyFilterValue(r.taxonomy)));
       }
       if (query && query.trim()) {
         const q = query.trim().toLowerCase();
