@@ -5,7 +5,7 @@ const { join } = require('node:path');
 const { test } = require('node:test');
 
 const html = readFileSync(
-  join(__dirname, '../src/asago_policy_mapper/templates/risk_extraction_report_template.html'),
+  join(__dirname, '../src/asago_policy_mapper/templates/risk_extraction_report.jinja2'),
   'utf8',
 );
 const script = html.match(/<script>\s*(function reportApp\(\)[\s\S]*?)<\/script>/)[1];

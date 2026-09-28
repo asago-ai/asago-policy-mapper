@@ -1,58 +1,43 @@
 import base64
-import json
+from functools import lru_cache
 from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
 from asago_policy_mapper.extract.report_themes import enrich_report_themes
 
 TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
 
-_DARK_MODE_SNIPPET: str | None = None
-_DARK_TOGGLE = (
-    '<button class="dark-toggle" id="rl-dark-toggle" onclick="'
-    "document.documentElement.classList.toggle('dark');"
-    "var d=document.documentElement.classList.contains('dark');"
-    "localStorage.setItem('rl-dark-mode',d);"
-    "this.textContent=d?'\\u2600\\uFE0F':'\\uD83C\\uDF19'"
-    '"></button>'
-    "<script>"
-    "document.getElementById('rl-dark-toggle').textContent="
-    "document.documentElement.classList.contains('dark')"
-    "?'\\u2600\\uFE0F':'\\uD83C\\uDF19';"
-    "</script>"
-)
 
-
-def _get_dark_snippet() -> str:
-    global _DARK_MODE_SNIPPET
-    if _DARK_MODE_SNIPPET is None:
-        _DARK_MODE_SNIPPET = (TEMPLATE_DIR / "dark_mode_snippet.html").read_text()
-    return _DARK_MODE_SNIPPET
+@lru_cache(maxsize=1)
+def _report_environment() -> Environment:
+    environment = Environment(
+        loader=FileSystemLoader(TEMPLATE_DIR),
+        autoescape=select_autoescape(("html", "jinja2")),
+        undefined=StrictUndefined,
+    )
+    # Keep support for values such as datetimes in saved results when embedding JSON.
+    environment.policies["json.dumps_kwargs"] = {"default": str, "sort_keys": False}
+    return environment
 
 
 def build_risk_extraction_report(data: dict, output_path: Path) -> Path:
     logo = base64.b64encode((TEMPLATE_DIR / "assets" / "asago-main-logo-dark.svg").read_bytes()).decode("ascii")
     html = (
-        (TEMPLATE_DIR / "risk_extraction_report_template.html")
-        .read_text()
-        .replace("__ASAGO_LOGO__", f"data:image/svg+xml;base64,{logo}")
-        .replace("__REPORT_DATA__", json.dumps(enrich_report_themes(data), default=str))
+        _report_environment()
+        .get_template("risk_extraction_report.jinja2")
+        .render(
+            report_data=enrich_report_themes(data),
+            logo_src=f"data:image/svg+xml;base64,{logo}",
+        )
     )
-    branding = (TEMPLATE_DIR / "report_branding.html").read_text()
-    html = html.replace("</head>", _get_dark_snippet() + branding + "\n</head>", 1)
-    html = html.replace("</body>", _DARK_TOGGLE + "\n</body>", 1)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
     return output_path
 
 
 def build_annotation_report(data: dict, output_path: Path) -> Path:
-    html = (
-        (TEMPLATE_DIR / "annotation_report_template.html")
-        .read_text()
-        .replace("__REPORT_DATA__", json.dumps(data, default=str))
-    )
-    html = html.replace("</head>", _get_dark_snippet() + "\n</head>", 1)
-    html = html.replace("</body>", _DARK_TOGGLE + "\n</body>", 1)
+    html = _report_environment().get_template("annotation_report.jinja2").render(report_data=data)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
     return output_path
