@@ -281,6 +281,8 @@ The findings table supports search and multiple selections for Accepted by, Grou
 
 Counts refer to matched taxonomy entries; several entries can describe a related topic. Grounding confidence describes model-rated document support for a match.
 
+In the configuration section, expand objects and lists to view their complete contents as formatted JSON. Empty lists, empty objects and unset values are labelled explicitly.
+
 The score breakdown explains each retrieval score's range and direction: keyword rank starts at 1 (lower is better), embedding distance ranges from 0 to 2 (lower is closer), reranker scores range from 0 to 1 (higher indicates stronger model-rated relevance), and default RRF scores range up to about 0.0328 (higher is better). These scores describe search relevance; use supporting quotes and grounding confidence to assess document support. Unused scores and known zero placeholders are labelled explicitly; ambiguous zeros remain identified as ambiguous. Original numbers are available under **Raw stored values**.
 
 To preview report layout changes using saved results, regenerate just the HTML:
