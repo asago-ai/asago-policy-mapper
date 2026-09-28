@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-default-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Risk Extraction Report</title>
+  <title>Policy risk report · asago</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
@@ -86,135 +86,179 @@
     /* Keep the table header and expandable risk rows on identical tracks. */
     .risk-table-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 7rem 6rem 7rem 5rem 1.5rem;
+      grid-template-columns: minmax(14rem, 1fr) minmax(11rem, 15rem) 10rem 5rem 1.5rem;
       min-width: 48rem;
       width: 100%;
     }
 
     .risk-table-grid th { white-space: nowrap; }
+    [id] { scroll-margin-top: 1.5rem; }
+    button:focus-visible, a:focus-visible, summary:focus-visible {
+      outline: 2px solid var(--asago-primary, #2d7ff9);
+      outline-offset: 3px;
+    }
+    .chart-bar { transition: width 180ms ease; }
+    @media (prefers-reduced-motion: reduce) {
+      .chart-bar, .chevron { transition: none; }
+    }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
+<body class="asago-report min-h-screen">
 <script>const DATA = __REPORT_DATA__;</script>
 
 <div id="app" x-data="reportApp()" x-cloak>
-
-  <!-- ============================================================ -->
-  <!-- 1. Header Bar -->
-  <!-- ============================================================ -->
-  <header class="bg-gray-900 text-white px-6 py-4 shadow-lg">
-    <div class="max-w-screen-xl mx-auto">
-      <div class="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight">Risk Extraction Report</h1>
-          <p class="text-gray-400 text-sm mt-0.5">
-            <span x-text="docNames"></span>
-            <template x-if="data.metadata?.model">
-              <span>&mdash; <span x-text="data.metadata.model"></span></span>
-            </template>
-            <template x-if="data.metadata?.timestamp">
-              <span>&mdash; <span x-text="data.metadata.timestamp"></span></span>
-            </template>
-          </p>
-        </div>
-        <div class="flex items-center gap-3">
-          <template x-if="data.metadata?.threshold_high != null">
-            <span class="tip px-2 py-1 rounded text-xs bg-gray-800 text-gray-300 font-mono" data-tip="Cross-encoder score above this threshold: auto-accepted">
-              high: <span x-text="data.metadata.threshold_high"></span>
-            </span>
-          </template>
-          <template x-if="data.metadata?.threshold_low != null">
-            <span class="tip px-2 py-1 rounded text-xs bg-gray-800 text-gray-300 font-mono" data-tip="Cross-encoder score below this threshold: discarded">
-              low: <span x-text="data.metadata.threshold_low"></span>
-            </span>
-          </template>
-          <!-- Eval badge -->
-          <span class="px-3 py-1 rounded-full text-xs font-bold uppercase"
-                :class="evalBadgeClass"
-                x-text="evalBadgeText"></span>
-        </div>
+  <header class="asago-header">
+    <div class="max-w-screen-xl mx-auto px-4 py-6 sm:px-6">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="__ASAGO_LOGO__" alt="asago" class="asago-logo" width="1000" height="400" />
+        <span class="asago-product text-xs font-semibold uppercase tracking-widest">Policy mapper</span>
       </div>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="asago-title text-3xl font-semibold tracking-tight">Policy risk report</h1>
+          <p class="text-sm text-gray-300 mt-2 break-all" x-text="docNames"></p>
+        </div>
+        <p x-show="data.metadata?.timestamp" class="text-xs text-gray-400">
+          Analysed <time :datetime="data.metadata?.timestamp" x-text="formatDate(data.metadata?.timestamp)"></time>
+        </p>
+      </div>
+      <nav aria-label="Report sections" class="mt-6 flex flex-wrap gap-6 text-sm">
+        <a href="#summary" class="text-gray-300 hover:text-white"><span class="asago-nav-number mr-1">01</span> Summary</a>
+        <a href="#overview" class="text-gray-300 hover:text-white"><span class="asago-nav-number mr-1">02</span> Overview</a>
+        <a href="#findings" class="text-gray-300 hover:text-white"><span class="asago-nav-number mr-1">03</span> Findings</a>
+      </nav>
     </div>
   </header>
 
-  <div class="max-w-screen-xl mx-auto p-6 space-y-6">
+  <main class="max-w-screen-xl mx-auto px-4 py-8 sm:px-6 space-y-8">
+    <!-- 1. Summary: counts of final matches, independent of filters -->
+    <section id="summary" aria-labelledby="summary-heading">
+      <p class="text-xs font-semibold asago-link uppercase tracking-wide mb-2">01 / Summary</p>
+      <h2 id="summary-heading" class="text-xl font-semibold text-gray-900">Your results at a glance</h2>
+      <p class="text-sm text-gray-600 mt-2 max-w-3xl" x-text="summaryText"></p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+        <div class="asago-summary-card rounded-xl p-5">
+          <p class="text-sm text-gray-500">Risk matches</p>
+          <p class="text-4xl font-semibold text-gray-900 mt-3" x-text="formatNumber(riskCount)"></p>
+          <p class="text-xs text-gray-500 mt-2">Matched taxonomy entries</p>
+        </div>
+        <div class="asago-summary-card rounded-xl p-5">
+          <p class="text-sm text-gray-500">Taxonomies represented</p>
+          <p class="text-4xl font-semibold text-gray-900 mt-3" x-text="taxonomyCount"></p>
+          <p class="text-xs text-gray-500 mt-2">Frameworks with risk matches</p>
+        </div>
+        <div class="asago-summary-card asago-summary-high rounded-xl p-5">
+          <p class="text-sm text-gray-500">High grounding confidence</p>
+          <p class="text-4xl font-semibold asago-success mt-3" x-text="formatNumber(highCount)"></p>
+          <p class="text-xs text-gray-500 mt-2">Model-rated document support</p>
+        </div>
+        <button type="button" @click="showReviewMatches()" :disabled="reviewCount === 0"
+                class="asago-summary-card asago-review-card rounded-xl p-5 text-left disabled:cursor-default"
+                aria-label="Review Medium, Low and Ungrounded matches">
+          <p class="text-sm text-amber-800">Review suggested</p>
+          <p class="text-4xl font-semibold text-amber-800 mt-3" x-text="formatNumber(reviewCount)"></p>
+          <p class="text-xs text-amber-800 mt-2">Medium, Low or Ungrounded <span x-show="reviewCount > 0" aria-hidden="true">&rarr;</span></p>
+        </button>
+      </div>
+      <p class="text-xs text-gray-500 mt-3">A topic may have matches in several taxonomies. Counts describe matched entries in those taxonomies.</p>
+    </section>
 
-    <!-- ============================================================ -->
-    <!-- 2. Scorecard Row -->
-    <!-- ============================================================ -->
-    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-        <span class="tip" data-tip="High-level pipeline metrics: risks found, acceptance breakdown, chunk count, and evaluation scores.">Scorecard</span>
-        <span class="tip-icon tip" data-tip="Summary metrics from the extraction pipeline.">i</span>
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div class="tip text-center p-4 bg-gray-50 rounded-lg" data-tip="Total unique risks extracted from the source documents after merging and deduplication.">
-          <p class="text-3xl font-bold text-indigo-600" x-text="data.risks.length"></p>
-          <p class="text-xs text-gray-400 mt-1">Risks Found</p>
+    <!-- 2. Overview: full-report distributions, with links to filtering -->
+    <section id="overview" aria-labelledby="overview-heading">
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div>
+          <p class="text-xs font-semibold asago-link uppercase tracking-wide mb-2">02 / Overview</p>
+          <h2 id="overview-heading" class="text-xl font-semibold text-gray-900">Explore the pattern of matches</h2>
+          <p class="text-sm text-gray-500 mt-1">Select chart categories to filter the findings below. Charts show the full report.</p>
         </div>
-        <div class="tip text-center p-4 bg-gray-50 rounded-lg" data-tip="Candidates with cross-encoder score above the high threshold, accepted without LLM verification.">
-          <p class="text-3xl font-bold text-green-600" x-text="data.retrieval_stats?.auto_accepted || 0"></p>
-          <p class="text-xs text-gray-400 mt-1">Auto-accepted</p>
-        </div>
-        <div class="tip text-center p-4 bg-gray-50 rounded-lg" data-tip="Borderline candidates verified by LLM judge (score between low and high thresholds).">
-          <p class="text-3xl font-bold text-amber-600" x-text="data.retrieval_stats?.llm_judged || 0"></p>
-          <p class="text-xs text-gray-400 mt-1">LLM Judged</p>
-        </div>
-        <div class="tip text-center p-4 bg-gray-50 rounded-lg" data-tip="Candidates that passed retrieval but were filtered out during grounding verification.">
-          <p class="text-3xl font-bold"
-             :class="(data.retrieval_stats?.grounding_filtered || 0) > 0 ? 'text-red-600' : 'text-green-600'"
-             x-text="data.retrieval_stats?.grounding_filtered || 0"></p>
-          <p class="text-xs text-gray-400 mt-1">Grounding Filtered</p>
-        </div>
-        <div class="tip text-center p-4 bg-gray-50 rounded-lg" data-tip="Total document chunks processed by the retrieval pipeline.">
-          <p class="text-3xl font-bold text-blue-600" x-text="data.retrieval_stats?.total_chunks || 0"></p>
-          <p class="text-xs text-gray-400 mt-1">Chunks</p>
-        </div>
-        <template x-if="data.eval">
-          <div class="tip text-center p-4 bg-gray-50 rounded-lg" data-tip="Evaluation metrics against ground truth: Precision / Recall / F1.">
-            <div class="flex justify-center gap-2 text-lg font-bold">
-              <span class="text-blue-600" x-text="(data.eval.precision * 100).toFixed(0) + '%'"></span>
-              <span class="text-gray-300">/</span>
-              <span class="text-emerald-600" x-text="(data.eval.recall * 100).toFixed(0) + '%'"></span>
-              <span class="text-gray-300">/</span>
-              <span class="text-purple-600" x-text="(data.eval.f1 * 100).toFixed(0) + '%'"></span>
-            </div>
-            <p class="text-xs text-gray-400 mt-1">P / R / F1</p>
+        <a href="#findings" class="text-sm font-medium asago-link hover:underline">View findings &darr;</a>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">Risk matches by taxonomy</h3>
+          <p class="text-xs text-gray-500 mt-1 mb-4">Number of matched entries in each taxonomy</p>
+          <div class="space-y-2" role="group" aria-label="Filter findings by taxonomy">
+            <template x-for="item in taxonomyDistribution" :key="item.value">
+              <button type="button" @click="toggleChartFilter('filterTaxonomy', item.value)"
+                      :aria-pressed="filterTaxonomy.includes(item.value)"
+                      :aria-label="taxonomyLabel(item.value) + ': ' + item.count + ' matches'"
+                      class="w-full text-left rounded-lg border p-2"
+                      :class="filterTaxonomy.includes(item.value) ? 'asago-selected' : 'border-transparent hover:bg-gray-50'">
+                <div class="flex items-center justify-between gap-3 text-xs mb-2">
+                  <span class="text-gray-700 break-all" x-text="taxonomyLabel(item.value)"></span>
+                  <span class="text-gray-900 font-semibold tabular-nums" x-text="item.count"></span>
+                </div>
+                <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div class="chart-bar h-full rounded-full asago-chart-bar"
+                       :style="'width: ' + (item.count / taxonomyMax * 100) + '%'"></div>
+                </div>
+              </button>
+            </template>
           </div>
-        </template>
-        <template x-if="!data.eval">
-          <div class="text-center p-4 bg-gray-50 rounded-lg">
-            <p class="text-3xl font-bold text-gray-300">&mdash;</p>
-            <p class="text-xs text-gray-400 mt-1">No Eval</p>
+          <p x-show="riskCount === 0" class="text-sm text-gray-500 py-8 text-center">No risk matches to summarise.</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">Grounding confidence</h3>
+          <p class="text-xs text-gray-500 mt-1">How strongly the model judges the document to support each match</p>
+          <div x-show="riskCount > 0" class="flex h-12 rounded-lg overflow-hidden mt-6 mb-5"
+               role="group" aria-label="Grounding confidence distribution">
+            <template x-for="item in groundingDistribution.filter(item => item.count > 0)" :key="item.value">
+              <button type="button" @click="toggleChartFilter('filterGrounding', item.value)"
+                      :aria-pressed="filterGrounding.includes(item.value)"
+                      :aria-label="groundingLabel(item.value) + ': ' + item.count + ' matches, ' + matchShare(item.count)"
+                      :title="groundingLabel(item.value) + ': ' + item.count + ' matches'"
+                      class="grounding-segment h-full font-semibold text-sm"
+                      :class="groundingBarColor(item.value)"
+                      :style="'width: ' + (item.count / riskCount * 100) + '%'">
+                <span x-show="item.count / riskCount >= 0.10" x-text="item.count"></span>
+              </button>
+            </template>
           </div>
-        </template>
+          <div class="grid grid-cols-2 gap-2 mt-5" role="group" aria-label="Filter findings by grounding confidence">
+            <template x-for="item in groundingDistribution" :key="item.value">
+              <button type="button" @click="toggleChartFilter('filterGrounding', item.value)"
+                      :disabled="item.count === 0" :aria-pressed="filterGrounding.includes(item.value)"
+                      :aria-label="groundingLabel(item.value) + ': ' + item.count + ' matches'"
+                      class="rounded-lg border p-3 text-left disabled:opacity-50 disabled:cursor-default"
+                      :class="filterGrounding.includes(item.value) ? 'asago-selected' : 'border-gray-100 hover:bg-gray-50'">
+                <span class="flex items-center gap-2 text-xs text-gray-600">
+                  <span class="w-2 h-2 rounded-full" :class="groundingBarColor(item.value)" aria-hidden="true"></span>
+                  <span x-text="groundingLabel(item.value)"></span>
+                </span>
+                <span class="flex items-baseline justify-between mt-2 gap-2">
+                  <span class="text-xl font-semibold text-gray-900" x-text="item.count"></span>
+                  <span class="text-xs text-gray-500" x-text="matchShare(item.count)"></span>
+                </span>
+              </button>
+            </template>
+          </div>
+          <p class="text-xs text-gray-500 mt-5">These levels describe document support for a match. Ungrounded means the grounding stage was skipped.</p>
+          <p x-show="riskCount === 0" class="text-sm text-gray-500 mt-3">No grounding results to summarise.</p>
+        </div>
+      </div>
+      <div x-show="hasActiveFilters" class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+        <span class="text-gray-600" x-text="'Showing ' + visibleRisks.length + ' of ' + riskCount + ' matches in the findings below.'"></span>
+        <button type="button" @click="scrollToFindings()" class="asago-link font-medium hover:underline">Go to filtered findings &darr;</button>
+        <button type="button" @click="resetFilters()" class="text-gray-500 hover:underline">Reset filters</button>
       </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- 3. Risks Table -->
-    <!-- ============================================================ -->
-    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5"
-             x-data="{
-               sortBy: 'confidence',
-               sortDesc: true,
-               filterAcceptedBy: [],
-               filterGrounding: [],
-               filterTaxonomy: [],
-               searchQuery: '',
-             }">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-        <span class="tip" data-tip="All extracted risks with confidence scores, grounding verification, evidence spans, and retrieval score breakdowns.">Risks</span>
-        <span class="tip-icon tip" data-tip="Sortable, filterable table of all extracted risks.">i</span>
-        <span class="ml-2 text-xs font-normal text-gray-400" x-text="`(${filteredRisks(data.risks, filterAcceptedBy, filterGrounding, filterTaxonomy, searchQuery).length} shown)`"></span>
-      </h2>
-
+    <!-- 3. Findings -->
+    <section id="findings" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" aria-labelledby="findings-heading">
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div>
+          <p class="text-xs font-semibold asago-link uppercase tracking-wide mb-2">03 / Findings</p>
+          <h2 id="findings-heading" tabindex="-1" class="text-xl font-semibold text-gray-900">Explore findings</h2>
+          <p class="text-sm text-gray-500 mt-1">Open a risk to read the supporting policy passages and risk context.</p>
+        </div>
+        <p class="text-sm text-gray-500" aria-live="polite" x-text="'Showing ' + visibleRisks.length + ' of ' + riskCount + ' matches'"></p>
+      </div>
       <!-- Filter bar -->
       <div class="flex flex-wrap items-center gap-3 mb-4 text-sm">
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Accepted by:</label>
-          <div class="relative" x-data="{ acceptedByOpen: false }" @click.outside="acceptedByOpen = false">
-            <button type="button" @click="acceptedByOpen = !acceptedByOpen"
+          <div class="relative" x-data="{ acceptedByOpen: false }" @keydown.escape.stop.prevent="acceptedByOpen = false; $refs.acceptedByButton.focus()" @click.outside="acceptedByOpen = false">
+            <button type="button" x-ref="acceptedByButton" aria-label="Filter by accepted by" @click="acceptedByOpen = !acceptedByOpen"
                     :aria-expanded="acceptedByOpen"
                     class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
               <span x-text="acceptedByFilterLabel(filterAcceptedBy, data.risks)"></span>
@@ -241,8 +285,8 @@
         </div>
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Grounding:</label>
-          <div class="relative" x-data="{ groundingOpen: false }" @click.outside="groundingOpen = false">
-            <button type="button" @click="groundingOpen = !groundingOpen"
+          <div class="relative" x-data="{ groundingOpen: false }" @keydown.escape.stop.prevent="groundingOpen = false; $refs.groundingButton.focus()" @click.outside="groundingOpen = false">
+            <button type="button" x-ref="groundingButton" aria-label="Filter by grounding" @click="groundingOpen = !groundingOpen"
                     :aria-expanded="groundingOpen"
                     class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
               <span x-text="groundingFilterLabel(filterGrounding, data.risks)"></span>
@@ -269,8 +313,8 @@
         </div>
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Taxonomy:</label>
-          <div class="relative" x-data="{ taxonomyOpen: false }" @click.outside="taxonomyOpen = false">
-            <button type="button" @click="taxonomyOpen = !taxonomyOpen"
+          <div class="relative" x-data="{ taxonomyOpen: false }" @keydown.escape.stop.prevent="taxonomyOpen = false; $refs.taxonomyButton.focus()" @click.outside="taxonomyOpen = false">
+            <button type="button" x-ref="taxonomyButton" aria-label="Filter by taxonomy" @click="taxonomyOpen = !taxonomyOpen"
                     :aria-expanded="taxonomyOpen"
                     class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
               <span x-text="taxonomyFilterLabel(filterTaxonomy, data.risks)"></span>
@@ -297,267 +341,513 @@
         </div>
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Search:</label>
-          <input type="text" x-model="searchQuery" placeholder="risk name..."
+          <input type="text" x-model="searchQuery" aria-label="Search risks" placeholder="Risk name or ID..."
                  class="border border-gray-300 rounded px-2 py-1 text-xs bg-white w-40" />
         </div>
+        <button type="button" @click="resetFilters()" :disabled="!hasActiveFilters"
+                class="text-xs font-medium asago-link hover:underline disabled:opacity-40 disabled:cursor-default">
+          Reset filters
+        </button>
       </div>
 
-      <!-- Table -->
-      <div class="overflow-x-auto">
+
+      <div class="relative overflow-x-auto">
         <table class="w-full text-sm">
+          <caption class="sr-only">Matched risks and their supporting evidence</caption>
           <thead>
-            <tr class="risk-table-grid px-3 text-left text-xs text-gray-400 uppercase border-b border-gray-200">
-              <th class="pb-2 pr-3 cursor-pointer select-none" @click="toggleSort('risk_name')">
-                <span class="tip" data-tip="Name of the extracted risk from the Nexus knowledge graph.">Risk Name</span>
-                <span x-show="sortBy === 'risk_name'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
-              </th>
-              <th class="pb-2 pr-3 cursor-pointer select-none text-right" @click="toggleSort('confidence')">
-                <span class="tip" data-tip="Cross-encoder confidence score (0-1). Higher means the retrieval model is more confident this risk matches the document chunk.">Confidence</span>
-                <span x-show="sortBy === 'confidence'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
-              </th>
-              <th class="pb-2 pr-3 cursor-pointer select-none" @click="toggleSort('grounding_confidence')">
-                <span class="tip" data-tip="LLM grounding result: high/medium/low confidence that the risk is discussed in the document; ungrounded means the grounding stage was skipped.">Grounding</span>
-                <span x-show="sortBy === 'grounding_confidence'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
-              </th>
-              <th class="pb-2 pr-3 cursor-pointer select-none" @click="toggleSort('accepted_by')">
-                <span class="tip" data-tip="How this risk was accepted: threshold (cross-encoder threshold), llm_judge (borderline accepted by the LLM judge), rrf (retrieval-score threshold), auto_promoted (borderline accepted with judging disabled), or expansion (a grounded sibling risk).">Accepted By</span>
-                <span x-show="sortBy === 'accepted_by'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
-              </th>
-              <th class="pb-2 text-right cursor-pointer select-none" @click="toggleSort('evidence_count')">
-                <span class="tip" data-tip="Number of evidence spans extracted from the document supporting this risk.">Evidence</span>
-                <span x-show="sortBy === 'evidence_count'" x-text="sortDesc ? ' v' : ' ^'" class="text-indigo-500"></span>
-              </th>
+            <tr class="risk-table-grid px-3 text-left text-xs text-gray-500 border-b border-gray-200">
+              <template x-for="column in findingColumns" :key="column.key">
+                <th scope="col" class="pb-3 pr-3 font-medium"
+                    :aria-sort="sortBy === column.key ? (sortDesc ? 'descending' : 'ascending') : 'none'"
+                    :class="column.key === 'evidence_count' ? 'text-right' : ''">
+                  <button type="button" @click="toggleSort(column.key)">
+                    <span x-text="column.label"></span>
+                    <span x-show="sortBy === column.key" x-text="sortDesc ? ' ↓' : ' ↑'" class="asago-link"></span>
+                  </button>
+                </th>
+              </template>
+              <th scope="col"><span class="sr-only">Expand finding</span></th>
             </tr>
           </thead>
           <tbody>
-            <template x-for="risk in sortedRisks(filteredRisks(data.risks, filterAcceptedBy, filterGrounding, filterTaxonomy, searchQuery), sortBy, sortDesc)" :key="risk.risk_id">
+            <template x-for="risk in sortedRisks(visibleRisks, sortBy, sortDesc)" :key="risk.risk_id">
               <tr class="border-b border-gray-100" x-data="{ expanded: false }">
                 <td colspan="5" class="p-0">
-                  <!-- Row header -->
-                  <div class="risk-table-grid items-center cursor-pointer hover:bg-gray-50 px-3 py-2" @click="expanded = !expanded">
-                    <div class="min-w-0 pr-3">
-                      <span class="font-semibold text-gray-900" x-text="risk.risk_name"></span>
-                      <span x-show="risk.taxonomy" class="ml-1.5 px-1.5 py-0.5 rounded text-xs font-mono"
-                            :class="{
-                              'bg-sky-100 text-sky-800': risk.taxonomy === 'ibm-risk-atlas',
-                              'bg-teal-100 text-teal-800': risk.taxonomy === 'credo-ucf',
-                              'bg-violet-100 text-violet-800': risk.taxonomy === 'mit-ai-risk-repository',
-                              'bg-lime-100 text-lime-800': risk.taxonomy === 'air-2024',
-                              'bg-gray-100 text-gray-700': !['ibm-risk-atlas','credo-ucf','mit-ai-risk-repository','air-2024'].includes(risk.taxonomy),
-                            }"
-                            x-text="risk.taxonomy"></span>
+                  <div class="risk-table-grid items-center cursor-pointer hover:bg-gray-50 px-3 py-4" @click="expanded = !expanded">
+                    <div class="min-w-0 pr-4">
+                      <button type="button" class="text-left font-semibold text-gray-900"
+                              @click.stop="expanded = !expanded" :aria-expanded="expanded"
+                              :aria-controls="'finding-' + encodeURIComponent(risk.risk_id)"
+                              x-text="risk.risk_name"></button>
                     </div>
-                    <div class="w-20 text-right pr-3">
-                      <span class="px-2 py-0.5 rounded text-xs font-mono font-semibold"
-                            :class="confidenceColor(risk.confidence)"
-                            x-text="risk.confidence?.toFixed(3) || '?'"></span>
+                    <div class="pr-3 min-w-0">
+                      <span class="inline-block rounded px-2 py-1 text-xs break-all"
+                            :class="taxonomyColor(risk.taxonomy)"
+                            x-text="taxonomyLabel(taxonomyFilterValue(risk.taxonomy))"></span>
                     </div>
-                    <div class="w-20 pr-3">
-                      <span class="px-2 py-0.5 rounded text-xs font-medium capitalize"
+                    <div class="pr-3">
+                      <span class="px-2 py-1 rounded text-xs font-medium"
                             :class="groundingColor(risk.grounding_confidence)"
-                            x-text="risk.grounding_confidence"></span>
+                            x-text="groundingLabel(groundingValue(risk.grounding_confidence))"></span>
                     </div>
-                    <div class="w-24 pr-3">
-                      <span class="px-2 py-0.5 rounded text-xs"
-                            :class="acceptedByColor(risk.accepted_by)"
-                            x-text="acceptedByLabel(risk.accepted_by)"></span>
-                    </div>
-                    <div class="w-16 text-right pr-3">
-                      <span class="text-gray-600 font-mono text-xs" x-text="(risk.evidence || []).length"></span>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-400 chevron flex-shrink-0"
-                         :class="expanded ? 'rotate-180' : ''"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="text-right pr-3 text-gray-600 tabular-nums" x-text="(risk.evidence || []).length"></div>
+                    <svg class="w-5 h-5 text-gray-400 chevron" :class="expanded ? 'rotate-180' : ''"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                   </div>
-                  <!-- Expanded detail -->
-                  <div x-show="expanded" class="px-4 pb-4 pt-1 space-y-3 bg-gray-50 border-t border-gray-100">
-                    <!-- Description -->
-                    <div>
-                      <p class="text-xs text-gray-400 uppercase mb-1">Description</p>
-                      <p class="text-sm text-gray-700" x-text="risk.risk_description"></p>
-                    </div>
-                    <!-- Causal chain (DPV) -->
-                    <div x-show="risk.threat || risk.consequence">
-                      <p class="tip text-xs text-gray-400 uppercase mb-1"
-                         data-tip="DPV causal chain: what event causes this risk (Threat), what system weakness is exploited (Vulnerability), what happens if materialized (Consequence), and who is harmed (Impact).">Causal Chain</p>
-                      <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div x-show="risk.threat" class="rounded p-2 bg-red-50 border border-red-100">
-                          <span class="font-semibold text-red-700">Threat</span>
-                          <p class="text-red-900 mt-0.5" x-text="risk.threat"></p>
-                          <p x-show="risk.threat_source" class="text-red-600 mt-1 opacity-75">
-                            <span class="font-medium">Source:</span> <span x-text="risk.threat_source"></span>
-                          </p>
-                        </div>
-                        <div x-show="risk.vulnerability" class="rounded p-2 bg-orange-50 border border-orange-100">
-                          <span class="font-semibold text-orange-700">Vulnerability</span>
-                          <p class="text-orange-900 mt-0.5" x-text="risk.vulnerability"></p>
-                        </div>
-                        <div x-show="risk.consequence" class="rounded p-2 bg-yellow-50 border border-yellow-100">
-                          <span class="font-semibold text-yellow-700">Consequence</span>
-                          <p class="text-yellow-900 mt-0.5" x-text="risk.consequence"></p>
-                        </div>
-                        <div x-show="risk.impact" class="rounded p-2 bg-rose-50 border border-rose-100">
-                          <span class="font-semibold text-rose-700">Impact</span>
-                          <p class="text-rose-900 mt-0.5" x-text="risk.impact"></p>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Score breakdown -->
-                    <div x-show="risk.scores">
-                      <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="Retrieval pipeline score components for this risk candidate.">Score Breakdown</p>
-                      <div class="flex flex-wrap gap-3 text-xs">
-                        <span class="px-2 py-1 rounded bg-blue-50 text-blue-800 font-mono">
-                          BM25 rank: <span x-text="risk.scores?.bm25_rank ?? '?'"></span>
-                        </span>
-                        <span class="px-2 py-1 rounded bg-purple-50 text-purple-800 font-mono">
-                          Emb. dist: <span x-text="risk.scores?.embedding_distance?.toFixed(4) ?? '?'"></span>
-                        </span>
-                        <span class="px-2 py-1 rounded bg-green-50 text-green-800 font-mono">
-                          Cross-enc: <span x-text="risk.scores?.cross_encoder_score?.toFixed(4) ?? '?'"></span>
-                        </span>
-                        <span class="px-2 py-1 rounded bg-orange-50 text-orange-800 font-mono">
-                          RRF: <span x-text="risk.scores?.rrf_score?.toFixed(4) ?? '?'"></span>
-                        </span>
-                      </div>
-                    </div>
-                    <!-- Evidence spans -->
-                    <div x-show="(risk.evidence || []).length > 0">
-                      <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="Direct quotes from the document supporting this risk extraction.">Evidence Spans</p>
-                      <div class="space-y-2">
-                        <template x-for="(ev, ei) in risk.evidence || []" :key="ei">
-                          <div class="border border-gray-200 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700">
-                            <p class="text-sm text-gray-800 dark:text-gray-200 italic" x-text="'“' + ev.text + '”'"></p>
-                            <div class="flex flex-wrap items-center gap-1 mt-1 text-xs text-gray-500">
-                              <span class="font-medium" x-text="fileName(ev.document)"></span>
-                              <span x-show="ev.page != null">&middot;</span>
-                              <span x-show="ev.page != null" x-text="'p.' + ev.page"></span>
-                              <span x-show="ev.section">&middot;</span>
-                              <span x-show="ev.section" x-text="ev.section"></span>
-                              <span>&middot;</span>
-                              <span class="font-mono" x-text="'chunk ' + ev.chunk_index"></span>
+                  <template x-if="expanded">
+                    <div :id="'finding-' + encodeURIComponent(risk.risk_id)" class="px-4 py-5 space-y-5 bg-gray-50 border-t border-gray-100">
+                      <!-- Evidence spans -->
+                      <div x-show="(risk.evidence || []).length > 0">
+                        <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="Direct quotes from the document supporting this risk extraction.">Supporting evidence</p>
+                        <div class="space-y-3">
+                          <template x-for="(ev, ei) in risk.evidence || []" :key="ei">
+                            <div class="asago-evidence-card asago-evidence rounded-lg p-4">
+                              <p class="text-sm text-gray-800 dark:text-gray-200 italic" x-text="'“' + ev.text + '”'"></p>
+                              <div class="flex flex-wrap items-center gap-1 mt-1 text-xs text-gray-500">
+                                <span class="font-medium" x-text="fileName(ev.document)"></span>
+                                <span x-show="ev.page != null">&middot;</span>
+                                <span x-show="ev.page != null" x-text="'p.' + ev.page"></span>
+                                <span x-show="ev.section">&middot;</span>
+                                <span x-show="ev.section" x-text="ev.section"></span>
+                              </div>
                             </div>
-                          </div>
-                        </template>
+                          </template>
+                        </div>
                       </div>
-                    </div>
-                    <!-- Mitigations -->
-                    <div x-show="(risk.mitigations || []).length > 0" x-data="{ mitOpen: false }">
-                      <p class="tip text-xs text-gray-400 uppercase mb-1 cursor-pointer select-none" @click="mitOpen = !mitOpen"
-                         data-tip="Recommended mitigation actions from NIST, OWASP, and AIUC-1 frameworks, categorized as technical (engineering deploys), operational (ops/QA executes), or governance (leadership/compliance owns).">
-                        Mitigations
-                        <span class="text-gray-500 font-mono" x-text="'(' + (risk.mitigations || []).length + ')'"></span>
-                        <template x-for="cat in ['technical','operational','governance']" :key="cat">
-                          <span class="ml-1 px-1 py-0.5 rounded text-xs"
-                                :class="cat === 'technical' ? 'bg-blue-50 text-blue-700' : cat === 'operational' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'"
-                                x-text="cat[0].toUpperCase() + ':' + (risk.mitigations || []).filter(m => m.category === cat).length"
-                                x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0"></span>
-                        </template>
-                        <svg class="w-3 h-3 inline ml-1 text-gray-400 chevron"
-                             :class="mitOpen ? 'rotate-180' : ''"
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
+                      <p x-show="!(risk.evidence || []).length" class="text-sm text-gray-500 py-2">
+                        No supporting quotes were saved for this match.
+                        <span x-show="risk.grounding_confidence === 'ungrounded'">Grounding was skipped.</span>
                       </p>
-                      <div x-show="mitOpen" class="space-y-2">
-                        <template x-for="cat in ['technical','operational','governance']" :key="cat">
-                          <div x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0">
-                            <p class="text-xs font-semibold mt-1 mb-0.5"
-                               :class="cat === 'technical' ? 'text-blue-700' : cat === 'operational' ? 'text-amber-700' : 'text-purple-700'"
-                               x-text="cat.charAt(0).toUpperCase() + cat.slice(1)"></p>
-                            <template x-for="src in [...new Set((risk.mitigations || []).filter(m => m.category === cat).map(m => m.source))].sort()" :key="src">
-                              <div class="ml-2 mb-1">
-                                <p class="text-xs text-gray-500" x-text="src"></p>
-                                <div class="flex flex-wrap gap-1">
-                                  <template x-for="m in (risk.mitigations || []).filter(m => m.category === cat && m.source === src)" :key="m.action_id">
-                                    <div class="tip rounded text-xs p-1.5 mb-1"
-                                         :class="cat === 'technical' ? 'bg-blue-50 text-blue-800' : cat === 'operational' ? 'bg-amber-50 text-amber-800' : 'bg-purple-50 text-purple-800'"
-                                         :data-tip="m.action_id">
-                                      <span class="font-semibold" x-text="m.action_name || m.action_id"></span>
-                                      <span x-show="m.risk_control" class="ml-1 px-1 py-0.5 rounded text-xs opacity-60 font-normal bg-gray-200 text-gray-700"
-                                            x-text="m.risk_control?.replace('Control','')"></span>
-                                      <p x-show="m.description" class="mt-0.5 text-xs opacity-80 font-normal" x-text="m.description"></p>
-                                    </div>
-                                  </template>
-                                </div>
-                              </div>
-                            </template>
-                          </div>
-                        </template>
+                      <!-- Description -->
+                      <div>
+                        <p class="text-xs text-gray-400 uppercase mb-1">Risk definition</p>
+                        <p class="text-sm text-gray-700" x-text="risk.risk_description"></p>
                       </div>
-                    </div>
-                    <!-- Inline LLM calls for this risk -->
-                    <div x-show="riskCalls(risk.risk_id).length > 0">
-                      <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="LLM calls that involved this risk (grounding verification, borderline judging).">LLM Calls</p>
-                      <div class="space-y-2">
-                        <template x-for="call in riskCalls(risk.risk_id)" :key="call.call_id">
-                          <div class="border border-gray-200 rounded bg-white" x-data="{ callOpen: false }">
-                            <div class="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-gray-50 text-xs"
-                                 @click="callOpen = !callOpen">
-                              <div class="flex items-center gap-2">
-                                <span class="stage-badge"
-                                      :class="call.stage === 'grounding' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
-                                      x-text="call.stage"></span>
-                                <span class="font-mono text-gray-500" x-text="call.call_id"></span>
-                                <span class="text-gray-400" x-text="call.duration_ms?.toFixed(0) + 'ms'"></span>
-                              </div>
-                              <div class="flex items-center gap-2">
-                                <span class="text-gray-600" x-text="call.result_summary"></span>
-                                <svg class="w-4 h-4 text-gray-400 chevron"
-                                     :class="callOpen ? 'rotate-180' : ''"
-                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                              </div>
-                            </div>
-                            <div x-show="callOpen" class="px-2 pb-2 border-t border-gray-100 space-y-2">
-                              <template x-for="(msg, mi) in call.messages || []" :key="mi">
-                                <div class="mt-1">
-                                  <span class="text-xs font-semibold uppercase"
-                                        :class="msg.role === 'system' ? 'text-purple-600' : msg.role === 'user' ? 'text-blue-600' : 'text-green-600'"
-                                        x-text="msg.role"></span>
-                                  <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-40 overflow-y-auto bg-gray-50 rounded p-1" x-text="msg.content"></pre>
+                      <!-- Causal chain (DPV) -->
+                      <div x-show="risk.threat || risk.consequence">
+                        <p class="tip text-xs text-gray-400 uppercase mb-1"
+                           data-tip="DPV causal chain: what event causes this risk (Threat), what system weakness is exploited (Vulnerability), what happens if materialized (Consequence), and who is harmed (Impact).">Causal explanation</p>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                          <div x-show="risk.threat" class="rounded p-2 bg-red-50 border border-red-100">
+                            <span class="font-semibold text-red-700">Threat</span>
+                            <p class="text-red-900 mt-0.5" x-text="risk.threat"></p>
+                            <p x-show="risk.threat_source" class="text-red-600 mt-1 opacity-75">
+                              <span class="font-medium">Source:</span> <span x-text="risk.threat_source"></span>
+                            </p>
+                          </div>
+                          <div x-show="risk.vulnerability" class="rounded p-2 bg-orange-50 border border-orange-100">
+                            <span class="font-semibold text-orange-700">Vulnerability</span>
+                            <p class="text-orange-900 mt-0.5" x-text="risk.vulnerability"></p>
+                          </div>
+                          <div x-show="risk.consequence" class="rounded p-2 bg-yellow-50 border border-yellow-100">
+                            <span class="font-semibold text-yellow-700">Consequence</span>
+                            <p class="text-yellow-900 mt-0.5" x-text="risk.consequence"></p>
+                          </div>
+                          <div x-show="risk.impact" class="rounded p-2 bg-rose-50 border border-rose-100">
+                            <span class="font-semibold text-rose-700">Impact</span>
+                            <p class="text-rose-900 mt-0.5" x-text="risk.impact"></p>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Mitigations -->
+                      <div x-show="(risk.mitigations || []).length > 0" x-data="{ mitOpen: false }">
+                        <p class="tip text-xs text-gray-400 uppercase mb-1 cursor-pointer select-none" @click="mitOpen = !mitOpen"
+                           data-tip="Recommended mitigation actions from NIST, OWASP, and AIUC-1 frameworks, categorized as technical (engineering deploys), operational (ops/QA executes), or governance (leadership/compliance owns).">
+                          Related mitigation guidance
+                          <span class="text-gray-500 font-mono" x-text="'(' + (risk.mitigations || []).length + ')'"></span>
+                          <template x-for="cat in ['technical','operational','governance']" :key="cat">
+                            <span class="ml-1 px-1 py-0.5 rounded text-xs"
+                                  :class="cat === 'technical' ? 'bg-blue-50 text-blue-700' : cat === 'operational' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'"
+                                  x-text="cat[0].toUpperCase() + ':' + (risk.mitigations || []).filter(m => m.category === cat).length"
+                                  x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0"></span>
+                          </template>
+                          <svg class="w-3 h-3 inline ml-1 text-gray-400 chevron"
+                               :class="mitOpen ? 'rotate-180' : ''"
+                               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                          </svg>
+                        </p>
+                        <div x-show="mitOpen" class="space-y-2">
+                          <template x-for="cat in ['technical','operational','governance']" :key="cat">
+                            <div x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0">
+                              <p class="text-xs font-semibold mt-1 mb-0.5"
+                                 :class="cat === 'technical' ? 'text-blue-700' : cat === 'operational' ? 'text-amber-700' : 'text-purple-700'"
+                                 x-text="cat.charAt(0).toUpperCase() + cat.slice(1)"></p>
+                              <template x-for="src in [...new Set((risk.mitigations || []).filter(m => m.category === cat).map(m => m.source))].sort()" :key="src">
+                                <div class="ml-2 mb-1">
+                                  <p class="text-xs text-gray-500" x-text="src"></p>
+                                  <div class="flex flex-wrap gap-1">
+                                    <template x-for="m in (risk.mitigations || []).filter(m => m.category === cat && m.source === src)" :key="m.action_id">
+                                      <div class="tip rounded text-xs p-1.5 mb-1"
+                                           :class="cat === 'technical' ? 'bg-blue-50 text-blue-800' : cat === 'operational' ? 'bg-amber-50 text-amber-800' : 'bg-purple-50 text-purple-800'"
+                                           :data-tip="m.action_id">
+                                        <span class="font-semibold" x-text="m.action_name || m.action_id"></span>
+                                        <span x-show="m.risk_control" class="ml-1 px-1 py-0.5 rounded text-xs opacity-60 font-normal bg-gray-200 text-gray-700"
+                                              x-text="m.risk_control?.replace('Control','')"></span>
+                                        <p x-show="m.description" class="mt-0.5 text-xs opacity-80 font-normal" x-text="m.description"></p>
+                                      </div>
+                                    </template>
+                                  </div>
                                 </div>
                               </template>
-                              <div>
-                                <span class="text-xs font-semibold uppercase text-green-600">Response</span>
-                                <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-40 overflow-y-auto bg-gray-50 rounded p-1" x-text="formatJSON(call.response)"></pre>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+
+                      <div x-data="{ riskTechnicalOpen: false }">
+                        <button type="button" @click="riskTechnicalOpen = !riskTechnicalOpen" :aria-expanded="riskTechnicalOpen"
+                                class="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                          <span aria-hidden="true" x-text="riskTechnicalOpen ? '−' : '+'"></span> Technical details for this match
+                        </button>
+                        <template x-if="riskTechnicalOpen">
+                          <div class="space-y-4 mt-3">
+                            <p class="text-xs text-gray-500 break-all">Risk ID: <span x-text="risk.risk_id"></span></p>
+                            <div class="flex flex-wrap gap-4 items-center text-xs">
+                              <span>Accepted by:
+                                <span class="px-2 py-1 rounded" :class="acceptedByColor(risk.accepted_by)" x-text="acceptedByLabel(risk.accepted_by)"></span>
+                              </span>
+                            </div>
+                            <p class="text-xs text-gray-500" x-show="(risk.evidence || []).length">
+                              Evidence chunks: <span x-text="(risk.evidence || []).map(ev => fileName(ev.document) + ' #' + ev.chunk_index).join(', ')"></span>
+                            </p>
+                            <!-- Score breakdown -->
+                            <div class="score-breakdown">
+                              <h3 class="text-sm font-semibold text-gray-900 mb-1">Score breakdown</h3>
+                              <p class="text-xs text-gray-500 mb-3">These scores help shortlist risks using document passages or generated search queries. Their meaning depends on the search method and model. Use the supporting quotes and grounding confidence to assess how well the document supports this match.</p>
+                              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                <template x-for="score in scoreBreakdown(risk)" :key="score.key">
+                                  <div class="asago-score-card rounded-lg p-4" :data-score="score.key">
+                                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                                      <h4 class="text-sm font-semibold text-gray-900" x-text="score.label"></h4>
+                                      <span class="text-lg font-semibold text-gray-900 tabular-nums" x-text="score.value"></span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 mt-2" x-text="score.description"></p>
+                                    <p class="text-xs font-semibold asago-link mt-3">
+                                      <span x-text="score.direction"></span> &middot; Range: <span x-text="score.range"></span>
+                                    </p>
+                                    <p class="text-xs text-gray-600 mt-2" x-text="score.interpretation"></p>
+                                  </div>
+                                </template>
+                              </div>
+                              <details class="mt-3 text-xs text-gray-500">
+                                <summary class="cursor-pointer w-fit">Raw stored values</summary>
+                                <p class="mt-2">The confidence field stores the retrieval score selected by the extraction mode. Grounding confidence is recorded separately.</p>
+                                <pre class="whitespace-pre-wrap overflow-x-auto mt-2 p-3 rounded bg-white" x-text="formatJSON({ confidence: risk.confidence, ...risk.scores })"></pre>
+                              </details>
+                            </div>
+                            <!-- Inline LLM calls for this risk -->
+                            <div x-show="riskCalls(risk.risk_id).length > 0">
+                              <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="LLM calls that involved this risk (grounding verification, borderline judging).">LLM Calls</p>
+                              <div class="space-y-2">
+                                <template x-for="call in riskCalls(risk.risk_id)" :key="call.call_id">
+                                  <div class="border border-gray-200 rounded bg-white" x-data="{ callOpen: false }">
+                                    <div class="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-gray-50 text-xs"
+                                         @click="callOpen = !callOpen">
+                                      <div class="flex items-center gap-2">
+                                        <span class="stage-badge"
+                                              :class="call.stage === 'grounding' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                              x-text="call.stage"></span>
+                                        <span class="font-mono text-gray-500" x-text="call.call_id"></span>
+                                        <span class="text-gray-400" x-text="call.duration_ms?.toFixed(0) + 'ms'"></span>
+                                      </div>
+                                      <div class="flex items-center gap-2">
+                                        <span class="text-gray-600" x-text="call.result_summary"></span>
+                                        <svg class="w-4 h-4 text-gray-400 chevron"
+                                             :class="callOpen ? 'rotate-180' : ''"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                      </div>
+                                    </div>
+                                    <div x-show="callOpen" class="px-2 pb-2 border-t border-gray-100 space-y-2">
+                                      <template x-for="(msg, mi) in call.messages || []" :key="mi">
+                                        <div class="mt-1">
+                                          <span class="text-xs font-semibold uppercase"
+                                                :class="msg.role === 'system' ? 'text-purple-600' : msg.role === 'user' ? 'text-blue-600' : 'text-green-600'"
+                                                x-text="msg.role"></span>
+                                          <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-40 overflow-y-auto bg-gray-50 rounded p-1" x-text="msg.content"></pre>
+                                        </div>
+                                      </template>
+                                      <div>
+                                        <span class="text-xs font-semibold uppercase text-green-600">Response</span>
+                                        <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-40 overflow-y-auto bg-gray-50 rounded p-1" x-text="formatJSON(call.response)"></pre>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </template>
                               </div>
                             </div>
+
                           </div>
                         </template>
                       </div>
                     </div>
-                  </div>
+                  </template>
                 </td>
               </tr>
             </template>
           </tbody>
         </table>
       </div>
-      <p x-show="filteredRisks(data.risks, filterAcceptedBy, filterGrounding, filterTaxonomy, searchQuery).length === 0"
-         class="text-center text-gray-400 py-8">No risks match the current filters.</p>
+      <div x-show="visibleRisks.length === 0" class="text-center text-gray-500 py-8">
+        <p x-text="riskCount ? 'No risks match the current filters.' : 'No risk matches were recorded in this analysis.'"></p>
+        <button type="button" x-show="hasActiveFilters" @click="resetFilters()" class="mt-2 text-sm asago-link hover:underline">Reset filters</button>
+      </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- 4. Eval Detail (only when DATA.eval exists) -->
-    <!-- ============================================================ -->
+    <!-- 4. Technical appendix -->
+    <section id="technical-details" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ technicalOpen: false }">
+      <h2>
+        <button type="button" @click="technicalOpen = !technicalOpen" :aria-expanded="technicalOpen"
+                class="flex w-full items-center justify-between gap-4 text-left">
+          <span>
+            <span class="text-sm font-semibold text-gray-900">Technical details</span>
+            <span class="block text-xs text-gray-500 mt-1">Processing statistics, configuration, document chunks and model call logs</span>
+          </span>
+          <span class="text-gray-400" aria-hidden="true" x-text="technicalOpen ? '−' : '+'"></span>
+        </button>
+      </h2>
+      <template x-if="technicalOpen">
+        <div class="space-y-4 mt-4">
+          <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ statsOpen: false }">
+            <h3>
+              <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+                      @click="statsOpen = !statsOpen" :aria-expanded="statsOpen">
+                <span class="tip" data-tip="Detailed pipeline performance metrics: timing breakdown, token usage, and configuration parameters.">Processing statistics</span>
+                <span class="tip-icon tip" data-tip="Timing, tokens, and configuration.">i</span>
+                <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
+                     :class="statsOpen ? 'rotate-180' : ''"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </h3>
+            <div x-show="statsOpen" class="mt-3 space-y-4">
+              <p class="text-xs text-gray-500">These counts describe candidate processing across document chunks.</p>
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <template x-for="stat in processingStats" :key="stat.key">
+                  <div class="p-3 rounded-lg bg-gray-50">
+                    <p class="text-xl font-semibold text-gray-900" x-text="formatNumber(data.retrieval_stats?.[stat.key] || 0)"></p>
+                    <p class="text-xs text-gray-500 mt-1" x-text="stat.label"></p>
+                  </div>
+                </template>
+              </div>
+              <!-- Timing -->
+              <div x-show="Object.keys(data.retrieval_stats?.timing_ms || {}).length > 0">
+                <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Timing Breakdown</p>
+                <div class="space-y-1">
+                  <template x-for="[stage, ms] in sortedTimings()" :key="stage">
+                    <div class="flex items-center gap-3 text-sm">
+                      <span class="w-28 text-right text-xs text-gray-500 font-mono" x-text="stage"></span>
+                      <div class="flex-1 bg-gray-200 rounded overflow-hidden h-5">
+                        <div class="timing-bar asago-chart-bar flex items-center justify-end px-1"
+                             :style="`width: ${Math.max((ms / maxTiming) * 100, 2)}%`">
+                          <span class="text-[10px] text-white font-mono" x-text="ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms.toFixed(0) + 'ms'"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Token usage -->
+              <div x-show="Object.keys(data.token_usage || {}).length > 0">
+                <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Token Usage</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <template x-if="data.token_usage?.prompt_tokens != null">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                      <p class="text-xl font-bold text-blue-600" x-text="formatNumber(data.token_usage.prompt_tokens)"></p>
+                      <p class="text-xs text-gray-400 mt-1">Prompt Tokens</p>
+                    </div>
+                  </template>
+                  <template x-if="data.token_usage?.completion_tokens != null">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                      <p class="text-xl font-bold text-green-600" x-text="formatNumber(data.token_usage.completion_tokens)"></p>
+                      <p class="text-xs text-gray-400 mt-1">Completion Tokens</p>
+                    </div>
+                  </template>
+                  <template x-if="data.token_usage?.total_tokens != null">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                      <p class="text-xl font-bold text-purple-600" x-text="formatNumber(data.token_usage.total_tokens)"></p>
+                      <p class="text-xs text-gray-400 mt-1">Total Tokens</p>
+                    </div>
+                  </template>
+                  <template x-if="data.token_usage?.calls != null">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                      <p class="text-xl font-bold text-amber-600" x-text="data.token_usage.calls"></p>
+                      <p class="text-xs text-gray-400 mt-1">LLM Calls</p>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Configuration echo -->
+              <div x-show="Object.keys(data.metadata || {}).length > 0">
+                <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Configuration</p>
+                <div class="overflow-x-auto">
+                  <table class="text-sm">
+                    <tbody>
+                      <template x-for="[key, val] in Object.entries(data.metadata || {})" :key="key">
+                        <tr class="border-b border-gray-100">
+                          <td class="py-1 pr-4 text-xs text-gray-500 font-mono" x-text="key"></td>
+                          <td class="py-1 text-xs text-gray-800 font-mono" x-text="String(val)"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ chunksOpen: false }">
+            <h3>
+              <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+                      @click="chunksOpen = !chunksOpen" :aria-expanded="chunksOpen">
+                <span class="tip" data-tip="Chronological view of all document chunks processed by the retrieval pipeline, with per-chunk retrieval statistics.">Chunks Timeline</span>
+                <span class="tip-icon tip" data-tip="Click to expand the chunk-by-chunk processing timeline.">i</span>
+                <span class="text-xs font-normal text-gray-400" x-text="`(${(data.chunks || []).length} chunks)`"></span>
+                <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
+                     :class="chunksOpen ? 'rotate-180' : ''"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </h3>
+            <div x-show="chunksOpen" class="mt-3 space-y-2">
+              <template x-for="chunk in data.chunks || []" :key="chunk.index">
+                <div class="border border-gray-200 rounded-lg p-3"
+                     :class="(chunk.accepted_risk_ids || []).length > 0 ? 'border-l-4 asago-evidence' : ''">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-700 font-mono font-semibold"
+                              x-text="'#' + chunk.index"></span>
+                        <span class="text-xs text-gray-600" x-text="fileName(chunk.source)"></span>
+                        <span x-show="chunk.page != null" class="text-xs text-gray-400" x-text="'p.' + chunk.page"></span>
+                        <span x-show="chunk.section" class="text-xs text-gray-400" x-text="chunk.section"></span>
+                      </div>
+                      <p class="text-xs text-gray-500 line-clamp-2" x-text="chunk.text_preview"></p>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs flex-shrink-0">
+                      <span class="tip px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono"
+                            data-tip="Total candidates retrieved for this chunk" x-text="chunk.candidates_retrieved"></span>
+                      <span class="tip px-1.5 py-0.5 rounded bg-green-50 text-green-700 font-mono"
+                            data-tip="Auto-accepted (above high threshold)" x-text="chunk.auto_accepted"></span>
+                      <span class="tip px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-mono"
+                            data-tip="Borderline candidates sent to LLM judge" x-text="chunk.borderline"></span>
+                      <span class="tip px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-mono"
+                            data-tip="Discarded (below low threshold)" x-text="chunk.discarded"></span>
+                    </div>
+                  </div>
+                  <div x-show="(chunk.accepted_risk_ids || []).length > 0" class="mt-2 flex flex-wrap gap-1">
+                    <template x-for="rid in chunk.accepted_risk_ids || []" :key="rid">
+                      <span class="px-1.5 py-0.5 rounded text-[10px] asago-tag font-mono" x-text="rid"></span>
+                    </template>
+                  </div>
+                </div>
+              </template>
+              <p x-show="(data.chunks || []).length === 0" class="text-center text-gray-400 py-4">No chunk data available.</p>
+            </div>
+          </section>
+          <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ callsOpen: false }">
+            <h3>
+              <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+                      @click="callsOpen = !callsOpen" :aria-expanded="callsOpen">
+                <span class="tip" data-tip="Chronological log of all LLM calls made during the extraction pipeline (borderline judging, grounding verification).">LLM Call Log</span>
+                <span class="tip-icon tip" data-tip="Full request/response log for every LLM call.">i</span>
+                <span class="text-xs font-normal text-gray-400" x-text="`(${(data.llm_calls || []).length} calls)`"></span>
+                <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
+                     :class="callsOpen ? 'rotate-180' : ''"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </h3>
+            <div x-show="callsOpen" class="mt-3 space-y-2">
+              <template x-for="call in data.llm_calls || []" :key="call.call_id">
+                <div class="border border-gray-200 rounded-lg" x-data="{ logOpen: false }">
+                  <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-50"
+                       @click="logOpen = !logOpen">
+                    <div class="flex items-center gap-2 text-sm">
+                      <span class="stage-badge"
+                            :class="call.stage === 'grounding' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                            x-text="call.stage"></span>
+                      <span class="font-mono text-xs text-gray-500" x-text="call.call_id"></span>
+                      <span class="text-xs text-gray-400" x-text="'chunk ' + call.chunk_index"></span>
+                      <div class="flex flex-wrap gap-1">
+                        <template x-for="rid in call.risk_ids || []" :key="rid">
+                          <span class="px-1 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 font-mono" x-text="rid"></span>
+                        </template>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                      <span class="text-gray-500 font-mono" x-text="(call.duration_ms?.toFixed(0) || '?') + 'ms'"></span>
+                      <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-700" x-text="call.result_summary"></span>
+                      <svg class="w-4 h-4 text-gray-400 chevron"
+                           :class="logOpen ? 'rotate-180' : ''"
+                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div x-show="logOpen" class="px-3 pb-3 border-t border-gray-100 space-y-2">
+                    <template x-for="(msg, mi) in call.messages || []" :key="mi">
+                      <div class="mt-2">
+                        <span class="text-xs font-semibold uppercase"
+                              :class="msg.role === 'system' ? 'text-purple-600' : msg.role === 'user' ? 'text-blue-600' : 'text-green-600'"
+                              x-text="msg.role"></span>
+                        <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-60 overflow-y-auto bg-gray-50 rounded p-2 border border-gray-100" x-text="msg.content"></pre>
+                      </div>
+                    </template>
+                    <div class="mt-2">
+                      <span class="text-xs font-semibold uppercase text-green-600">Response</span>
+                      <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-60 overflow-y-auto bg-gray-50 rounded p-2 border border-gray-100" x-text="formatJSON(call.response)"></pre>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <p x-show="(data.llm_calls || []).length === 0" class="text-center text-gray-400 py-4">No LLM calls recorded.</p>
+            </div>
+          </section>
+
+        </div>
+      </template>
+    </section>
+
+    <!-- 5. Evaluation appendix, only when labelled reference results exist -->
     <template x-if="data.eval">
-      <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ evalOpen: false }">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 cursor-pointer flex items-center gap-2"
-            @click="evalOpen = !evalOpen">
-          <span class="tip" data-tip="Detailed evaluation results comparing extracted risk IDs against ground truth.">Eval Detail</span>
-          <span class="tip-icon tip" data-tip="Matched, missing, and spurious risk IDs.">i</span>
-          <span class="text-xs font-normal text-gray-400"
-                x-text="`${data.eval.matched || 0}/${data.eval.total_expected || 0} matched, ${(data.eval.missing || []).length} missing, ${(data.eval.spurious || []).length} spurious`"></span>
-          <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-               :class="evalOpen ? 'rotate-180' : ''"
-               fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
+      <section id="evaluation" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ evalOpen: false }">
+        <h2>
+          <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+                  @click="evalOpen = !evalOpen" :aria-expanded="evalOpen">
+            <span class="tip" data-tip="Detailed evaluation results comparing extracted risk IDs against ground truth.">Evaluation</span>
+            <span class="tip-icon tip" data-tip="Matched, missing, and spurious risk IDs.">i</span>
+            <span class="text-xs font-normal text-gray-400"
+                  x-text="`${data.eval.matched || 0}/${data.eval.total_expected || 0} matched, ${(data.eval.missing || []).length} missing, ${(data.eval.spurious || []).length} spurious`"></span>
+            <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
+                 :class="evalOpen ? 'rotate-180' : ''"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
         </h2>
         <div x-show="evalOpen" class="mt-3">
+          <p class="text-sm text-gray-500 mb-4">Comparison with labelled reference data for this document.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <div class="rounded-lg bg-gray-50 p-3">
+              <p class="text-xs text-gray-500 mb-1">Evaluation result</p>
+              <span class="px-2 py-1 rounded text-xs font-bold text-white" :class="evalBadgeClass" x-text="evalBadgeText"></span>
+            </div>
+            <template x-for="metric in ['precision', 'recall', 'f1']" :key="metric">
+              <div class="rounded-lg bg-gray-50 p-3">
+                <p class="text-xs text-gray-500 capitalize" x-text="metric === 'f1' ? 'F1' : metric"></p>
+                <p class="text-xl font-semibold text-gray-900 mt-1" x-text="formatPercent(data.eval[metric])"></p>
+              </div>
+            </template>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Matched -->
             <div class="border border-green-200 rounded-lg p-3">
@@ -631,231 +921,43 @@
       </section>
     </template>
 
-    <!-- ============================================================ -->
-    <!-- 5. Chunks Timeline -->
-    <!-- ============================================================ -->
-    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ chunksOpen: false }">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 cursor-pointer flex items-center gap-2"
-          @click="chunksOpen = !chunksOpen">
-        <span class="tip" data-tip="Chronological view of all document chunks processed by the retrieval pipeline, with per-chunk retrieval statistics.">Chunks Timeline</span>
-        <span class="tip-icon tip" data-tip="Click to expand the chunk-by-chunk processing timeline.">i</span>
-        <span class="text-xs font-normal text-gray-400" x-text="`(${(data.chunks || []).length} chunks)`"></span>
-        <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-             :class="chunksOpen ? 'rotate-180' : ''"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
-      </h2>
-      <div x-show="chunksOpen" class="mt-3 space-y-2">
-        <template x-for="chunk in data.chunks || []" :key="chunk.index">
-          <div class="border border-gray-200 rounded-lg p-3"
-               :class="(chunk.accepted_risk_ids || []).length > 0 ? 'border-l-4 border-l-indigo-400' : ''">
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-700 font-mono font-semibold"
-                        x-text="'#' + chunk.index"></span>
-                  <span class="text-xs text-gray-600" x-text="fileName(chunk.source)"></span>
-                  <span x-show="chunk.page != null" class="text-xs text-gray-400" x-text="'p.' + chunk.page"></span>
-                  <span x-show="chunk.section" class="text-xs text-gray-400" x-text="chunk.section"></span>
-                </div>
-                <p class="text-xs text-gray-500 line-clamp-2" x-text="chunk.text_preview"></p>
-              </div>
-              <div class="flex items-center gap-2 text-xs flex-shrink-0">
-                <span class="tip px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono"
-                      data-tip="Total candidates retrieved for this chunk" x-text="chunk.candidates_retrieved"></span>
-                <span class="tip px-1.5 py-0.5 rounded bg-green-50 text-green-700 font-mono"
-                      data-tip="Auto-accepted (above high threshold)" x-text="chunk.auto_accepted"></span>
-                <span class="tip px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-mono"
-                      data-tip="Borderline candidates sent to LLM judge" x-text="chunk.borderline"></span>
-                <span class="tip px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-mono"
-                      data-tip="Discarded (below low threshold)" x-text="chunk.discarded"></span>
-              </div>
-            </div>
-            <div x-show="(chunk.accepted_risk_ids || []).length > 0" class="mt-2 flex flex-wrap gap-1">
-              <template x-for="rid in chunk.accepted_risk_ids || []" :key="rid">
-                <span class="px-1.5 py-0.5 rounded text-[10px] bg-indigo-100 text-indigo-800 font-mono" x-text="rid"></span>
-              </template>
-            </div>
-          </div>
-        </template>
-        <p x-show="(data.chunks || []).length === 0" class="text-center text-gray-400 py-4">No chunk data available.</p>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 6. LLM Call Log -->
-    <!-- ============================================================ -->
-    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ callsOpen: false }">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 cursor-pointer flex items-center gap-2"
-          @click="callsOpen = !callsOpen">
-        <span class="tip" data-tip="Chronological log of all LLM calls made during the extraction pipeline (borderline judging, grounding verification).">LLM Call Log</span>
-        <span class="tip-icon tip" data-tip="Full request/response log for every LLM call.">i</span>
-        <span class="text-xs font-normal text-gray-400" x-text="`(${(data.llm_calls || []).length} calls)`"></span>
-        <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-             :class="callsOpen ? 'rotate-180' : ''"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
-      </h2>
-      <div x-show="callsOpen" class="mt-3 space-y-2">
-        <template x-for="call in data.llm_calls || []" :key="call.call_id">
-          <div class="border border-gray-200 rounded-lg" x-data="{ logOpen: false }">
-            <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-50"
-                 @click="logOpen = !logOpen">
-              <div class="flex items-center gap-2 text-sm">
-                <span class="stage-badge"
-                      :class="call.stage === 'grounding' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
-                      x-text="call.stage"></span>
-                <span class="font-mono text-xs text-gray-500" x-text="call.call_id"></span>
-                <span class="text-xs text-gray-400" x-text="'chunk ' + call.chunk_index"></span>
-                <div class="flex flex-wrap gap-1">
-                  <template x-for="rid in call.risk_ids || []" :key="rid">
-                    <span class="px-1 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 font-mono" x-text="rid"></span>
-                  </template>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 text-xs">
-                <span class="text-gray-500 font-mono" x-text="(call.duration_ms?.toFixed(0) || '?') + 'ms'"></span>
-                <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-700" x-text="call.result_summary"></span>
-                <svg class="w-4 h-4 text-gray-400 chevron"
-                     :class="logOpen ? 'rotate-180' : ''"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </div>
-            </div>
-            <div x-show="logOpen" class="px-3 pb-3 border-t border-gray-100 space-y-2">
-              <template x-for="(msg, mi) in call.messages || []" :key="mi">
-                <div class="mt-2">
-                  <span class="text-xs font-semibold uppercase"
-                        :class="msg.role === 'system' ? 'text-purple-600' : msg.role === 'user' ? 'text-blue-600' : 'text-green-600'"
-                        x-text="msg.role"></span>
-                  <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-60 overflow-y-auto bg-gray-50 rounded p-2 border border-gray-100" x-text="msg.content"></pre>
-                </div>
-              </template>
-              <div class="mt-2">
-                <span class="text-xs font-semibold uppercase text-green-600">Response</span>
-                <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-60 overflow-y-auto bg-gray-50 rounded p-2 border border-gray-100" x-text="formatJSON(call.response)"></pre>
-              </div>
-            </div>
-          </div>
-        </template>
-        <p x-show="(data.llm_calls || []).length === 0" class="text-center text-gray-400 py-4">No LLM calls recorded.</p>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 7. Pipeline Stats -->
-    <!-- ============================================================ -->
-    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ statsOpen: false }">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 cursor-pointer flex items-center gap-2"
-          @click="statsOpen = !statsOpen">
-        <span class="tip" data-tip="Detailed pipeline performance metrics: timing breakdown, token usage, and configuration parameters.">Pipeline Stats</span>
-        <span class="tip-icon tip" data-tip="Timing, tokens, and configuration.">i</span>
-        <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-             :class="statsOpen ? 'rotate-180' : ''"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
-      </h2>
-      <div x-show="statsOpen" class="mt-3 space-y-4">
-        <!-- Timing -->
-        <div x-show="Object.keys(data.retrieval_stats?.timing_ms || {}).length > 0">
-          <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Timing Breakdown</p>
-          <div class="space-y-1">
-            <template x-for="[stage, ms] in sortedTimings()" :key="stage">
-              <div class="flex items-center gap-3 text-sm">
-                <span class="w-28 text-right text-xs text-gray-500 font-mono" x-text="stage"></span>
-                <div class="flex-1 bg-gray-200 rounded overflow-hidden h-5">
-                  <div class="timing-bar bg-indigo-400 flex items-center justify-end px-1"
-                       :style="`width: ${Math.max((ms / maxTiming) * 100, 2)}%`">
-                    <span class="text-[10px] text-white font-mono" x-text="ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms.toFixed(0) + 'ms'"></span>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <!-- Token usage -->
-        <div x-show="Object.keys(data.token_usage || {}).length > 0">
-          <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Token Usage</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <template x-if="data.token_usage?.prompt_tokens != null">
-              <div class="text-center p-3 bg-gray-50 rounded-lg">
-                <p class="text-xl font-bold text-blue-600" x-text="formatNumber(data.token_usage.prompt_tokens)"></p>
-                <p class="text-xs text-gray-400 mt-1">Prompt Tokens</p>
-              </div>
-            </template>
-            <template x-if="data.token_usage?.completion_tokens != null">
-              <div class="text-center p-3 bg-gray-50 rounded-lg">
-                <p class="text-xl font-bold text-green-600" x-text="formatNumber(data.token_usage.completion_tokens)"></p>
-                <p class="text-xs text-gray-400 mt-1">Completion Tokens</p>
-              </div>
-            </template>
-            <template x-if="data.token_usage?.total_tokens != null">
-              <div class="text-center p-3 bg-gray-50 rounded-lg">
-                <p class="text-xl font-bold text-purple-600" x-text="formatNumber(data.token_usage.total_tokens)"></p>
-                <p class="text-xs text-gray-400 mt-1">Total Tokens</p>
-              </div>
-            </template>
-            <template x-if="data.token_usage?.calls != null">
-              <div class="text-center p-3 bg-gray-50 rounded-lg">
-                <p class="text-xl font-bold text-amber-600" x-text="data.token_usage.calls"></p>
-                <p class="text-xs text-gray-400 mt-1">LLM Calls</p>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <!-- Configuration echo -->
-        <div x-show="Object.keys(data.metadata || {}).length > 0">
-          <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Configuration</p>
-          <div class="overflow-x-auto">
-            <table class="text-sm">
-              <tbody>
-                <template x-for="[key, val] in Object.entries(data.metadata || {})" :key="key">
-                  <tr class="border-b border-gray-100">
-                    <td class="py-1 pr-4 text-xs text-gray-500 font-mono" x-text="key"></td>
-                    <td class="py-1 text-xs text-gray-800 font-mono" x-text="String(val)"></td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </div>
+  </main>
 </div>
 
 <script>
 function reportApp() {
-  const data = DATA;
+  const data = { ...DATA, risks: DATA.risks || [] };
 
   // Document names (filenames only)
   const docNames = (data.source_documents || [])
     .map(d => d.split('/').pop().split('\\').pop())
     .join(', ') || 'Unknown';
 
-  // Eval badge
-  let evalBadgeClass, evalBadgeText;
-  if (data.eval == null) {
-    evalBadgeClass = 'bg-gray-700 text-gray-300';
-    evalBadgeText = 'No eval';
-  } else if (data.eval.pass) {
-    evalBadgeClass = 'bg-green-600 text-white';
-    evalBadgeText = 'PASS';
-  } else {
-    evalBadgeClass = 'bg-red-600 text-white';
-    evalBadgeText = 'FAIL';
-  }
+  // Evaluation stays in its optional appendix.
+  const evalBadgeClass = data.eval?.pass ? 'bg-green-600' : 'bg-red-600';
+  const evalBadgeText = data.eval?.pass ? 'PASS' : 'FAIL';
 
   // Max timing for bar widths
   const timings = data.retrieval_stats?.timing_ms || {};
   const maxTiming = Math.max(...Object.values(timings), 1);
+
+  // Full-report distributions never change when the findings are filtered.
+  const riskCount = data.risks.length;
+  const taxonomyCounts = new Map();
+  const groundingCounts = new Map(['high', 'medium', 'low', 'ungrounded'].map(level => [level, 0]));
+  for (const risk of data.risks) {
+    const taxonomy = typeof risk.taxonomy === 'string' && risk.taxonomy.length ? risk.taxonomy : '__asago_no_taxonomy__';
+    const grounding = typeof risk.grounding_confidence === 'string' && risk.grounding_confidence.length
+      ? risk.grounding_confidence : 'unknown';
+    taxonomyCounts.set(taxonomy, (taxonomyCounts.get(taxonomy) || 0) + 1);
+    groundingCounts.set(grounding, (groundingCounts.get(grounding) || 0) + 1);
+  }
+  const taxonomyDistribution = [...taxonomyCounts].map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+  const groundingDistribution = [...groundingCounts].map(([value, count]) => ({ value, count }));
+  const taxonomyCount = [...taxonomyCounts.keys()].filter(value => value !== '__asago_no_taxonomy__').length;
+  const highCount = groundingCounts.get('high') || 0;
+  const reviewCount = ['medium', 'low', 'ungrounded'].reduce((sum, level) => sum + (groundingCounts.get(level) || 0), 0);
 
   return {
     data,
@@ -863,24 +965,128 @@ function reportApp() {
     evalBadgeClass,
     evalBadgeText,
     maxTiming,
+    riskCount,
+    taxonomyCount,
+    highCount,
+    reviewCount,
+    taxonomyDistribution,
+    groundingDistribution,
+    taxonomyMax: Math.max(...taxonomyDistribution.map(item => item.count), 1),
+    sortBy: 'grounding_confidence',
+    sortDesc: true,
+    filterAcceptedBy: [],
+    filterGrounding: [],
+    filterTaxonomy: [],
+    searchQuery: '',
+    findingColumns: [
+      { key: 'risk_name', label: 'Risk' },
+      { key: 'taxonomy', label: 'Taxonomy' },
+      { key: 'grounding_confidence', label: 'Grounding confidence' },
+      { key: 'evidence_count', label: 'Evidence' },
+    ],
+    processingStats: [
+      { key: 'total_chunks', label: 'Chunks processed' },
+      { key: 'total_candidates_retrieved', label: 'Candidates retrieved' },
+      { key: 'auto_accepted', label: 'Auto-accepted candidates' },
+      { key: 'llm_judged', label: 'Candidates judged' },
+      { key: 'grounding_filtered', label: 'Filtered during grounding' },
+    ],
+
+    get summaryText() {
+      if (!riskCount) return 'No risk matches were recorded in this analysis. Processing details are available below.';
+      const entries = riskCount === 1 ? 'risk entry' : 'risk entries';
+      const scope = taxonomyCount
+        ? ' across ' + taxonomyCount + (taxonomyCount === 1 ? ' taxonomy.' : ' taxonomies.')
+        : '. Taxonomy information was not recorded.';
+      return 'This analysis mapped document passages to ' + riskCount + ' ' + entries + scope;
+    },
+
+    get visibleRisks() {
+      return this.filteredRisks(data.risks, this.filterAcceptedBy, this.filterGrounding, this.filterTaxonomy, this.searchQuery);
+    },
+
+    get hasActiveFilters() {
+      return this.filterAcceptedBy.length > 0 || this.filterGrounding.length > 0
+        || this.filterTaxonomy.length > 0 || this.searchQuery.trim().length > 0;
+    },
+
+    resetFilters() {
+      this.filterAcceptedBy = [];
+      this.filterGrounding = [];
+      this.filterTaxonomy = [];
+      this.searchQuery = '';
+    },
+
+    toggleChartFilter(field, value) {
+      this[field] = this[field].includes(value)
+        ? this[field].filter(item => item !== value)
+        : [...this[field], value];
+    },
+
+    showReviewMatches() {
+      this.resetFilters();
+      this.filterGrounding = ['medium', 'low', 'ungrounded'];
+      this.sortBy = 'grounding_confidence';
+      this.sortDesc = false;
+      this.scrollToFindings();
+    },
+
+    scrollToFindings() {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.getElementById('findings')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      document.getElementById('findings-heading')?.focus({ preventScroll: true });
+    },
+
+    formatDate(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+    },
+
+    formatPercent(value) {
+      return typeof value === 'number' && Number.isFinite(value)
+        ? (value * 100).toFixed(1).replace(/\.0$/, '') + '%' : '—';
+    },
+
+    matchShare(count) {
+      return this.formatPercent(riskCount ? count / riskCount : 0);
+    },
+
+    groundingValue(value) {
+      return typeof value === 'string' && value.length ? value : 'unknown';
+    },
+
+    groundingBarColor(value) {
+      return {
+        high: 'asago-grounding-high',
+        medium: 'asago-grounding-medium',
+        low: 'asago-grounding-low',
+        ungrounded: 'bg-slate-500',
+      }[value] || 'bg-gray-500';
+    },
+
+    taxonomyColor(value) {
+      return {
+        'ibm-risk-atlas': 'bg-sky-100 text-sky-800',
+        'credo-ucf': 'bg-teal-100 text-teal-800',
+        'mit-ai-risk-repository': 'bg-violet-100 text-violet-800',
+        'ai-risk-taxonomy': 'bg-green-100 text-green-800',
+        'air-2024': 'bg-green-100 text-green-800',
+      }[value] || 'bg-gray-100 text-gray-700';
+    },
 
     fileName(path) {
       if (!path) return '?';
       return path.split('/').pop().split('\\').pop();
     },
 
-    confidenceColor(score) {
-      if (score == null) return 'bg-gray-100 text-gray-600';
-      if (score >= 0.9) return 'bg-green-100 text-green-800';
-      if (score >= 0.7) return 'bg-amber-100 text-amber-800';
-      return 'bg-red-100 text-red-800';
-    },
-
     groundingColor(level) {
       const colors = {
-        'high': 'bg-green-100 text-green-800',
+        'high': 'asago-grounding-badge',
         'medium': 'bg-amber-100 text-amber-800',
-        'low': 'bg-red-100 text-red-800',
+        'low': 'bg-orange-100 text-orange-800',
         'ungrounded': 'bg-gray-100 text-gray-600',
       };
       return colors[level] || 'bg-gray-100 text-gray-600';
@@ -888,7 +1094,7 @@ function reportApp() {
 
     groundingOptions(risks) {
       const values = [...new Set((risks || [])
-        .map(risk => risk.grounding_confidence)
+        .map(risk => this.groundingValue(risk.grounding_confidence))
         .filter(value => typeof value === 'string' && value.length > 0))];
       const commonOrder = ['high', 'medium', 'low', 'ungrounded'];
       return [
@@ -992,7 +1198,7 @@ function reportApp() {
       }
       if ((grounding || []).length > 0) {
         const selectedGrounding = new Set(grounding);
-        result = result.filter(r => selectedGrounding.has(r.grounding_confidence));
+        result = result.filter(r => selectedGrounding.has(this.groundingValue(r.grounding_confidence)));
       }
       if ((taxonomy || []).length > 0) {
         const selectedTaxonomy = new Set(taxonomy);
@@ -1014,6 +1220,14 @@ function reportApp() {
         if (sortBy === 'evidence_count') {
           va = (a.evidence || []).length;
           vb = (b.evidence || []).length;
+        } else if (sortBy === 'grounding_confidence') {
+          const order = { high: 3, medium: 2, low: 1, ungrounded: 0 };
+          va = order[a.grounding_confidence] ?? -1;
+          vb = order[b.grounding_confidence] ?? -1;
+          if (va === vb) return (a.risk_name || '').localeCompare(b.risk_name || '');
+        } else if (sortBy === 'taxonomy') {
+          va = this.taxonomyLabel(this.taxonomyFilterValue(a.taxonomy));
+          vb = this.taxonomyLabel(this.taxonomyFilterValue(b.taxonomy));
         } else {
           va = a[sortBy];
           vb = b[sortBy];
@@ -1036,8 +1250,90 @@ function reportApp() {
         section.sortDesc = !section.sortDesc;
       } else {
         section.sortBy = field;
-        section.sortDesc = field === 'confidence' || field === 'evidence_count';
+        section.sortDesc = field === 'grounding_confidence' || field === 'evidence_count';
       }
+    },
+
+    scoreBreakdown(risk) {
+      const scores = risk.scores || {};
+      const metadata = data.metadata || {};
+      const colbert = Boolean(metadata.colbert_model);
+      const expansion = risk.accepted_by === 'expansion';
+      const definitions = [
+        {
+          key: 'bm25_rank', label: 'Keyword rank (BM25)',
+          description: 'Where this risk appeared in the keyword search results.',
+          direction: 'Lower is better', range: '1 upwards',
+          interpretation: '1 is the top keyword result. Rank is relative to the other risks in that search.',
+        },
+        {
+          key: 'embedding_distance', label: 'Meaning distance (embeddings)',
+          description: 'Compares the meaning of the search text and the risk description.',
+          direction: 'Lower is closer', range: '0–2',
+          interpretation: '0 is the closest possible match according to the model. Useful cutoffs depend on the embedding model.',
+        },
+        {
+          key: 'cross_encoder_score',
+          label: colbert ? 'Token similarity (ColBERT)' : 'Relevance score (cross-encoder)',
+          description: colbert
+            ? 'Matches individual tokens in the search text against the risk description.'
+            : 'A model’s score for how relevant a passage is to this risk.',
+          direction: 'Higher is stronger', range: '0–1',
+          interpretation: colbert
+            ? 'Uses normalized token similarity. Its scale differs from a cross-encoder score.'
+            : 'Interpretation depends on the reranker model. There is no universal “good” cutoff across models.',
+        },
+        {
+          key: 'rrf_score', label: 'Combined ranking (RRF)',
+          description: 'Combines positions in the keyword and meaning-based search lists.',
+          direction: 'Higher is better', range: '0–0.0328 (default)',
+          interpretation: 'The default maximum is reached when a risk ranks first in both search lists. Small values are expected.',
+        },
+      ];
+      return definitions.map(definition => {
+        const raw = scores[definition.key];
+        const result = { ...definition, value: this.formatRetrievalScore(raw) };
+        if (!Number.isFinite(raw)) {
+          result.interpretation = 'No value was recorded for this score.';
+        } else if (expansion && raw === 0) {
+          result.value = 'Not used';
+          result.interpretation = 'This risk was added by checking related risks. The saved zero is a placeholder.';
+        } else if (definition.key === 'bm25_rank') {
+          result.value = raw === 0 ? 'Not ranked' : String(raw);
+          if (raw === 0) result.interpretation = 'This risk did not appear in the keyword shortlist. Zero is a placeholder for an absent rank.';
+        } else if (definition.key === 'embedding_distance' && raw === 0) {
+          if (colbert) {
+            result.value = 'Not used';
+            result.interpretation = 'ColBERT uses token similarity instead of a single embedding distance. The saved zero is a placeholder.';
+          } else {
+            result.interpretation = 'A stored zero can mean an exact match between embeddings or an unrecorded default. This saved result does not distinguish them.';
+          }
+        } else if (definition.key === 'cross_encoder_score' && raw === 0) {
+          if (colbert) {
+            result.value = 'Not ranked';
+            result.interpretation = 'This risk did not appear in the ColBERT shortlist. The saved zero is a placeholder.';
+          } else if (metadata.use_cross_encoder === false || metadata.cross_encoder_model === null) {
+            result.value = 'Not run';
+            result.interpretation = 'Cross-encoder reranking was disabled for this run. The saved zero is a placeholder.';
+          } else if (metadata.query_gen === true) {
+            result.interpretation = 'Generated-query retrieval can skip reranking, while fallback retrieval can run it. This zero may be a placeholder or a scored result.';
+          } else if (metadata.bm25_rescue_rank > 0 && scores.bm25_rank > 0 && scores.bm25_rank <= metadata.bm25_rescue_rank) {
+            result.interpretation = 'Keyword rescue can retain a risk without a reranker score. This zero may be a placeholder or a scored result.';
+          } else if (metadata.use_cross_encoder !== true || metadata.query_gen !== false) {
+            result.interpretation = 'The saved settings do not confirm whether reranking ran for this match. This zero may be a placeholder.';
+          }
+        } else if (definition.key === 'rrf_score' && raw === 0) {
+          result.value = 'Not recorded';
+          result.interpretation = 'RRF is positive when a risk appears in either search list. No combined ranking was recorded here.';
+        }
+        return result;
+      });
+    },
+
+    formatRetrievalScore(value) {
+      if (!Number.isFinite(value)) return 'Not recorded';
+      // Keep tiny measured scores distinguishable from zero placeholders.
+      return value !== 0 && Math.abs(value) < 0.0001 ? value.toExponential(2) : value.toFixed(4);
     },
 
     riskCalls(riskId) {
