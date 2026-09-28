@@ -309,6 +309,8 @@ PY
 
 Open the generated HTML in a browser. This makes no LLM calls. Internet access is needed for the report's Tailwind and Alpine scripts.
 
+The extraction and annotation HTML reports are rendered from Jinja2 templates in `src/asago_policy_mapper/templates/`. Shared dark mode styling and controls are included by the templates, and report data is embedded with Jinja2's `tojson` filter. Alpine runs the interactive filters and controls in the browser.
+
 Report checks: `uv run pytest tests/test_extract_report.py tests/test_report_themes.py` and `node --test tests/report_interactions.test.cjs` (Node.js 18+).
 
 ### Evaluate against ground truth

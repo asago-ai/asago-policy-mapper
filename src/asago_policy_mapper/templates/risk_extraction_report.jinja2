@@ -120,15 +120,17 @@
       .chart-bar, .chevron { transition: none; }
     }
   </style>
+  {% include "dark_mode_snippet.html" %}
+  {% include "report_branding.html" %}
 </head>
 <body class="asago-report min-h-screen">
-<script>const DATA = __REPORT_DATA__;</script>
+<script>const DATA = {{ report_data | tojson }};</script>
 
 <div id="app" x-data="reportApp()" x-cloak>
   <header class="asago-header">
     <div class="max-w-screen-xl mx-auto px-4 py-6 sm:px-6">
       <div class="flex items-center gap-4 mb-4">
-        <img src="__ASAGO_LOGO__" alt="asago" class="asago-logo" width="1000" height="400" />
+        <img src="{{ logo_src }}" alt="asago" class="asago-logo" width="1000" height="400" />
         <span class="asago-product text-xs font-semibold uppercase tracking-widest">Policy mapper</span>
       </div>
       <div class="flex flex-wrap items-end justify-between gap-4">
@@ -1561,5 +1563,6 @@ function reportApp() {
   };
 }
 </script>
+{% include "dark_mode_toggle.html" %}
 </body>
 </html>
