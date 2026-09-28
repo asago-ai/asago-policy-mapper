@@ -277,7 +277,7 @@ Reports use [Asago's visual style](https://github.com/asago-ai/asago-ai.github.i
 
 The report starts with matched-risk totals, taxonomy counts and grounding confidence. Compact charts show matches by theme, taxonomy and grounding confidence. Theme bars are sorted by descending count, with **Other / not yet grouped** always last. Select one or more chart categories to filter the findings; charts and summary totals always describe the full report. Theme coverage and methodology are available under **Technical details → Theme grouping**. The **Review suggested** card clears existing filters and shows Medium, Low and Ungrounded matches.
 
-Hover over, focus or tap the info icon beside a chart title for an explanation. Press Escape to dismiss it.
+Hover over, focus or tap the info icon beside any summary card or chart title for an explanation. Press Escape to dismiss it. Opening the Review suggested tooltip leaves your filters unchanged.
 
 Themes cover privacy, fairness, security, reliability, human agency, harmful content, intellectual property and environmental impact. The curated category-to-theme definitions live in `src/asago_policy_mapper/data/report_themes.yaml`, joined to `risk_to_category.sssom.tsv` using only exact/close/broadMatch links. A risk can appear in multiple themes, so theme totals may overlap; the findings list shows each risk once. Matches without a supported link, including custom risks, remain in **Other / not yet grouped**. Themes with no matches are omitted; this does not establish that a topic is absent from the policy.
 
