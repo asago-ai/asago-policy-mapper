@@ -60,6 +60,24 @@
       vertical-align: middle;
     }
 
+    /* Keep chart help within its card on narrow screens. */
+    .chart-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      z-index: 50;
+      width: min(320px, 100%);
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #1f2937;
+      color: #f9fafb;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.4;
+      box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+    }
+    .dark .chart-tooltip { background: #f9fafb; color: #111827; }
+
     /* Chevron transition */
     .chevron { transition: transform 0.2s ease; }
 
@@ -169,14 +187,47 @@
         <div>
           <p class="text-xs font-semibold asago-link uppercase tracking-wide mb-2">02 / Overview</p>
           <h2 id="overview-heading" class="text-xl font-semibold text-gray-900">Explore the pattern of matches</h2>
-          <p class="text-sm text-gray-500 mt-1">Select chart categories to filter the findings below. Charts show the full report.</p>
+          <p class="text-sm text-gray-500 mt-1">Select chart categories to filter the findings. Charts show the full report.</p>
         </div>
         <a href="#findings" class="text-sm font-medium asago-link hover:underline">View findings &darr;</a>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div id="themes" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" aria-labelledby="themes-heading">
+          <div class="relative flex items-center gap-1 mb-4" x-data="{ helpOpen: false }"
+               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
+            <h3 id="themes-heading" class="text-sm font-semibold text-gray-900">Risk matches by theme</h3>
+            <button type="button" class="tip-icon" aria-label="About risk themes" aria-describedby="theme-chart-help"
+                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
+            <span id="theme-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of matched risk entries in each theme. A risk can belong to several themes, so counts overlap. Other / not yet grouped contains matches without a supported theme mapping.</span>
+          </div>
+          <div class="space-y-2" role="group" aria-label="Filter findings by theme">
+            <template x-for="item in themeDistribution" :key="item.id">
+              <button type="button" @click="toggleChartFilter('filterThemes', item.id)"
+                      :aria-pressed="filterThemes.includes(item.id)"
+                      :aria-label="item.label + ': ' + item.count + ' matches'"
+                      class="w-full text-left rounded-lg border p-2"
+                      :class="filterThemes.includes(item.id) ? 'asago-selected' : 'border-transparent hover:bg-gray-50'">
+                <div class="flex items-center justify-between gap-3 text-xs mb-2">
+                  <span class="text-gray-700" x-text="item.label"></span>
+                  <span class="text-gray-900 font-semibold tabular-nums" x-text="item.count"></span>
+                </div>
+                <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div class="chart-bar h-full rounded-full asago-chart-bar"
+                       :style="'width: ' + (item.count / themeMax * 100) + '%'"></div>
+                </div>
+              </button>
+            </template>
+          </div>
+          <p x-show="riskCount === 0" class="text-sm text-gray-500 py-8 text-center">No risk matches to group.</p>
+        </div>
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-900">Risk matches by taxonomy</h3>
-          <p class="text-xs text-gray-500 mt-1 mb-4">Number of matched entries in each taxonomy</p>
+          <div class="relative flex items-center gap-1 mb-4" x-data="{ helpOpen: false }"
+               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
+            <h3 class="text-sm font-semibold text-gray-900">Risk matches by taxonomy</h3>
+            <button type="button" class="tip-icon" aria-label="About risk taxonomies" aria-describedby="taxonomy-chart-help"
+                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
+            <span id="taxonomy-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of matched risk entries from each taxonomy. Related entries in different taxonomies are counted separately.</span>
+          </div>
           <div class="space-y-2" role="group" aria-label="Filter findings by taxonomy">
             <template x-for="item in taxonomyDistribution" :key="item.value">
               <button type="button" @click="toggleChartFilter('filterTaxonomy', item.value)"
@@ -198,9 +249,14 @@
           <p x-show="riskCount === 0" class="text-sm text-gray-500 py-8 text-center">No risk matches to summarise.</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-900">Grounding confidence</h3>
-          <p class="text-xs text-gray-500 mt-1">How strongly the model judges the document to support each match</p>
-          <div x-show="riskCount > 0" class="flex h-12 rounded-lg overflow-hidden mt-6 mb-5"
+          <div class="relative flex items-center gap-1 mb-4" x-data="{ helpOpen: false }"
+               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
+            <h3 class="text-sm font-semibold text-gray-900">Grounding confidence</h3>
+            <button type="button" class="tip-icon" aria-label="About grounding confidence" aria-describedby="grounding-chart-help"
+                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
+            <span id="grounding-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number and share of matches at each level of model-rated document support. High indicates stronger support than Medium or Low. Ungrounded means the grounding stage was skipped.</span>
+          </div>
+          <div x-show="riskCount > 0" class="flex h-12 rounded-lg overflow-hidden mb-5"
                role="group" aria-label="Grounding confidence distribution">
             <template x-for="item in groundingDistribution.filter(item => item.count > 0)" :key="item.value">
               <button type="button" @click="toggleChartFilter('filterGrounding', item.value)"
@@ -232,7 +288,6 @@
               </button>
             </template>
           </div>
-          <p class="text-xs text-gray-500 mt-5">These levels describe document support for a match. Ungrounded means the grounding stage was skipped.</p>
           <p x-show="riskCount === 0" class="text-sm text-gray-500 mt-3">No grounding results to summarise.</p>
         </div>
       </div>
@@ -255,6 +310,33 @@
       </div>
       <!-- Filter bar -->
       <div class="flex flex-wrap items-center gap-3 mb-4 text-sm">
+        <div class="flex items-center gap-1">
+          <label class="text-gray-500 text-xs">Theme:</label>
+          <div class="relative" x-data="{ themesOpen: false }" @keydown.escape.stop.prevent="themesOpen = false; $refs.themesButton.focus()" @click.outside="themesOpen = false">
+            <button type="button" x-ref="themesButton" aria-label="Filter by theme" @click="themesOpen = !themesOpen"
+                    :aria-expanded="themesOpen"
+                    class="flex min-w-28 max-w-48 gap-2 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+              <span x-text="themeFilterLabel"></span>
+              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+            </button>
+            <div x-show="themesOpen" x-transition
+                 class="absolute left-0 top-full z-30 mt-1 w-72 max-w-[calc(100vw-7rem)] max-h-80 overflow-y-auto rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 role="group" aria-label="Theme">
+              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                <input type="checkbox" :checked="filterThemes.length === 0 || filterThemes.length === themeDistribution.length"
+                       @change="filterThemes = []" class="rounded border-gray-300" />
+                <span>All</span>
+              </label>
+              <div class="my-1 border-t border-gray-100"></div>
+              <template x-for="option in themeDistribution" :key="option.id">
+                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                  <input type="checkbox" :value="option.id" x-model="filterThemes" class="rounded border-gray-300" />
+                  <span x-text="option.label"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+        </div>
         <div class="flex items-center gap-1">
           <label class="text-gray-500 text-xs">Accepted by:</label>
           <div class="relative" x-data="{ acceptedByOpen: false }" @keydown.escape.stop.prevent="acceptedByOpen = false; $refs.acceptedByButton.focus()" @click.outside="acceptedByOpen = false">
@@ -379,6 +461,11 @@
                               @click.stop="expanded = !expanded" :aria-expanded="expanded"
                               :aria-controls="'finding-' + encodeURIComponent(risk.risk_id)"
                               x-text="risk.risk_name"></button>
+                      <div class="flex flex-wrap gap-1 mt-2" aria-label="Themes">
+                        <template x-for="themeId in riskThemeIds(risk)" :key="themeId">
+                          <span class="asago-tag rounded px-2 py-0.5 text-xs" x-text="themeLabel(themeId)"></span>
+                        </template>
+                      </div>
                     </div>
                     <div class="pr-3 min-w-0">
                       <span class="inline-block rounded px-2 py-1 text-xs break-all"
@@ -425,6 +512,19 @@
                         <p class="text-xs text-gray-400 uppercase mb-1">Risk definition</p>
                         <p class="text-sm text-gray-700" x-text="risk.risk_description"></p>
                       </div>
+                      <details class="text-xs text-gray-500">
+                        <summary class="cursor-pointer asago-link w-fit">How this risk was grouped</summary>
+                        <p x-show="!(risk.theme_links || []).length" class="mt-2">No supported category-to-theme link is available for this risk yet. It remains visible in Other / not yet grouped.</p>
+                        <ul x-show="(risk.theme_links || []).length" class="mt-2 space-y-2">
+                          <template x-for="link in risk.theme_links || []" :key="link.taxonomy + ':' + link.category_id">
+                            <li>
+                              <span class="font-medium text-gray-700" x-text="link.category_label"></span>
+                              <span x-text="' (' + link.taxonomy_label + ') → '"></span>
+                              <span x-text="link.theme_ids.map(id => themeLabel(id)).join(', ')"></span>
+                            </li>
+                          </template>
+                        </ul>
+                      </details>
                       <!-- Causal chain (DPV) -->
                       <div x-show="risk.threat || risk.consequence">
                         <p class="tip text-xs text-gray-400 uppercase mb-1"
@@ -605,13 +705,20 @@
                 class="flex w-full items-center justify-between gap-4 text-left">
           <span>
             <span class="text-sm font-semibold text-gray-900">Technical details</span>
-            <span class="block text-xs text-gray-500 mt-1">Processing statistics, configuration, document chunks and model call logs</span>
+            <span class="block text-xs text-gray-500 mt-1">Grouping methodology, processing statistics, configuration, document chunks and model call logs</span>
           </span>
           <span class="text-gray-400" aria-hidden="true" x-text="technicalOpen ? '−' : '+'"></span>
         </button>
       </h2>
       <template x-if="technicalOpen">
         <div class="space-y-4 mt-4">
+          <details class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm text-gray-500">
+            <summary class="cursor-pointer font-semibold">Theme grouping</summary>
+            <p class="mt-3 font-medium text-gray-700" x-text="themeCoverageText"></p>
+            <p class="mt-2">Themes use curated links from risks to NIST, OWASP and AILuminate categories. Only exact, close or broader-category links are used. Source categories are shown inside each finding. Matches without a supported link remain in Other / not yet grouped.</p>
+            <p class="mt-2">A risk can belong to several themes, so theme counts may add up to more than the total. Selecting several themes shows each matching risk once. Mapping coverage is partial and varies by taxonomy; it does not measure extraction accuracy or policy completeness.</p>
+            <p class="mt-2">Themes with no matches are omitted. Their absence does not establish that a topic is absent from your policy.</p>
+          </details>
           <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ statsOpen: false }">
             <h3>
               <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
@@ -938,6 +1045,21 @@
 <script>
 function reportApp() {
   const data = { ...DATA, risks: DATA.risks || [] };
+  const otherTheme = { id: 'other', label: 'Other / not yet grouped', description: 'Matches without a supported theme mapping, including custom risks.' };
+  const themeCatalog = [...(data.theme_catalog || []).filter(theme => theme.id !== 'other'), otherTheme];
+  const themeById = new Map(themeCatalog.map(theme => [theme.id, theme]));
+  const riskThemeIds = risk => {
+    const ids = [...new Set((risk.theme_ids || []).filter(id => id !== 'other' && themeById.has(id)))];
+    return ids.length ? ids : ['other'];
+  };
+  const themeDistribution = themeCatalog.map(theme => {
+    const matches = data.risks.filter(risk => riskThemeIds(risk).includes(theme.id));
+    const taxonomies = new Set(matches.map(risk => risk.taxonomy).filter(Boolean));
+    return { ...theme, count: matches.length, taxonomyCount: taxonomies.size };
+  }).filter(theme => theme.count > 0)
+    .sort((a, b) => Number(a.id === 'other') - Number(b.id === 'other')
+      || b.count - a.count || a.label.localeCompare(b.label));
+  const groupedCount = data.risks.filter(risk => !riskThemeIds(risk).includes('other')).length;
 
   // Document names (filenames only)
   const docNames = (data.source_documents || [])
@@ -982,12 +1104,16 @@ function reportApp() {
     reviewCount,
     taxonomyDistribution,
     groundingDistribution,
+    themeDistribution,
+    themeMax: Math.max(...themeDistribution.map(item => item.count), 1),
+    riskThemeIds,
     taxonomyMax: Math.max(...taxonomyDistribution.map(item => item.count), 1),
     sortBy: 'grounding_confidence',
     sortDesc: true,
     filterAcceptedBy: [],
     filterGrounding: [],
     filterTaxonomy: [],
+    filterThemes: [],
     searchQuery: '',
     findingColumns: [
       { key: 'risk_name', label: 'Risk' },
@@ -1013,18 +1139,33 @@ function reportApp() {
     },
 
     get visibleRisks() {
-      return this.filteredRisks(data.risks, this.filterAcceptedBy, this.filterGrounding, this.filterTaxonomy, this.searchQuery);
+      return this.filteredRisks(data.risks, this.filterAcceptedBy, this.filterGrounding, this.filterTaxonomy, this.searchQuery, this.filterThemes);
+    },
+
+    get themeCoverageText() {
+      return `${groupedCount} of ${riskCount} matches grouped by theme · ${riskCount - groupedCount} not yet grouped`;
+    },
+
+    themeLabel(id) {
+      return (themeById.get(id) || otherTheme).label;
+    },
+
+    get themeFilterLabel() {
+      if (!this.filterThemes.length || this.filterThemes.length === themeDistribution.length) return 'All';
+      if (this.filterThemes.length === 1) return this.themeLabel(this.filterThemes[0]);
+      return `${this.filterThemes.length} selected`;
     },
 
     get hasActiveFilters() {
       return this.filterAcceptedBy.length > 0 || this.filterGrounding.length > 0
-        || this.filterTaxonomy.length > 0 || this.searchQuery.trim().length > 0;
+        || this.filterTaxonomy.length > 0 || this.filterThemes.length > 0 || this.searchQuery.trim().length > 0;
     },
 
     resetFilters() {
       this.filterAcceptedBy = [];
       this.filterGrounding = [];
       this.filterTaxonomy = [];
+      this.filterThemes = [];
       this.searchQuery = '';
     },
 
@@ -1201,7 +1342,7 @@ function reportApp() {
       return colors[value] || 'bg-gray-100 text-gray-700';
     },
 
-    filteredRisks(risks, acceptedBy, grounding, taxonomy, query) {
+    filteredRisks(risks, acceptedBy, grounding, taxonomy, query, themes) {
       let result = risks || [];
       if ((acceptedBy || []).length > 0) {
         const selected = new Set(acceptedBy);
@@ -1214,6 +1355,10 @@ function reportApp() {
       if ((taxonomy || []).length > 0) {
         const selectedTaxonomy = new Set(taxonomy);
         result = result.filter(r => selectedTaxonomy.has(this.taxonomyFilterValue(r.taxonomy)));
+      }
+      if ((themes || []).length > 0) {
+        const selectedThemes = new Set(themes);
+        result = result.filter(r => riskThemeIds(r).some(id => selectedThemes.has(id)));
       }
       if (query && query.trim()) {
         const q = query.trim().toLowerCase();
