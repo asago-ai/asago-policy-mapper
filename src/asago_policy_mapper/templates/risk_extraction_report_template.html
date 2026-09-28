@@ -685,15 +685,26 @@
               </div>
 
               <!-- Configuration echo -->
-              <div x-show="Object.keys(data.metadata || {}).length > 0">
+              <div id="report-configuration" x-show="Object.keys(data.metadata || {}).length > 0">
                 <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Configuration</p>
-                <div class="overflow-x-auto">
-                  <table class="text-sm">
+                <div class="relative overflow-x-auto">
+                  <table class="w-full table-fixed text-sm">
+                    <caption class="sr-only">Extraction settings</caption>
                     <tbody>
                       <template x-for="[key, val] in Object.entries(data.metadata || {})" :key="key">
-                        <tr class="border-b border-gray-100">
-                          <td class="py-1 pr-4 text-xs text-gray-500 font-mono" x-text="key"></td>
-                          <td class="py-1 text-xs text-gray-800 font-mono" x-text="String(val)"></td>
+                        <tr class="border-b border-gray-100" :data-setting="key">
+                          <th scope="row" class="w-1/3 sm:w-1/4 py-2 pr-4 align-top text-left text-xs text-gray-500 font-mono font-normal break-all" x-text="key"></th>
+                          <td class="py-2 align-top text-xs text-gray-800 font-mono">
+                            <template x-if="isExpandableMetadata(val)">
+                              <details>
+                                <summary class="cursor-pointer asago-link w-fit" x-text="metadataValueLabel(val)"></summary>
+                                <pre class="mt-2 p-3 rounded border border-blue-300 bg-gray-50 text-gray-700 whitespace-pre-wrap break-words max-h-80 overflow-auto" x-text="formatJSON(val)"></pre>
+                              </details>
+                            </template>
+                            <template x-if="!isExpandableMetadata(val)">
+                              <span class="whitespace-pre-wrap break-all" x-text="metadataValueLabel(val)"></span>
+                            </template>
+                          </td>
                         </tr>
                       </template>
                     </tbody>
@@ -1340,6 +1351,22 @@ function reportApp() {
       return (data.llm_calls || []).filter(c =>
         (c.risk_ids || []).includes(riskId)
       );
+    },
+
+    isExpandableMetadata(value) {
+      return value !== null && typeof value === 'object' && Object.keys(value).length > 0;
+    },
+
+    metadataValueLabel(value) {
+      if (value == null) return 'Not set';
+      if (Array.isArray(value)) {
+        return value.length ? value.length + (value.length === 1 ? ' item' : ' items') : 'Empty list []';
+      }
+      if (typeof value === 'object') {
+        const count = Object.keys(value).length;
+        return count ? count + (count === 1 ? ' field' : ' fields') : 'Empty object {}';
+      }
+      return value === '' ? 'Empty string ""' : String(value);
     },
 
     formatJSON(obj) {
