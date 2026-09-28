@@ -166,9 +166,15 @@
           <p class="text-xs text-gray-500 mt-2">Frameworks with risk matches</p>
         </div>
         <div class="asago-summary-card asago-summary-high rounded-xl p-5">
-          <p class="text-sm text-gray-500">High grounding confidence</p>
+          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
+               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
+            <p class="text-sm text-gray-500">High grounding confidence</p>
+            <button type="button" class="tip-icon" aria-label="About strong supporting evidence" aria-describedby="strong-evidence-help"
+                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
+            <span id="strong-evidence-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">The AI judged that quoted passages in your policy strongly support these risk matches. This count includes matches rated High for grounding confidence.</span>
+          </div>
           <p class="text-4xl font-semibold asago-success mt-3" x-text="formatNumber(highCount)"></p>
-          <p class="text-xs text-gray-500 mt-2">Model-rated document support</p>
+          <p class="text-xs text-gray-500 mt-2">Matches with strong supporting evidence</p>
         </div>
         <button type="button" @click="showReviewMatches()" :disabled="reviewCount === 0"
                 class="asago-summary-card asago-review-card rounded-xl p-5 text-left disabled:cursor-default"
@@ -254,7 +260,7 @@
             <h3 class="text-sm font-semibold text-gray-900">Grounding confidence</h3>
             <button type="button" class="tip-icon" aria-label="About grounding confidence" aria-describedby="grounding-chart-help"
                     @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="grounding-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number and share of matches at each level of model-rated document support. High indicates stronger support than Medium or Low. Ungrounded means the grounding stage was skipped.</span>
+            <span id="grounding-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">How strongly the AI judges quoted passages in your policy to support each risk match. High indicates stronger support than Medium or Low. Ungrounded means the grounding stage was skipped.</span>
           </div>
           <div x-show="riskCount > 0" class="flex h-12 rounded-lg overflow-hidden mb-5"
                role="group" aria-label="Grounding confidence distribution">
