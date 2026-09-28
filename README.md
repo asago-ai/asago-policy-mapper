@@ -275,9 +275,17 @@ Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-
 
 Reports use [Asago's visual style](https://github.com/asago-ai/asago-ai.github.io), with the official logo embedded in the HTML, blue and mint accents, and a dark theme by default. The theme toggle retains your light/dark preference.
 
-The report starts with matched-risk totals, taxonomy counts and grounding confidence. Select categories in the taxonomy or grounding charts to filter the findings; charts and summary totals always describe the full report. The **Review suggested** card clears existing filters and shows Medium, Low and Ungrounded matches.
+The report starts with matched-risk totals, taxonomy counts and grounding confidence. Compact charts show matches by theme, taxonomy and grounding confidence. Theme bars are sorted by descending count, with **Other / not yet grouped** always last. Select one or more chart categories to filter the findings; charts and summary totals always describe the full report. Theme coverage and methodology are available under **Technical details → Theme grouping**. The **Review suggested** card clears existing filters and shows Medium, Low and Ungrounded matches.
 
-The findings table supports search and multiple selections for Accepted by, Grounding and Taxonomy. Open a finding to read its supporting quotes, source locations, risk definition, causal explanation and related mitigation guidance. Retrieval scores and LLM diagnostics are under each finding's technical details. Processing statistics, settings, chunks and the full LLM log are in a collapsed technical appendix. Evaluation appears last, only when evaluation data is available.
+Hover over, focus or tap the info icon beside a chart title for an explanation. Press Escape to dismiss it.
+
+Themes cover privacy, fairness, security, reliability, human agency, harmful content, intellectual property and environmental impact. The curated category-to-theme definitions live in `src/asago_policy_mapper/data/report_themes.yaml`, joined to `risk_to_category.sssom.tsv` using only exact/close/broadMatch links. A risk can appear in multiple themes, so theme totals may overlap; the findings list shows each risk once. Matches without a supported link, including custom risks, remain in **Other / not yet grouped**. Themes with no matches are omitted; this does not establish that a topic is absent from the policy.
+
+**Theme mapping coverage is partial and varies by taxonomy.** The grouped count measures how many matched entries have a supported category-to-theme link; it does not measure extraction accuracy or policy completeness. The theme vocabulary is curated by this project, and both the source mappings and grouping choices require review.
+
+The findings table supports search and multiple selections for Theme, Accepted by, Grounding and Taxonomy. Selections within a filter are combined with OR; different filters combine with AND. Each finding shows its themes; expand **How this risk was grouped** to see the source categories. Open a finding to read its supporting quotes, source locations, risk definition, causal explanation and related mitigation guidance. Retrieval scores and LLM diagnostics are under each finding's technical details. Processing statistics, settings, chunks and the full LLM log are in a collapsed technical appendix. Evaluation appears last, only when evaluation data is available.
+
+Theme metadata is added to the HTML during report generation; saved extraction files and evaluation counts are unchanged. Existing results can be regrouped by rebuilding the report, with no Nexus download, labelled policy or LLM calls. Full variant IDs use their own mappings; theme links are not inferred from synthetic parents or risk names.
 
 Counts refer to matched taxonomy entries; several entries can describe a related topic. Grounding confidence describes model-rated document support for a match.
 
@@ -301,7 +309,7 @@ PY
 
 Open the generated HTML in a browser. This makes no LLM calls. Internet access is needed for the report's Tailwind and Alpine scripts.
 
-Report checks: `uv run pytest tests/test_extract_report.py` and `node --test tests/report_interactions.test.cjs` (Node.js 18+).
+Report checks: `uv run pytest tests/test_extract_report.py tests/test_report_themes.py` and `node --test tests/report_interactions.test.cjs` (Node.js 18+).
 
 ### Evaluate against ground truth
 

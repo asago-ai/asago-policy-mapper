@@ -2,6 +2,8 @@ import base64
 import json
 from pathlib import Path
 
+from asago_policy_mapper.extract.report_themes import enrich_report_themes
+
 TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
 
 _DARK_MODE_SNIPPET: str | None = None
@@ -33,7 +35,7 @@ def build_risk_extraction_report(data: dict, output_path: Path) -> Path:
         (TEMPLATE_DIR / "risk_extraction_report_template.html")
         .read_text()
         .replace("__ASAGO_LOGO__", f"data:image/svg+xml;base64,{logo}")
-        .replace("__REPORT_DATA__", json.dumps(data, default=str))
+        .replace("__REPORT_DATA__", json.dumps(enrich_report_themes(data), default=str))
     )
     branding = (TEMPLATE_DIR / "report_branding.html").read_text()
     html = html.replace("</head>", _get_dark_snippet() + branding + "\n</head>", 1)

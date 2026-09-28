@@ -108,6 +108,65 @@ test('empty reports have finite chart values and sensible missing metadata', () 
   assert.equal(app.formatPercent(undefined), '—');
   assert.equal(app.formatPercent(0), '0%');
   assert.equal(app.formatDate(undefined), '');
+  assert.deepEqual(app.themeDistribution, []);
+  assert.match(app.themeCoverageText, /0 of 0/);
+});
+
+function themeFixture() {
+  const data = fixture();
+  data.theme_catalog = [
+    { id: 'privacy', label: 'Privacy & confidentiality' },
+    { id: 'security', label: 'Security & resilience' },
+  ];
+  data.risks[0].theme_ids = ['privacy', 'security'];
+  data.risks[1].theme_ids = ['privacy'];
+  data.risks[2].theme_ids = ['security'];
+  data.risks[3].theme_ids = ['other'];
+  data.risks[5].theme_ids = ['privacy', 'privacy'];
+  return data;
+}
+
+test('themes count overlapping memberships once and combine selections without duplicate findings', () => {
+  const input = themeFixture();
+  const original = JSON.stringify(input);
+  const app = createApp(input);
+  assert.deepEqual(app.themeDistribution.map(t => [t.id, t.count]), [['privacy', 3], ['security', 2], ['other', 2]]);
+  assert.match(app.themeCoverageText, /4 of 6/);
+  assert.equal(app.themeDistribution[0].taxonomyCount, 2);
+  const distribution = JSON.stringify(app.themeDistribution);
+  app.toggleChartFilter('filterThemes', 'privacy');
+  assert.equal(app.themeFilterLabel, 'Privacy & confidentiality');
+  assert.deepEqual(ids(app.visibleRisks), ['a', 'b', 'f']);
+  app.toggleChartFilter('filterThemes', 'security');
+  assert.equal(app.themeFilterLabel, '2 selected');
+  assert.deepEqual(ids(app.visibleRisks), ['a', 'b', 'c', 'f']);
+  app.filterTaxonomy = ['ibm-risk-atlas'];
+  app.filterGrounding = ['high'];
+  app.filterAcceptedBy = ['rrf'];
+  assert.deepEqual(ids(app.visibleRisks), ['a']);
+  app.searchQuery = 'nothing';
+  assert.deepEqual(ids(app.visibleRisks), []);
+  assert.equal(JSON.stringify(app.themeDistribution), distribution);
+  assert.equal(JSON.stringify(input), original);
+});
+
+test('ungrouped and missing themes remain selectable; reset and review clear theme selections', () => {
+  const app = createApp(themeFixture());
+  app.filterThemes = ['other'];
+  assert.deepEqual(ids(app.visibleRisks), ['d', 'e']);
+  assert.equal(app.hasActiveFilters, true);
+  app.resetFilters();
+  assert.deepEqual(app.filterThemes, []);
+  assert.equal(app.visibleRisks.length, 6);
+  assert.equal(app.themeFilterLabel, 'All');
+  assert.equal(app.hasActiveFilters, false);
+  app.filterThemes = ['privacy'];
+  app.scrollToFindings = () => {};
+  app.showReviewMatches();
+  assert.deepEqual(app.filterThemes, []);
+  assert.deepEqual(ids(app.visibleRisks), ['b', 'c', 'd']);
+  const older = createApp(fixture());
+  assert.deepEqual(older.themeDistribution.map(t => [t.id, t.count]), [['other', 6]]);
 });
 
 function explainScores(metadata, scores, acceptedBy = 'threshold') {
