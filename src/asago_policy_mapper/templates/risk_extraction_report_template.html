@@ -60,7 +60,7 @@
       vertical-align: middle;
     }
 
-    /* Keep chart help within its card on narrow screens. */
+    /* Keep summary and chart help within its card on narrow screens. */
     .chart-tooltip {
       position: absolute;
       bottom: 100%;
@@ -156,12 +156,24 @@
       <p class="text-sm text-gray-600 mt-2 max-w-3xl" x-text="summaryText"></p>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
         <div class="asago-summary-card rounded-xl p-5">
-          <p class="text-sm text-gray-500">Risk matches</p>
+          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
+               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
+            <p class="text-sm text-gray-500">Risk matches</p>
+            <button type="button" class="tip-icon" aria-label="About risk matches" aria-describedby="risk-count-help"
+                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
+            <span id="risk-count-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of risk entries matched to your policy across all taxonomies. Several entries may describe the same underlying issue.</span>
+          </div>
           <p class="text-4xl font-semibold text-gray-900 mt-3" x-text="formatNumber(riskCount)"></p>
           <p class="text-xs text-gray-500 mt-2">Matched taxonomy entries</p>
         </div>
         <div class="asago-summary-card rounded-xl p-5">
-          <p class="text-sm text-gray-500">Taxonomies represented</p>
+          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
+               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
+            <p class="text-sm text-gray-500">Taxonomies represented</p>
+            <button type="button" class="tip-icon" aria-label="About taxonomies represented" aria-describedby="taxonomy-count-help"
+                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
+            <span id="taxonomy-count-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of distinct risk taxonomies with at least one match in your policy. A taxonomy is a collection of defined risks.</span>
+          </div>
           <p class="text-4xl font-semibold text-gray-900 mt-3" x-text="taxonomyCount"></p>
           <p class="text-xs text-gray-500 mt-2">Frameworks with risk matches</p>
         </div>
@@ -176,13 +188,21 @@
           <p class="text-4xl font-semibold asago-success mt-3" x-text="formatNumber(highCount)"></p>
           <p class="text-xs text-gray-500 mt-2">Matches with strong supporting evidence</p>
         </div>
-        <button type="button" @click="showReviewMatches()" :disabled="reviewCount === 0"
-                class="asago-summary-card asago-review-card rounded-xl p-5 text-left disabled:cursor-default"
-                aria-label="Review Medium, Low and Ungrounded matches">
-          <p class="text-sm text-amber-800">Review suggested</p>
-          <p class="text-4xl font-semibold text-amber-800 mt-3" x-text="formatNumber(reviewCount)"></p>
-          <p class="text-xs text-amber-800 mt-2">Medium, Low or Ungrounded <span x-show="reviewCount > 0" aria-hidden="true">&rarr;</span></p>
-        </button>
+        <div class="asago-summary-card asago-review-card relative rounded-xl p-5 text-left">
+          <button type="button" @click="showReviewMatches()" :disabled="reviewCount === 0"
+                  class="absolute inset-0 w-full h-full rounded-xl disabled:cursor-default"
+                  aria-label="Review Medium, Low and Ungrounded matches"></button>
+          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
+               @click.self="if (reviewCount > 0) showReviewMatches()"
+               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
+            <p class="text-sm text-amber-800 pointer-events-none">Review suggested</p>
+            <button type="button" class="tip-icon" aria-label="About suggested reviews" aria-describedby="review-count-help"
+                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
+            <span id="review-count-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Matches with Medium or Low evidence support, or where the AI evidence check was skipped. Select the card to view these matches.</span>
+          </div>
+          <p class="relative pointer-events-none text-4xl font-semibold text-amber-800 mt-3" x-text="formatNumber(reviewCount)"></p>
+          <p class="relative pointer-events-none text-xs text-amber-800 mt-2">Medium, Low or Ungrounded <span x-show="reviewCount > 0" aria-hidden="true">&rarr;</span></p>
+        </div>
       </div>
       <p class="text-xs text-gray-500 mt-3">A topic may have matches in several taxonomies. Counts describe matched entries in those taxonomies.</p>
     </section>

@@ -152,7 +152,7 @@
     --summary-background: #35270e;
     --summary-border: #a47624;
   }
-  .asago-report .asago-review-card:hover:not(:disabled) { border-color: var(--asago-amber); }
+  .asago-report .asago-review-card:has(> button:enabled):hover { border-color: var(--asago-amber); }
   .asago-report .dark-toggle {
     background: var(--asago-card);
     border-color: var(--asago-border);
