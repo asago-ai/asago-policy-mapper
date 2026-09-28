@@ -271,6 +271,36 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 
 Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both.
 
+#### Explore the report
+
+Reports use [Asago's visual style](https://github.com/asago-ai/asago-ai.github.io), with the official logo embedded in the HTML, blue and mint accents, and a dark theme by default. The theme toggle retains your light/dark preference.
+
+The report starts with matched-risk totals, taxonomy counts and grounding confidence. Select categories in the taxonomy or grounding charts to filter the findings; charts and summary totals always describe the full report. The **Review suggested** card clears existing filters and shows Medium, Low and Ungrounded matches.
+
+The findings table supports search and multiple selections for Accepted by, Grounding and Taxonomy. Open a finding to read its supporting quotes, source locations, risk definition, causal explanation and related mitigation guidance. Retrieval scores and LLM diagnostics are under each finding's technical details. Processing statistics, settings, chunks and the full LLM log are in a collapsed technical appendix. Evaluation appears last, only when evaluation data is available.
+
+Counts refer to matched taxonomy entries; several entries can describe a related topic. Grounding confidence describes model-rated document support for a match.
+
+The score breakdown explains each retrieval score's range and direction: keyword rank starts at 1 (lower is better), embedding distance ranges from 0 to 2 (lower is closer), reranker scores range from 0 to 1 (higher indicates stronger model-rated relevance), and default RRF scores range up to about 0.0328 (higher is better). These scores describe search relevance; use supporting quotes and grounding confidence to assess document support. Unused scores and known zero placeholders are labelled explicitly; ambiguous zeros remain identified as ambiguous. Original numbers are available under **Raw stored values**.
+
+To preview report layout changes using saved results, regenerate just the HTML:
+
+```bash
+uv run python - <<'PY'
+import json
+from pathlib import Path
+from asago_policy_mapper.extract.report import build_risk_extraction_report
+
+run = Path("output")  # Directory containing your saved extraction
+data = json.loads((run / "risk-extraction.json").read_text())
+build_risk_extraction_report(data, run / "risk-extraction-preview.html")
+PY
+```
+
+Open the generated HTML in a browser. This makes no LLM calls. Internet access is needed for the report's Tailwind and Alpine scripts.
+
+Report checks: `uv run pytest tests/test_extract_report.py` and `node --test tests/report_interactions.test.cjs` (Node.js 18+).
+
 ### Evaluate against ground truth
 
 ```bash

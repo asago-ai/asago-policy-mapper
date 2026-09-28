@@ -1,0 +1,164 @@
+<!-- Asago palette and typography: https://github.com/asago-ai/asago-ai.github.io -->
+<style>
+  .asago-report {
+    --asago-primary: #2d7ff9;
+    --asago-secondary: #0dd4a0;
+    --asago-amber: #f59e0b;
+    --asago-page: #f4f7fb;
+    --asago-card: #ffffff;
+    --asago-subtle: #edf2fa;
+    --asago-text: #0b1020;
+    --asago-muted: #52637b;
+    --asago-border: #dce5f2;
+    --asago-hover: #eaf2ff;
+    --asago-link: #1763ce;
+    --asago-success: #08775d;
+    --asago-selection: #e9f2ff;
+    --asago-success-bg: #e1f8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color-scheme: light;
+  }
+  .dark .asago-report {
+    --asago-page: #000108;
+    --asago-card: #0b1020;
+    --asago-subtle: #05080f;
+    --asago-text: #f8fafc;
+    --asago-muted: #cbd5e1;
+    --asago-border: #151e35;
+    --asago-hover: #101b32;
+    --asago-link: #7eb0ff;
+    --asago-success: #0dd4a0;
+    --asago-selection: #0d2345;
+    --asago-success-bg: #062b25;
+    color-scheme: dark;
+  }
+
+  /* Scope the report palette so other report templates retain their themes. */
+  body.asago-report { background: var(--asago-page) !important; color: var(--asago-text) !important; }
+  .asago-report .bg-white { background-color: var(--asago-card) !important; }
+  .asago-report :is(.bg-gray-50, .bg-gray-100) { background-color: var(--asago-subtle) !important; }
+  .asago-report :is(.text-gray-900, .text-gray-800, .text-gray-700) { color: var(--asago-text) !important; }
+  .asago-report :is(.text-gray-600, .text-gray-500, .text-gray-400, .text-gray-300) { color: var(--asago-muted) !important; }
+  .asago-report :is(.border-gray-100, .border-gray-200, .border-gray-300) { border-color: var(--asago-border) !important; }
+  .asago-report :is(.shadow-sm, .shadow-lg) { box-shadow: 0 4px 20px rgb(0 1 8 / 4%) !important; }
+  .asago-report .hover\:bg-gray-50:hover { background-color: var(--asago-hover) !important; }
+  .asago-report :is(input, select, textarea) {
+    background-color: var(--asago-card) !important;
+    border-color: var(--asago-border) !important;
+    color: var(--asago-text) !important;
+    accent-color: var(--asago-primary);
+  }
+  .asago-report :is(button, a, input):focus-visible {
+    outline: 2px solid var(--asago-primary);
+    outline-offset: 3px;
+  }
+  .asago-report .tip { border-bottom-color: var(--asago-muted); }
+
+  .asago-header {
+    --asago-text: #f8fafc;
+    --asago-muted: #cbd5e1;
+    --asago-link: #7eb0ff;
+    background: linear-gradient(135deg, #05080f, #060c1a);
+    color: var(--asago-text);
+    border-bottom: 1px solid #151e35;
+    position: relative;
+  }
+  .asago-header::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(135deg, var(--asago-primary), var(--asago-secondary));
+  }
+  .asago-logo { width: 170px; height: auto; flex-shrink: 0; }
+  .asago-product { border-left: 1px solid #243149; padding-left: 1rem; color: #cbd5e1; }
+  .asago-title {
+    background: linear-gradient(110deg, #7eb0ff, var(--asago-secondary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    width: fit-content;
+  }
+  .asago-header nav a { color: #cbd5e1; transition: color 150ms ease; }
+  .asago-header nav a:hover { color: var(--asago-secondary); }
+  .asago-nav-number { color: var(--asago-secondary); }
+  .asago-report .asago-link { color: var(--asago-link); }
+  .asago-report .asago-success { color: var(--asago-success); }
+  .asago-report .asago-selected {
+    border-color: var(--asago-primary) !important;
+    background-color: var(--asago-selection) !important;
+  }
+  .asago-report .asago-chart-bar {
+    background: linear-gradient(110deg, var(--asago-primary), var(--asago-secondary));
+  }
+  .asago-report .asago-evidence { border-left-color: var(--asago-primary) !important; }
+  .asago-report :is(.asago-evidence-card, .asago-score-card) {
+    background: #f0f6ff;
+    border: 2px solid #97b7dd;
+  }
+  .asago-report .asago-evidence-card { border-left-width: 4px; }
+  .dark .asago-report :is(.asago-evidence-card, .asago-score-card) {
+    background: #15243d;
+    border-color: #49688f;
+  }
+  .asago-report .asago-tag {
+    background: var(--asago-selection);
+    color: var(--asago-link);
+  }
+  .asago-report .asago-grounding-high { background-color: var(--asago-secondary); }
+  .asago-report .asago-grounding-medium { background-color: var(--asago-amber); }
+  .asago-report .asago-grounding-low { background-color: #f97316; }
+  .asago-report .asago-grounding-badge {
+    background-color: var(--asago-success-bg);
+    color: var(--asago-success);
+  }
+  .asago-report .grounding-segment { color: #ffffff; }
+  .asago-report .grounding-segment:is(.asago-grounding-high, .asago-grounding-medium, .asago-grounding-low) {
+    color: #05080f;
+  }
+  .asago-report .grounding-segment[aria-pressed="true"] {
+    box-shadow: inset 0 0 0 3px var(--asago-text);
+  }
+  .asago-report .asago-summary-card {
+    --summary-background: #f0f6ff;
+    --summary-border: #97b7dd;
+    --summary-accent: var(--asago-primary);
+    background: var(--summary-background);
+    border: 2px solid var(--summary-border);
+    border-top: 4px solid var(--summary-accent);
+    box-shadow: 0 8px 24px rgb(0 1 8 / 12%);
+  }
+  .dark .asago-report .asago-summary-card {
+    --summary-background: #15243d;
+    --summary-border: #49688f;
+  }
+  .asago-report .asago-summary-high {
+    --summary-background: #eefcf6;
+    --summary-border: #84cbb3;
+    --summary-accent: var(--asago-secondary);
+  }
+  .dark .asago-report .asago-summary-high {
+    --summary-background: #0c302b;
+    --summary-border: #328775;
+  }
+  .asago-report .asago-review-card {
+    --summary-background: #fff8e8;
+    --summary-border: #cf961f;
+    --summary-accent: var(--asago-amber);
+    transition: border-color 150ms ease;
+  }
+  .dark .asago-report .asago-review-card {
+    --summary-background: #35270e;
+    --summary-border: #a47624;
+  }
+  .asago-report .asago-review-card:hover:not(:disabled) { border-color: var(--asago-amber); }
+  .asago-report .dark-toggle {
+    background: var(--asago-card);
+    border-color: var(--asago-border);
+    color: var(--asago-text);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .asago-report .asago-review-card, .asago-report .dark-toggle, .asago-header nav a { transition: none; }
+  }
+</style>

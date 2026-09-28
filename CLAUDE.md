@@ -61,6 +61,16 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 
 **Multi-pass grounding:** Grounding and expansion each run multiple passes (default 3) and union results to reduce LLM non-determinism. Do not remove the extra passes — they stabilize which risks survive grounding. Grounding JSON is split into batches (`grounding_batch_size`, default 15) so responses stay within `LLMConfig.max_tokens` (always sent to the API, default 8192).
 
+### Report UI
+
+- Asago report styling lives in `templates/report_branding.html`, scoped to `.asago-report`. The official SVG in `templates/assets/` is embedded by the report builder so exported HTML carries its logo. Extraction reports default to dark mode; saved theme preferences take precedence.
+- The extraction report template is `src/asago_policy_mapper/templates/risk_extraction_report_template.html`. Section order: summary, overview charts, findings with supporting evidence first, collapsed technical appendix, optional evaluation appendix. Evaluation metrics and pass/fail status belong in the final appendix.
+- Keep filter and sort state in the root Alpine `reportApp()`. Charts and summary cards use the complete set of final matches, independent of table filters. Chart clicks toggle the same selections used by the dropdowns.
+- Use categorical `grounding_confidence` for the confidence overview and default sorting. Raw `confidence` contains retrieval scores (including zero placeholders for expansion), so keep it in technical details.
+- Score explanations must follow `extract/index.py`: BM25 rank starts at 1, embedding distance is 1 minus cosine similarity (0–2), normalized reranker scores are 0–1, and default two-list RRF peaks at 2/61. Use saved metadata to identify skipped stages and ColBERT scores; keep ambiguous zeros explicit and never present retrieval scores as correctness probabilities.
+- The review shortcut resets all filters and shows Medium, Low and Ungrounded matches. Taxonomy options and chart entries come from the data, including custom taxonomies and a fallback for missing taxonomy.
+- Rebuild previews from saved JSON with `extract.report.build_risk_extraction_report`; extraction need not rerun. Check report generation with `uv run pytest tests/test_extract_report.py` and UI logic with `node --test tests/report_interactions.test.cjs` (Node.js 18+).
+
 ## Key Conventions
 
 - `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points to a local clone of `github.com/IBM/ai-atlas-nexus`

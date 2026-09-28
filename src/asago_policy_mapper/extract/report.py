@@ -1,3 +1,4 @@
+import base64
 import json
 from pathlib import Path
 
@@ -27,12 +28,15 @@ def _get_dark_snippet() -> str:
 
 
 def build_risk_extraction_report(data: dict, output_path: Path) -> Path:
+    logo = base64.b64encode((TEMPLATE_DIR / "assets" / "asago-main-logo-dark.svg").read_bytes()).decode("ascii")
     html = (
         (TEMPLATE_DIR / "risk_extraction_report_template.html")
         .read_text()
+        .replace("__ASAGO_LOGO__", f"data:image/svg+xml;base64,{logo}")
         .replace("__REPORT_DATA__", json.dumps(data, default=str))
     )
-    html = html.replace("</head>", _get_dark_snippet() + "\n</head>", 1)
+    branding = (TEMPLATE_DIR / "report_branding.html").read_text()
+    html = html.replace("</head>", _get_dark_snippet() + branding + "\n</head>", 1)
     html = html.replace("</body>", _DARK_TOGGLE + "\n</body>", 1)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
