@@ -4,42 +4,40 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Policy risk report · asago</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>{{ patternfly_css | safe }}</style>
+  {% include "report_utilities.html" %}
   <style>
-    :root { color-scheme: light; }
+    .pf-v6-theme-dark { color-scheme: dark; }
     [x-cloak] { display: none !important; }
 
-    /* Tooltip */
+    /* Legacy help labels share one viewport-positioned tooltip. */
     .tip {
-      position: relative;
+      display: inline-block;
       cursor: help;
       border-bottom: 1px dotted #9ca3af;
     }
-    .tip::after {
-      content: attr(data-tip);
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1f2937;
+    .tip:focus-visible { outline: 2px solid #2d7ff9; outline-offset: 3px; }
+    .report-hover-tooltip {
+      position: fixed;
+      z-index: 10000;
+      width: max-content;
+      max-width: min(320px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border: 2px solid #2d7ff9;
+      border-radius: 8px;
+      background: #15243d;
       color: #f9fafb;
       font-size: 12px;
       font-weight: 400;
-      line-height: 1.4;
-      padding: 6px 10px;
-      border-radius: 6px;
+      line-height: 1.45;
       white-space: normal;
-      width: max-content;
-      max-width: 320px;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s;
-      z-index: 50;
       text-transform: none;
       letter-spacing: normal;
+      box-shadow: 0 12px 28px rgb(0 0 0 / 35%);
     }
-    .tip:hover::after { opacity: 1; }
+    .report-hover-tooltip[hidden] { display: none; }
+    .pf-v6-theme-dark .report-hover-tooltip { background: #f9fafb; color: #111827; }
 
     .tip-icon {
       display: inline-flex;
@@ -59,24 +57,6 @@
       cursor: help;
       vertical-align: middle;
     }
-
-    /* Keep summary and chart help within its card on narrow screens. */
-    .chart-tooltip {
-      position: absolute;
-      bottom: 100%;
-      left: 0;
-      z-index: 50;
-      width: min(320px, 100%);
-      padding: 8px 10px;
-      border-radius: 6px;
-      background: #1f2937;
-      color: #f9fafb;
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 1.4;
-      box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
-    }
-    .dark .chart-tooltip { background: #f9fafb; color: #111827; }
 
     /* Chevron transition */
     .chevron { transition: transform 0.2s ease; }
@@ -110,6 +90,11 @@
     }
 
     .risk-table-grid th { white-space: nowrap; }
+    .asago-findings-table thead .risk-table-grid { align-items: center; }
+    .asago-findings-table thead th { padding: .875rem .75rem .875rem 0; }
+    .asago-findings-table thead th:last-child { padding-right: 0; }
+    .asago-findings-table thead th button,
+    .asago-findings-table tbody .risk-table-grid > div:first-child > button { padding: 0; }
     [id] { scroll-margin-top: 1.5rem; }
     button:focus-visible, a:focus-visible, summary:focus-visible {
       outline: 2px solid var(--asago-primary, #2d7ff9);
@@ -120,408 +105,394 @@
       .chart-bar, .chevron { transition: none; }
     }
   </style>
-  {% include "dark_mode_snippet.html" %}
+  {% include "extraction_dark_mode_snippet.html" %}
   {% include "report_branding.html" %}
 </head>
-<body class="asago-report min-h-screen">
+<body class="asago-report report-min-h-screen">
 <script>const DATA = {{ report_data | tojson }};</script>
 
 <div id="app" x-data="reportApp()" x-cloak>
   <header class="asago-header">
-    <div class="max-w-screen-xl mx-auto px-4 py-6 sm:px-6">
-      <div class="flex items-center gap-4 mb-4">
+    <div class="report-max-w-screen-xl pf-v6-u-mx-auto pf-v6-u-px-md pf-v6-u-py-lg report-px-6-sm">
+      <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-4 pf-v6-u-mb-md">
         <img src="{{ logo_src }}" alt="asago" class="asago-logo" width="1000" height="400" />
-        <span class="asago-product text-xs font-semibold uppercase tracking-widest">Policy mapper</span>
+        <span class="asago-product pf-v6-u-font-size-xs report-font-semibold report-uppercase report-tracking-widest">Policy mapper</span>
       </div>
-      <div class="flex flex-wrap items-end justify-between gap-4">
+      <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap pf-v6-u-align-items-flex-end pf-v6-u-justify-content-space-between report-gap-4">
         <div>
-          <h1 class="asago-title text-3xl font-semibold tracking-tight">Policy risk report</h1>
-          <p class="text-sm text-gray-300 mt-2 break-all" x-text="docNames"></p>
+          <h1 class="asago-title pf-v6-u-font-size-3xl report-font-semibold report-tracking-tight">Policy risk report</h1>
+          <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-mt-sm report-break-all" x-text="docNames"></p>
         </div>
-        <p x-show="data.metadata?.timestamp" class="text-xs text-gray-400">
+        <p x-show="data.metadata?.timestamp" class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">
           Analysed <time :datetime="data.metadata?.timestamp" x-text="formatDate(data.metadata?.timestamp)"></time>
         </p>
       </div>
-      <nav aria-label="Report sections" class="mt-6 flex flex-wrap gap-6 text-sm">
-        <a href="#summary" class="text-gray-300 hover:text-white"><span class="asago-nav-number mr-1">01</span> Summary</a>
-        <a href="#overview" class="text-gray-300 hover:text-white"><span class="asago-nav-number mr-1">02</span> Overview</a>
-        <a href="#findings" class="text-gray-300 hover:text-white"><span class="asago-nav-number mr-1">03</span> Findings</a>
+      <nav aria-label="Report sections" class="pf-v6-u-mt-lg pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-6 pf-v6-u-font-size-sm">
+        <a href="#summary" class="pf-v6-u-text-color-subtle report-hover-text-white"><span class="asago-nav-number pf-v6-u-mr-xs">01</span> Summary</a>
+        <a href="#overview" class="pf-v6-u-text-color-subtle report-hover-text-white"><span class="asago-nav-number pf-v6-u-mr-xs">02</span> Overview</a>
+        <a href="#findings" class="pf-v6-u-text-color-subtle report-hover-text-white"><span class="asago-nav-number pf-v6-u-mr-xs">03</span> Findings</a>
       </nav>
     </div>
   </header>
 
-  <main class="max-w-screen-xl mx-auto px-4 py-8 sm:px-6 space-y-8">
+  <main class="report-max-w-screen-xl pf-v6-u-mx-auto pf-v6-u-px-md pf-v6-u-py-xl report-px-6-sm report-space-y-8">
     <!-- 1. Summary: counts of final matches, independent of filters -->
     <section id="summary" aria-labelledby="summary-heading">
-      <p class="text-xs font-semibold asago-link uppercase tracking-wide mb-2">01 / Summary</p>
-      <h2 id="summary-heading" class="text-xl font-semibold text-gray-900">Your results at a glance</h2>
-      <p class="text-sm text-gray-600 mt-2 max-w-3xl" x-text="summaryText"></p>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
-        <div class="asago-summary-card rounded-xl p-5">
-          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
-               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
-            <p class="text-sm text-gray-500">Risk matches</p>
-            <button type="button" class="tip-icon" aria-label="About risk matches" aria-describedby="risk-count-help"
-                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="risk-count-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of risk entries matched to your policy across all taxonomies. Several entries may describe the same underlying issue.</span>
+      <p class="pf-v6-u-font-size-xs report-font-semibold asago-link report-uppercase report-tracking-wide pf-v6-u-mb-sm">01 / Summary</p>
+      <h2 id="summary-heading" class="pf-v6-u-font-size-xl report-font-semibold pf-v6-u-text-color-regular">Your results at a glance</h2>
+      <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-mt-sm report-max-w-3xl" x-text="summaryText"></p>
+      <div class="pf-v6-u-display-grid report-grid-cols-2 report-grid-cols-4-lg report-gap-4 report-mt-5">
+        <div class="pf-v6-c-card asago-summary-card report-rounded-xl report-p-5">
+          <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+            <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle">Risk matches</p>
+            <button type="button" class="tip-icon" aria-label="About risk matches"
+                    data-tip="Number of risk entries matched to your policy across all taxonomies. Several entries may describe the same underlying issue.">i</button>
           </div>
-          <p class="text-4xl font-semibold text-gray-900 mt-3" x-text="formatNumber(riskCount)"></p>
-          <p class="text-xs text-gray-500 mt-2">Matched taxonomy entries</p>
+          <p class="pf-v6-u-font-size-4xl report-font-semibold pf-v6-u-text-color-regular report-mt-3" x-text="formatNumber(riskCount)"></p>
+          <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-sm">Matched taxonomy entries</p>
         </div>
-        <div class="asago-summary-card rounded-xl p-5">
-          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
-               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
-            <p class="text-sm text-gray-500">Taxonomies represented</p>
-            <button type="button" class="tip-icon" aria-label="About taxonomies represented" aria-describedby="taxonomy-count-help"
-                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="taxonomy-count-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of distinct risk taxonomies with at least one match in your policy. A taxonomy is a collection of defined risks.</span>
+        <div class="pf-v6-c-card asago-summary-card report-rounded-xl report-p-5">
+          <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+            <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle">Taxonomies represented</p>
+            <button type="button" class="tip-icon" aria-label="About taxonomies represented"
+                    data-tip="Number of distinct risk taxonomies with at least one match in your policy. A taxonomy is a collection of defined risks.">i</button>
           </div>
-          <p class="text-4xl font-semibold text-gray-900 mt-3" x-text="taxonomyCount"></p>
-          <p class="text-xs text-gray-500 mt-2">Frameworks with risk matches</p>
+          <p class="pf-v6-u-font-size-4xl report-font-semibold pf-v6-u-text-color-regular report-mt-3" x-text="taxonomyCount"></p>
+          <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-sm">Frameworks with risk matches</p>
         </div>
-        <div class="asago-summary-card asago-summary-high rounded-xl p-5">
-          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
-               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
-            <p class="text-sm text-gray-500">High grounding confidence</p>
-            <button type="button" class="tip-icon" aria-label="About strong supporting evidence" aria-describedby="strong-evidence-help"
-                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="strong-evidence-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">The AI judged that quoted passages in your policy strongly support these risk matches. This count includes matches rated High for grounding confidence.</span>
+        <div class="pf-v6-c-card asago-summary-card asago-summary-high report-rounded-xl report-p-5">
+          <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+            <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle">High grounding confidence</p>
+            <button type="button" class="tip-icon" aria-label="About strong supporting evidence"
+                    data-tip="The AI judged that quoted passages in your policy strongly support these risk matches. This count includes matches rated High for grounding confidence.">i</button>
           </div>
-          <p class="text-4xl font-semibold asago-success mt-3" x-text="formatNumber(highCount)"></p>
-          <p class="text-xs text-gray-500 mt-2">Matches with strong supporting evidence</p>
+          <p class="pf-v6-u-font-size-4xl report-font-semibold asago-success report-mt-3" x-text="formatNumber(highCount)"></p>
+          <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-sm">Matches with strong supporting evidence</p>
         </div>
-        <div class="asago-summary-card asago-review-card relative rounded-xl p-5 text-left">
+        <div class="pf-v6-c-card asago-summary-card asago-review-card report-relative report-rounded-xl report-p-5 pf-v6-u-text-align-start">
           <button type="button" @click="showReviewMatches()" :disabled="reviewCount === 0"
-                  class="absolute inset-0 w-full h-full rounded-xl disabled:cursor-default"
+                  class="report-absolute report-inset-0 report-w-full report-h-full report-rounded-xl report-disabled-cursor-default"
                   aria-label="Review Medium, Low and Ungrounded matches"></button>
-          <div class="relative flex items-center gap-1" x-data="{ helpOpen: false }"
-               @click.self="if (reviewCount > 0) showReviewMatches()"
-               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
-            <p class="text-sm text-amber-800 pointer-events-none">Review suggested</p>
-            <button type="button" class="tip-icon" aria-label="About suggested reviews" aria-describedby="review-count-help"
-                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="review-count-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Matches with Medium or Low evidence support, or where the AI evidence check was skipped. Select the card to view these matches.</span>
+          <div class="report-relative pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1"
+               @click.self="if (reviewCount > 0) showReviewMatches()">
+            <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-status-warning report-pointer-events-none">Review suggested</p>
+            <button type="button" class="tip-icon" aria-label="About suggested reviews"
+                    data-tip="Matches with Medium or Low evidence support, or where the AI evidence check was skipped. Select the card to view these matches.">i</button>
           </div>
-          <p class="relative pointer-events-none text-4xl font-semibold text-amber-800 mt-3" x-text="formatNumber(reviewCount)"></p>
-          <p class="relative pointer-events-none text-xs text-amber-800 mt-2">Medium, Low or Ungrounded <span x-show="reviewCount > 0" aria-hidden="true">&rarr;</span></p>
+          <p class="report-relative report-pointer-events-none pf-v6-u-font-size-4xl report-font-semibold pf-v6-u-text-color-status-warning report-mt-3" x-text="formatNumber(reviewCount)"></p>
+          <p class="report-relative report-pointer-events-none pf-v6-u-font-size-xs pf-v6-u-text-color-status-warning pf-v6-u-mt-sm">Medium, Low or Ungrounded <span x-show="reviewCount > 0" aria-hidden="true">&rarr;</span></p>
         </div>
       </div>
-      <p class="text-xs text-gray-500 mt-3">A topic may have matches in several taxonomies. Counts describe matched entries in those taxonomies.</p>
+      <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-mt-3">A topic may have matches in several taxonomies. Counts describe matched entries in those taxonomies.</p>
     </section>
 
     <!-- 2. Overview: full-report distributions, with links to filtering -->
     <section id="overview" aria-labelledby="overview-heading">
-      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+      <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap pf-v6-u-align-items-flex-end pf-v6-u-justify-content-space-between report-gap-3 pf-v6-u-mb-md">
         <div>
-          <p class="text-xs font-semibold asago-link uppercase tracking-wide mb-2">02 / Overview</p>
-          <h2 id="overview-heading" class="text-xl font-semibold text-gray-900">Explore the pattern of matches</h2>
-          <p class="text-sm text-gray-500 mt-1">Select chart categories to filter the findings. Charts show the full report.</p>
+          <p class="pf-v6-u-font-size-xs report-font-semibold asago-link report-uppercase report-tracking-wide pf-v6-u-mb-sm">02 / Overview</p>
+          <h2 id="overview-heading" class="pf-v6-u-font-size-xl report-font-semibold pf-v6-u-text-color-regular">Explore the pattern of matches</h2>
+          <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-mt-xs">Select chart categories to filter the findings. Charts show the full report.</p>
         </div>
-        <a href="#findings" class="text-sm font-medium asago-link hover:underline">View findings &darr;</a>
+        <a href="#findings" class="pf-v6-u-font-size-sm report-font-medium asago-link report-hover-underline">View findings &darr;</a>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div id="themes" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" aria-labelledby="themes-heading">
-          <div class="relative flex items-center gap-1 mb-4" x-data="{ helpOpen: false }"
-               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
-            <h3 id="themes-heading" class="text-sm font-semibold text-gray-900">Risk matches by theme</h3>
-            <button type="button" class="tip-icon" aria-label="About risk themes" aria-describedby="theme-chart-help"
-                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="theme-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of matched risk entries in each theme. A risk can belong to several themes, so counts overlap. Other / not yet grouped contains matches without a supported theme mapping.</span>
+      <div class="pf-v6-u-display-grid report-grid-cols-1 report-grid-cols-3-lg report-gap-5">
+        <div id="themes" class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5" aria-labelledby="themes-heading">
+          <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1 pf-v6-u-mb-md">
+            <h3 id="themes-heading" class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-regular">Risk matches by theme</h3>
+            <button type="button" class="tip-icon" aria-label="About risk themes"
+                    data-tip="Number of matched risk entries in each theme. A risk can belong to several themes, so counts overlap. Other / not yet grouped contains matches without a supported theme mapping.">i</button>
           </div>
-          <div class="space-y-2" role="group" aria-label="Filter findings by theme">
+          <div class="report-space-y-2" role="group" aria-label="Filter findings by theme">
             <template x-for="item in themeDistribution" :key="item.id">
               <button type="button" @click="toggleChartFilter('filterThemes', item.id)"
                       :aria-pressed="filterThemes.includes(item.id)"
                       :aria-label="item.label + ': ' + item.count + ' matches'"
-                      class="w-full text-left rounded-lg border p-2"
-                      :class="filterThemes.includes(item.id) ? 'asago-selected' : 'border-transparent hover:bg-gray-50'">
-                <div class="flex items-center justify-between gap-3 text-xs mb-2">
-                  <span class="text-gray-700" x-text="item.label"></span>
-                  <span class="text-gray-900 font-semibold tabular-nums" x-text="item.count"></span>
+                      class="report-w-full pf-v6-u-text-align-start report-rounded-lg report-border pf-v6-u-p-sm"
+                      :class="filterThemes.includes(item.id) ? 'asago-selected' : 'report-border-transparent report-hover-bg-secondary'">
+                <div class="pf-v6-u-display-flex pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-gap-3 pf-v6-u-font-size-xs pf-v6-u-mb-sm">
+                  <span class="pf-v6-u-text-color-regular" x-text="item.label"></span>
+                  <span class="pf-v6-u-text-color-regular report-font-semibold report-tabular-nums" x-text="item.count"></span>
                 </div>
-                <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div class="chart-bar h-full rounded-full asago-chart-bar"
+                <div class="report-h-2 report-rounded-full report-bg-secondary report-overflow-hidden">
+                  <div class="chart-bar report-h-full report-rounded-full asago-chart-bar"
                        :style="'width: ' + (item.count / themeMax * 100) + '%'"></div>
                 </div>
               </button>
             </template>
           </div>
-          <p x-show="riskCount === 0" class="text-sm text-gray-500 py-8 text-center">No risk matches to group.</p>
+          <p x-show="riskCount === 0" class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-py-xl pf-v6-u-text-align-center">No risk matches to group.</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div class="relative flex items-center gap-1 mb-4" x-data="{ helpOpen: false }"
-               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
-            <h3 class="text-sm font-semibold text-gray-900">Risk matches by taxonomy</h3>
-            <button type="button" class="tip-icon" aria-label="About risk taxonomies" aria-describedby="taxonomy-chart-help"
-                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="taxonomy-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">Number of matched risk entries from each taxonomy. Related entries in different taxonomies are counted separately.</span>
+        <div class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5">
+          <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1 pf-v6-u-mb-md">
+            <h3 class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-regular">Risk matches by taxonomy</h3>
+            <button type="button" class="tip-icon" aria-label="About risk taxonomies"
+                    data-tip="Number of matched risk entries from each taxonomy. Related entries in different taxonomies are counted separately.">i</button>
           </div>
-          <div class="space-y-2" role="group" aria-label="Filter findings by taxonomy">
+          <div class="report-space-y-2" role="group" aria-label="Filter findings by taxonomy">
             <template x-for="item in taxonomyDistribution" :key="item.value">
               <button type="button" @click="toggleChartFilter('filterTaxonomy', item.value)"
                       :aria-pressed="filterTaxonomy.includes(item.value)"
                       :aria-label="taxonomyLabel(item.value) + ': ' + item.count + ' matches'"
-                      class="w-full text-left rounded-lg border p-2"
-                      :class="filterTaxonomy.includes(item.value) ? 'asago-selected' : 'border-transparent hover:bg-gray-50'">
-                <div class="flex items-center justify-between gap-3 text-xs mb-2">
-                  <span class="text-gray-700 break-all" x-text="taxonomyLabel(item.value)"></span>
-                  <span class="text-gray-900 font-semibold tabular-nums" x-text="item.count"></span>
+                      class="report-w-full pf-v6-u-text-align-start report-rounded-lg report-border pf-v6-u-p-sm"
+                      :class="filterTaxonomy.includes(item.value) ? 'asago-selected' : 'report-border-transparent report-hover-bg-secondary'">
+                <div class="pf-v6-u-display-flex pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-gap-3 pf-v6-u-font-size-xs pf-v6-u-mb-sm">
+                  <span class="pf-v6-u-text-color-regular report-break-all" x-text="taxonomyLabel(item.value)"></span>
+                  <span class="pf-v6-u-text-color-regular report-font-semibold report-tabular-nums" x-text="item.count"></span>
                 </div>
-                <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div class="chart-bar h-full rounded-full asago-chart-bar"
+                <div class="report-h-2 report-rounded-full report-bg-secondary report-overflow-hidden">
+                  <div class="chart-bar report-h-full report-rounded-full asago-chart-bar"
                        :style="'width: ' + (item.count / taxonomyMax * 100) + '%'"></div>
                 </div>
               </button>
             </template>
           </div>
-          <p x-show="riskCount === 0" class="text-sm text-gray-500 py-8 text-center">No risk matches to summarise.</p>
+          <p x-show="riskCount === 0" class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-py-xl pf-v6-u-text-align-center">No risk matches to summarise.</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div class="relative flex items-center gap-1 mb-4" x-data="{ helpOpen: false }"
-               @mouseleave="helpOpen = false" @click.outside="helpOpen = false" @keydown.escape.stop.prevent="helpOpen = false">
-            <h3 class="text-sm font-semibold text-gray-900">Grounding confidence</h3>
-            <button type="button" class="tip-icon" aria-label="About grounding confidence" aria-describedby="grounding-chart-help"
-                    @mouseenter="helpOpen = true" @focus="helpOpen = true" @blur="helpOpen = false" @click="helpOpen = true">i</button>
-            <span id="grounding-chart-help" role="tooltip" x-show="helpOpen" class="chart-tooltip">How strongly the AI judges quoted passages in your policy to support each risk match. High indicates stronger support than Medium or Low. Ungrounded means the grounding stage was skipped.</span>
+        <div class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5">
+          <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1 pf-v6-u-mb-md">
+            <h3 class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-regular">Grounding confidence</h3>
+            <button type="button" class="tip-icon" aria-label="About grounding confidence"
+                    data-tip="How strongly the AI judges quoted passages in your policy to support each risk match. High indicates stronger support than Medium or Low. Ungrounded means the grounding stage was skipped.">i</button>
           </div>
-          <div x-show="riskCount > 0" class="flex h-12 rounded-lg overflow-hidden mb-5"
+          <div x-show="riskCount > 0" class="pf-v6-u-display-flex report-h-12 report-rounded-lg report-overflow-hidden report-mb-5"
                role="group" aria-label="Grounding confidence distribution">
             <template x-for="item in groundingDistribution.filter(item => item.count > 0)" :key="item.value">
               <button type="button" @click="toggleChartFilter('filterGrounding', item.value)"
                       :aria-pressed="filterGrounding.includes(item.value)"
                       :aria-label="groundingLabel(item.value) + ': ' + item.count + ' matches, ' + matchShare(item.count)"
                       :title="groundingLabel(item.value) + ': ' + item.count + ' matches'"
-                      class="grounding-segment h-full font-semibold text-sm"
+                      class="grounding-segment report-h-full report-font-semibold pf-v6-u-font-size-sm"
                       :class="groundingBarColor(item.value)"
                       :style="'width: ' + (item.count / riskCount * 100) + '%'">
                 <span x-show="item.count / riskCount >= 0.10" x-text="item.count"></span>
               </button>
             </template>
           </div>
-          <div class="grid grid-cols-2 gap-2 mt-5" role="group" aria-label="Filter findings by grounding confidence">
+          <div class="pf-v6-u-display-grid report-grid-cols-2 report-gap-2 report-mt-5" role="group" aria-label="Filter findings by grounding confidence">
             <template x-for="item in groundingDistribution" :key="item.value">
               <button type="button" @click="toggleChartFilter('filterGrounding', item.value)"
                       :disabled="item.count === 0" :aria-pressed="filterGrounding.includes(item.value)"
                       :aria-label="groundingLabel(item.value) + ': ' + item.count + ' matches'"
-                      class="rounded-lg border p-3 text-left disabled:opacity-50 disabled:cursor-default"
-                      :class="filterGrounding.includes(item.value) ? 'asago-selected' : 'border-gray-100 hover:bg-gray-50'">
-                <span class="flex items-center gap-2 text-xs text-gray-600">
-                  <span class="w-2 h-2 rounded-full" :class="groundingBarColor(item.value)" aria-hidden="true"></span>
+                      class="report-rounded-lg report-border report-p-3 pf-v6-u-text-align-start report-disabled-opacity-50 report-disabled-cursor-default"
+                      :class="filterGrounding.includes(item.value) ? 'asago-selected' : 'report-border-default report-hover-bg-secondary'">
+                <span class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2 pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">
+                  <span class="report-w-2 report-h-2 report-rounded-full" :class="groundingBarColor(item.value)" aria-hidden="true"></span>
                   <span x-text="groundingLabel(item.value)"></span>
                 </span>
-                <span class="flex items-baseline justify-between mt-2 gap-2">
-                  <span class="text-xl font-semibold text-gray-900" x-text="item.count"></span>
-                  <span class="text-xs text-gray-500" x-text="matchShare(item.count)"></span>
+                <span class="pf-v6-u-display-flex pf-v6-u-align-items-baseline pf-v6-u-justify-content-space-between pf-v6-u-mt-sm report-gap-2">
+                  <span class="pf-v6-u-font-size-xl report-font-semibold pf-v6-u-text-color-regular" x-text="item.count"></span>
+                  <span class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-text="matchShare(item.count)"></span>
                 </span>
               </button>
             </template>
           </div>
-          <p x-show="riskCount === 0" class="text-sm text-gray-500 mt-3">No grounding results to summarise.</p>
+          <p x-show="riskCount === 0" class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle report-mt-3">No grounding results to summarise.</p>
         </div>
       </div>
-      <div x-show="hasActiveFilters" class="mt-3 flex flex-wrap items-center gap-3 text-sm">
-        <span class="text-gray-600" x-text="'Showing ' + visibleRisks.length + ' of ' + riskCount + ' matches in the findings below.'"></span>
-        <button type="button" @click="scrollToFindings()" class="asago-link font-medium hover:underline">Go to filtered findings &darr;</button>
-        <button type="button" @click="resetFilters()" class="text-gray-500 hover:underline">Reset filters</button>
+      <div x-show="hasActiveFilters" class="report-mt-3 pf-v6-u-display-flex pf-v6-u-flex-wrap pf-v6-u-align-items-center report-gap-3 pf-v6-u-font-size-sm">
+        <span class="pf-v6-u-text-color-subtle" x-text="'Showing ' + visibleRisks.length + ' of ' + riskCount + ' matches in the findings below.'"></span>
+        <button type="button" @click="scrollToFindings()" class="asago-link report-font-medium report-hover-underline">Go to filtered findings &darr;</button>
+        <button type="button" @click="resetFilters()" class="pf-v6-u-text-color-subtle report-hover-underline">Reset filters</button>
       </div>
     </section>
 
     <!-- 3. Findings -->
-    <section id="findings" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" aria-labelledby="findings-heading">
-      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+    <section id="findings" class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5" aria-labelledby="findings-heading">
+      <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap pf-v6-u-align-items-flex-end pf-v6-u-justify-content-space-between report-gap-3 pf-v6-u-mb-md">
         <div>
-          <p class="text-xs font-semibold asago-link uppercase tracking-wide mb-2">03 / Findings</p>
-          <h2 id="findings-heading" tabindex="-1" class="text-xl font-semibold text-gray-900">Explore findings</h2>
-          <p class="text-sm text-gray-500 mt-1">Open a risk to read the supporting policy passages and risk context.</p>
+          <p class="pf-v6-u-font-size-xs report-font-semibold asago-link report-uppercase report-tracking-wide pf-v6-u-mb-sm">03 / Findings</p>
+          <h2 id="findings-heading" tabindex="-1" class="pf-v6-u-font-size-xl report-font-semibold pf-v6-u-text-color-regular">Explore findings</h2>
+          <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-mt-xs">Open a risk to read the supporting policy passages and risk context.</p>
         </div>
-        <p class="text-sm text-gray-500" aria-live="polite" x-text="'Showing ' + visibleRisks.length + ' of ' + riskCount + ' matches'"></p>
+        <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle" aria-live="polite" x-text="'Showing ' + visibleRisks.length + ' of ' + riskCount + ' matches'"></p>
       </div>
       <!-- Filter bar -->
-      <div class="flex flex-wrap items-center gap-3 mb-4 text-sm">
-        <div class="flex items-center gap-1">
-          <label class="text-gray-500 text-xs">Theme:</label>
-          <div class="relative" x-data="{ themesOpen: false }" @keydown.escape.stop.prevent="themesOpen = false; $refs.themesButton.focus()" @click.outside="themesOpen = false">
+      <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap pf-v6-u-align-items-center report-gap-3 pf-v6-u-mb-md pf-v6-u-font-size-sm">
+        <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+          <label class="pf-v6-u-text-color-subtle pf-v6-u-font-size-xs">Theme:</label>
+          <div class="report-relative" x-data="{ themesOpen: false }" @keydown.escape.stop.prevent="themesOpen = false; $refs.themesButton.focus()" @click.outside="themesOpen = false">
             <button type="button" x-ref="themesButton" aria-label="Filter by theme" @click="themesOpen = !themesOpen"
                     :aria-expanded="themesOpen"
-                    class="flex min-w-28 max-w-48 gap-2 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+                    class="pf-v6-c-button pf-m-control pf-v6-u-display-flex report-min-w-28 report-max-w-48 report-gap-2 pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-border report-border-default report-rounded pf-v6-u-px-sm pf-v6-u-py-xs pf-v6-u-font-size-xs report-bg-primary pf-v6-u-text-align-start">
               <span x-text="themeFilterLabel"></span>
-              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+              <span aria-hidden="true" class="pf-v6-u-ml-xs pf-v6-u-text-color-subtle">&#9662;</span>
             </button>
             <div x-show="themesOpen" x-transition
-                 class="absolute left-0 top-full z-30 mt-1 w-72 max-w-[calc(100vw-7rem)] max-h-80 overflow-y-auto rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 class="report-absolute report-left-0 report-top-full report-z-30 pf-v6-u-mt-xs report-w-72 report-max-w-menu report-max-h-80 report-overflow-y-auto report-rounded report-border report-border-default report-bg-primary pf-v6-u-p-xs pf-v6-u-box-shadow-lg"
                  role="group" aria-label="Theme">
-              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+              <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
                 <input type="checkbox" :checked="filterThemes.length === 0 || filterThemes.length === themeDistribution.length"
-                       @change="filterThemes = []" class="rounded border-gray-300" />
+                       @change="filterThemes = []" class="report-rounded report-border-default" />
                 <span>All</span>
               </label>
-              <div class="my-1 border-t border-gray-100"></div>
+              <div class="pf-v6-u-my-xs report-border-t report-border-default"></div>
               <template x-for="option in themeDistribution" :key="option.id">
-                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
-                  <input type="checkbox" :value="option.id" x-model="filterThemes" class="rounded border-gray-300" />
+                <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
+                  <input type="checkbox" :value="option.id" x-model="filterThemes" class="report-rounded report-border-default" />
                   <span x-text="option.label"></span>
                 </label>
               </template>
             </div>
           </div>
         </div>
-        <div class="flex items-center gap-1">
-          <label class="text-gray-500 text-xs">Accepted by:</label>
-          <div class="relative" x-data="{ acceptedByOpen: false }" @keydown.escape.stop.prevent="acceptedByOpen = false; $refs.acceptedByButton.focus()" @click.outside="acceptedByOpen = false">
+        <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+          <label class="pf-v6-u-text-color-subtle pf-v6-u-font-size-xs">Accepted by:</label>
+          <div class="report-relative" x-data="{ acceptedByOpen: false }" @keydown.escape.stop.prevent="acceptedByOpen = false; $refs.acceptedByButton.focus()" @click.outside="acceptedByOpen = false">
             <button type="button" x-ref="acceptedByButton" aria-label="Filter by accepted by" @click="acceptedByOpen = !acceptedByOpen"
                     :aria-expanded="acceptedByOpen"
-                    class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+                    class="pf-v6-c-button pf-m-control pf-v6-u-display-flex report-min-w-28 pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-border report-border-default report-rounded pf-v6-u-px-sm pf-v6-u-py-xs pf-v6-u-font-size-xs report-bg-primary pf-v6-u-text-align-start">
               <span x-text="acceptedByFilterLabel(filterAcceptedBy, data.risks)"></span>
-              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+              <span aria-hidden="true" class="pf-v6-u-ml-xs pf-v6-u-text-color-subtle">&#9662;</span>
             </button>
             <div x-show="acceptedByOpen" x-transition
-                 class="absolute left-0 top-full z-30 mt-1 w-48 rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 class="report-absolute report-left-0 report-top-full report-z-30 pf-v6-u-mt-xs report-w-48 report-rounded report-border report-border-default report-bg-primary pf-v6-u-p-xs pf-v6-u-box-shadow-lg"
                  role="group" aria-label="Accepted by">
-              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+              <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
                 <input type="checkbox" :checked="filterAcceptedBy.length === 0 || filterAcceptedBy.length === acceptedByOptions(data.risks).length"
-                       @change="filterAcceptedBy = []" class="rounded border-gray-300" />
+                       @change="filterAcceptedBy = []" class="report-rounded report-border-default" />
                 <span>All</span>
               </label>
-              <div class="my-1 border-t border-gray-100"></div>
+              <div class="pf-v6-u-my-xs report-border-t report-border-default"></div>
               <template x-for="option in acceptedByOptions(data.risks)" :key="option">
-                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
                   <input type="checkbox" :value="option" x-model="filterAcceptedBy"
-                         class="rounded border-gray-300" />
+                         class="report-rounded report-border-default" />
                   <span x-text="acceptedByLabel(option)"></span>
                 </label>
               </template>
             </div>
           </div>
         </div>
-        <div class="flex items-center gap-1">
-          <label class="text-gray-500 text-xs">Grounding:</label>
-          <div class="relative" x-data="{ groundingOpen: false }" @keydown.escape.stop.prevent="groundingOpen = false; $refs.groundingButton.focus()" @click.outside="groundingOpen = false">
+        <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+          <label class="pf-v6-u-text-color-subtle pf-v6-u-font-size-xs">Grounding:</label>
+          <div class="report-relative" x-data="{ groundingOpen: false }" @keydown.escape.stop.prevent="groundingOpen = false; $refs.groundingButton.focus()" @click.outside="groundingOpen = false">
             <button type="button" x-ref="groundingButton" aria-label="Filter by grounding" @click="groundingOpen = !groundingOpen"
                     :aria-expanded="groundingOpen"
-                    class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+                    class="pf-v6-c-button pf-m-control pf-v6-u-display-flex report-min-w-28 pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-border report-border-default report-rounded pf-v6-u-px-sm pf-v6-u-py-xs pf-v6-u-font-size-xs report-bg-primary pf-v6-u-text-align-start">
               <span x-text="groundingFilterLabel(filterGrounding, data.risks)"></span>
-              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+              <span aria-hidden="true" class="pf-v6-u-ml-xs pf-v6-u-text-color-subtle">&#9662;</span>
             </button>
             <div x-show="groundingOpen" x-transition
-                 class="absolute left-0 top-full z-30 mt-1 w-48 rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 class="report-absolute report-left-0 report-top-full report-z-30 pf-v6-u-mt-xs report-w-48 report-rounded report-border report-border-default report-bg-primary pf-v6-u-p-xs pf-v6-u-box-shadow-lg"
                  role="group" aria-label="Grounding">
-              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+              <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
                 <input type="checkbox" :checked="filterGrounding.length === 0 || filterGrounding.length === groundingOptions(data.risks).length"
-                       @change="filterGrounding = []" class="rounded border-gray-300" />
+                       @change="filterGrounding = []" class="report-rounded report-border-default" />
                 <span>All</span>
               </label>
-              <div class="my-1 border-t border-gray-100"></div>
+              <div class="pf-v6-u-my-xs report-border-t report-border-default"></div>
               <template x-for="option in groundingOptions(data.risks)" :key="option">
-                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
                   <input type="checkbox" :value="option" x-model="filterGrounding"
-                         class="rounded border-gray-300" />
+                         class="report-rounded report-border-default" />
                   <span x-text="groundingLabel(option)"></span>
                 </label>
               </template>
             </div>
           </div>
         </div>
-        <div class="flex items-center gap-1">
-          <label class="text-gray-500 text-xs">Taxonomy:</label>
-          <div class="relative" x-data="{ taxonomyOpen: false }" @keydown.escape.stop.prevent="taxonomyOpen = false; $refs.taxonomyButton.focus()" @click.outside="taxonomyOpen = false">
+        <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+          <label class="pf-v6-u-text-color-subtle pf-v6-u-font-size-xs">Taxonomy:</label>
+          <div class="report-relative" x-data="{ taxonomyOpen: false }" @keydown.escape.stop.prevent="taxonomyOpen = false; $refs.taxonomyButton.focus()" @click.outside="taxonomyOpen = false">
             <button type="button" x-ref="taxonomyButton" aria-label="Filter by taxonomy" @click="taxonomyOpen = !taxonomyOpen"
                     :aria-expanded="taxonomyOpen"
-                    class="flex min-w-28 items-center justify-between border border-gray-300 rounded px-2 py-1 text-xs bg-white text-left">
+                    class="pf-v6-c-button pf-m-control pf-v6-u-display-flex report-min-w-28 pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-border report-border-default report-rounded pf-v6-u-px-sm pf-v6-u-py-xs pf-v6-u-font-size-xs report-bg-primary pf-v6-u-text-align-start">
               <span x-text="taxonomyFilterLabel(filterTaxonomy, data.risks)"></span>
-              <span aria-hidden="true" class="ml-1 text-gray-400">&#9662;</span>
+              <span aria-hidden="true" class="pf-v6-u-ml-xs pf-v6-u-text-color-subtle">&#9662;</span>
             </button>
             <div x-show="taxonomyOpen" x-transition
-                 class="absolute left-0 top-full z-30 mt-1 w-64 max-h-64 overflow-y-auto rounded border border-gray-200 bg-white p-1 shadow-lg"
+                 class="report-absolute report-left-0 report-top-full report-z-30 pf-v6-u-mt-xs report-w-64 report-max-h-64 report-overflow-y-auto report-rounded report-border report-border-default report-bg-primary pf-v6-u-p-xs pf-v6-u-box-shadow-lg"
                  role="group" aria-label="Taxonomy">
-              <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+              <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
                 <input type="checkbox" :checked="filterTaxonomy.length === 0 || filterTaxonomy.length === taxonomyOptions(data.risks).length"
-                       @change="filterTaxonomy = []" class="rounded border-gray-300" />
+                       @change="filterTaxonomy = []" class="report-rounded report-border-default" />
                 <span>All</span>
               </label>
-              <div class="my-1 border-t border-gray-100"></div>
+              <div class="pf-v6-u-my-xs report-border-t report-border-default"></div>
               <template x-for="option in taxonomyOptions(data.risks)" :key="option">
-                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-gray-50">
+                <label class="pf-v6-u-display-flex report-cursor-pointer pf-v6-u-align-items-center report-gap-2 report-rounded pf-v6-u-px-sm report-py-one-half pf-v6-u-font-size-xs report-hover-bg-secondary">
                   <input type="checkbox" :value="option" x-model="filterTaxonomy"
-                         class="rounded border-gray-300" />
+                         class="report-rounded report-border-default" />
                   <span x-text="taxonomyLabel(option)"></span>
                 </label>
               </template>
             </div>
           </div>
         </div>
-        <div class="flex items-center gap-1">
-          <label class="text-gray-500 text-xs">Search:</label>
+        <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-1">
+          <label class="pf-v6-u-text-color-subtle pf-v6-u-font-size-xs">Search:</label>
           <input type="text" x-model="searchQuery" aria-label="Search risks" placeholder="Risk name or ID..."
-                 class="border border-gray-300 rounded px-2 py-1 text-xs bg-white w-40" />
+                 class="report-border report-border-default report-rounded pf-v6-u-px-sm pf-v6-u-py-xs pf-v6-u-font-size-xs report-bg-primary report-w-40" />
         </div>
         <button type="button" @click="resetFilters()" :disabled="!hasActiveFilters"
-                class="text-xs font-medium asago-link hover:underline disabled:opacity-40 disabled:cursor-default">
+                class="pf-v6-u-font-size-xs report-font-medium asago-link report-hover-underline report-disabled-opacity-40 report-disabled-cursor-default">
           Reset filters
         </button>
       </div>
 
 
-      <div class="relative overflow-x-auto">
-        <table class="w-full text-sm">
-          <caption class="sr-only">Matched risks and their supporting evidence</caption>
+      <div class="report-relative report-overflow-x-auto">
+        <table class="pf-v6-c-table asago-findings-table report-w-full pf-v6-u-font-size-sm">
+          <caption class="pf-v6-screen-reader">Matched risks and their supporting evidence</caption>
           <thead>
-            <tr class="risk-table-grid px-3 text-left text-xs text-gray-500 border-b border-gray-200">
+            <tr class="risk-table-grid report-px-3 pf-v6-u-text-align-start pf-v6-u-font-size-xs report-border-b report-border-default">
               <template x-for="column in findingColumns" :key="column.key">
-                <th scope="col" class="pb-3 pr-3 font-medium"
+                <th scope="col" class="report-font-semibold"
                     :aria-sort="sortBy === column.key ? (sortDesc ? 'descending' : 'ascending') : 'none'"
-                    :class="column.key === 'evidence_count' ? 'text-right' : ''">
+                    :class="column.key === 'evidence_count' ? 'pf-v6-u-text-align-end' : ''">
                   <button type="button" @click="toggleSort(column.key)">
                     <span x-text="column.label"></span>
                     <span x-show="sortBy === column.key" x-text="sortDesc ? ' ↓' : ' ↑'" class="asago-link"></span>
                   </button>
                 </th>
               </template>
-              <th scope="col"><span class="sr-only">Expand finding</span></th>
+              <th scope="col"><span class="pf-v6-screen-reader">Expand finding</span></th>
             </tr>
           </thead>
           <tbody>
             <template x-for="risk in sortedRisks(visibleRisks, sortBy, sortDesc)" :key="risk.risk_id">
-              <tr class="border-b border-gray-100" x-data="{ expanded: false }">
-                <td colspan="5" class="p-0">
-                  <div class="risk-table-grid items-center cursor-pointer hover:bg-gray-50 px-3 py-4" @click="expanded = !expanded">
-                    <div class="min-w-0 pr-4">
-                      <button type="button" class="text-left font-semibold text-gray-900"
+              <tr class="report-border-b report-border-default" x-data="{ expanded: false }">
+                <td colspan="5" class="pf-v6-u-p-0">
+                  <div class="risk-table-grid pf-v6-u-align-items-center report-cursor-pointer report-hover-bg-secondary report-px-3 pf-v6-u-py-md" @click="expanded = !expanded">
+                    <div class="report-min-w-0 pf-v6-u-pr-md">
+                      <button type="button" class="pf-v6-u-text-align-start report-font-semibold pf-v6-u-text-color-regular"
                               @click.stop="expanded = !expanded" :aria-expanded="expanded"
                               :aria-controls="'finding-' + encodeURIComponent(risk.risk_id)"
-                              x-text="risk.risk_name"></button>
-                      <div class="flex flex-wrap gap-1 mt-2" aria-label="Themes">
+                              x-text="risk.risk_name || risk.risk_id"></button>
+                      <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-1 pf-v6-u-mt-sm" aria-label="Themes">
                         <template x-for="themeId in riskThemeIds(risk)" :key="themeId">
-                          <span class="asago-tag rounded px-2 py-0.5 text-xs" x-text="themeLabel(themeId)"></span>
+                          <span class="pf-v6-c-label asago-tag report-rounded pf-v6-u-px-sm report-py-half pf-v6-u-font-size-xs" x-text="themeLabel(themeId)"></span>
                         </template>
                       </div>
                     </div>
-                    <div class="pr-3 min-w-0">
-                      <span class="inline-block rounded px-2 py-1 text-xs break-all"
+                    <div class="report-pr-3 report-min-w-0">
+                      <span class="pf-v6-u-display-inline-block report-rounded pf-v6-u-px-sm pf-v6-u-py-xs pf-v6-u-font-size-xs report-break-all"
                             :class="taxonomyColor(risk.taxonomy)"
                             x-text="taxonomyLabel(taxonomyFilterValue(risk.taxonomy))"></span>
                     </div>
-                    <div class="pr-3">
-                      <span class="px-2 py-1 rounded text-xs font-medium"
+                    <div class="report-pr-3">
+                      <span class="pf-v6-u-px-sm pf-v6-u-py-xs report-rounded pf-v6-u-font-size-xs report-font-medium"
                             :class="groundingColor(risk.grounding_confidence)"
                             x-text="groundingLabel(groundingValue(risk.grounding_confidence))"></span>
                     </div>
-                    <div class="text-right pr-3 text-gray-600 tabular-nums" x-text="(risk.evidence || []).length"></div>
-                    <svg class="w-5 h-5 text-gray-400 chevron" :class="expanded ? 'rotate-180' : ''"
+                    <div class="pf-v6-u-text-align-end report-pr-3 pf-v6-u-text-color-subtle report-tabular-nums" x-text="(risk.evidence || []).length"></div>
+                    <svg class="report-w-5 report-h-5 pf-v6-u-text-color-subtle chevron" :class="expanded ? 'report-rotate-180' : ''"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                   </div>
                   <template x-if="expanded">
-                    <div :id="'finding-' + encodeURIComponent(risk.risk_id)" class="px-4 py-5 space-y-5 bg-gray-50 border-t border-gray-100">
+                    <div :id="'finding-' + encodeURIComponent(risk.risk_id)" class="pf-v6-u-px-md report-py-5 report-space-y-5 report-bg-secondary report-border-t report-border-default">
                       <!-- Evidence spans -->
                       <div x-show="(risk.evidence || []).length > 0">
-                        <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="Direct quotes from the document supporting this risk extraction.">Supporting evidence</p>
-                        <div class="space-y-3">
+                        <p class="tip pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-xs" tabindex="0" data-tip="Direct quotes from the document supporting this risk extraction.">Supporting evidence</p>
+                        <div class="report-space-y-3">
                           <template x-for="(ev, ei) in risk.evidence || []" :key="ei">
-                            <div class="asago-evidence-card asago-evidence rounded-lg p-4">
-                              <p class="text-sm text-gray-800 dark:text-gray-200 italic" x-text="'“' + ev.text + '”'"></p>
-                              <div class="flex flex-wrap items-center gap-1 mt-1 text-xs text-gray-500">
-                                <span class="font-medium" x-text="fileName(ev.document)"></span>
+                            <div class="pf-v6-c-card asago-evidence-card asago-evidence report-rounded-lg pf-v6-u-p-md">
+                              <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-regular report-dark-text-regular report-italic" x-text="'“' + ev.text + '”'"></p>
+                              <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap pf-v6-u-align-items-center report-gap-1 pf-v6-u-mt-xs pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">
+                                <span class="report-font-medium" x-text="fileName(ev.document)"></span>
                                 <span x-show="ev.page != null">&middot;</span>
                                 <span x-show="ev.page != null" x-text="'p.' + ev.page"></span>
                                 <span x-show="ev.section">&middot;</span>
@@ -531,22 +502,22 @@
                           </template>
                         </div>
                       </div>
-                      <p x-show="!(risk.evidence || []).length" class="text-sm text-gray-500 py-2">
+                      <p x-show="!(risk.evidence || []).length" class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-py-sm">
                         No supporting quotes were saved for this match.
                         <span x-show="risk.grounding_confidence === 'ungrounded'">Grounding was skipped.</span>
                       </p>
                       <!-- Description -->
                       <div>
-                        <p class="text-xs text-gray-400 uppercase mb-1">Risk definition</p>
-                        <p class="text-sm text-gray-700" x-text="risk.risk_description"></p>
+                        <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-xs">Risk definition</p>
+                        <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-regular" x-text="risk.risk_description"></p>
                       </div>
-                      <details class="text-xs text-gray-500">
-                        <summary class="cursor-pointer asago-link w-fit">How this risk was grouped</summary>
-                        <p x-show="!(risk.theme_links || []).length" class="mt-2">No supported category-to-theme link is available for this risk yet. It remains visible in Other / not yet grouped.</p>
-                        <ul x-show="(risk.theme_links || []).length" class="mt-2 space-y-2">
+                      <details class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">
+                        <summary class="report-cursor-pointer asago-link report-w-fit">How this risk was grouped</summary>
+                        <p x-show="!(risk.theme_links || []).length" class="pf-v6-u-mt-sm">No supported category-to-theme link is available for this risk yet. It remains visible in Other / not yet grouped.</p>
+                        <ul x-show="(risk.theme_links || []).length" class="pf-v6-u-mt-sm report-space-y-2">
                           <template x-for="link in risk.theme_links || []" :key="link.taxonomy + ':' + link.category_id">
                             <li>
-                              <span class="font-medium text-gray-700" x-text="link.category_label"></span>
+                              <span class="report-font-medium pf-v6-u-text-color-regular" x-text="link.category_label"></span>
                               <span x-text="' (' + link.taxonomy_label + ') → '"></span>
                               <span x-text="link.theme_ids.map(id => themeLabel(id)).join(', ')"></span>
                             </li>
@@ -555,66 +526,67 @@
                       </details>
                       <!-- Causal chain (DPV) -->
                       <div x-show="risk.threat || risk.consequence">
-                        <p class="tip text-xs text-gray-400 uppercase mb-1"
+                        <p class="tip pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-xs" tabindex="0"
                            data-tip="DPV causal chain: what event causes this risk (Threat), what system weakness is exploited (Vulnerability), what happens if materialized (Consequence), and who is harmed (Impact).">Causal explanation</p>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                          <div x-show="risk.threat" class="rounded p-2 bg-red-50 border border-red-100">
-                            <span class="font-semibold text-red-700">Threat</span>
-                            <p class="text-red-900 mt-0.5" x-text="risk.threat"></p>
-                            <p x-show="risk.threat_source" class="text-red-600 mt-1 opacity-75">
-                              <span class="font-medium">Source:</span> <span x-text="risk.threat_source"></span>
+                        <div class="pf-v6-u-display-grid report-grid-cols-2 report-gap-2 pf-v6-u-font-size-xs">
+                          <div x-show="risk.threat" class="report-rounded pf-v6-u-p-sm report-bg-danger report-border report-border-danger">
+                            <span class="report-font-semibold pf-v6-u-text-color-status-danger">Threat</span>
+                            <p class="pf-v6-u-text-color-status-danger report-mt-half" x-text="risk.threat"></p>
+                            <p x-show="risk.threat_source" class="pf-v6-u-text-color-status-danger pf-v6-u-mt-xs report-opacity-75">
+                              <span class="report-font-medium">Source:</span> <span x-text="risk.threat_source"></span>
                             </p>
                           </div>
-                          <div x-show="risk.vulnerability" class="rounded p-2 bg-orange-50 border border-orange-100">
-                            <span class="font-semibold text-orange-700">Vulnerability</span>
-                            <p class="text-orange-900 mt-0.5" x-text="risk.vulnerability"></p>
+                          <div x-show="risk.vulnerability" class="report-rounded pf-v6-u-p-sm report-bg-warning report-border report-border-warning">
+                            <span class="report-font-semibold pf-v6-u-text-color-status-warning">Vulnerability</span>
+                            <p class="pf-v6-u-text-color-status-warning report-mt-half" x-text="risk.vulnerability"></p>
                           </div>
-                          <div x-show="risk.consequence" class="rounded p-2 bg-yellow-50 border border-yellow-100">
-                            <span class="font-semibold text-yellow-700">Consequence</span>
-                            <p class="text-yellow-900 mt-0.5" x-text="risk.consequence"></p>
+                          <div x-show="risk.consequence" class="report-rounded pf-v6-u-p-sm report-bg-warning report-border report-border-warning">
+                            <span class="report-font-semibold pf-v6-u-text-color-status-warning">Consequence</span>
+                            <p class="pf-v6-u-text-color-status-warning report-mt-half" x-text="risk.consequence"></p>
                           </div>
-                          <div x-show="risk.impact" class="rounded p-2 bg-rose-50 border border-rose-100">
-                            <span class="font-semibold text-rose-700">Impact</span>
-                            <p class="text-rose-900 mt-0.5" x-text="risk.impact"></p>
+                          <div x-show="risk.impact" class="report-rounded pf-v6-u-p-sm report-bg-danger report-border report-border-danger">
+                            <span class="report-font-semibold pf-v6-u-text-color-status-danger">Impact</span>
+                            <p class="pf-v6-u-text-color-status-danger report-mt-half" x-text="risk.impact"></p>
                           </div>
                         </div>
                       </div>
                       <!-- Mitigations -->
                       <div x-show="(risk.mitigations || []).length > 0" x-data="{ mitOpen: false }">
-                        <p class="tip text-xs text-gray-400 uppercase mb-1 cursor-pointer select-none" @click="mitOpen = !mitOpen"
+                        <p class="tip pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-xs report-cursor-pointer report-select-none" tabindex="0" @click="mitOpen = !mitOpen"
+                           @keydown.enter.prevent="mitOpen = !mitOpen" @keydown.space.prevent="mitOpen = !mitOpen"
                            data-tip="Recommended mitigation actions from NIST, OWASP, and AIUC-1 frameworks, categorized as technical (engineering deploys), operational (ops/QA executes), or governance (leadership/compliance owns).">
                           Related mitigation guidance
-                          <span class="text-gray-500 font-mono" x-text="'(' + (risk.mitigations || []).length + ')'"></span>
+                          <span class="pf-v6-u-text-color-subtle pf-v6-u-font-family-monospace" x-text="'(' + (risk.mitigations || []).length + ')'"></span>
                           <template x-for="cat in ['technical','operational','governance']" :key="cat">
-                            <span class="ml-1 px-1 py-0.5 rounded text-xs"
-                                  :class="cat === 'technical' ? 'bg-blue-50 text-blue-700' : cat === 'operational' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'"
+                            <span class="pf-v6-u-ml-xs pf-v6-u-px-xs report-py-half report-rounded pf-v6-u-font-size-xs"
+                                  :class="cat === 'technical' ? 'report-bg-brand pf-v6-u-text-color-link' : cat === 'operational' ? 'report-bg-warning pf-v6-u-text-color-status-warning' : 'report-bg-custom pf-v6-u-text-color-status-custom'"
                                   x-text="cat[0].toUpperCase() + ':' + (risk.mitigations || []).filter(m => m.category === cat).length"
                                   x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0"></span>
                           </template>
-                          <svg class="w-3 h-3 inline ml-1 text-gray-400 chevron"
-                               :class="mitOpen ? 'rotate-180' : ''"
+                          <svg class="report-w-3 report-h-3 pf-v6-u-display-inline pf-v6-u-ml-xs pf-v6-u-text-color-subtle chevron"
+                               :class="mitOpen ? 'report-rotate-180' : ''"
                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                           </svg>
                         </p>
-                        <div x-show="mitOpen" class="space-y-2">
+                        <div x-show="mitOpen" class="report-space-y-2">
                           <template x-for="cat in ['technical','operational','governance']" :key="cat">
                             <div x-show="(risk.mitigations || []).filter(m => m.category === cat).length > 0">
-                              <p class="text-xs font-semibold mt-1 mb-0.5"
-                                 :class="cat === 'technical' ? 'text-blue-700' : cat === 'operational' ? 'text-amber-700' : 'text-purple-700'"
+                              <p class="pf-v6-u-font-size-xs report-font-semibold pf-v6-u-mt-xs report-mb-half"
+                                 :class="cat === 'technical' ? 'pf-v6-u-text-color-link' : cat === 'operational' ? 'pf-v6-u-text-color-status-warning' : 'pf-v6-u-text-color-status-custom'"
                                  x-text="cat.charAt(0).toUpperCase() + cat.slice(1)"></p>
                               <template x-for="src in [...new Set((risk.mitigations || []).filter(m => m.category === cat).map(m => m.source))].sort()" :key="src">
-                                <div class="ml-2 mb-1">
-                                  <p class="text-xs text-gray-500" x-text="src"></p>
-                                  <div class="flex flex-wrap gap-1">
+                                <div class="pf-v6-u-ml-sm pf-v6-u-mb-xs">
+                                  <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-text="src"></p>
+                                  <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-1">
                                     <template x-for="m in (risk.mitigations || []).filter(m => m.category === cat && m.source === src)" :key="m.action_id">
-                                      <div class="tip rounded text-xs p-1.5 mb-1"
-                                           :class="cat === 'technical' ? 'bg-blue-50 text-blue-800' : cat === 'operational' ? 'bg-amber-50 text-amber-800' : 'bg-purple-50 text-purple-800'"
+                                      <div class="tip report-rounded pf-v6-u-font-size-xs report-p-one-half pf-v6-u-mb-xs" tabindex="0"
+                                           :class="cat === 'technical' ? 'report-bg-brand pf-v6-u-text-color-link' : cat === 'operational' ? 'report-bg-warning pf-v6-u-text-color-status-warning' : 'report-bg-custom pf-v6-u-text-color-status-custom'"
                                            :data-tip="m.action_id">
-                                        <span class="font-semibold" x-text="m.action_name || m.action_id"></span>
-                                        <span x-show="m.risk_control" class="ml-1 px-1 py-0.5 rounded text-xs opacity-60 font-normal bg-gray-200 text-gray-700"
+                                        <span class="report-font-semibold" x-text="m.action_name || m.action_id"></span>
+                                        <span x-show="m.risk_control" class="pf-v6-u-ml-xs pf-v6-u-px-xs report-py-half report-rounded pf-v6-u-font-size-xs report-opacity-60 pf-v6-u-font-weight-normal report-bg-tertiary pf-v6-u-text-color-regular"
                                               x-text="m.risk_control?.replace('Control','')"></span>
-                                        <p x-show="m.description" class="mt-0.5 text-xs opacity-80 font-normal" x-text="m.description"></p>
+                                        <p x-show="m.description" class="report-mt-half pf-v6-u-font-size-xs report-opacity-80 pf-v6-u-font-weight-normal" x-text="m.description"></p>
                                       </div>
                                     </template>
                                   </div>
@@ -627,81 +599,81 @@
 
                       <div x-data="{ riskTechnicalOpen: false }">
                         <button type="button" @click="riskTechnicalOpen = !riskTechnicalOpen" :aria-expanded="riskTechnicalOpen"
-                                class="text-xs font-semibold text-gray-500 flex items-center gap-2">
+                                class="pf-v6-u-font-size-xs report-font-semibold pf-v6-u-text-color-subtle pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2">
                           <span aria-hidden="true" x-text="riskTechnicalOpen ? '−' : '+'"></span> Technical details for this match
                         </button>
                         <template x-if="riskTechnicalOpen">
-                          <div class="space-y-4 mt-3">
-                            <p class="text-xs text-gray-500 break-all">Risk ID: <span x-text="risk.risk_id"></span></p>
-                            <div class="flex flex-wrap gap-4 items-center text-xs">
+                          <div class="report-space-y-4 report-mt-3">
+                            <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-break-all">Risk ID: <span x-text="risk.risk_id"></span></p>
+                            <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-4 pf-v6-u-align-items-center pf-v6-u-font-size-xs">
                               <span>Accepted by:
-                                <span class="px-2 py-1 rounded" :class="acceptedByColor(risk.accepted_by)" x-text="acceptedByLabel(risk.accepted_by)"></span>
+                                <span class="pf-v6-u-px-sm pf-v6-u-py-xs report-rounded" :class="acceptedByColor(risk.accepted_by)" x-text="acceptedByLabel(risk.accepted_by)"></span>
                               </span>
                             </div>
-                            <p class="text-xs text-gray-500" x-show="(risk.evidence || []).length">
+                            <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-show="(risk.evidence || []).length">
                               Evidence chunks: <span x-text="(risk.evidence || []).map(ev => fileName(ev.document) + ' #' + ev.chunk_index).join(', ')"></span>
                             </p>
                             <!-- Score breakdown -->
                             <div class="score-breakdown">
-                              <h3 class="text-sm font-semibold text-gray-900 mb-1">Score breakdown</h3>
-                              <p class="text-xs text-gray-500 mb-3">These scores help shortlist risks using document passages or generated search queries. Their meaning depends on the search method and model. Use the supporting quotes and grounding confidence to assess how well the document supports this match.</p>
-                              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                              <h3 class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-regular pf-v6-u-mb-xs">Score breakdown</h3>
+                              <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-mb-3">These scores help shortlist risks using document passages or generated search queries. Their meaning depends on the search method and model. Use the supporting quotes and grounding confidence to assess how well the document supports this match.</p>
+                              <div class="pf-v6-u-display-grid report-grid-cols-1 report-grid-cols-2-lg report-gap-3">
                                 <template x-for="score in scoreBreakdown(risk)" :key="score.key">
-                                  <div class="asago-score-card rounded-lg p-4" :data-score="score.key">
-                                    <div class="flex flex-wrap items-baseline justify-between gap-2">
-                                      <h4 class="text-sm font-semibold text-gray-900" x-text="score.label"></h4>
-                                      <span class="text-lg font-semibold text-gray-900 tabular-nums" x-text="score.value"></span>
+                                  <div class="pf-v6-c-card asago-score-card report-rounded-lg pf-v6-u-p-md" :data-score="score.key">
+                                    <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap pf-v6-u-align-items-baseline pf-v6-u-justify-content-space-between report-gap-2">
+                                      <h4 class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-regular" x-text="score.label"></h4>
+                                      <span class="pf-v6-u-font-size-lg report-font-semibold pf-v6-u-text-color-regular report-tabular-nums" x-text="score.value"></span>
                                     </div>
-                                    <p class="text-xs text-gray-600 mt-2" x-text="score.description"></p>
-                                    <p class="text-xs font-semibold asago-link mt-3">
+                                    <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-sm" x-text="score.description"></p>
+                                    <p class="pf-v6-u-font-size-xs report-font-semibold asago-link report-mt-3">
                                       <span x-text="score.direction"></span> &middot; Range: <span x-text="score.range"></span>
                                     </p>
-                                    <p class="text-xs text-gray-600 mt-2" x-text="score.interpretation"></p>
+                                    <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-sm" x-text="score.interpretation"></p>
                                   </div>
                                 </template>
                               </div>
-                              <details class="mt-3 text-xs text-gray-500">
-                                <summary class="cursor-pointer w-fit">Raw stored values</summary>
-                                <p class="mt-2">The confidence field stores the retrieval score selected by the extraction mode. Grounding confidence is recorded separately.</p>
-                                <pre class="whitespace-pre-wrap overflow-x-auto mt-2 p-3 rounded bg-white" x-text="formatJSON({ confidence: risk.confidence, ...risk.scores })"></pre>
+                              <details class="report-mt-3 pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">
+                                <summary class="report-cursor-pointer report-w-fit">Raw stored values</summary>
+                                <p class="pf-v6-u-mt-sm">The confidence field stores the retrieval score selected by the extraction mode. Grounding confidence is recorded separately.</p>
+                                <pre class="report-whitespace-pre-wrap report-overflow-x-auto pf-v6-u-mt-sm report-p-3 report-rounded report-bg-primary" x-text="formatJSON({ confidence: risk.confidence, ...risk.scores })"></pre>
                               </details>
                             </div>
                             <!-- Inline LLM calls for this risk -->
                             <div x-show="riskCalls(risk.risk_id).length > 0">
-                              <p class="tip text-xs text-gray-400 uppercase mb-1" data-tip="LLM calls that involved this risk (grounding verification, borderline judging).">LLM Calls</p>
-                              <div class="space-y-2">
+                              <p class="tip pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-xs" tabindex="0" data-tip="LLM calls that involved this risk (grounding verification, borderline judging).">LLM Calls</p>
+                              <div class="report-space-y-2">
                                 <template x-for="call in riskCalls(risk.risk_id)" :key="call.call_id">
-                                  <div class="border border-gray-200 rounded bg-white" x-data="{ callOpen: false }">
-                                    <div class="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-gray-50 text-xs"
+                                  <div class="report-border report-border-default report-rounded report-bg-primary" x-data="{ callOpen: false }">
+                                    <div class="pf-v6-u-display-flex pf-v6-u-align-items-center pf-v6-u-justify-content-space-between pf-v6-u-px-sm report-py-one-half report-cursor-pointer report-hover-bg-secondary pf-v6-u-font-size-xs"
                                          @click="callOpen = !callOpen">
-                                      <div class="flex items-center gap-2">
+                                      <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2">
                                         <span class="stage-badge"
-                                              :class="call.stage === 'grounding' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                              :class="call.stage === 'grounding' ? 'report-bg-success pf-v6-u-text-color-status-success' : 'report-bg-warning pf-v6-u-text-color-status-warning'"
                                               x-text="call.stage"></span>
-                                        <span class="font-mono text-gray-500" x-text="call.call_id"></span>
-                                        <span class="text-gray-400" x-text="call.duration_ms?.toFixed(0) + 'ms'"></span>
+                                        <span class="pf-v6-u-font-family-monospace pf-v6-u-text-color-subtle" x-text="call.call_id"></span>
+                                        <span class="pf-v6-u-text-color-subtle" x-text="call.duration_ms?.toFixed(0) + 'ms'"></span>
                                       </div>
-                                      <div class="flex items-center gap-2">
-                                        <span class="text-gray-600" x-text="call.result_summary"></span>
-                                        <svg class="w-4 h-4 text-gray-400 chevron"
-                                             :class="callOpen ? 'rotate-180' : ''"
+                                      <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2">
+                                        <span class="pf-v6-u-text-color-subtle" x-text="call.result_summary"></span>
+                                        <svg class="report-w-4 report-h-4 pf-v6-u-text-color-subtle chevron"
+                                             :class="callOpen ? 'report-rotate-180' : ''"
                                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                       </div>
                                     </div>
-                                    <div x-show="callOpen" class="px-2 pb-2 border-t border-gray-100 space-y-2">
+                                    <div x-show="callOpen" class="pf-v6-u-px-sm pf-v6-u-pb-sm report-border-t report-border-default report-space-y-2">
                                       <template x-for="(msg, mi) in call.messages || []" :key="mi">
-                                        <div class="mt-1">
-                                          <span class="text-xs font-semibold uppercase"
-                                                :class="msg.role === 'system' ? 'text-purple-600' : msg.role === 'user' ? 'text-blue-600' : 'text-green-600'"
+                                        <div class="pf-v6-u-mt-xs">
+                                          <span class="pf-v6-u-font-size-xs report-font-semibold report-uppercase"
+                                                :class="msg.role === 'system' ? 'pf-v6-u-text-color-status-custom' : msg.role === 'user' ? 'pf-v6-u-text-color-link' : 'pf-v6-u-text-color-status-success'"
                                                 x-text="msg.role"></span>
-                                          <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-40 overflow-y-auto bg-gray-50 rounded p-1" x-text="msg.content"></pre>
+                                          <pre class="pf-v6-u-font-size-xs pf-v6-u-text-color-regular report-whitespace-pre-wrap report-mt-half report-max-h-40 report-overflow-y-auto report-bg-secondary report-rounded pf-v6-u-p-xs" x-text="msg.content"></pre>
                                         </div>
                                       </template>
                                       <div>
-                                        <span class="text-xs font-semibold uppercase text-green-600">Response</span>
-                                        <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-40 overflow-y-auto bg-gray-50 rounded p-1" x-text="formatJSON(call.response)"></pre>
+                                        <span class="pf-v6-u-font-size-xs report-font-semibold report-uppercase pf-v6-u-text-color-status-success">Response</span>
+                                        <pre class="pf-v6-u-font-size-xs pf-v6-u-text-color-regular report-whitespace-pre-wrap report-mt-half report-max-h-40 report-overflow-y-auto report-bg-secondary report-rounded pf-v6-u-p-xs" x-text="formatJSON(call.response)"></pre>
                                       </div>
                                     </div>
                                   </div>
@@ -720,67 +692,67 @@
           </tbody>
         </table>
       </div>
-      <div x-show="visibleRisks.length === 0" class="text-center text-gray-500 py-8">
+      <div x-show="visibleRisks.length === 0" class="pf-v6-u-text-align-center pf-v6-u-text-color-subtle pf-v6-u-py-xl">
         <p x-text="riskCount ? 'No risks match the current filters.' : 'No risk matches were recorded in this analysis.'"></p>
-        <button type="button" x-show="hasActiveFilters" @click="resetFilters()" class="mt-2 text-sm asago-link hover:underline">Reset filters</button>
+        <button type="button" x-show="hasActiveFilters" @click="resetFilters()" class="pf-v6-u-mt-sm pf-v6-u-font-size-sm asago-link report-hover-underline">Reset filters</button>
       </div>
     </section>
 
     <!-- 4. Technical appendix -->
-    <section id="technical-details" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ technicalOpen: false }">
+    <section id="technical-details" class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5" x-data="{ technicalOpen: false }">
       <h2>
         <button type="button" @click="technicalOpen = !technicalOpen" :aria-expanded="technicalOpen"
-                class="flex w-full items-center justify-between gap-4 text-left">
+                class="pf-v6-u-display-flex report-w-full pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-gap-4 pf-v6-u-text-align-start">
           <span>
-            <span class="text-sm font-semibold text-gray-900">Technical details</span>
-            <span class="block text-xs text-gray-500 mt-1">Grouping methodology, processing statistics, configuration, document chunks and model call logs</span>
+            <span class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-regular">Technical details</span>
+            <span class="pf-v6-u-display-block pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-xs">Grouping methodology, processing statistics, configuration, document chunks and model call logs</span>
           </span>
-          <span class="text-gray-400" aria-hidden="true" x-text="technicalOpen ? '−' : '+'"></span>
+          <span class="pf-v6-u-text-color-subtle" aria-hidden="true" x-text="technicalOpen ? '−' : '+'"></span>
         </button>
       </h2>
       <template x-if="technicalOpen">
-        <div class="space-y-4 mt-4">
-          <details class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm text-gray-500">
-            <summary class="cursor-pointer font-semibold">Theme grouping</summary>
-            <p class="mt-3 font-medium text-gray-700" x-text="themeCoverageText"></p>
-            <p class="mt-2">Themes use curated links from risks to NIST, OWASP and AILuminate categories. Only exact, close or broader-category links are used. Source categories are shown inside each finding. Matches without a supported link remain in Other / not yet grouped.</p>
-            <p class="mt-2">A risk can belong to several themes, so theme counts may add up to more than the total. Selecting several themes shows each matching risk once. Mapping coverage is partial and varies by taxonomy; it does not measure extraction accuracy or policy completeness.</p>
-            <p class="mt-2">Themes with no matches are omitted. Their absence does not establish that a topic is absent from your policy.</p>
+        <div class="report-space-y-4 pf-v6-u-mt-md">
+          <details class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5 pf-v6-u-font-size-sm pf-v6-u-text-color-subtle">
+            <summary class="report-cursor-pointer report-font-semibold">Theme grouping</summary>
+            <p class="report-mt-3 report-font-medium pf-v6-u-text-color-regular" x-text="themeCoverageText"></p>
+            <p class="pf-v6-u-mt-sm">Themes use curated links from risks to NIST, OWASP and AILuminate categories. Only exact, close or broader-category links are used. Source categories are shown inside each finding. Matches without a supported link remain in Other / not yet grouped.</p>
+            <p class="pf-v6-u-mt-sm">A risk can belong to several themes, so theme counts may add up to more than the total. Selecting several themes shows each matching risk once. Mapping coverage is partial and varies by taxonomy; it does not measure extraction accuracy or policy completeness.</p>
+            <p class="pf-v6-u-mt-sm">Themes with no matches are omitted. Their absence does not establish that a topic is absent from your policy.</p>
           </details>
-          <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ statsOpen: false }">
+          <section class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5" x-data="{ statsOpen: false }">
             <h3>
-              <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+              <button type="button" class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-subtle report-uppercase report-tracking-wide pf-v6-u-mb-xs report-w-full pf-v6-u-text-align-start pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2"
                       @click="statsOpen = !statsOpen" :aria-expanded="statsOpen">
                 <span class="tip" data-tip="Detailed pipeline performance metrics: timing breakdown, token usage, and configuration parameters.">Processing statistics</span>
                 <span class="tip-icon tip" data-tip="Timing, tokens, and configuration.">i</span>
-                <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-                     :class="statsOpen ? 'rotate-180' : ''"
+                <svg class="report-w-5 report-h-5 pf-v6-u-text-color-subtle chevron pf-v6-u-ml-auto"
+                     :class="statsOpen ? 'report-rotate-180' : ''"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
             </h3>
-            <div x-show="statsOpen" class="mt-3 space-y-4">
-              <p class="text-xs text-gray-500">These counts describe candidate processing across document chunks.</p>
-              <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div x-show="statsOpen" class="report-mt-3 report-space-y-4">
+              <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">These counts describe candidate processing across document chunks.</p>
+              <div class="pf-v6-u-display-grid report-grid-cols-2 report-grid-cols-5-md report-gap-3">
                 <template x-for="stat in processingStats" :key="stat.key">
-                  <div class="p-3 rounded-lg bg-gray-50">
-                    <p class="text-xl font-semibold text-gray-900" x-text="formatNumber(data.retrieval_stats?.[stat.key] || 0)"></p>
-                    <p class="text-xs text-gray-500 mt-1" x-text="stat.label"></p>
+                  <div class="report-p-3 report-rounded-lg report-bg-secondary">
+                    <p class="pf-v6-u-font-size-xl report-font-semibold pf-v6-u-text-color-regular" x-text="formatNumber(data.retrieval_stats?.[stat.key] || 0)"></p>
+                    <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-xs" x-text="stat.label"></p>
                   </div>
                 </template>
               </div>
               <!-- Timing -->
               <div x-show="Object.keys(data.retrieval_stats?.timing_ms || {}).length > 0">
-                <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Timing Breakdown</p>
-                <div class="space-y-1">
+                <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-sm report-font-semibold">Timing Breakdown</p>
+                <div class="report-space-y-1">
                   <template x-for="[stage, ms] in sortedTimings()" :key="stage">
-                    <div class="flex items-center gap-3 text-sm">
-                      <span class="w-28 text-right text-xs text-gray-500 font-mono" x-text="stage"></span>
-                      <div class="flex-1 bg-gray-200 rounded overflow-hidden h-5">
-                        <div class="timing-bar asago-chart-bar flex items-center justify-end px-1"
+                    <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-3 pf-v6-u-font-size-sm">
+                      <span class="report-w-28 pf-v6-u-text-align-end pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-font-family-monospace" x-text="stage"></span>
+                      <div class="pf-v6-u-flex-1 report-bg-tertiary report-rounded report-overflow-hidden report-h-5">
+                        <div class="timing-bar asago-chart-bar pf-v6-u-display-flex pf-v6-u-align-items-center pf-v6-u-justify-content-flex-end pf-v6-u-px-xs"
                              :style="`width: ${Math.max((ms / maxTiming) * 100, 2)}%`">
-                          <span class="text-[10px] text-white font-mono" x-text="ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms.toFixed(0) + 'ms'"></span>
+                          <span class="report-text-xxs report-text-white pf-v6-u-font-family-monospace" x-text="ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms.toFixed(0) + 'ms'"></span>
                         </div>
                       </div>
                     </div>
@@ -790,30 +762,30 @@
 
               <!-- Token usage -->
               <div x-show="Object.keys(data.token_usage || {}).length > 0">
-                <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Token Usage</p>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-sm report-font-semibold">Token Usage</p>
+                <div class="pf-v6-u-display-grid report-grid-cols-2 report-grid-cols-4-md report-gap-3">
                   <template x-if="data.token_usage?.prompt_tokens != null">
-                    <div class="text-center p-3 bg-gray-50 rounded-lg">
-                      <p class="text-xl font-bold text-blue-600" x-text="formatNumber(data.token_usage.prompt_tokens)"></p>
-                      <p class="text-xs text-gray-400 mt-1">Prompt Tokens</p>
+                    <div class="pf-v6-u-text-align-center report-p-3 report-bg-secondary report-rounded-lg">
+                      <p class="pf-v6-u-font-size-xl pf-v6-u-font-weight-bold pf-v6-u-text-color-link" x-text="formatNumber(data.token_usage.prompt_tokens)"></p>
+                      <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-xs">Prompt Tokens</p>
                     </div>
                   </template>
                   <template x-if="data.token_usage?.completion_tokens != null">
-                    <div class="text-center p-3 bg-gray-50 rounded-lg">
-                      <p class="text-xl font-bold text-green-600" x-text="formatNumber(data.token_usage.completion_tokens)"></p>
-                      <p class="text-xs text-gray-400 mt-1">Completion Tokens</p>
+                    <div class="pf-v6-u-text-align-center report-p-3 report-bg-secondary report-rounded-lg">
+                      <p class="pf-v6-u-font-size-xl pf-v6-u-font-weight-bold pf-v6-u-text-color-status-success" x-text="formatNumber(data.token_usage.completion_tokens)"></p>
+                      <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-xs">Completion Tokens</p>
                     </div>
                   </template>
                   <template x-if="data.token_usage?.total_tokens != null">
-                    <div class="text-center p-3 bg-gray-50 rounded-lg">
-                      <p class="text-xl font-bold text-purple-600" x-text="formatNumber(data.token_usage.total_tokens)"></p>
-                      <p class="text-xs text-gray-400 mt-1">Total Tokens</p>
+                    <div class="pf-v6-u-text-align-center report-p-3 report-bg-secondary report-rounded-lg">
+                      <p class="pf-v6-u-font-size-xl pf-v6-u-font-weight-bold pf-v6-u-text-color-status-custom" x-text="formatNumber(data.token_usage.total_tokens)"></p>
+                      <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-xs">Total Tokens</p>
                     </div>
                   </template>
                   <template x-if="data.token_usage?.calls != null">
-                    <div class="text-center p-3 bg-gray-50 rounded-lg">
-                      <p class="text-xl font-bold text-amber-600" x-text="data.token_usage.calls"></p>
-                      <p class="text-xs text-gray-400 mt-1">LLM Calls</p>
+                    <div class="pf-v6-u-text-align-center report-p-3 report-bg-secondary report-rounded-lg">
+                      <p class="pf-v6-u-font-size-xl pf-v6-u-font-weight-bold pf-v6-u-text-color-status-warning" x-text="data.token_usage.calls"></p>
+                      <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mt-xs">LLM Calls</p>
                     </div>
                   </template>
                 </div>
@@ -821,23 +793,23 @@
 
               <!-- Configuration echo -->
               <div id="report-configuration" x-show="Object.keys(data.metadata || {}).length > 0">
-                <p class="text-xs text-gray-400 uppercase mb-2 font-semibold">Configuration</p>
-                <div class="relative overflow-x-auto">
-                  <table class="w-full table-fixed text-sm">
-                    <caption class="sr-only">Extraction settings</caption>
+                <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-sm report-font-semibold">Configuration</p>
+                <div class="report-relative report-overflow-x-auto">
+                  <table class="pf-v6-c-table report-w-full report-table-fixed pf-v6-u-font-size-sm">
+                    <caption class="pf-v6-screen-reader">Extraction settings</caption>
                     <tbody>
                       <template x-for="[key, val] in Object.entries(data.metadata || {})" :key="key">
-                        <tr class="border-b border-gray-100" :data-setting="key">
-                          <th scope="row" class="w-1/3 sm:w-1/4 py-2 pr-4 align-top text-left text-xs text-gray-500 font-mono font-normal break-all" x-text="key"></th>
-                          <td class="py-2 align-top text-xs text-gray-800 font-mono">
+                        <tr class="report-border-b report-border-default" :data-setting="key">
+                          <th scope="row" class="report-w-third report-w-quarter-sm pf-v6-u-py-sm pf-v6-u-pr-md report-align-top pf-v6-u-text-align-start pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-font-family-monospace pf-v6-u-font-weight-normal report-break-all" x-text="key"></th>
+                          <td class="pf-v6-u-py-sm report-align-top pf-v6-u-font-size-xs pf-v6-u-text-color-regular pf-v6-u-font-family-monospace">
                             <template x-if="isExpandableMetadata(val)">
                               <details>
-                                <summary class="cursor-pointer asago-link w-fit" x-text="metadataValueLabel(val)"></summary>
-                                <pre class="mt-2 p-3 rounded border border-blue-300 bg-gray-50 text-gray-700 whitespace-pre-wrap break-words max-h-80 overflow-auto" x-text="formatJSON(val)"></pre>
+                                <summary class="report-cursor-pointer asago-link report-w-fit" x-text="metadataValueLabel(val)"></summary>
+                                <pre class="pf-v6-u-mt-sm report-p-3 report-rounded report-border report-border-brand report-bg-secondary pf-v6-u-text-color-regular report-whitespace-pre-wrap report-break-words report-max-h-80 report-overflow-auto" x-text="formatJSON(val)"></pre>
                               </details>
                             </template>
                             <template x-if="!isExpandableMetadata(val)">
-                              <span class="whitespace-pre-wrap break-all" x-text="metadataValueLabel(val)"></span>
+                              <span class="report-whitespace-pre-wrap report-break-all" x-text="metadataValueLabel(val)"></span>
                             </template>
                           </td>
                         </tr>
@@ -848,114 +820,114 @@
               </div>
             </div>
           </section>
-          <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ chunksOpen: false }">
+          <section class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5" x-data="{ chunksOpen: false }">
             <h3>
-              <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+              <button type="button" class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-subtle report-uppercase report-tracking-wide pf-v6-u-mb-xs report-w-full pf-v6-u-text-align-start pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2"
                       @click="chunksOpen = !chunksOpen" :aria-expanded="chunksOpen">
                 <span class="tip" data-tip="Chronological view of all document chunks processed by the retrieval pipeline, with per-chunk retrieval statistics.">Chunks Timeline</span>
                 <span class="tip-icon tip" data-tip="Click to expand the chunk-by-chunk processing timeline.">i</span>
-                <span class="text-xs font-normal text-gray-400" x-text="`(${(data.chunks || []).length} chunks)`"></span>
-                <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-                     :class="chunksOpen ? 'rotate-180' : ''"
+                <span class="pf-v6-u-font-size-xs pf-v6-u-font-weight-normal pf-v6-u-text-color-subtle" x-text="`(${(data.chunks || []).length} chunks)`"></span>
+                <svg class="report-w-5 report-h-5 pf-v6-u-text-color-subtle chevron pf-v6-u-ml-auto"
+                     :class="chunksOpen ? 'report-rotate-180' : ''"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
             </h3>
-            <div x-show="chunksOpen" class="mt-3 space-y-2">
+            <div x-show="chunksOpen" class="report-mt-3 report-space-y-2">
               <template x-for="chunk in data.chunks || []" :key="chunk.index">
-                <div class="border border-gray-200 rounded-lg p-3"
-                     :class="(chunk.accepted_risk_ids || []).length > 0 ? 'border-l-4 asago-evidence' : ''">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2 mb-1">
-                        <span class="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-700 font-mono font-semibold"
+                <div class="report-border report-border-default report-rounded-lg report-p-3"
+                     :class="(chunk.accepted_risk_ids || []).length > 0 ? 'report-border-l-4 asago-evidence' : ''">
+                  <div class="pf-v6-u-display-flex pf-v6-u-align-items-flex-start pf-v6-u-justify-content-space-between report-gap-3">
+                    <div class="pf-v6-u-flex-1 report-min-w-0">
+                      <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2 pf-v6-u-mb-xs">
+                        <span class="pf-v6-u-px-sm report-py-half report-rounded pf-v6-u-font-size-xs report-bg-tertiary pf-v6-u-text-color-regular pf-v6-u-font-family-monospace report-font-semibold"
                               x-text="'#' + chunk.index"></span>
-                        <span class="text-xs text-gray-600" x-text="fileName(chunk.source)"></span>
-                        <span x-show="chunk.page != null" class="text-xs text-gray-400" x-text="'p.' + chunk.page"></span>
-                        <span x-show="chunk.section" class="text-xs text-gray-400" x-text="chunk.section"></span>
+                        <span class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-text="fileName(chunk.source)"></span>
+                        <span x-show="chunk.page != null" class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-text="'p.' + chunk.page"></span>
+                        <span x-show="chunk.section" class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-text="chunk.section"></span>
                       </div>
-                      <p class="text-xs text-gray-500 line-clamp-2" x-text="chunk.text_preview"></p>
+                      <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-line-clamp-2" x-text="chunk.text_preview"></p>
                     </div>
-                    <div class="flex items-center gap-2 text-xs flex-shrink-0">
-                      <span class="tip px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono"
+                    <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2 pf-v6-u-font-size-xs pf-v6-u-flex-shrink-0">
+                      <span class="tip report-px-one-half report-py-half report-rounded report-bg-brand pf-v6-u-text-color-link pf-v6-u-font-family-monospace" tabindex="0"
                             data-tip="Total candidates retrieved for this chunk" x-text="chunk.candidates_retrieved"></span>
-                      <span class="tip px-1.5 py-0.5 rounded bg-green-50 text-green-700 font-mono"
+                      <span class="tip report-px-one-half report-py-half report-rounded report-bg-success pf-v6-u-text-color-status-success pf-v6-u-font-family-monospace" tabindex="0"
                             data-tip="Auto-accepted (above high threshold)" x-text="chunk.auto_accepted"></span>
-                      <span class="tip px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-mono"
+                      <span class="tip report-px-one-half report-py-half report-rounded report-bg-warning pf-v6-u-text-color-status-warning pf-v6-u-font-family-monospace" tabindex="0"
                             data-tip="Borderline candidates sent to LLM judge" x-text="chunk.borderline"></span>
-                      <span class="tip px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-mono"
+                      <span class="tip report-px-one-half report-py-half report-rounded report-bg-danger pf-v6-u-text-color-status-danger pf-v6-u-font-family-monospace" tabindex="0"
                             data-tip="Discarded (below low threshold)" x-text="chunk.discarded"></span>
                     </div>
                   </div>
-                  <div x-show="(chunk.accepted_risk_ids || []).length > 0" class="mt-2 flex flex-wrap gap-1">
+                  <div x-show="(chunk.accepted_risk_ids || []).length > 0" class="pf-v6-u-mt-sm pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-1">
                     <template x-for="rid in chunk.accepted_risk_ids || []" :key="rid">
-                      <span class="px-1.5 py-0.5 rounded text-[10px] asago-tag font-mono" x-text="rid"></span>
+                      <span class="report-px-one-half report-py-half report-rounded report-text-xxs asago-tag pf-v6-u-font-family-monospace" x-text="rid"></span>
                     </template>
                   </div>
                 </div>
               </template>
-              <p x-show="(data.chunks || []).length === 0" class="text-center text-gray-400 py-4">No chunk data available.</p>
+              <p x-show="(data.chunks || []).length === 0" class="pf-v6-u-text-align-center pf-v6-u-text-color-subtle pf-v6-u-py-md">No chunk data available.</p>
             </div>
           </section>
-          <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ callsOpen: false }">
+          <section class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5" x-data="{ callsOpen: false }">
             <h3>
-              <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+              <button type="button" class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-subtle report-uppercase report-tracking-wide pf-v6-u-mb-xs report-w-full pf-v6-u-text-align-start pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2"
                       @click="callsOpen = !callsOpen" :aria-expanded="callsOpen">
                 <span class="tip" data-tip="Chronological log of all LLM calls made during the extraction pipeline (borderline judging, grounding verification).">LLM Call Log</span>
                 <span class="tip-icon tip" data-tip="Full request/response log for every LLM call.">i</span>
-                <span class="text-xs font-normal text-gray-400" x-text="`(${(data.llm_calls || []).length} calls)`"></span>
-                <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-                     :class="callsOpen ? 'rotate-180' : ''"
+                <span class="pf-v6-u-font-size-xs pf-v6-u-font-weight-normal pf-v6-u-text-color-subtle" x-text="`(${(data.llm_calls || []).length} calls)`"></span>
+                <svg class="report-w-5 report-h-5 pf-v6-u-text-color-subtle chevron pf-v6-u-ml-auto"
+                     :class="callsOpen ? 'report-rotate-180' : ''"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
             </h3>
-            <div x-show="callsOpen" class="mt-3 space-y-2">
+            <div x-show="callsOpen" class="report-mt-3 report-space-y-2">
               <template x-for="call in data.llm_calls || []" :key="call.call_id">
-                <div class="border border-gray-200 rounded-lg" x-data="{ logOpen: false }">
-                  <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-50"
+                <div class="report-border report-border-default report-rounded-lg" x-data="{ logOpen: false }">
+                  <div class="pf-v6-u-display-flex pf-v6-u-align-items-center pf-v6-u-justify-content-space-between report-px-3 pf-v6-u-py-sm report-cursor-pointer report-hover-bg-secondary"
                        @click="logOpen = !logOpen">
-                    <div class="flex items-center gap-2 text-sm">
+                    <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2 pf-v6-u-font-size-sm">
                       <span class="stage-badge"
-                            :class="call.stage === 'grounding' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                            :class="call.stage === 'grounding' ? 'report-bg-success pf-v6-u-text-color-status-success' : 'report-bg-warning pf-v6-u-text-color-status-warning'"
                             x-text="call.stage"></span>
-                      <span class="font-mono text-xs text-gray-500" x-text="call.call_id"></span>
-                      <span class="text-xs text-gray-400" x-text="'chunk ' + call.chunk_index"></span>
-                      <div class="flex flex-wrap gap-1">
+                      <span class="pf-v6-u-font-family-monospace pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-text="call.call_id"></span>
+                      <span class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle" x-text="'chunk ' + call.chunk_index"></span>
+                      <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-1">
                         <template x-for="rid in call.risk_ids || []" :key="rid">
-                          <span class="px-1 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 font-mono" x-text="rid"></span>
+                          <span class="pf-v6-u-px-xs report-py-half report-rounded report-text-xxs report-bg-secondary pf-v6-u-text-color-subtle pf-v6-u-font-family-monospace" x-text="rid"></span>
                         </template>
                       </div>
                     </div>
-                    <div class="flex items-center gap-2 text-xs">
-                      <span class="text-gray-500 font-mono" x-text="(call.duration_ms?.toFixed(0) || '?') + 'ms'"></span>
-                      <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-700" x-text="call.result_summary"></span>
-                      <svg class="w-4 h-4 text-gray-400 chevron"
-                           :class="logOpen ? 'rotate-180' : ''"
+                    <div class="pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2 pf-v6-u-font-size-xs">
+                      <span class="pf-v6-u-text-color-subtle pf-v6-u-font-family-monospace" x-text="(call.duration_ms?.toFixed(0) || '?') + 'ms'"></span>
+                      <span class="pf-v6-u-px-sm report-py-half report-rounded report-bg-secondary pf-v6-u-text-color-regular" x-text="call.result_summary"></span>
+                      <svg class="report-w-4 report-h-4 pf-v6-u-text-color-subtle chevron"
+                           :class="logOpen ? 'report-rotate-180' : ''"
                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                       </svg>
                     </div>
                   </div>
-                  <div x-show="logOpen" class="px-3 pb-3 border-t border-gray-100 space-y-2">
+                  <div x-show="logOpen" class="report-px-3 report-pb-3 report-border-t report-border-default report-space-y-2">
                     <template x-for="(msg, mi) in call.messages || []" :key="mi">
-                      <div class="mt-2">
-                        <span class="text-xs font-semibold uppercase"
-                              :class="msg.role === 'system' ? 'text-purple-600' : msg.role === 'user' ? 'text-blue-600' : 'text-green-600'"
+                      <div class="pf-v6-u-mt-sm">
+                        <span class="pf-v6-u-font-size-xs report-font-semibold report-uppercase"
+                              :class="msg.role === 'system' ? 'pf-v6-u-text-color-status-custom' : msg.role === 'user' ? 'pf-v6-u-text-color-link' : 'pf-v6-u-text-color-status-success'"
                               x-text="msg.role"></span>
-                        <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-60 overflow-y-auto bg-gray-50 rounded p-2 border border-gray-100" x-text="msg.content"></pre>
+                        <pre class="pf-v6-u-font-size-xs pf-v6-u-text-color-regular report-whitespace-pre-wrap report-mt-half report-max-h-60 report-overflow-y-auto report-bg-secondary report-rounded pf-v6-u-p-sm report-border report-border-default" x-text="msg.content"></pre>
                       </div>
                     </template>
-                    <div class="mt-2">
-                      <span class="text-xs font-semibold uppercase text-green-600">Response</span>
-                      <pre class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 max-h-60 overflow-y-auto bg-gray-50 rounded p-2 border border-gray-100" x-text="formatJSON(call.response)"></pre>
+                    <div class="pf-v6-u-mt-sm">
+                      <span class="pf-v6-u-font-size-xs report-font-semibold report-uppercase pf-v6-u-text-color-status-success">Response</span>
+                      <pre class="pf-v6-u-font-size-xs pf-v6-u-text-color-regular report-whitespace-pre-wrap report-mt-half report-max-h-60 report-overflow-y-auto report-bg-secondary report-rounded pf-v6-u-p-sm report-border report-border-default" x-text="formatJSON(call.response)"></pre>
                     </div>
                   </div>
                 </div>
               </template>
-              <p x-show="(data.llm_calls || []).length === 0" class="text-center text-gray-400 py-4">No LLM calls recorded.</p>
+              <p x-show="(data.llm_calls || []).length === 0" class="pf-v6-u-text-align-center pf-v6-u-text-color-subtle pf-v6-u-py-md">No LLM calls recorded.</p>
             </div>
           </section>
 
@@ -965,98 +937,98 @@
 
     <!-- 5. Evaluation appendix, only when labelled reference results exist -->
     <template x-if="data.eval">
-      <section id="evaluation" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5" x-data="{ evalOpen: false }">
+      <section id="evaluation" class="pf-v6-c-card report-bg-primary report-rounded-xl pf-v6-u-box-shadow-sm report-border report-border-default report-p-5" x-data="{ evalOpen: false }">
         <h2>
-          <button type="button" class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1 w-full text-left flex items-center gap-2"
+          <button type="button" class="pf-v6-u-font-size-sm report-font-semibold pf-v6-u-text-color-subtle report-uppercase report-tracking-wide pf-v6-u-mb-xs report-w-full pf-v6-u-text-align-start pf-v6-u-display-flex pf-v6-u-align-items-center report-gap-2"
                   @click="evalOpen = !evalOpen" :aria-expanded="evalOpen">
             <span class="tip" data-tip="Detailed evaluation results comparing extracted risk IDs against ground truth.">Evaluation</span>
             <span class="tip-icon tip" data-tip="Matched, missing, and spurious risk IDs.">i</span>
-            <span class="text-xs font-normal text-gray-400"
+            <span class="pf-v6-u-font-size-xs pf-v6-u-font-weight-normal pf-v6-u-text-color-subtle"
                   x-text="`${data.eval.matched || 0}/${data.eval.total_expected || 0} matched, ${(data.eval.missing || []).length} missing, ${(data.eval.spurious || []).length} spurious`"></span>
-            <svg class="w-5 h-5 text-gray-400 chevron ml-auto"
-                 :class="evalOpen ? 'rotate-180' : ''"
+            <svg class="report-w-5 report-h-5 pf-v6-u-text-color-subtle chevron pf-v6-u-ml-auto"
+                 :class="evalOpen ? 'report-rotate-180' : ''"
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
         </h2>
-        <div x-show="evalOpen" class="mt-3">
-          <p class="text-sm text-gray-500 mb-4">Comparison with labelled reference data for this document.</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-            <div class="rounded-lg bg-gray-50 p-3">
-              <p class="text-xs text-gray-500 mb-1">Evaluation result</p>
-              <span class="px-2 py-1 rounded text-xs font-bold text-white" :class="evalBadgeClass" x-text="evalBadgeText"></span>
+        <div x-show="evalOpen" class="report-mt-3">
+          <p class="pf-v6-u-font-size-sm pf-v6-u-text-color-subtle pf-v6-u-mb-md">Comparison with labelled reference data for this document.</p>
+          <div class="pf-v6-u-display-grid report-grid-cols-2 report-grid-cols-4-md report-gap-3 report-mb-5">
+            <div class="report-rounded-lg report-bg-secondary report-p-3">
+              <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle pf-v6-u-mb-xs">Evaluation result</p>
+              <span class="pf-v6-u-px-sm pf-v6-u-py-xs report-rounded pf-v6-u-font-size-xs pf-v6-u-font-weight-bold report-text-white" :class="evalBadgeClass" x-text="evalBadgeText"></span>
             </div>
             <template x-for="metric in ['precision', 'recall', 'f1']" :key="metric">
-              <div class="rounded-lg bg-gray-50 p-3">
-                <p class="text-xs text-gray-500 capitalize" x-text="metric === 'f1' ? 'F1' : metric"></p>
-                <p class="text-xl font-semibold text-gray-900 mt-1" x-text="formatPercent(data.eval[metric])"></p>
+              <div class="report-rounded-lg report-bg-secondary report-p-3">
+                <p class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle report-capitalize" x-text="metric === 'f1' ? 'F1' : metric"></p>
+                <p class="pf-v6-u-font-size-xl report-font-semibold pf-v6-u-text-color-regular pf-v6-u-mt-xs" x-text="formatPercent(data.eval[metric])"></p>
               </div>
             </template>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="pf-v6-u-display-grid report-grid-cols-1 report-grid-cols-3-md report-gap-4">
             <!-- Matched -->
-            <div class="border border-green-200 rounded-lg p-3">
-              <p class="text-xs font-semibold text-green-700 uppercase mb-2">Matched
-                <span class="font-mono text-green-600" x-text="'(' + (data.eval.matched_ids || []).length + ')'"></span>
+            <div class="report-border report-border-success report-rounded-lg report-p-3">
+              <p class="pf-v6-u-font-size-xs report-font-semibold pf-v6-u-text-color-status-success report-uppercase pf-v6-u-mb-sm">Matched
+                <span class="pf-v6-u-font-family-monospace pf-v6-u-text-color-status-success" x-text="'(' + (data.eval.matched_ids || []).length + ')'"></span>
               </p>
-              <div class="flex flex-wrap gap-1">
+              <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-1">
                 <template x-for="rid in data.eval.matched_ids || []" :key="rid">
-                  <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800 font-mono" x-text="rid"></span>
+                  <span class="pf-v6-u-px-sm report-py-half report-rounded pf-v6-u-font-size-xs report-bg-success pf-v6-u-text-color-status-success pf-v6-u-font-family-monospace" x-text="rid"></span>
                 </template>
-                <span x-show="!(data.eval.matched_ids || []).length" class="text-xs text-gray-400">None</span>
+                <span x-show="!(data.eval.matched_ids || []).length" class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">None</span>
               </div>
             </div>
             <!-- Missing -->
-            <div class="border border-red-200 rounded-lg p-3">
-              <p class="text-xs font-semibold text-red-700 uppercase mb-2">Missing
-                <span class="font-mono text-red-600" x-text="'(' + (data.eval.missing || []).length + ')'"></span>
+            <div class="report-border report-border-danger report-rounded-lg report-p-3">
+              <p class="pf-v6-u-font-size-xs report-font-semibold pf-v6-u-text-color-status-danger report-uppercase pf-v6-u-mb-sm">Missing
+                <span class="pf-v6-u-font-family-monospace pf-v6-u-text-color-status-danger" x-text="'(' + (data.eval.missing || []).length + ')'"></span>
               </p>
-              <div class="flex flex-wrap gap-1">
+              <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-1">
                 <template x-for="rid in data.eval.missing || []" :key="rid">
-                  <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800 font-mono" x-text="rid"></span>
+                  <span class="pf-v6-u-px-sm report-py-half report-rounded pf-v6-u-font-size-xs report-bg-danger pf-v6-u-text-color-status-danger pf-v6-u-font-family-monospace" x-text="rid"></span>
                 </template>
-                <span x-show="!(data.eval.missing || []).length" class="text-xs text-gray-400">None</span>
+                <span x-show="!(data.eval.missing || []).length" class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">None</span>
               </div>
             </div>
             <!-- Spurious -->
-            <div class="border border-orange-200 rounded-lg p-3">
-              <p class="text-xs font-semibold text-orange-700 uppercase mb-2">Spurious
-                <span class="font-mono text-orange-600" x-text="'(' + (data.eval.spurious || []).length + ')'"></span>
+            <div class="report-border report-border-warning report-rounded-lg report-p-3">
+              <p class="pf-v6-u-font-size-xs report-font-semibold pf-v6-u-text-color-status-warning report-uppercase pf-v6-u-mb-sm">Spurious
+                <span class="pf-v6-u-font-family-monospace pf-v6-u-text-color-status-warning" x-text="'(' + (data.eval.spurious || []).length + ')'"></span>
               </p>
-              <div class="flex flex-wrap gap-1">
+              <div class="pf-v6-u-display-flex pf-v6-u-flex-wrap report-gap-1">
                 <template x-for="rid in data.eval.spurious || []" :key="rid">
-                  <span class="px-2 py-0.5 rounded text-xs bg-orange-100 text-orange-800 font-mono" x-text="rid"></span>
+                  <span class="pf-v6-u-px-sm report-py-half report-rounded pf-v6-u-font-size-xs report-bg-warning pf-v6-u-text-color-status-warning pf-v6-u-font-family-monospace" x-text="rid"></span>
                 </template>
-                <span x-show="!(data.eval.spurious || []).length" class="text-xs text-gray-400">None</span>
+                <span x-show="!(data.eval.spurious || []).length" class="pf-v6-u-font-size-xs pf-v6-u-text-color-subtle">None</span>
               </div>
             </div>
           </div>
 
           <!-- Per-Taxonomy Breakdown -->
           <template x-if="data.eval.per_taxonomy && Object.keys(data.eval.per_taxonomy).length">
-            <div class="mt-4">
-              <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Per-Taxonomy Breakdown</p>
-              <table class="w-full text-xs">
+            <div class="pf-v6-u-mt-md">
+              <p class="pf-v6-u-font-size-xs report-font-semibold pf-v6-u-text-color-subtle report-uppercase pf-v6-u-mb-sm">Per-Taxonomy Breakdown</p>
+              <table class="pf-v6-c-table report-w-full pf-v6-u-font-size-xs">
                 <thead>
-                  <tr class="border-b border-gray-200">
-                    <th class="text-left py-1 px-2 text-gray-500">Taxonomy</th>
-                    <th class="text-right py-1 px-2 text-gray-500">Expected</th>
-                    <th class="text-right py-1 px-2 text-gray-500">Matched</th>
-                    <th class="text-right py-1 px-2 text-gray-500">Precision</th>
-                    <th class="text-right py-1 px-2 text-gray-500">Recall</th>
-                    <th class="text-right py-1 px-2 text-gray-500">F1</th>
+                  <tr class="report-border-b report-border-default">
+                    <th class="pf-v6-u-text-align-start pf-v6-u-py-xs pf-v6-u-px-sm pf-v6-u-text-color-subtle">Taxonomy</th>
+                    <th class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm pf-v6-u-text-color-subtle">Expected</th>
+                    <th class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm pf-v6-u-text-color-subtle">Matched</th>
+                    <th class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm pf-v6-u-text-color-subtle">Precision</th>
+                    <th class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm pf-v6-u-text-color-subtle">Recall</th>
+                    <th class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm pf-v6-u-text-color-subtle">F1</th>
                   </tr>
                 </thead>
                 <tbody>
                   <template x-for="[tax, td] in Object.entries(data.eval.per_taxonomy).sort()" :key="tax">
-                    <tr class="border-b border-gray-100">
-                      <td class="py-1 px-2 font-mono" x-text="tax"></td>
-                      <td class="text-right py-1 px-2" x-text="td.expected"></td>
-                      <td class="text-right py-1 px-2" x-text="td.matched"></td>
-                      <td class="text-right py-1 px-2" x-text="td.precision.toFixed(3)"></td>
-                      <td class="text-right py-1 px-2" x-text="td.recall.toFixed(3)"></td>
-                      <td class="text-right py-1 px-2 font-semibold" x-text="td.f1.toFixed(3)"></td>
+                    <tr class="report-border-b report-border-default">
+                      <td class="pf-v6-u-py-xs pf-v6-u-px-sm pf-v6-u-font-family-monospace" x-text="tax"></td>
+                      <td class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm" x-text="td.expected"></td>
+                      <td class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm" x-text="td.matched"></td>
+                      <td class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm" x-text="td.precision.toFixed(3)"></td>
+                      <td class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm" x-text="td.recall.toFixed(3)"></td>
+                      <td class="pf-v6-u-text-align-end pf-v6-u-py-xs pf-v6-u-px-sm report-font-semibold" x-text="td.f1.toFixed(3)"></td>
                     </tr>
                   </template>
                 </tbody>
@@ -1095,7 +1067,7 @@ function reportApp() {
     .join(', ') || 'Unknown';
 
   // Evaluation stays in its optional appendix.
-  const evalBadgeClass = data.eval?.pass ? 'bg-green-600' : 'bg-red-600';
+  const evalBadgeClass = data.eval?.pass ? 'report-bg-success-strong' : 'report-bg-danger-strong';
   const evalBadgeText = data.eval?.pass ? 'PASS' : 'FAIL';
 
   // Max timing for bar widths
@@ -1243,18 +1215,18 @@ function reportApp() {
         high: 'asago-grounding-high',
         medium: 'asago-grounding-medium',
         low: 'asago-grounding-low',
-        ungrounded: 'bg-slate-500',
-      }[value] || 'bg-gray-500';
+        ungrounded: 'report-bg-muted-strong',
+      }[value] || 'report-bg-muted-strong';
     },
 
     taxonomyColor(value) {
       return {
-        'ibm-risk-atlas': 'bg-sky-100 text-sky-800',
-        'credo-ucf': 'bg-teal-100 text-teal-800',
-        'mit-ai-risk-repository': 'bg-violet-100 text-violet-800',
-        'ai-risk-taxonomy': 'bg-green-100 text-green-800',
-        'air-2024': 'bg-green-100 text-green-800',
-      }[value] || 'bg-gray-100 text-gray-700';
+        'ibm-risk-atlas': 'report-bg-brand pf-v6-u-text-color-link',
+        'credo-ucf': 'report-bg-success pf-v6-u-text-color-status-success',
+        'mit-ai-risk-repository': 'report-bg-custom pf-v6-u-text-color-status-custom',
+        'ai-risk-taxonomy': 'report-bg-warning pf-v6-u-text-color-status-warning',
+        'air-2024': 'report-bg-danger pf-v6-u-text-color-status-danger',
+      }[value] || 'report-bg-secondary pf-v6-u-text-color-regular';
     },
 
     fileName(path) {
@@ -1265,11 +1237,11 @@ function reportApp() {
     groundingColor(level) {
       const colors = {
         'high': 'asago-grounding-badge',
-        'medium': 'bg-amber-100 text-amber-800',
-        'low': 'bg-orange-100 text-orange-800',
-        'ungrounded': 'bg-gray-100 text-gray-600',
+        'medium': 'report-bg-warning pf-v6-u-text-color-status-warning',
+        'low': 'report-bg-warning pf-v6-u-text-color-status-warning',
+        'ungrounded': 'report-bg-secondary pf-v6-u-text-color-subtle',
       };
-      return colors[level] || 'bg-gray-100 text-gray-600';
+      return colors[level] || 'report-bg-secondary pf-v6-u-text-color-subtle';
     },
 
     groundingOptions(risks) {
@@ -1361,13 +1333,13 @@ function reportApp() {
 
     acceptedByColor(value) {
       const colors = {
-        threshold: 'bg-green-100 text-green-800',
-        llm_judge: 'bg-amber-100 text-amber-800',
-        rrf: 'bg-sky-100 text-sky-800',
-        auto_promoted: 'bg-violet-100 text-violet-800',
-        expansion: 'bg-purple-100 text-purple-800',
+        threshold: 'report-bg-success pf-v6-u-text-color-status-success',
+        llm_judge: 'report-bg-warning pf-v6-u-text-color-status-warning',
+        rrf: 'report-bg-brand pf-v6-u-text-color-link',
+        auto_promoted: 'report-bg-custom pf-v6-u-text-color-status-custom',
+        expansion: 'report-bg-custom pf-v6-u-text-color-status-custom',
       };
-      return colors[value] || 'bg-gray-100 text-gray-700';
+      return colors[value] || 'report-bg-secondary pf-v6-u-text-color-regular';
     },
 
     filteredRisks(risks, acceptedBy, grounding, taxonomy, query, themes) {
@@ -1563,6 +1535,94 @@ function reportApp() {
   };
 }
 </script>
-{% include "dark_mode_toggle.html" %}
+<script>{{ alpine_js | safe }}</script>
+<script>
+(() => {
+  const tooltip = document.createElement('div');
+  tooltip.id = 'report-hover-tooltip';
+  tooltip.className = 'report-hover-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  tooltip.hidden = true;
+  document.body.append(tooltip);
+
+  let active = null;
+  let describedElement = null;
+  let previousDescription = null;
+  let openedByFocus = false;
+  const padding = 12;
+  const gap = 8;
+
+  function hide() {
+    if (describedElement) {
+      if (previousDescription === null) describedElement.removeAttribute('aria-describedby');
+      else describedElement.setAttribute('aria-describedby', previousDescription);
+    }
+    active = null;
+    describedElement = null;
+    tooltip.hidden = true;
+  }
+
+  function place() {
+    if (!active || !active.isConnected) { hide(); return; }
+    const target = active.getBoundingClientRect();
+    if (target.bottom < 0 || target.top > window.innerHeight) { hide(); return; }
+    const box = tooltip.getBoundingClientRect();
+    const left = Math.max(padding, Math.min(
+      target.left + (target.width - box.width) / 2,
+      document.documentElement.clientWidth - box.width - padding
+    ));
+    let top = target.bottom + gap;
+    if (top + box.height > window.innerHeight - padding && target.top - box.height - gap >= padding) {
+      top = target.top - box.height - gap;
+    }
+    top = Math.max(padding, Math.min(top, window.innerHeight - box.height - padding));
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+  }
+
+  function show(target, fromFocus = false) {
+    const message = target.getAttribute('data-tip')?.trim();
+    if (!message) { hide(); return; }
+    const descriptionTarget = fromFocus ? target.closest('button') || target : target;
+    if (active !== target || describedElement !== descriptionTarget) {
+      hide();
+      active = target;
+      describedElement = descriptionTarget;
+      previousDescription = descriptionTarget.getAttribute('aria-describedby');
+      descriptionTarget.setAttribute('aria-describedby', tooltip.id);
+    }
+    openedByFocus = fromFocus;
+    tooltip.textContent = message;
+    tooltip.hidden = false;
+    place();
+  }
+
+  document.addEventListener('pointerover', event => {
+    const target = event.target instanceof Element ? event.target.closest('[data-tip]') : null;
+    if (target) show(target);
+  });
+  document.addEventListener('pointerout', event => {
+    if (!active || openedByFocus || !(event.target instanceof Node) || !active.contains(event.target)) return;
+    if (!(event.relatedTarget instanceof Node) || !active.contains(event.relatedTarget)) hide();
+  });
+  document.addEventListener('focusin', event => {
+    if (!(event.target instanceof Element)) return;
+    const target = event.target.matches('[data-tip]')
+      ? event.target : event.target.querySelector('[data-tip]');
+    if (target) show(target, true);
+  });
+  document.addEventListener('focusout', () => { if (openedByFocus) hide(); });
+  document.addEventListener('click', event => {
+    const target = event.target instanceof Element ? event.target.closest('[data-tip]') : null;
+    if (target) { show(target); requestAnimationFrame(place); }
+    else hide();
+  });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') hide(); });
+  document.addEventListener('scroll', place, true);
+  window.addEventListener('resize', place);
+})();
+</script>
+<template id="third-party-notices"><pre>{{ vendor_notices }}</pre></template>
+{% include "extraction_dark_mode_toggle.html" %}
 </body>
 </html>

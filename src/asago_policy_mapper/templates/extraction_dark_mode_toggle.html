@@ -1,0 +1,17 @@
+<button type="button" class="pf-v6-c-button pf-m-plain dark-toggle" id="rl-dark-toggle" aria-label="Toggle dark mode"></button>
+<script>
+(() => {
+  const toggle = document.getElementById('rl-dark-toggle');
+  function updateToggle() {
+    const dark = document.documentElement.classList.contains('pf-v6-theme-dark');
+    toggle.textContent = dark ? '\u2600\uFE0F' : '\uD83C\uDF19';
+    toggle.setAttribute('aria-pressed', String(dark));
+  }
+  toggle.addEventListener('click', () => {
+    const dark = document.documentElement.classList.toggle('pf-v6-theme-dark');
+    localStorage.setItem('rl-dark-mode', String(dark));
+    updateToggle();
+  });
+  updateToggle();
+})();
+</script>

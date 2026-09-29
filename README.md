@@ -307,9 +307,9 @@ build_risk_extraction_report(data, run / "risk-extraction-preview.html")
 PY
 ```
 
-Open the generated HTML in a browser. This makes no LLM calls. Internet access is needed for the report's Tailwind and Alpine scripts.
+Open the generated extraction HTML in a browser. This makes no LLM calls and works offline: PatternFly 6.6.1 CSS, its fonts and images, and Alpine 3.17.4 are bundled into the exported HTML.
 
-The extraction and annotation HTML reports are rendered from Jinja2 templates in `src/asago_policy_mapper/templates/`. Shared dark mode styling and controls are included by the templates, and report data is embedded with Jinja2's `tojson` filter. Alpine runs the interactive filters and controls in the browser.
+Both HTML reports are rendered from Jinja2 templates in `src/asago_policy_mapper/templates/`, with report data embedded using Jinja2's `tojson` filter. The extraction report uses PatternFly HTML/CSS components and utilities, Asago colors, bundled Alpine, and extraction-specific dark mode controls using `.pf-v6-theme-dark`; no React runtime is needed. The annotation report retains its existing Tailwind and Alpine CDN integrations and dark mode controls. Vendored extraction-report asset versions, sources, and license notices are documented in `src/asago_policy_mapper/templates/vendor/README.md`.
 
 Report checks: `uv run pytest tests/test_extract_report.py tests/test_report_themes.py` and `node --test tests/report_interactions.test.cjs` (Node.js 18+).
 
