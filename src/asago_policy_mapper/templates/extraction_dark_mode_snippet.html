@@ -1,0 +1,32 @@
+<style>
+  [x-cloak] { display: none !important; }
+  .dark-toggle {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 100;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--pf-t--global--border--color--default);
+    border-radius: 50%;
+    background: var(--pf-t--global--background--color--primary--default);
+    color: var(--pf-t--global--text--color--regular);
+    box-shadow: var(--pf-t--global--box-shadow--md);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .dark-toggle:focus-visible {
+    outline: 2px solid var(--pf-t--global--color--brand--default);
+    outline-offset: 3px;
+  }
+</style>
+<script>
+(() => {
+  const saved = localStorage.getItem('rl-dark-mode');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const defaultDark = document.documentElement.dataset.defaultTheme === 'dark';
+  document.documentElement.classList.toggle(
+    'pf-v6-theme-dark', saved === 'true' || (saved === null && (defaultDark || prefersDark))
+  );
+})();
+</script>

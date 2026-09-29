@@ -113,7 +113,8 @@ tailwind.config = { darkMode: 'class' }
   .dark .text-indigo-800 { color: #a5b4fc !important; }
   .dark .text-orange-600,
   .dark .text-orange-700,
-  .dark .text-orange-800 { color: #fdba74 !important; }
+  .dark .text-orange-800,
+  .dark .text-orange-900 { color: #fdba74 !important; }
   .dark .text-emerald-700,
   .dark .text-emerald-800 { color: #6ee7b7 !important; }
   .dark .text-cyan-600,
@@ -209,11 +210,12 @@ tailwind.config = { darkMode: 'class' }
   }
 </style>
 <script>
-document.addEventListener('alpine:init', () => {
+(() => {
   const saved = localStorage.getItem('rl-dark-mode');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (saved === 'true' || (saved === null && prefersDark)) {
+  const defaultDark = document.documentElement.dataset.defaultTheme === 'dark';
+  if (saved === 'true' || (saved === null && (defaultDark || prefersDark))) {
     document.documentElement.classList.add('dark');
   }
-});
+})();
 </script>

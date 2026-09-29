@@ -271,6 +271,48 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 
 Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both.
 
+#### Explore the report
+
+Reports use [Asago's visual style](https://github.com/asago-ai/asago-ai.github.io), with the official logo embedded in the HTML, blue and mint accents, and a dark theme by default. The theme toggle retains your light/dark preference.
+
+The report starts with matched-risk totals, taxonomy counts and grounding confidence. Compact charts show matches by theme, taxonomy and grounding confidence. Theme bars are sorted by descending count, with **Other / not yet grouped** always last. Select one or more chart categories to filter the findings; charts and summary totals always describe the full report. Theme coverage and methodology are available under **Technical details → Theme grouping**. The **Review suggested** card clears existing filters and shows Medium, Low and Ungrounded matches.
+
+Hover over, focus or tap the info icon beside any summary card or chart title for an explanation. Press Escape to dismiss it. Opening the Review suggested tooltip leaves your filters unchanged.
+
+Themes cover privacy, fairness, security, reliability, human agency, harmful content, intellectual property and environmental impact. The curated category-to-theme definitions live in `src/asago_policy_mapper/data/report_themes.yaml`, joined to `risk_to_category.sssom.tsv` using only exact/close/broadMatch links. A risk can appear in multiple themes, so theme totals may overlap; the findings list shows each risk once. Matches without a supported link, including custom risks, remain in **Other / not yet grouped**. Themes with no matches are omitted; this does not establish that a topic is absent from the policy.
+
+**Theme mapping coverage is partial and varies by taxonomy.** The grouped count measures how many matched entries have a supported category-to-theme link; it does not measure extraction accuracy or policy completeness. The theme vocabulary is curated by this project, and both the source mappings and grouping choices require review.
+
+The findings table supports search and multiple selections for Theme, Accepted by, Grounding and Taxonomy. Selections within a filter are combined with OR; different filters combine with AND. Each finding shows its themes; expand **How this risk was grouped** to see the source categories. Open a finding to read its supporting quotes, source locations, risk definition, causal explanation and related mitigation guidance. Retrieval scores and LLM diagnostics are under each finding's technical details. Processing statistics, settings, chunks and the full LLM log are in a collapsed technical appendix. Evaluation appears last, only when evaluation data is available.
+
+Theme metadata is added to the HTML during report generation; saved extraction files and evaluation counts are unchanged. Existing results can be regrouped by rebuilding the report, with no Nexus download, labelled policy or LLM calls. Full variant IDs use their own mappings; theme links are not inferred from synthetic parents or risk names.
+
+Counts refer to matched taxonomy entries; several entries can describe a related topic. Grounding confidence describes model-rated document support for a match.
+
+In the configuration section, expand objects and lists to view their complete contents as formatted JSON. Empty lists, empty objects and unset values are labelled explicitly.
+
+The score breakdown explains each retrieval score's range and direction: keyword rank starts at 1 (lower is better), embedding distance ranges from 0 to 2 (lower is closer), reranker scores range from 0 to 1 (higher indicates stronger model-rated relevance), and default RRF scores range up to about 0.0328 (higher is better). These scores describe search relevance; use supporting quotes and grounding confidence to assess document support. Unused scores and known zero placeholders are labelled explicitly; ambiguous zeros remain identified as ambiguous. Original numbers are available under **Raw stored values**.
+
+To preview report layout changes using saved results, regenerate just the HTML:
+
+```bash
+uv run python - <<'PY'
+import json
+from pathlib import Path
+from asago_policy_mapper.extract.report import build_risk_extraction_report
+
+run = Path("output")  # Directory containing your saved extraction
+data = json.loads((run / "risk-extraction.json").read_text())
+build_risk_extraction_report(data, run / "risk-extraction-preview.html")
+PY
+```
+
+Open the generated extraction HTML in a browser. This makes no LLM calls and works offline: PatternFly 6.6.1 CSS, its fonts and images, and Alpine 3.17.4 are bundled into the exported HTML.
+
+Both HTML reports are rendered from Jinja2 templates in `src/asago_policy_mapper/templates/`, with report data embedded using Jinja2's `tojson` filter. The extraction report uses PatternFly HTML/CSS components and utilities, Asago colors, bundled Alpine, and extraction-specific dark mode controls using `.pf-v6-theme-dark`; no React runtime is needed. The annotation report retains its existing Tailwind and Alpine CDN integrations and dark mode controls. Vendored extraction-report asset versions, sources, and license notices are documented in `src/asago_policy_mapper/templates/vendor/README.md`.
+
+Report checks: `uv run pytest tests/test_extract_report.py tests/test_report_themes.py` and `node --test tests/report_interactions.test.cjs` (Node.js 18+).
+
 ### Evaluate against ground truth
 
 ```bash

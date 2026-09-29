@@ -1,0 +1,75 @@
+# Curated report navigation, version 1. These labels are Asago groupings, not a
+# new risk taxonomy. Join category IDs through risk_to_category.sssom.tsv using
+# only exactMatch, closeMatch and broadMatch (the same policy as evaluation).
+# A category may belong to several themes; do not infer links from risk names.
+version: 1
+themes:
+  - id: privacy
+    label: Privacy & confidentiality
+    description: Personal data, confidential information and unwanted disclosure.
+  - id: fairness
+    label: Fairness & bias
+    description: Discrimination, harmful bias and homogenisation.
+  - id: security
+    label: Security & resilience
+    description: Attacks, unauthorised access and exploitation of AI systems.
+  - id: reliability
+    label: Reliability & information integrity
+    description: Incorrect outputs, misinformation and component integration.
+  - id: human-agency
+    label: Human agency & oversight
+    description: Human control, appropriate reliance and limits on AI autonomy.
+  - id: harmful-content
+    label: Harmful content & misuse
+    description: Dangerous content, abusive uses and unsafe advice.
+  - id: intellectual-property
+    label: Intellectual property
+    description: Copyright, ownership and use of protected material.
+  - id: environment
+    label: Environmental impact
+    description: Environmental costs of developing and using AI.
+category_taxonomies:
+  nist-ai-rmf:
+    label: NIST AI RMF
+    categories:
+      nist-cbrn-information-or-capabilities: {label: CBRN information or capabilities, themes: [harmful-content]}
+      nist-confabulation: {label: Confabulation, themes: [reliability]}
+      nist-dangerous-violent-or-hateful-content: {label: 'Dangerous, violent or hateful content', themes: [harmful-content]}
+      nist-data-privacy: {label: Data privacy, themes: [privacy]}
+      nist-environmental-impacts: {label: Environmental impacts, themes: [environment]}
+      nist-harmful-bias-or-homogenization: {label: Harmful bias or homogenization, themes: [fairness]}
+      nist-human-ai-configuration: {label: Human-AI configuration, themes: [human-agency]}
+      nist-information-integrity: {label: Information integrity, themes: [reliability]}
+      nist-information-security: {label: Information security, themes: [security]}
+      nist-intellectual-property: {label: Intellectual property, themes: [intellectual-property]}
+      nist-obscene-degrading-and-or-abusive-content: {label: 'Obscene, degrading and/or abusive content', themes: [harmful-content]}
+      nist-value-chain-and-component-integration: {label: Value chain and component integration, themes: [reliability]}
+  owasp-llm-2.0:
+    label: OWASP Top 10 for LLMs
+    categories:
+      llm01-prompt-injection: {label: Prompt injection, themes: [security]}
+      llm022025-sensitive-information-disclosure: {label: Sensitive information disclosure, themes: [privacy]}
+      llm032025-supply-chain: {label: Supply chain, themes: [security]}
+      llm042025-data-and-model-poisoning: {label: Data and model poisoning, themes: [security]}
+      llm052025-improper-output-handling: {label: Improper output handling, themes: [security]}
+      llm062025-excessive-agency: {label: Excessive agency, themes: [human-agency]}
+      llm072025-system-prompt-leakage: {label: System prompt leakage, themes: [security, privacy]}
+      llm092025-misinformation: {label: Misinformation, themes: [reliability]}
+      llm102025-unbounded-consumption: {label: Unbounded consumption, themes: [security]}
+  owasp-asi:
+    label: OWASP Agentic Security
+    categories:
+      asi01-agent-goal-hijack: {label: Agent goal hijack, themes: [security, human-agency]}
+      asi02-tool-misuse-and-exploitation: {label: Tool misuse and exploitation, themes: [security]}
+      asi03-identity-and-privilege-abuse: {label: Identity and privilege abuse, themes: [security]}
+      asi04-agentic-supply-chain-vulnerabilities: {label: Agentic supply chain vulnerabilities, themes: [security]}
+      asi06-memory-and-context-poisoning: {label: Memory and context poisoning, themes: [security]}
+      asi09-human-agent-trust-exploitation: {label: Human-agent trust exploitation, themes: [security, human-agency]}
+      asi10-rogue-agents: {label: Rogue agents, themes: [security, human-agency]}
+  ailuminate-v1.0:
+    label: AILuminate
+    categories:
+      ail-intellectual-property: {label: Intellectual property, themes: [intellectual-property]}
+      ail-nonviolent-crimes: {label: Nonviolent crimes, themes: [harmful-content]}
+      ail-privacy: {label: Privacy, themes: [privacy]}
+      ail-specialized-advice: {label: Specialized advice, themes: [harmful-content]}
