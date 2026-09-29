@@ -15,11 +15,19 @@
     --asago-success: #08775d;
     --asago-selection: #e9f2ff;
     --asago-success-bg: #e1f8f0;
+    --asago-table-header: #e2edfc;
+    --asago-table-header-text: #1d426f;
+    --asago-table-header-border: #8fb6ea;
+    --asago-table-stripe: #f3f7fd;
+    --asago-table-hover: #e9f2ff;
+    --pf-t--global--color--brand--default: #2d7ff9;
+    --pf-t--global--color--brand--hover: #1763ce;
+    --pf-t--global--text--color--link--default: #1763ce;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.6;
     color-scheme: light;
   }
-  .dark .asago-report {
+  .pf-v6-theme-dark .asago-report {
     --asago-page: #000108;
     --asago-card: #0b1020;
     --asago-subtle: #05080f;
@@ -31,18 +39,20 @@
     --asago-success: #0dd4a0;
     --asago-selection: #0d2345;
     --asago-success-bg: #062b25;
+    --asago-table-header: #1c3150;
+    --asago-table-header-text: #e7f1ff;
+    --asago-table-header-border: #527fb0;
+    --asago-table-stripe: #111c30;
+    --asago-table-hover: #1a3153;
+    --pf-t--global--color--brand--default: #7eb0ff;
+    --pf-t--global--text--color--link--default: #7eb0ff;
     color-scheme: dark;
   }
 
-  /* Scope the report palette so other report templates retain their themes. */
+  /* Keep the Asago palette scoped to the extraction report. */
   body.asago-report { background: var(--asago-page) !important; color: var(--asago-text) !important; }
-  .asago-report .bg-white { background-color: var(--asago-card) !important; }
-  .asago-report :is(.bg-gray-50, .bg-gray-100) { background-color: var(--asago-subtle) !important; }
-  .asago-report :is(.text-gray-900, .text-gray-800, .text-gray-700) { color: var(--asago-text) !important; }
-  .asago-report :is(.text-gray-600, .text-gray-500, .text-gray-400, .text-gray-300) { color: var(--asago-muted) !important; }
-  .asago-report :is(.border-gray-100, .border-gray-200, .border-gray-300) { border-color: var(--asago-border) !important; }
-  .asago-report :is(.shadow-sm, .shadow-lg) { box-shadow: 0 4px 20px rgb(0 1 8 / 4%) !important; }
-  .asago-report .hover\:bg-gray-50:hover { background-color: var(--asago-hover) !important; }
+  .asago-report .pf-v6-c-card { border: 1px solid var(--asago-border); background: var(--asago-card); }
+  .asago-report .pf-v6-c-card::before { content: none; }
   .asago-report :is(input, select, textarea) {
     background-color: var(--asago-card) !important;
     border-color: var(--asago-border) !important;
@@ -81,6 +91,7 @@
     width: fit-content;
   }
   .asago-header nav a { color: #cbd5e1; transition: color 150ms ease; }
+  .asago-header .pf-v6-u-text-color-subtle { color: #cbd5e1 !important; }
   .asago-header nav a:hover { color: var(--asago-secondary); }
   .asago-nav-number { color: var(--asago-secondary); }
   .asago-report .asago-link { color: var(--asago-link); }
@@ -98,7 +109,7 @@
     border: 2px solid #97b7dd;
   }
   .asago-report .asago-evidence-card { border-left-width: 4px; }
-  .dark .asago-report :is(.asago-evidence-card, .asago-score-card) {
+  .pf-v6-theme-dark .asago-report :is(.asago-evidence-card, .asago-score-card) {
     background: #15243d;
     border-color: #49688f;
   }
@@ -129,7 +140,7 @@
     border-top: 4px solid var(--summary-accent);
     box-shadow: 0 8px 24px rgb(0 1 8 / 12%);
   }
-  .dark .asago-report .asago-summary-card {
+  .pf-v6-theme-dark .asago-report .asago-summary-card {
     --summary-background: #15243d;
     --summary-border: #49688f;
   }
@@ -138,7 +149,7 @@
     --summary-border: #84cbb3;
     --summary-accent: var(--asago-secondary);
   }
-  .dark .asago-report .asago-summary-high {
+  .pf-v6-theme-dark .asago-report .asago-summary-high {
     --summary-background: #0c302b;
     --summary-border: #328775;
   }
@@ -148,11 +159,25 @@
     --summary-accent: var(--asago-amber);
     transition: border-color 150ms ease;
   }
-  .dark .asago-report .asago-review-card {
+  .pf-v6-theme-dark .asago-report .asago-review-card {
     --summary-background: #35270e;
     --summary-border: #a47624;
   }
   .asago-report .asago-review-card:has(> button:enabled):hover { border-color: var(--asago-amber); }
+  .asago-report .asago-findings-table { background: var(--asago-card); }
+  .asago-report .asago-findings-table thead tr {
+    background: var(--asago-table-header);
+    color: var(--asago-table-header-text);
+    border-bottom: 2px solid var(--asago-table-header-border);
+    font-weight: 600;
+  }
+  .asago-report .asago-findings-table thead button { color: inherit; }
+  .asago-report .asago-findings-table tbody > tr:nth-of-type(even) > td > .risk-table-grid {
+    background: var(--asago-table-stripe);
+  }
+  .asago-report .asago-findings-table tbody > tr:hover > td > .risk-table-grid {
+    background: var(--asago-table-hover);
+  }
   .asago-report .dark-toggle {
     background: var(--asago-card);
     border-color: var(--asago-border);
