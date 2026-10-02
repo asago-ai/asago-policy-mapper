@@ -28,17 +28,32 @@ jobs:
 
   test-llm-ollama:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     concurrency:
       group: test-llm-ollama-${{ github.ref }}
       cancel-in-progress: true
     env:
       OLLAMA_MODELS: /home/runner/.ollama-models
+      OLLAMA_DEBUG: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v8
         with:
           enable-cache: true
       - run: uv sync --group dev
+      - name: Record runner diagnostics
+        env:
+          OLLAMA_DIAGNOSTICS: ${{ runner.temp }}/ollama-diagnostics
+        run: |
+          echo "OLLAMA_DIAGNOSTICS=$OLLAMA_DIAGNOSTICS" >> "$GITHUB_ENV"
+          mkdir -p "$OLLAMA_DIAGNOSTICS"
+          {
+            uname -a
+            lscpu
+            free -h
+            uv --version
+            uv run python --version
+          } > "$OLLAMA_DIAGNOSTICS/runner.txt" 2>&1
       - name: Install Ollama
         # Pin install script to a Git blob SHA (immutable) instead of piping the live URL.
         # To update: find the commit for the new release tag with
@@ -51,17 +66,46 @@ jobs:
           key: ollama-gemma3-1b
       - name: Start Ollama and pull model
         run: |
+          set -o pipefail
           sudo systemctl stop ollama 2>/dev/null || true
-          ollama serve &
-          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 1; done
-          ollama pull gemma3:1b
+          ollama serve > "$OLLAMA_DIAGNOSTICS/server.log" 2>&1 &
+          ready=false
+          for _ in $(seq 1 30); do
+            if curl --max-time 2 -sf http://localhost:11434/api/tags >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then
+            echo "Ollama API did not become ready. Read the diagnostic artifact."
+            exit 1
+          fi
+          ollama --version > "$OLLAMA_DIAGNOSTICS/version.txt" 2>&1
+          ollama pull gemma3:1b 2>&1 | tee "$OLLAMA_DIAGNOSTICS/pull.log"
+          curl --fail --show-error --max-time 10 http://localhost:11434/api/show \
+            -d '{"model":"gemma3:1b"}' > "$OLLAMA_DIAGNOSTICS/model.json"
       - name: Run LLM integration tests
         env:
           LLM_BASE_URL: "http://localhost:11434/v1"
           LLM_MODEL: "gemma3:1b"
-        run: uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
+          LLM_REQUIRE_SERVER: "1"
+        run: uv run pytest tests/ -rs --test-llm -m llm --maxfail=1 -v -s --tb=short -W ignore::DeprecationWarning
       - name: Save Ollama model cache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: ${{ env.OLLAMA_MODELS }}
           key: ollama-gemma3-1b
+      - name: Show Ollama log on failure
+        if: failure()
+        run: |
+          if [ -f "$OLLAMA_DIAGNOSTICS/server.log" ]; then
+            tail -n 200 "$OLLAMA_DIAGNOSTICS/server.log"
+          fi
+      - name: Upload Ollama diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ollama-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ollama-diagnostics
+          retention-days: 7

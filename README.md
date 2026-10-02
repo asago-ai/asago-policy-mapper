@@ -424,8 +424,22 @@ uv run pytest tests/ -rs --test-llm -m llm -v -s --tb=short -W ignore::Deprecati
 |---------|---------|-------------|
 | `LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible API endpoint |
 | `LLM_MODEL` | `gemma3:1b` | Model name (Ollama tag) |
+| `LLM_REQUIRE_SERVER` | `0` | Set to `1` to fail instead of skip when the server does not respond |
 
-Tests skip gracefully when no server is available.
+A session probe requires a model list and a valid structured completion before the LLM tests start.
+Each probe request has a 60-second timeout and no automatic retries.
+Tests skip when no server responds, unless `LLM_REQUIRE_SERVER=1`.
+Missing models and failed inference always fail the tests.
+
+CI requires the server and stops after the first failure.
+The Ollama job uploads an `ollama-diagnostics-<run_id>-<attempt>` artifact on success or failure, with seven-day retention.
+The artifact contains:
+
+- CPU, memory, kernel, Python, and uv details.
+- The Ollama version, model metadata, and model download log.
+- The complete Ollama debug log, which includes output from the inference backend.
+
+The job also prints the final 200 lines of the Ollama log on failure.
 
 ## License
 
