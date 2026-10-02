@@ -1,7 +1,7 @@
-"""Integration tests exercising real LLM calls via Ollama (or similar real LLM endpoint).
+"""Integration tests use real LLM calls through Ollama or another OpenAI-compatible endpoint.
 
-All tests are marked ``@pytest.mark.llm`` and skipped by default unless ``--test-llm`` is passed,
-and also skipped automatically when no LLM server is reachable (see ``llm_config`` fixture below).
+All tests use ``@pytest.mark.llm`` and skip by default unless ``--test-llm`` is present.
+If no LLM server responds, tests skip unless ``LLM_REQUIRE_SERVER=1``.
 
 Run with::
 
@@ -18,7 +18,7 @@ from typing import Literal
 
 import instructor
 import pytest
-from openai import OpenAI
+from llm_health import LLMHealthError, LLMUnavailableError, probe_llm
 
 from asago_policy_mapper.extract.attribute import (
     ground_and_extract_evidence,
@@ -145,19 +145,18 @@ LLM_QUERYGEN_RISKS = [r for r in LLM_TEST_RISKS if r.id in {"R-BIAS", "R-TRANSPA
 
 @pytest.fixture(scope="session")
 def llm_config():
-    """LLMConfig pointing at a local OpenAI-compatible server. Skips if unreachable."""
+    """Make sure that the server supports structured inference before the tests start."""
     base_url = os.environ.get("LLM_BASE_URL", "http://localhost:11434/v1")
     model = os.environ.get("LLM_MODEL", "gemma3:1b")
 
     try:
-        probe = OpenAI(base_url=base_url, api_key="none")
-        available = probe.models.list()
-    except Exception:
-        pytest.skip(f"LLM server not available at {base_url}")
-
-    available_ids = {m.id for m in available.data}
-    if model not in available_ids:
-        pytest.fail(f"Model {model!r} not available on {base_url} (available: {sorted(available_ids)})")
+        probe_llm(base_url, model)
+    except LLMUnavailableError as exc:
+        if os.environ.get("LLM_REQUIRE_SERVER") == "1":
+            pytest.fail(str(exc), pytrace=False)
+        pytest.skip(str(exc))
+    except LLMHealthError as exc:
+        pytest.fail(str(exc), pytrace=False)
 
     return LLMConfig(
         base_url=base_url,
