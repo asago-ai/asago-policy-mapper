@@ -83,6 +83,15 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 - `torch<2.12` and `transformers<5.6` — newer versions introduce an MPS-incompatible `rt_detr_v2` layout model in docling's PDF pipeline on Apple Silicon
 - `numpy<2.5` — numpy 2.5.0 ships PEP 695 type stubs that mypy cannot parse when `python_version` targets 3.11
 
+## LLM Test Diagnostics
+
+- `tests/llm_health.py` requires a model list and a structured completion before the LLM integration tests start.
+- Each probe request has a 60-second timeout and no automatic retries. Missing models and failed inference fail the tests.
+- `LLM_REQUIRE_SERVER=1` makes an unavailable server fail the tests. Local runs skip unavailable servers by default.
+- The Ollama CI job uses `--maxfail=1` and a 15-minute job timeout.
+- CI preserves CPU details, runtime versions, model metadata, and the complete Ollama debug log in a diagnostic artifact.
+- Diagnostic artifacts use the name `ollama-diagnostics-<run_id>-<attempt>` and seven-day retention.
+
 ## Experiments
 
 - Always update `experiments/EXPERIMENT_LOG.md` with results after running any experiment or battery that produces new data points
