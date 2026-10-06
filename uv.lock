@@ -37,8 +37,8 @@ wheels = [
 
 [[package]]
 name = "ai-atlas-nexus"
-version = "1.2.3"
-source = { git = "https://github.com/IBM/ai-atlas-nexus.git?rev=main#a8af9d79b72fe12c165bd51f855bc888d9acaeb4" }
+version = "1.2.5"
+source = { git = "https://github.com/IBM/ai-atlas-nexus.git?rev=main#c7a53040c45761376993386b0416a2b977591426" }
 dependencies = [
     { name = "chardet" },
     { name = "cymple" },
