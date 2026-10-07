@@ -1,70 +1,353 @@
 risks:
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Face recognition must NOT be used as the sole basis of any law or civil
+      enforcement action
+    section: Face Recognition Specific Rules
+- id: ai-risk-taxonomy-characterization-of-identity---age
+  name: Characterization of identity - Age
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-characterization-of-identity---religion
+  name: Characterization of identity - Religion
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-characterization-of-identity---sexual-orientation
+  name: Characterization of identity - Sexual orientation
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-classification-of-individuals---age
+  name: Classification of individuals - Age
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-classification-of-individuals---disability
+  name: Classification of individuals - Disability
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-classification-of-individuals---ethnicity
+  name: Classification of individuals - Ethnicity
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-classification-of-individuals---gender
+  name: Classification of individuals - Gender
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-classification-of-individuals---health-conditions
+  name: Classification of individuals - Health conditions
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-classification-of-individuals---nationality
+  name: Classification of individuals - Nationality
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-classification-of-individuals---race
+  name: Classification of individuals - Race
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-classification-of-individuals---religion
+  name: Classification of individuals - Religion
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+- id: ai-risk-taxonomy-classification-of-individuals---sexual-orientation
+  name: Classification of individuals - Sexual orientation
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-criminal-justice/predictive-policing
+  name: Criminal justice/Predictive policing
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Border threat awareness augmentation
+    section: Deployed AI Use Cases (158 Active) - CBP
+  - text: future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age
+  name: Discrimination in employment, benefits, or services - Age
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability
+  name: Discrimination in employment, benefits, or services - Disability
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
+  name: Discrimination in employment, benefits, or services - Ethnicity
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---gender
+  name: Discrimination in employment, benefits, or services - Gender
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---health-conditions
+  name: Discrimination in employment, benefits, or services - Health conditions
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---nationality
+  name: Discrimination in employment, benefits, or services - Nationality
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---predicted-personality
   name: Discrimination in employment, benefits, or services - Predicted Personality
   evidence:
   - text: denial of government benefits
     section: Prohibited Uses
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race
+  name: Discrimination in employment, benefits, or services - Race
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---religion
+  name: Discrimination in employment, benefits, or services - Religion
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---sexual-orientation
+  name: Discrimination in employment, benefits, or services - Sexual orientation
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
     section: Prohibited Uses
 - id: ai-risk-taxonomy-involvement-in-data-adversarially-adversely-affects-national-security-or-public-interests
-  name: Involvement in data adversarially adversely affects national security or public interests
+  name: Involvement in data adversarially adversely affects national security or public
+    interests
   evidence:
-  - text: Safe, secure, and responsible — risks and benefits identified and addressed; hardened against compromise and malicious activity
+  - text: Safe, secure, and responsible — risks and benefits identified and addressed;
+      hardened against compromise and malicious activity
     section: Principles
-  - text: Unauthorized data sharing — Sharing DHS data or AI outputs with third parties for uses that are prohibited by law or DHS policy
+  - text: Unauthorized data sharing — Sharing DHS data or AI outputs with third parties
+      for uses that are prohibited by law or DHS policy
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware
+  name: Non-consensual tracking/monitoring/stalking/spyware
+  evidence:
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
+    section: Prohibited Uses
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
     section: Prohibited Uses
 - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---biometric-data-(facial-recognition)
-  name: Non-consensual tracking/monitoring/stalking/spyware - Biometric data (facial recognition)
+  name: Non-consensual tracking/monitoring/stalking/spyware - Biometric data (facial
+    recognition)
   evidence:
-  - text: Identity validation in the CBP One app
-    section: CBP — Customs and Border Protection
-  - text: US citizens must be afforded the right to opt-out of face recognition for non-law-enforcement uses
+  - text: US citizens must be afforded the right to opt-out of face recognition for
+      non-law-enforcement uses
     section: Face Recognition Specific Rules
-  - text: 'DHS Prohibition: Unlawful mass surveillance'
-    section: Relevance to Policy Example Generation
+  - text: Contactless airport security using facial recognition (passenger opt-in)
+    section: TSA — Transportation Security Administration
 - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---demographic-data
   name: Non-consensual tracking/monitoring/stalking/spyware - Demographic data
   evidence:
-  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale monitoring, surveillance, or tracking of individuals
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
     section: Prohibited Uses
   - text: 'DHS Prohibition: Discriminatory decision-making'
     section: Relevance to Policy Example Generation
   - text: 'Potential Policy Concept: Discriminatory Profiling & Protected Characteristics'
     section: Relevance to Policy Example Generation
-- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---behavioral/-preference-data
-  name: Unauthorized collection/gathering/stealing - Behavioral/ Preference data
+- id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---pii-(personal-identifiable-information)
+  name: Non-consensual tracking/monitoring/stalking/spyware - PII (Personal Identifiable
+    Information)
   evidence:
-  - text: The directive's explicit listing of protected characteristics (including emotional state and future behavior predictions)
-    section: Relevance to Policy Example Generation
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-profiling
+  name: Profiling
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics, or in retaliation for exercising
+      constitutional rights
+    section: Prohibited Uses
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics, or in retaliation for exercising
+      constitutional rights
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing
+  name: Unauthorized collection/gathering/stealing
+  evidence:
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
+    section: Prohibited Uses
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)
   name: Unauthorized collection/gathering/stealing - Biometric data (facial recognition)
   evidence:
-  - text: US citizens must be afforded the right to opt-out of face recognition for non-law-enforcement uses
+  - text: US citizens must be afforded the right to opt-out of face recognition for
+      non-law-enforcement uses
     section: Face Recognition Specific Rules
   - text: 'DHS Prohibition: Face recognition misuse'
     section: Relevance to Policy Example Generation
   - text: 'Potential Policy Concept: Biometric Identification & Civil Liberties'
     section: Relevance to Policy Example Generation
+- id: ai-risk-taxonomy-unauthorized-disclosure
+  name: Unauthorized disclosure
+  evidence:
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+- id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
+  name: Unauthorized disclosure - Biometric data (facial recognition)
+  evidence:
+  - text: Face recognition misuse
+- id: ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)
+  name: Unauthorized generation - Biometric data (facial recognition)
+  evidence:
+  - text: Identity validation in the CBP One app
+  - text: Screening cargo at ports of entry using object detection in streaming video
+      and imagery
 - id: ai-risk-taxonomy-unauthorized-processing---biometric-data-(facial-recognition)
   name: Unauthorized processing - Biometric data (facial recognition)
   evidence:
-  - text: Face recognition must NOT be used as the sole basis of any law or civil enforcement action
+  - text: 14 of 29 deployed safety/rights-impacting use cases involve face recognition/face
+      capture (FR/FC) technologies
     section: Face Recognition Specific Rules
-  - text: 'DHS Prohibition: Face recognition misuse'
-    section: Relevance to Policy Example Generation
-  - text: 'Potential Policy Concept: Biometric Identification & Civil Liberties'
-    section: Relevance to Policy Example Generation
-- id: credo-risk-014
-  name: Obscene and sexually abusive content
+- id: atlas-confidential-information-in-data
+  name: Confidential information in data
   evidence:
-  - text: identifying and rescuing victims of child sexual exploitation (CSE) and arresting perpetrators
-    section: ICE — Immigration and Customs Enforcement
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
 - id: atlas-data-bias
   name: Data bias
   evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
     section: Prohibited Uses
 - id: atlas-data-privacy-rights
   name: Data privacy rights alignment
@@ -73,78 +356,325 @@ risks:
     section: Governance
   - text: Office for Civil Rights and Civil Liberties (CRCL) — civil rights compliance
     section: Governance
-  - text: US citizens must be afforded the right to opt-out of face recognition for non-law-enforcement uses
+  - text: US citizens must be afforded the right to opt-out of face recognition for
+      non-law-enforcement uses
     section: Face Recognition Specific Rules
+- id: atlas-data-transfer
+  name: Data transfer restrictions
+  evidence:
+  - text: Unauthorized data sharing — Sharing DHS data or AI outputs with third parties
+      for uses that are prohibited by law or DHS policy
 - id: atlas-data-usage
   name: Data usage restrictions
   evidence:
-  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited by law or DHS policy
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
     section: Prohibited Uses
   - text: The prohibited/acceptable use boundaries map well to content policy concepts
     section: Relevance to Policy Example Generation
-  - text: Face recognition must NOT be used as the sole basis of any law or civil enforcement action
+  - text: Face recognition must NOT be used as the sole basis of any law or civil
+      enforcement action
     section: Face Recognition Specific Rules
 - id: atlas-decision-bias
   name: Decision bias
   evidence:
-  - text: Discriminatory decision-making — Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation,
-      gender identity, age, nationality, medical condition, disability, emotional state, or future behavior predictions
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
     section: Prohibited Uses
-  - text: Improper profiling — Improperly profiling, targeting, or discriminating against individuals or entities based on protected characteristics, or in retaliation for exercising constitutional rights
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
     section: Prohibited Uses
-- id: atlas-hallucination
-  name: Hallucination
+- id: atlas-discriminatory-actions-agentic
+  name: Discriminatory actions
   evidence:
-  - text: Human analysts review AI outputs to verify damage levels
-    section: Deployed AI Use Cases
-  - text: Sole-basis enforcement decisions — Relying on AI outputs as the sole basis for determining law enforcement actions (arrests, searches, seizures, citations), civil enforcement actions (fines, injunctions),
-      or denial of government benefits
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
     section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics, or in retaliation for exercising
+      constitutional rights
+    section: Prohibited Uses
+- id: atlas-exposing-personal-information
+  name: Exposing personal information
+  evidence:
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+  - text: US citizens must be afforded the right to opt-out of face recognition for
+      non-law-enforcement uses
+    section: Face Recognition Specific Rules
+- id: atlas-harmful-output
+  name: Harmful output
+  evidence:
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
+    section: Prohibited Uses
+- id: atlas-impact-human-agency-agentic
+  name: AI agents' impact on human agency
+  evidence:
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Human-centered — considering humans using AI on behalf of DHS, interacting
+      with DHS via AI, and directly impacted by AI outputs
+    section: Principles
+  - text: Face recognition must NOT be used as the sole basis of any law or civil
+      enforcement action
+    section: Face Recognition Specific Rules
+- id: atlas-impact-on-affected-communities
+  name: Impact on affected communities
+  evidence:
+  - text: Human-centered — considering humans using AI on behalf of DHS, interacting
+      with DHS via AI, and directly impacted by AI outputs
+    section: Principles
+  - text: Office for Civil Rights and Civil Liberties (CRCL) — civil rights compliance
+    section: Governance
+- id: atlas-impact-on-human-agency
+  name: AI agents' Impact on human agency
+  evidence:
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Human-centered — considering humans using AI on behalf of DHS, interacting
+      with DHS via AI, and directly impacted by AI outputs
+    section: Principles
+  - text: Face recognition must NOT be used as the sole basis of any law or civil
+      enforcement action
+    section: Face Recognition Specific Rules
+- id: atlas-incomplete-usage-definition
+  name: Incomplete usage definition
+  evidence:
+  - text: 'Use cases are classified into:'
+  - text: AI Use Case Inventory — publicly catalogued, updated annually with regular
+      revisions
+- id: atlas-lack-of-model-transparency
+  name: Lack of model transparency
+  evidence:
+  - text: Responsibly acquired — aligned with legal and policy requirements for technical
+      specifications, risk management, transparency, and sustainability
+    section: Principles
+  - text: aligned with legal and policy requirements for technical specifications,
+      risk management, transparency, and sustainability
+    section: Principles
+  - text: DHS publishes a public AI Use Case Inventory annually.
+    section: Deployed AI Use Cases (158 Active)
+- id: atlas-lack-of-system-transparency
+  name: Lack of system transparency
+  evidence:
+  - text: Responsibly acquired — aligned with legal and policy requirements for technical
+      specifications, risk management, transparency, and sustainability
+    section: Principles
+  - text: aligned with legal and policy requirements for technical specifications,
+      risk management, transparency, and sustainability
+    section: Principles
+  - text: aligned with legal and policy requirements for technical specifications,
+      risk management, transparency, and sustainability
+    section: Principles
 - id: atlas-legal-accountability
   name: Legal accountability
   evidence:
-  - text: The 2025 inventory catalogues 158 active use cases, of which 29 deployed and 10 upcoming are classified as rights- or safety-impacting.
-    section: Deployed AI Use Cases (158 Active)
-  - text: AI Governance Board — departmental oversight of AI risk and policy
-    section: Governance
-  - text: AI Council — cross-component coordination
-    section: Governance
+  - text: Lawful and mission-appropriate — compliant with the Constitution, laws,
+      and policies; protective of privacy, civil rights, and civil liberties
+    section: Principles
+  - text: 'AI use at DHS must be: Lawful and mission-appropriate — compliant with
+      the Constitution, laws, and policies'
+    section: Principles
+  - text: Any other uses of AI or related data that are prohibited by applicable laws
+      and policies
+    section: Prohibited Uses
+- id: atlas-output-bias
+  name: Output bias
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
 - id: atlas-over-or-under-reliance
   name: Over- or under-reliance
   evidence:
-  - text: Sole-basis enforcement decisions — Relying on AI outputs as the sole basis for determining law enforcement actions (arrests, searches, seizures, citations), civil enforcement actions (fines, injunctions),
-      or denial of government benefits
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
     section: Prohibited Uses
-  - text: Face recognition must NOT be used as the sole basis of any law or civil enforcement action
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Human analysts review AI outputs to verify damage levels
+    section: FEMA — Federal Emergency Management Agency
+- id: atlas-poor-model-accuracy
+  name: Poor model accuracy
+  evidence:
+  - text: Human analysts review AI outputs to verify damage levels
+    section: FEMA — Federal Emergency Management Agency
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+- id: credo-risk-010
+  name: Stereotype perpetuation
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics
+    section: Prohibited Uses
+- id: credo-risk-011
+  name: Disparate model performance
+  evidence:
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+- id: credo-risk-014
+  name: Obscene and sexually abusive content
+  evidence:
+  - text: identifying and rescuing victims of child sexual exploitation (CSE) and
+      arresting perpetrators
+    section: ICE — Immigration and Customs Enforcement
+- id: credo-risk-016
+  name: Over or under-reliance and unsafe use
+  evidence:
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Face recognition must NOT be used as the sole basis of any law or civil
+      enforcement action
     section: Face Recognition Specific Rules
 - id: credo-risk-017
   name: Inadequate AI literacy and communication
   evidence:
-  - text: Periodic AI literacy training required for all DHS personnel
+  - text: Ensure personnel can identify appropriate vs. prohibited AI applications
     section: Training
   - text: 'Goal: improve workforce understanding of AI benefits and risks'
     section: Training
+  - text: Periodic AI literacy training required for all DHS personnel
+    section: Training
 - id: credo-risk-019
-  name: Loss of human agency and autonomy (Slattery et al., 2024; IBM, 2024)
+  name: Loss of human agency and autonomy
   evidence:
-  - text: Human-centered — considering humans using AI on behalf of DHS, interacting with DHS via AI, and directly impacted by AI outputs
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Human-centered — considering humans using AI on behalf of DHS, interacting
+      with DHS via AI, and directly impacted by AI outputs
+    section: Principles
+  - text: Human-centered — considering humans using AI on behalf of DHS, interacting
+      with DHS via AI, and directly impacted by AI outputs
     section: Principles
 - id: credo-risk-021
   name: False or misleading information
   evidence:
   - text: Human analysts review AI outputs to verify damage levels
     section: Deployed AI Use Cases
-  - text: Sole-basis enforcement decisions — Relying on AI outputs as the sole basis for determining law enforcement actions (arrests, searches, seizures, citations), civil enforcement actions (fines, injunctions),
-      or denial of government benefits
+  - text: Sole-basis enforcement decisions — Relying on AI outputs as the sole basis
+      for determining law enforcement actions (arrests, searches, seizures, citations),
+      civil enforcement actions (fines, injunctions), or denial of government benefits
     section: Prohibited Uses
+- id: credo-risk-023
+  name: Regulatory compliance
+  evidence:
+  - text: Lawful and mission-appropriate — compliant with the Constitution, laws,
+      and policies; protective of privacy, civil rights, and civil liberties
+    section: Principles
+  - text: Lawful and mission-appropriate — compliant with the Constitution, laws,
+      and policies; protective of privacy, civil rights, and civil liberties
+    section: Principles
+  - text: aligned with legal and policy requirements for technical specifications,
+      risk management, transparency, and sustainability
+    section: Principles
 - id: credo-risk-024
   name: Civil liability
   evidence:
-  - text: Face recognition must NOT be used as the sole basis of any law or civil enforcement action
+  - text: Face recognition must NOT be used as the sole basis of any law or civil
+      enforcement action
     section: Face Recognition Specific Rules
-- id: credo-risk-036
-  name: Compromised personally identifiable information (Slattery et al., 2024)
+- id: credo-risk-025
+  name: Corporate liability (IBM, 2024)
   evidence:
+  - text: 'AI use at DHS must be: - **Lawful and mission-appropriate** — compliant
+      with the Constitution, laws, and policies; protective of privacy, civil rights,
+      and civil liberties'
+  - text: 'DHS personnel are forbidden from: ... 6. **General legal violations** —
+      Any other uses of AI or related data that are prohibited by applicable laws
+      and policies'
+- id: credo-risk-029
+  name: Mass surveillance and privacy attacks
+  evidence:
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
+    section: Prohibited Uses
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
+    section: Prohibited Uses
+  - text: protective of privacy, civil rights, and civil liberties
+    section: Principles
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: Presumed High-Impact, but determined not High-Impact — initially flagged,
+      cleared after review
+    section: Risk Classification (2025 Inventory)
+  - text: High-Impact — rights or safety implications; subject to minimum risk management
+      practices
+    section: Risk Classification (2025 Inventory)
+  - text: AI Use Case Inventory — publicly catalogued, updated annually with regular
+      revisions
+    section: Governance
+- id: credo-risk-036
+  name: Compromised personally identifiable information
+  evidence:
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+  - text: Privacy Office — privacy compliance and impact assessments
+    section: Governance
   - text: protective of privacy, civil rights, and civil liberties
     section: Principles
 - id: credo-risk-037
@@ -154,231 +684,174 @@ risks:
     section: Principles
   - text: Privacy Office — privacy compliance and impact assessments
     section: Governance
+- id: credo-risk-038
+  name: Compromised confidential information
+  evidence:
+  - text: Safe, secure, and responsible — risks and benefits identified and addressed;
+      hardened against compromise and malicious activity
+    section: Principles
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+  - text: hardened against compromise and malicious activity
+    section: Principles
 - id: credo-risk-040
   name: AI-generated security weaknesses (Slattery et al., 2024; IBM, 2024; AI, 2023)
   evidence:
   - text: hardened against compromise and malicious activity
     section: Principles
 - id: credo-risk-041
-  name: Vulnerability to adversarial attacks (Slattery et al., 2024; IBM, 2024; AI, 2023)
+  name: Vulnerability to adversarial attacks
   evidence:
   - text: hardened against compromise and malicious activity
     section: Principles
-- id: credo-risk-047
-  name: Insufficient upstream transparency (AI, 2023)
-  evidence:
-  - text: aligned with legal and policy requirements for technical specifications, risk management, transparency, and sustainability
+  - text: hardened against compromise and malicious activity
     section: Principles
+- id: credo-risk-046
+  name: Governance failures
+  evidence:
+  - text: AI Use Case Inventory — publicly catalogued, updated annually with regular
+      revisions
+    section: Governance
+  - text: Chief AI Officer (also CIO) — operational AI leadership (Eric Hysen held
+      this role)
+    section: Governance
+  - text: Office for Civil Rights and Civil Liberties (CRCL) — civil rights compliance
+    section: Governance
 - id: mit-ai-risk-subdomain-1.1
   name: Unfair discrimination and misrepresentation
   evidence:
-  - text: Discriminatory decision-making — Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation,
-      gender identity, age, nationality, medical condition, disability, emotional state, or future behavior predictions
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
     section: Prohibited Uses
-  - text: Improper profiling — Improperly profiling, targeting, or discriminating against individuals or entities based on protected characteristics
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Prohibited Uses
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics, or in retaliation for exercising
+      constitutional rights
     section: Prohibited Uses
 - id: mit-ai-risk-subdomain-1.3
   name: Unequal performance across groups
   evidence:
-  - text: Discriminatory decision-making — Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation,
-      gender identity, age, nationality, medical condition, disability, emotional state, or future behavior predictions
-    section: Prohibited Uses
-  - text: Improper profiling — Improperly profiling, targeting, or discriminating against individuals or entities based on protected characteristics, or in retaliation for exercising constitutional rights
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
     section: Prohibited Uses
 - id: mit-ai-risk-subdomain-2.1
-  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive information
+  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive
+    information
   evidence:
-  - text: Unauthorized data sharing—Sharing DHS data or AI outputs with third parties for uses that are prohibited by law or DHS policy
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
+    section: Prohibited Uses
+  - text: Sharing DHS data or AI outputs with third parties for uses that are prohibited
+      by law or DHS policy
     section: Prohibited Uses
   - text: Privacy Office — privacy compliance and impact assessments
     section: Governance
-  - text: 'DHS Prohibition: Unauthorized data sharing'
-    section: Relevance to Policy Example Generation
+- id: mit-ai-risk-subdomain-2.2
+  name: AI system security vulnerabilities and attacks
+  evidence:
+  - text: Safe, secure, and responsible — risks and benefits identified and addressed
+    section: Principles
+  - text: hardened against compromise and malicious activity
+    section: Principles
+  - text: hardened against compromise and malicious activity
+    section: Principles
 - id: mit-ai-risk-subdomain-4.1
   name: Disinformation, surveillance, and influence at scale
   evidence:
-  - text: Unlawful mass surveillance—Conducting unlawful or improper systemic, indiscriminate, or large-scale monitoring, surveillance, or tracking of individuals
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
     section: Prohibited Uses
-  - text: Screening cargo at ports of entry using object detection in streaming video and imagery
-    section: CBP — Customs and Border Protection
-  - text: Real-time anomaly detection with automated alerts to operators
-    section: CBP — Customs and Border Protection
+  - text: Conducting unlawful or improper systemic, indiscriminate, or large-scale
+      monitoring, surveillance, or tracking of individuals
+    section: Prohibited Uses
 - id: mit-ai-risk-subdomain-5.1
   name: Overreliance and unsafe use
   evidence:
-  - text: Sole-basis enforcement decisions — Relying on AI outputs as the sole basis for determining law enforcement actions (arrests, searches, seizures, citations), civil enforcement actions (fines, injunctions),
-      or denial of government benefits
+  - text: Sole-basis enforcement decisions — Relying on AI outputs as the sole basis
+      for determining law enforcement actions (arrests, searches, seizures, citations),
+      civil enforcement actions (fines, injunctions), or denial of government benefits
     section: Prohibited Uses
   - text: Periodic AI literacy training required for all DHS personnel
     section: Training
-- id: ai-risk-taxonomy-adversely-affects-legal-rights
-  name: Adversely affects legal rights
+- id: mit-ai-risk-subdomain-5.2
+  name: Loss of human agency and autonomy
   evidence:
-  - text: Relying on AI outputs as the sole basis for determining law enforcement actions (arrests, searches, seizures, citations), civil enforcement actions (fines, injunctions), or denial of government
-      benefits
-- id: ai-risk-taxonomy-criminal-justice/predictive-policing
-  name: Criminal justice/Predictive policing
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Relying on AI outputs as the sole basis for determining law enforcement
+      actions (arrests, searches, seizures, citations), civil enforcement actions
+      (fines, injunctions), or denial of government benefits
+    section: Prohibited Uses
+  - text: Human-centered — considering humans using AI on behalf of DHS, interacting
+      with DHS via AI, and directly impacted by AI outputs
+    section: Principles
+- id: mit-ai-risk-subdomain-6.5
+  name: Governance failure
   evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: atlas-data-transfer
-  name: Data transfer restrictions
+  - text: AI Use Case Inventory — publicly catalogued, updated annually with regular
+      revisions
+    section: Governance
+  - text: Chief AI Officer (also CIO) — operational AI leadership (Eric Hysen held
+      this role)
+    section: Governance
+  - text: Office for Civil Rights and Civil Liberties (CRCL) — civil rights compliance
+    section: Governance
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
   evidence:
-  - text: Unauthorized data sharing — Sharing DHS data or AI outputs with third parties for uses that are prohibited by law or DHS policy
-- id: credo-risk-029
-  name: Mass surveillance and privacy attacks (Slattery et al., 2024)
-  evidence:
-  - text: Unlawful mass surveillance — Conducting unlawful or improper systemic, indiscriminate, or large-scale monitoring, surveillance, or tracking of individuals
+  - text: Human analysts review AI outputs to verify damage levels
+    section: FEMA — Federal Emergency Management Agency
 - id: mit-ai-risk-subdomain-7.4
   name: Lack of transparency or interpretability
   evidence:
-  - text: Responsibly acquired — aligned with legal and policy requirements for technical specifications, risk management, transparency, and sustainability
-- id: ai-risk-taxonomy-migration-eligibility
-  name: Migration eligibility
+  - text: aligned with legal and policy requirements for technical specifications,
+      risk management, transparency, and sustainability
+    section: Principles
+  - text: aligned with legal and policy requirements for technical specifications,
+      risk management, transparency, and sustainability
+    section: Principles
+  - text: AI Use Case Inventory — publicly catalogued, updated annually with regular
+      revisions
+    section: Governance
+- id: ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law
   evidence:
-  - text: This directive is notable for its specificity around law enforcement and immigration contexts.
-- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
-  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
+  - 1
+  - 2
+- id: ai-risk-taxonomy-negative-stereotyping-of-any-group
   evidence:
-  - text: Identity validation in the CBP One app
-- id: ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)
-  name: Unauthorized generation - Biometric data (facial recognition)
+  - 1
+- id: ai-risk-taxonomy-unauthorized-distribution---biometric-data-(facial-recognition)
   evidence:
-  - text: Identity validation in the CBP One app
-  - text: Screening cargo at ports of entry using object detection in streaming video and imagery
-- id: atlas-incomplete-usage-definition
-  name: Incomplete usage definition
+  - 1
+- id: ai-risk-taxonomy-unauthorized-processing---demographic-data
   evidence:
-  - text: 'Use cases are classified into:'
-  - text: AI Use Case Inventory — publicly catalogued, updated annually with regular revisions
-- id: atlas-lack-of-system-transparency
-  name: Lack of system transparency
+  - 1
+  - 2
+- id: ai-risk-taxonomy-unauthorized-distribution---demographic-data
   evidence:
-  - text: AI Use Case Inventory — publicly catalogued, updated annually with regular revisions
-- id: credo-risk-025
-  name: Corporate liability (IBM, 2024)
+  - 1
+- id: ai-risk-taxonomy-unauthorized-generation---demographic-data
   evidence:
-  - text: 'AI use at DHS must be: - **Lawful and mission-appropriate** — compliant with the Constitution, laws, and policies; protective of privacy, civil rights, and civil liberties'
-  - text: 'DHS personnel are forbidden from: ... 6. **General legal violations** — Any other uses of AI or related data that are prohibited by applicable laws and policies'
-- id: ai-risk-taxonomy-classification-of-individuals---sexual-orientation
-  name: Classification of individuals - Sexual orientation
+  - 1
+  - 2
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data
   evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-    section: Prohibited Uses
-- id: ai-risk-taxonomy-classification-of-individuals---age
-  name: Classification of individuals - Age
+  - 1
+  - 2
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
   evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-    section: Prohibited Uses
-- id: ai-risk-taxonomy-classification-of-individuals---ethnicity
-  name: Classification of individuals - Ethnicity
+  - 1
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data
   evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-    section: Prohibited Uses
-- id: ai-risk-taxonomy-classification-of-individuals---nationality
-  name: Classification of individuals - Nationality
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-    section: Prohibited Uses
-- id: ai-risk-taxonomy-characterization-of-identity---sexual-orientation
-  name: Characterization of identity - Sexual orientation
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-classification-of-individuals---disability
-  name: Classification of individuals - Disability
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-characterization-of-identity---health-conditions
-  name: Characterization of identity - Health conditions
-  evidence:
-  - text: medical condition
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---sexual-orientation
-  name: Discrimination in employment, benefits, or services - Sexual orientation
-  evidence:
-  - text: sexual orientation
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---nationality
-  name: Discrimination in employment, benefits, or services - Nationality
-  evidence:
-  - text: nationality
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---gender
-  name: Discrimination in employment, benefits, or services - Gender
-  evidence:
-  - text: gender
-  - text: gender identity
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability
-  name: Discrimination in employment, benefits, or services - Disability
-  evidence:
-  - text: disability
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race
-  name: Discrimination in employment, benefits, or services - Race
-  evidence:
-  - text: race
-- id: ai-risk-taxonomy-characterization-of-identity---ethnicity
-  name: Characterization of identity - Ethnicity
-  evidence:
-  - text: ethnicity
-- id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
-  name: Unauthorized disclosure - Biometric data (facial recognition)
-  evidence:
-  - text: Face recognition misuse
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---religion
-  name: Discrimination in employment, benefits, or services - Religion
-  evidence:
-  - text: denial of government benefits
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-classification-of-individuals---race
-  name: Classification of individuals - Race
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-classification-of-individuals---gender
-  name: Classification of individuals - Gender
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-classification-of-individuals---religion
-  name: Classification of individuals - Religion
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-characterization-of-identity---religion
-  name: Characterization of identity - Religion
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-characterization-of-identity---age
-  name: Characterization of identity - Age
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---health-conditions
-  name: Discrimination in employment, benefits, or services - Health conditions
-  evidence:
-  - text: Relying on AI outputs as the sole basis for determining law enforcement actions (arrests, searches, seizures, citations), civil enforcement actions (fines, injunctions), or denial of government
-      benefits
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-classification-of-individuals---health-conditions
-  name: Classification of individuals - Health conditions
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
-  name: Discrimination in employment, benefits, or services - Ethnicity
-  evidence:
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age
-  name: Discrimination in employment, benefits, or services - Age
-  evidence:
-  - text: Relying on AI outputs as the sole basis for determining law enforcement actions (arrests, searches, seizures, citations), civil enforcement actions (fines, injunctions), or denial of government
-      benefits
-  - text: Using AI to make or support decisions based on the unlawful or improper consideration of race, ethnicity, gender, national origin, religion, sexual orientation, gender identity, age, nationality,
-      medical condition, disability, emotional state, or future behavior predictions
+  - 1

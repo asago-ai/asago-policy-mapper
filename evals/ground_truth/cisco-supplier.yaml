@@ -1,58 +1,289 @@
 risks:
+- id: ai-risk-taxonomy-unauthorized-disclosure
+  name: Unauthorized disclosure
+  evidence:
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: '''Process'' and any other form of the verb ''Process'' means any operation
+      or set of operations that is performed upon Protected Data, whether or not by
+      automatic means, such as collection, recording, securing, organization, storage,
+      adaptation or alteration, access to, retrieval, consultation, use, disclosure
+      by transmission, dissemination or otherwise making available, alignment or combination,
+      blocking, erasure, or destruction.'
+    section: 3. Definitions
+- id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
+  name: Unauthorized disclosure - PII (Personal Identifiable Information)
+  evidence:
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: ai-risk-taxonomy-unauthorized-processing
+  name: Unauthorized processing
+  evidence:
+  - text: '''Process'' and any other form of the verb ''Process'' means any operation
+      or set of operations that is performed upon Protected Data, whether or not by
+      automatic means, such as collection, recording, securing, organization, storage,
+      adaptation or alteration, access to, retrieval, consultation, use, disclosure
+      by transmission, dissemination or otherwise making available, alignment or combination,
+      blocking, erasure, or destruction.'
+    section: 3. Definitions
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
+  name: Unauthorized processing - PII (Personal Identifiable Information)
+  evidence:
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: '''Personal Data'' means any information that is about, or can be related
+      to, an identifiable individual. It includes any information that can be linked
+      to an individual or used to directly or indirectly identify an individual, natural
+      person. Personal Data shall be considered Confidential Information regardless
+      of the source. Personal Data is Protected Data.'
+    section: 3. Definitions
 - id: atlas-confidential-information-in-data
   name: Confidential information in data
   evidence:
-  - text: '''Protected Data'' means Administrative Data, Confidential Information, Customer Data, Financing Data, Support Data, Telemetry Data, Personal Data, and Sensitive Personal Data.'
-    section: 3. Definitions
-    page: 2
-  - text: '''Confidential Information'' means any Customer Data, confidential information, and/or materials relating to the business, products, customers or employees of Cisco'
-    section: 3. Definitions
-    page: 2
-- id: atlas-data-usage
-  name: Data usage restrictions
-  evidence:
-  - text: Supplier is not permitted to Process Protected Data for training, retraining or improving Artificial Intelligence or Machine Learning technologies without Cisco's express written permission.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
     section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
-    page: 1
-- id: atlas-legal-accountability
-  name: Legal accountability
-  evidence:
-  - text: it is required to have an AI/ML governance program in place, with defined policies and procedures, that meets or exceeds current best industry standards.
-    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
-    page: 1
-  - text: Cisco reserves the right to audit Supplier's AI/ML governance program
-    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
-    page: 1
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: '''Protected Data'' means Administrative Data, Confidential Information,
+      Customer Data, Financing Data, Support Data, Telemetry Data, Personal Data,
+      and Sensitive Personal Data.'
+    section: 3. Definitions
 - id: atlas-data-acquisition
   name: Data acquisition restrictions
   evidence:
-  - text: Supplier is not permitted to Process Protected Data for training, retraining or improving Artificial Intelligence or Machine Learning technologies without Cisco's express written permission.
-- id: atlas-model-usage-rights
-  name: Model usage rights restrictions
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+- id: atlas-data-usage
+  name: Data usage restrictions
   evidence:
-  - text: Supplier is not permitted to Process Protected Data for training, retraining or improving Artificial Intelligence or Machine Learning technologies without Cisco's express written permission.
-- id: credo-risk-046
-  name: Governance failures (Slattery et al., 2024)
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: atlas-data-usage-rights
+  name: Data usage rights restrictions
   evidence:
-  - text: it is required to have an AI/ML governance program in place, with defined policies and procedures, that meets or exceeds current best industry standards.
-  - text: Cisco reserves the right to audit Supplier's AI/ML governance program before deciding whether to grant the requested permission and on a regular basis
-- id: mit-ai-risk-subdomain-6.5
-  name: Governance failure
-  evidence:
-  - text: it is required to have an AI/ML governance program in place, with defined policies and procedures, that meets or exceeds current best industry standards.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
 - id: atlas-exposing-personal-information
   name: Exposing personal information
   evidence:
-  - text: 3.10. 'Personal Data' means any information that is about, or can be related to, an identifiable individual. It includes any information that can be linked to an individual or used to directly
-      or indirectly identify an individual, natural person. Personal Data shall be considered Confidential Information regardless of the source. Personal Data is Protected Data.
-- id: atlas-reidentification
-  name: Reidentification
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: atlas-legal-accountability
+  name: Legal accountability
   evidence:
-  - text: 3.10. 'Personal Data' means any information that is about, or can be related to, an identifiable individual. It includes any information that can be linked to an individual or used to directly
-      or indirectly identify an individual, natural person.
+  - text: If Supplier seeks permission according to the above section 1.1., Supplier
+      shall provide Cisco with all information and assistance reasonably required
+      by Cisco to (i) comply with Applicable Laws, and (ii) perform all types of assessments
+      and related diligence that Cisco deems necessary.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier shall provide Cisco with all information and assistance reasonably
+      required by Cisco to (i) comply with Applicable Laws, and (ii) perform all types
+      of assessments and related diligence that Cisco deems necessary.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: atlas-personal-information-in-data
+  name: Personal information in data
+  evidence:
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: '''Personal Data'' means any information that is about, or can be related
+      to, an identifiable individual. ... Personal Data is Protected Data.'
+    section: 3. Definitions
+- id: credo-risk-005
+  name: Lack of training data transparency
+  evidence:
+  - text: Supplier shall provide Cisco with all information and assistance reasonably
+      required by Cisco to (i) comply with Applicable Laws, and (ii) perform all types
+      of assessments and related diligence that Cisco deems necessary.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: credo-risk-023
+  name: Regulatory compliance
+  evidence:
+  - text: Supplier shall provide Cisco with all information and assistance reasonably
+      required by Cisco to (i) comply with Applicable Laws, and (ii) perform all types
+      of assessments and related diligence that Cisco deems necessary.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier shall provide Cisco with all information and assistance reasonably
+      required by Cisco to (i) comply with Applicable Laws, and (ii) perform all types
+      of assessments and related diligence that Cisco deems necessary.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: '''Applicable Laws'' means any applicable supranational, national, federal,
+      state, provincial, or local law, ordinance, statute, by-law, regulation, order,
+      regulatory policy...'
+    section: 3. Definitions
+- id: credo-risk-025
+  name: Corporate liability
+  evidence:
+  - text: If Supplier seeks permission according to the above section 1.1., Cisco
+      reserves the right to audit Supplier's AI/ML governance program before deciding
+      whether to grant the requested permission and on a regular basis (with a notice
+      period of 14 days) after a permission has been granted.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+  - text: If Supplier is using or intends to use Artificial Intelligence and/or Machine
+      Learning technologies in the course of Performing, it is required to have an
+      AI/ML governance program in place, with defined policies and procedures, that
+      meets or exceeds current best industry standards.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: If Supplier is using or intends to use Artificial Intelligence and/or Machine
+      Learning technologies in the course of Performing, it is required to have an
+      AI/ML governance program in place, with defined policies and procedures, that
+      meets or exceeds current best industry standards.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+  - text: Cisco reserves the right to audit Supplier's AI/ML governance program before
+      deciding whether to grant the requested permission and on a regular basis (with
+      a notice period of 14 days) after a permission has been granted.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+  - text: Cisco reserves the right to audit Supplier's AI/ML governance program before
+      deciding whether to grant the requested permission and on a regular basis (with
+      a notice period of 14 days) after a permission has been granted.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+- id: credo-risk-036
+  name: Compromised personally identifiable information
+  evidence:
+  - text: '''Personal Data'' means any information that is about, or can be related
+      to, an identifiable individual. It includes any information that can be linked
+      to an individual or used to directly or indirectly identify an individual, natural
+      person. Personal Data shall be considered Confidential Information regardless
+      of the source. Personal Data is Protected Data.'
+    section: 3. Definitions
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: credo-risk-037
+  name: Compromised sensitive information
+  evidence:
+  - text: '''Sensitive Personal Data'' refers to sensitive personal information, special
+      categories of personal data, and other similar categories of Personal Data that
+      are afforded a higher level of protection under Applicable Laws.'
+    section: 3. Definitions
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: credo-risk-038
+  name: Compromised confidential information
+  evidence:
+  - text: '''Confidential Information'' means any Customer Data, confidential information,
+      and/or materials relating to the business, products, customers or employees
+      of Cisco and includes, without limitation, trade secrets, know-how, inventions,
+      techniques, processes, programs, schematics, software source documents, data,
+      customer lists, financial information, pricing, product development, sales and
+      marketing plans, or information that the Supplier knows or has reason to know
+      is confidential, highly confidential, restricted, proprietary, or trade secret
+      information obtained by Supplier from Cisco or at the request or direction of
+      Cisco in the course of Performing...'
+    section: 3. Definitions
+  - text: '''Confidential Information'' means any Customer Data, confidential information,
+      and/or materials relating to the business, products, customers or employees
+      of Cisco and includes, without limitation, trade secrets, know-how, inventions,
+      techniques, processes, programs, schematics, software source documents, data,
+      customer lists, financial information, pricing, product development, sales and
+      marketing plans...'
+    section: 3. Definitions
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: credo-risk-046
+  name: Governance failures
+  evidence:
+  - text: If Supplier is using or intends to use Artificial Intelligence and/or Machine
+      Learning technologies in the course of Performing, it is required to have an
+      AI/ML governance program in place, with defined policies and procedures, that
+      meets or exceeds current best industry standards.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+  - text: If Supplier is using or intends to use Artificial Intelligence and/or Machine
+      Learning technologies in the course of Performing, it is required to have an
+      AI/ML governance program in place, with defined policies and procedures, that
+      meets or exceeds current best industry standards.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+  - text: it is required to have an AI/ML governance program in place, with defined
+      policies and procedures, that meets or exceeds current best industry standards.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
 - id: mit-ai-risk-subdomain-2.1
-  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive information
+  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive
+    information
   evidence:
-  - text: 3.10. 'Personal Data' means any information that is about, or can be related to, an identifiable individual. It includes any information that can be linked to an individual or used to directly
-      or indirectly identify an individual, natural person.
-  - text: Personal Data shall be considered Confidential Information regardless of the source. Personal Data is Protected Data.
+  - text: '''Sensitive Personal Data'' refers to sensitive personal information, special
+      categories of personal data, and other similar categories of Personal Data that
+      are afforded a higher level of protection under Applicable Laws.'
+    section: 3. Definitions
+  - text: '''Sensitive Personal Data'' refers to sensitive personal information, special
+      categories of personal data, and other similar categories of Personal Data that
+      are afforded a higher level of protection under Applicable Laws.'
+    section: 3. Definitions
+  - text: Supplier is not permitted to Process Protected Data for training, retraining
+      or improving Artificial Intelligence or Machine Learning technologies without
+      Cisco's express written permission.
+    section: 1. Use of Protected Data for Artificial Intelligence and Machine Learning.
+- id: mit-ai-risk-subdomain-6.5
+  name: Governance failure
+  evidence:
+  - text: If Supplier is using or intends to use Artificial Intelligence and/or Machine
+      Learning technologies in the course of Performing, it is required to have an
+      AI/ML governance program in place, with defined policies and procedures, that
+      meets or exceeds current best industry standards.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+  - text: If Supplier is using or intends to use Artificial Intelligence and/or Machine
+      Learning technologies in the course of Performing, it is required to have an
+      AI/ML governance program in place, with defined policies and procedures, that
+      meets or exceeds current best industry standards.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.
+  - text: Cisco reserves the right to audit Supplier's AI/ML governance program before
+      deciding whether to grant the requested permission and on a regular basis (with
+      a notice period of 14 days) after a permission has been granted.
+    section: 2. Supplier's Use of Artificial Intelligence and Machine Learning.

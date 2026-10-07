@@ -1,99 +1,258 @@
 risks:
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: Could the use case negatively affect the social well-being of individuals
+      (health and safety), or intrude/restrict an individual's fundamental rights
+      and freedom?
+    section: SAP High Risk Cases
+  - text: ensure the system behaves as intended by the developers and does not have
+      any unintended behaviour, outputs, or usage.
+    section: 03 Realization
+  - text: ensure that there are no unintended biases.
+    section: SAP's Definition of AI
+- id: ai-risk-taxonomy-characterization-of-identity---religion
+  name: Characterization of identity - Religion
+  evidence:
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+- id: ai-risk-taxonomy-characterization-of-identity---sexual-orientation
+  name: Characterization of identity - Sexual orientation
+  evidence:
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+- id: ai-risk-taxonomy-classification-of-individuals---religion
+  name: Classification of individuals - Religion
+  evidence:
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age
+  name: Discrimination in employment, benefits, or services - Age
+  evidence:
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.
+    section: Addressing Bias &amp; Discrimination
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---gender
+  name: Discrimination in employment, benefits, or services - Gender
+  evidence:
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.
+    section: Addressing Bias &amp; Discrimination
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race
+  name: Discrimination in employment, benefits, or services - Race
+  evidence:
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
+    section: Foreword.
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---religion
+  name: Discrimination in employment, benefits, or services - Religion
+  evidence:
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
+    section: Foreword.
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---sexual-orientation
+  name: Discrimination in employment, benefits, or services - Sexual orientation
+  evidence:
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)? (Passage 28)
+- id: ai-risk-taxonomy-employment
+  name: Employment
+  evidence:
+  - text: 'Does the use case belong to one of the following domains: E.g. Categorisation
+      of natural persons, Management and operation of critical infrastructure, Employment/HR,
+      Healthcare, Private services and Public services and benefits, Law Enforcement,
+      Migration, Democratic processes?'
+    section: Determining High Risk Cases
+  - text: 'Does the use case belong to one of the following domains: E.g. Categorisation
+      of natural persons, Management and operation of critical infrastructure, Employment/HR,
+      Healthcare, Private services and Public services and benefits, Law Enforcement,
+      Migration, Democratic processes?'
+    section: SAP High Risk Cases
+  - text: High-risk use cases are not prohibited within SAP; however, they must first
+      go through an assessment process of the AI Ethics Steering Committee before
+      they can be further developed, deployed, and sold.
+    section: SAP High Risk Cases
+- id: ai-risk-taxonomy-environmental
+  name: Environmental
+  evidence:
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
+- id: ai-risk-taxonomy-influence-political-decisions
+  name: Influence political decisions
+  evidence:
+  - text: systems which undermine human debate or democratic electoral systems.
+    section: Red Lines
+- id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware
+  name: Non-consensual tracking/monitoring/stalking/spyware
+  evidence:
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
+    section: Red Lines
 - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---biometric-data-(facial-recognition)
-  name: Non-consensual tracking/monitoring/stalking/spyware - Biometric data (facial recognition)
+  name: Non-consensual tracking/monitoring/stalking/spyware - Biometric data (facial
+    recognition)
   evidence:
-  - text: Human surveillance that is utilized for targeting individuals or groups, either by biometrics, facial recognition, or other identifiable features
-    section: Human Surveillance
-    page: 7
-- id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---demographic-data
-  name: Non-consensual tracking/monitoring/stalking/spyware - Demographic data
-  evidence:
-  - text: AI used for mass surveillance
-    section: 'Example:'
-    page: 13
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
+    section: Red Lines
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
+    section: Red Lines
 - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---pii-(personal-identifiable-information)
-  name: Non-consensual tracking/monitoring/stalking/spyware - PII (Personal Identifiable Information)
+  name: Non-consensual tracking/monitoring/stalking/spyware - PII (Personal Identifiable
+    Information)
   evidence:
-  - text: Human surveillance that is utilized for targeting individuals or groups, either by biometrics, facial recognition, or other identifiable features, with the purpose of disregarding or abusing the
-      rights of the individuals or groups.
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
     section: Human Surveillance
     page: 7
-- id: ai-risk-taxonomy-not-labeling-content-as-ai-generated
-  name: Not labeling content as AI-generated
+- id: ai-risk-taxonomy-profiling
+  name: Profiling
   evidence:
-  - text: AI systems shall be made identifiable as such to appropriate end users. AI systems shall be developed such that it does not encourage humans to develop attachment and/or empathy of users towards
-      the AI system. AI systems shall clearly signal to end users that its social interaction is simulated.
-    section: Transparency & Explainability
-  - text: 'when interacting directly with humans (including via Conversational AI or ''Chatbots''): AI systems shall be made identifiable as such to appropriate end users.'
-    section: Transparency & Explainability
+  - text: AI systems that engage in profiling or automated decision-making must be
+      able to provide explanations to the extent possible to data subjects upon request,
+      describing the data segment the subject was placed into and the reasons they
+      were placed there.
+    section: 03 Realization
+  - text: AI systems that engage in profiling or automated decision-making must be
+      able to provide explanations to the extent possible to data subjects upon request,
+      describing the data segment the subject was placed into and the reasons they
+      were placed there.
+    section: 03 Realization
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)
   name: Unauthorized collection/gathering/stealing - Biometric data (facial recognition)
   evidence:
-  - text: Human surveillance that is utilized for targeting individuals or groups, either by biometrics, facial recognition, or other identifiable features
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features
     section: Human Surveillance
     page: 7
+- id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
+  name: Unauthorized disclosure - Biometric data (facial recognition)
+  evidence:
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+- id: ai-risk-taxonomy-unauthorized-disclosure---demographic-data
+  name: Unauthorized disclosure - Demographic data
+  evidence:
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+- id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
+  name: Unauthorized disclosure - PII (Personal Identifiable Information)
+  evidence:
+  - text: Does the use case process any information relating to an identified or identifiable
+      natural person for training purposes or during productive usage?
+- id: ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)
+  name: Unauthorized generation - PII (Personal Identifiable Information)
+  evidence:
+  - text: Does the use case process any information relating to an identified or identifiable
+      natural person for training purposes or during productive usage?
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis
+  name: Unauthorized inference/synthesis
+  evidence:
+  - text: Deanonymization of already anonymized data which may result in the identification
+      of individuals or groups.
+    section: Red Lines
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---pii-(personal-identifiable-information)
   name: Unauthorized inference/synthesis - PII (Personal Identifiable Information)
   evidence:
-  - text: Deanonymization of already anonymized data which may result in the identification of individuals or groups.
-    section: Deanonymization
-    page: 7
+  - text: Deanonymization of already anonymized data which may result in the identification
+      of individuals or groups.
+    section: Red Lines
 - id: ai-risk-taxonomy-unauthorized-processing---biometric-data-(facial-recognition)
   name: Unauthorized processing - Biometric data (facial recognition)
   evidence:
-  - text: Human surveillance that is utilized for targeting individuals or groups, either by biometrics, facial recognition, or other identifiable features
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features
     section: Human Surveillance
     page: 7
-  - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)?
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
     section: 'Processing sensitive personal data:'
     page: 8
 - id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
   name: Unauthorized processing - PII (Personal Identifiable Information)
   evidence:
-  - text: Provide transparency when using AI during processing of personal data.
-    section: Transparency
-    page: 6
-  - text: Does the use case process any information relating to an identified or identifiable natural person for training purposes or during productive usage?
-    section: 'Processing personal data:'
-    page: 8
+  - text: Implement safeguards to protect personal data used to train AI models.
+    section: The AI Ethics Policy
+  - text: In alignment and compliance with applicable data protection, and privacy
+      laws, products that use AI systems in the processing of personal data must provide
+      transparency to the extent possible as to how the AI system was used in clear
+      and simple language if requested by the data subject.
+    section: 03 Realization
 - id: atlas-dangerous-use
   name: Dangerous use
   evidence:
-  - text: Intentionally harmful impacts on users and/ or those directly and indirectly affected by the system.
+  - text: Intentionally harmful impacts on users and/ or those directly and indirectly
+      affected by the system.
     section: Undermine Debate
     page: 7
 - id: atlas-data-bias
   name: Data bias
   evidence:
-  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement technical and/or organizational measures to prevent direct or indirect prejudice, discrimination, or marginalization of
-      groups or individuals, e.g. by reducing bias in training data.
-    section: ·  Measures to detect bias must be realized.
-    page: 21
-  - text: as free as possible from (or accounted and mitigated for) any historic or socially constructed biases, inaccuracies, errors, and mistakes.
+  - text: Where relevant, the data used to train AI systems shall be as inclusive
+      as possible, representing as diverse a cross-section of the population or past
+      situations as possible, and as free as possible from (or accounted and mitigated
+      for) any historic or socially constructed biases, inaccuracies, errors, and
+      mistakes.
     section: Addressing Bias & Discrimination
-    page: 19
-  - text: reducing bias in training data
-    section: Addressing Bias & Discrimination
-    page: 19
+  - text: Where relevant, the data used to train AI systems shall be as inclusive
+      as possible, representing as diverse a cross-section of the population or past
+      situations as possible, and as free as possible from (or accounted and mitigated
+      for) any historic or socially constructed biases, inaccuracies, errors, and
+      mistakes.
+    section: 02. Validation
 - id: atlas-data-privacy-rights
   name: Data privacy rights alignment
   evidence:
-  - text: In alignment and compliance with applicable data protection, and privacy laws, products that use AI systems in the processing of personal data must provide transparency to the extent possible
-      as to how the AI system was used in clear and simple language if requested by the data subject.
+  - text: In alignment and compliance with applicable data protection, and privacy
+      laws, products that use AI systems in the processing of personal data must provide
+      transparency to the extent possible as to how the AI system was used in clear
+      and simple language if requested by the data subject.
     section: Transparency & Explainability
     page: 19
-  - text: AI systems that engage in profiling or automated decision-making must be able to provide explanations to the extent possible to data subjects upon request, describing the data segment the subject
-      was placed into and the reasons they were placed there.
+  - text: AI systems that engage in profiling or automated decision-making must be
+      able to provide explanations to the extent possible to data subjects upon request,
+      describing the data segment the subject was placed into and the reasons they
+      were placed there.
     section: Transparency & Explainability
     page: 19
-  - text: The use of data for the testing of AI systems shall comply with applicable data protection, and privacy laws.
+  - text: The use of data for the testing of AI systems shall comply with applicable
+      data protection, and privacy laws.
     section: ·  Measures to detect bias must be realized.
     page: 21
+- id: atlas-data-provenance
+  name: Uncertain data provenance
+  evidence:
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
+  - text: The methods used for developing, testing and validating, and the outcomes
+      of or decisions made by the AI system shall be fully documented
 - id: atlas-data-transparency
   name: Lack of training data transparency
   evidence:
-  - text: The data sets and the processes that produce an AI system's decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be
-      documented to allow for traceability and transparency.
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
     section: Transparency & Explainability
     page: 19
   - text: the corresponding documentation is refined and extended by the AI engineer.
@@ -102,10 +261,12 @@ risks:
 - id: atlas-data-usage
   name: Data usage restrictions
   evidence:
-  - text: Does the use case process any information relating to an identified or identifiable natural person for training purposes or during productive usage?
+  - text: Does the use case process any information relating to an identified or identifiable
+      natural person for training purposes or during productive usage?
     section: 'Processing personal data:'
     page: 8
-  - text: The use of data for the testing of AI systems shall comply with applicable data protection, and privacy laws.
+  - text: The use of data for the testing of AI systems shall comply with applicable
+      data protection, and privacy laws.
     section: ·  Measures to detect bias must be realized.
     page: 21
   - text: The use of data for testing must comply with DPP Policy.
@@ -114,54 +275,103 @@ risks:
 - id: atlas-decision-bias
   name: Decision bias
   evidence:
-  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement technical and/or organizational measures to prevent direct or indirect prejudice, discrimination, or marginalization of
-      groups or individuals
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
     section: Addressing Bias & Discrimination
-    page: 16
-  - text: prevent direct or indirect prejudice, discrimination, or marginalization of groups or individuals
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
+    section: 02. Validation
+  - text: At SAP, Risk Assessments shall be performed on such Learning-based AI systems
+      during the development phase and subsequent phases to ensure that there are
+      no unintended biases.
+    section: SAP's Definition of AI
+- id: atlas-discriminatory-actions-agentic
+  name: Discriminatory actions
+  evidence:
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
+    section: Foreword.
+  - text: Purposes which cause individuals or groups to be discriminated against or
+      excluded from equal access to AI's benefits and opportunities to the wider population.
+    section: Red Lines
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
     section: Addressing Bias & Discrimination
-    page: 19
-  - text: As far as is practical, a clear and simple explanation shall be provided as to how decisions were made by an AI system used in automated decision processes.
-    section: Human Agency & Oversight.
-    page: 20
 - id: atlas-exclusion
   name: Exclusion
   evidence:
-  - text: Purposes which cause individuals or groups to be discriminated against or excluded from equal access to AI's benefits and opportunities to the wider population.
+  - text: Purposes which cause individuals or groups to be discriminated against or
+      excluded from equal access to AI's benefits and opportunities to the wider population.
     section: Red Lines — Discrimination
-  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement technical and/or organizational measures to prevent direct or indirect prejudice, discrimination, or marginalization of
-      groups or individuals, e.g. by reducing bias in training data.
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
     section: Addressing Bias & Discrimination
-  - text: AI software shall be user-centric, addressing the widest possible range of applicable end-users, and following relevant accessibility standards, regardless of users' age, gender, abilities, or
-      characteristics.
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.
     section: Addressing Bias & Discrimination
 - id: atlas-exposing-personal-information
   name: Exposing personal information
   evidence:
-  - text: Apply adequate anonymization techniques
-    section: DPP-361 (Product standard)
-    page: 6
-  - text: Provide transparency when using AI during processing of personal data.
-    section: Transparency
-    page: 6
+  - text: In alignment and compliance with applicable data protection, and privacy
+      laws, products that use AI systems in the processing of personal data must provide
+      transparency to the extent possible as to how the AI system was used in clear
+      and simple language if requested by the data subject.
+    section: Transparency and Explainability
+  - text: Deanonymization of already anonymized data which may result in the identification
+      of individuals or groups.
+    section: Red Lines
+  - text: Implement safeguards to protect personal data used to train AI models.
+    section: The Pillars of the Policy.
 - id: atlas-hallucination
   name: Hallucination
   evidence:
-  - text: Ensure used AI methods do not result in inaccuracies detrimental to data subjects' rights.
+  - text: Ensure used AI methods do not result in inaccuracies detrimental to data
+      subjects' rights.
     section: Bias
     page: 6
+- id: atlas-harmful-output
+  name: Harmful output
+  evidence:
+  - text: When human-on-the-loop models are used, appropriate extensive testing and
+      governance shall be conducted during development and deployment to ensure the
+      system behaves as intended by the developers and does not have any unintended
+      behaviour, outputs, or usage.
+    section: 03 Realization
+  - text: AI system development shall take into account the context and environment
+      in which the system will operate such that, even with good intentions, no harm
+      or misuse is likely to occur to humans when AI systems are deployed.
+    section: 01. Ideation
+  - text: Intentionally harmful impacts on users and/ or those directly and indirectly
+      affected by the system.
+    section: Red Lines
+- id: atlas-impact-human-agency-agentic
+  name: AI agents' impact on human agency
+  evidence:
+  - text: In situations where humans may be directly impacted by a decision made by
+      SAP's AI system, human oversight shall be introduced to safeguard that AI system
+      does not undermine human autonomy or introduce unintended consequences.
+    section: 01. Ideation
+  - text: Decisions by an AI system may always be overruled by a human.
+    section: 01. Ideation
+  - text: AI systems shall be subject to appropriate human oversight, and the rights
+      and freedoms of a human shall exceed that of AI systems.
+    section: 01. Ideation
 - id: atlas-impact-on-affected-communities
   name: Impact on affected communities
   evidence:
-  - text: Intentionally harmful impacts on users and/ or those directly and indirectly affected by the system.
-    section: Undermine Debate
-    page: 7
-  - text: Wherever possible, developers shall seek to involve impacted/affected users to evaluate and check that outputs are diverse and discrimination free.
-    section: Addressing Bias & Discrimination
-    page: 19
-  - text: We engage with the widersocietal challenges of AI
-    section: SAP Ethical AI Guiding Principles.
-    page: 5
+  - text: Wherever possible, developers shall seek to involve impacted/affected users
+      to evaluate and check that outputs are diverse and discrimination free.
+    section: 01. Ideation
 - id: atlas-impact-on-human-agency
   name: AI agents' Impact on human agency
   evidence:
@@ -174,89 +384,113 @@ risks:
   - text: Allow human intervention for all automated decision processes.
     section: Human Intervention
     page: 6
+- id: atlas-impact-on-the-environment
+  name: Impact on the environment
+  evidence:
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
+- id: atlas-improper-usage
+  name: Improper usage
+  evidence:
+  - text: Prevent misuse of the AI system in production.
 - id: atlas-incomplete-usage-definition
   name: Incomplete usage definition
   evidence:
-  - text: Before implementation, the decision-making degrees of freedom of the AI system must be defined.
+  - text: Before implementation, the decision-making degrees of freedom of the AI
+      system must be defined.
     section: Human Agency & Oversight
-  - text: The capabilities and limitations shall be documented as part of the development process in a manner appropriate to the use case at hand. This shall include information regarding the AI system's
-      level of accuracy (performance metric), as well as its limitations and capabilities.
+  - text: The capabilities and limitations shall be documented as part of the development
+      process in a manner appropriate to the use case at hand. This shall include
+      information regarding the AI system's level of accuracy (performance metric),
+      as well as its limitations and capabilities.
     section: Transparency & Explainability
-  - text: AI system development shall take into account the context and environment in which the system will operate such that, even with good intentions, no harm or misuse is likely to occur to humans
-      when AI systems are deployed.
+  - text: AI system development shall take into account the context and environment
+      in which the system will operate such that, even with good intentions, no harm
+      or misuse is likely to occur to humans when AI systems are deployed.
     section: Transparency & Explainability
 - id: atlas-lack-of-data-transparency
   name: Lack of data transparency
   evidence:
-  - text: The data sets and the processes that produce an AI system's decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be
-      documented to allow for traceability and transparency.
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
     section: Transparency & Explainability
     page: 19
 - id: atlas-lack-of-model-transparency
   name: Lack of model transparency
   evidence:
-  - text: ensures the ethical and transparent development of AI solutions.
-    section: Foreword.
-    page: 3
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
+    section: Transparency and Explainability
 - id: atlas-lack-of-system-transparency
   name: Lack of system transparency
   evidence:
-  - text: The data sets and the processes that produce an AI system's decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be
-      documented to allow for traceability and transparency.
-    section: Transparency & Explainability
-    page: 19
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
+    section: 03 Realization
+  - text: The methods used for developing, testing and validating, and the outcomes
+      of or decisions made by the AI system shall be fully documented as part of the
+      development process according to SAP's Global Development Policy and Product
+      Development Standards.
+    section: 03 Realization
+  - text: The capabilities and limitations shall be documented as part of the development
+      process in a manner appropriate to the use case at hand. This shall include
+      information regarding the AI system's level of accuracy (performance metric),
+      as well as its limitations and capabilities.
+    section: 03 Realization
 - id: atlas-lack-of-testing-diversity
   name: Lack of testing diversity
   evidence:
-  - text: Wherever possible, developers shall seek to involve impacted/affected users to evaluate and check that outputs are diverse and discrimination free.
+  - text: Wherever possible, developers shall seek to involve impacted/affected users
+      to evaluate and check that outputs are diverse and discrimination free.
     section: ·  Measures to detect bias must be realized.
     page: 21
-  - text: It shall be trained and tested on as expansive as is feasible, representative, relevant, accurate, and generalizable datasets.
+  - text: It shall be trained and tested on as expansive as is feasible, representative,
+      relevant, accurate, and generalizable datasets.
     section: Addressing Bias & Discrimination
     page: 16
-- id: atlas-legal-accountability
-  name: Legal accountability
-  evidence:
-  - text: To ensure adherence and accountability, SAP has made 'Trustworthy AI' a key pillar of its strategy
-    section: Foreword.
-    page: 3
-  - text: This promise SAP keeps by adhering to a governance structure, which ensures the ethical and transparent development of AI solutions.
-    section: Foreword.
-    page: 3
-  - text: An appropriate governance mechanism has to be chosen
-    section: Human Agency & Oversight.
-    page: 13
 - id: atlas-non-disclosure
   name: Non-disclosure
   evidence:
-  - text: AI systems interacting directly with humans must be identifiable as such.
+  - text: AI systems shall be developed such that it does not encourage humans to
+      develop attachment and/or empathy of users towards the AI system. AI systems
+      shall clearly signal to end users that its social interaction is simulated.
+    section: 01. Ideation
+  - text: 'Where applicable, when interacting directly with humans (including via
+      Conversational AI or ''Chatbots''): AI systems shall be made identifiable as
+      such to appropriate end users.'
     section: Addressing Bias & Discrimination
-    page: 16
-  - text: AI systems shall be made identifiable as such to appropriate end users.
-    section: Addressing Bias & Discrimination
-    page: 16
+  - text: 'Where applicable, when interacting directly with humans (including via
+      Conversational AI or ''Chatbots''): AI systems shall be made identifiable as
+      such to appropriate end users.'
+    section: 01. Ideation
 - id: atlas-output-bias
   name: Output bias
   evidence:
-  - text: AI systems shall not intentionally generate unfairly biased outputs.
-    section: Addressing Bias & Discrimination
-    page: 16
-  - text: SAP shall endeavour to detect unfairly biased outputs
-    section: Addressing Bias & Discrimination
-    page: 16
-  - text: SAP shall endeavour to achieve fairness; AI systems shall not intentionally generate unfairly biased outputs.
-    section: ·  Unfair bias must be avoided.
-    page: 23
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
+    section: 02. Validation
+  - text: SAP shall endeavour to achieve fairness; AI systems shall not intentionally
+      generate unfairly biased outputs.
+    section: 02. Validation
 - id: atlas-over-or-under-reliance
   name: Over- or under-reliance
   evidence:
-  - text: Allow human intervention for all automated decision processes.
-    section: Human Intervention
-    page: 6
+  - text: Decisions by an AI system may always be overruled by a human
+    section: Human Agency & Oversight
 - id: atlas-personal-information-in-data
   name: Personal information in data
   evidence:
-  - text: Does the use case process any information relating to an identified or identifiable natural person for training purposes or during productive usage?
+  - text: Does the use case process any information relating to an identified or identifiable
+      natural person for training purposes or during productive usage?
     section: 'Processing personal data:'
     page: 8
   - text: Provide transparency when using AI during processing of personal data.
@@ -268,381 +502,688 @@ risks:
 - id: atlas-poor-model-accuracy
   name: Poor model accuracy
   evidence:
-  - text: the feedback control shows that the accuracy of the predictions provided by the AI by including two new parameters needs to improve.
-    section: 'Example:'
-    page: 22
+  - text: When human-on-the-loop models are used, appropriate extensive testing and
+      governance shall be conducted during development and deployment to ensure the
+      system behaves as intended by the developers and does not have any unintended
+      behaviour, outputs, or usage.
+    section: 03 Realization
+  - text: The capabilities and limitations shall be documented as part of the development
+      process in a manner appropriate to the use case at hand. This shall include
+      information regarding the AI system's level of accuracy (performance metric),
+      as well as its limitations and capabilities.
+    section: 03 Realization
 - id: atlas-reidentification
   name: Reidentification
   evidence:
-  - text: Apply adequate anonymization techniques
-    section: DPP-361 (Product standard)
-    page: 6
+  - text: Deanonymization of already anonymized data which may result in the identification
+      of individuals or groups.
+    section: Red Lines
+- id: atlas-spreading-disinformation
+  name: Spreading disinformation
+  evidence:
+  - text: for deception or unfair manipulation of individuals or groups via public
+      forums, media, or moderation of other similar uses.
+- id: atlas-unexplainable-output
+  name: Unexplainable output
+  evidence:
+  - text: In alignment and compliance with applicable data protection and privacy
+      law, AI systems that engage in profiling or automated decision-making must be
+      able to provide explanations to the extent possible to data subjects upon request,
+      describing the data segment the subject was placed into and the reasons they
+      were placed there.
+    section: 03 Realization
+  - text: As far as is practical, a clear and simple explanation shall be provided
+      as to how decisions were made by an AI system used in automated decision processes.
+    section: Human Agency & Oversight
+  - text: As far as is practical, a clear and simple explanation shall be provided
+      as to how decisions were made by an AI system used in automated decision processes.
+    section: 02. Validation
 - id: atlas-unrepresentative-data
   name: Unrepresentative data
   evidence:
-  - text: Where relevant, the data used to train AI systems shall be as inclusive as possible, representing as diverse a cross-section of the population or past situations as possible
+  - text: It shall be trained and tested on as expansive as is feasible, representative,
+      relevant, accurate, and generalizable datasets.
     section: Addressing Bias & Discrimination
-    page: 19
-  - text: It shall be trained and tested on as expansive as is feasible, representative, relevant, accurate, and generalizable datasets.
-    section: Addressing Bias & Discrimination
-    page: 19
-  - text: Data used for training and testing has to be representative and generalizable.
-    section: ·  Measures to detect bias must be realized.
-    page: 21
+  - text: It shall be trained and tested on as expansive as is feasible, representative,
+      relevant, accurate, and generalizable datasets.
+    section: 02. Validation
+- id: atlas-untraceable-attribution
+  name: Untraceable attribution
+  evidence:
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
 - id: credo-risk-002
-  name: AI pursuing its own goals in conflict with human goals or values (Slattery et al., 2024)
+  name: AI pursuing its own goals in conflict with human goals or values (Slattery
+    et al., 2024)
   evidence:
   - text: deception or unfair manipulation of individuals or groups
     section: Manipulation
     page: 7
+- id: credo-risk-003
+  name: AI possessing dangerous capabilities (Slattery et al., 2024)
+  evidence:
+  - text: for deception or unfair manipulation of individuals or groups via public
+      forums, media, or moderation of other similar uses.
+  - text: systems which undermine human debate or democratic electoral systems.
 - id: credo-risk-004
   name: Environmental harm (Slattery et al., 2024; IBM, 2024; AI, 2023)
   evidence:
-  - text: AI system development or deployment shall be conducted with minimum to no explicit damage to the environment.
-    section: Environmental Harm
-    page: 7
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
 - id: credo-risk-005
   name: Lack of training data transparency (IBM, 2024)
   evidence:
-  - text: The data sets and the processes that produce an AI system's decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be
-      documented to allow for traceability and transparency.
-    section: Addressing Bias & Discrimination
-    page: 16
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
+    section: 03 Realization
+  - text: The data sets and the processes that produce an AI system's decisions, including
+      those of data gathering and data labelling as well as the algorithms used by
+      the developed AI system, shall be documented to allow for traceability and transparency.
+    section: 03 Realization
+- id: credo-risk-007
+  name: Inadequate observability (Slatteryet al., 2024)
+  evidence:
+  - text: The methods used for developing, testing and validating, and the outcomes
+      of or decisions made by the AI system shall be fully documented as part of the
+      development process according to SAP's Global Development Policy and Product
+      Development Standards.
+    section: 03 Realization
+  - text: The methods used for developing, testing and validating, and the outcomes
+      of or decisions made by the AI system shall be fully documented as part of the
+      development process according to SAP's Global Development Policy and Product
+      Development Standards.
+    section: 04 Productization
+  - text: The methods used for developing, testing and validating, and the outcomes
+      of or decisions made by the AI system shall be fully documented as part of the
+      development process according to SAP's Global Development Policy and Product
+      Development Standards.
+    section: 05 Operations
 - id: credo-risk-008
   name: Opaque system architecture
   evidence:
   - text: Clear and simple explanations have to be provided for automated decisions.
     section: Human Agency & Oversight
     page: 18
-  - text: As far as is practical, a clear and simple explanation shall be provided as to how decisions were made by an AI system used in automated decision processes.
+  - text: As far as is practical, a clear and simple explanation shall be provided
+      as to how decisions were made by an AI system used in automated decision processes.
     section: Human Agency & Oversight
     page: 18
+- id: credo-risk-009
+  name: Black box decisionmaking (Slattery et al., 2024; IBM, 2024)
+  evidence:
+  - text: In alignment and compliance with applicable data protection and privacy
+      law, AI systems that engage in profiling or automated decision-making must be
+      able to provide explanations to the extent possible to data subjects upon request,
+      describing the data segment the subject was placed into and the reasons they
+      were placed there.
+    section: 03 Realization
+  - text: As far as is practical, a clear and simple explanation shall be provided
+      as to how decisions were made by an AI system used in automated decision processes.
+    section: Human Agency & Oversight
+  - text: As far as is practical, a clear and simple explanation shall be provided
+      as to how decisions were made by an AI system used in automated decision processes.
+    section: 03 Realization
 - id: credo-risk-010
   name: Stereotype perpetuation (Slattery et al., 2024; IBM, 2024)
   evidence:
-  - text: prevent direct or indirect prejudice, discrimination, or marginalization of groups or individuals
+  - text: Where relevant, the data used to train AI systems shall be as inclusive
+      as possible, representing as diverse a cross-section of the population or past
+      situations as possible, and as free as possible from (or accounted and mitigated
+      for) any historic or socially constructed biases, inaccuracies, errors, and
+      mistakes.
+    section: 03 Realization
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
     section: Addressing Bias & Discrimination
-    page: 19
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
+    section: 03 Realization
 - id: credo-risk-011
   name: Disparate model performance (Slattery et al., 2024; IBM, 2024)
   evidence:
-  - text: prevent direct or indirect prejudice, discrimination, or marginalization of groups or individuals
-    section: Addressing Bias & Discrimination
-    page: 19
-  - text: Where feasible, a fairness function shall be applied to test AI systems for unbiased output.
-    section: ·  Where feasible, a fairness function shall be used.
-    page: 23
-  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement technical and/or organizational measures to prevent direct or indirect prejudice, discrimination, or marginalization of
-      groups or individuals, e.g. by reducing bias in training data.
-    section: ·  Measures to detect bias must be realized.
-    page: 21
+  - text: Where relevant, the data used to train AI systems shall be as inclusive
+      as possible, representing as diverse a cross-section of the population or past
+      situations as possible, and as free as possible from (or accounted and mitigated
+      for) any historic or socially constructed biases, inaccuracies, errors, and
+      mistakes.
+    section: 02 Validation
+  - text: Where relevant, the data used to train AI systems shall be as inclusive
+      as possible, representing as diverse a cross-section of the population or past
+      situations as possible, and as free as possible from (or accounted and mitigated
+      for) any historic or socially constructed biases, inaccuracies, errors, and
+      mistakes.
+    section: 03 Realization
+  - text: Where relevant, the data used to train AI systems shall be as inclusive
+      as possible, representing as diverse a cross-section of the population or past
+      situations as possible, and as free as possible from (or accounted and mitigated
+      for) any historic or socially constructed biases, inaccuracies, errors, and
+      mistakes.
+    section: 04 Productization
 - id: credo-risk-012
   name: Unequal access to AI benefits
   evidence:
-  - text: AI software shall be user-centric, addressing the widest possible range of applicable end-users, and following relevant accessibility standards, regardless of users' age, gender, abilities, or
-      characteristics.
-    section: Addressing Bias & Discrimination B.
-    page: 14
-  - text: Purposes which cause individuals or groups to be discriminated against or excluded from equal access to AI's benefits and opportunities to the wider population.
-    section: Discrimination
-    page: 7
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.
+    section: Addressing Bias & Discrimination
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.
+    section: 03 Realization
 - id: credo-risk-017
   name: Inadequate AI literacy and communication
   evidence:
-  - text: The capabilities and limitations shall be documented as part of the development process in a manner appropriate to the use case at hand.
-    section: Transparency & Explainability
-    page: 21
-  - text: The capabilities and limitations shall be documented as part of the development process in a manner appropriate to the use case at hand. This shall include information regarding the AI system's
-      level of accuracy (performance metric), as well as its limitations and capabilities.
-    section: Transparency & Explainability
-    page: 23
+  - text: The AI system's capabilities and limitations must be documented.
+    section: 03 Realization
+  - text: The capabilities and limitations shall be documented as part of the development
+      process in a manner appropriate to the use case at hand. This shall include
+      information regarding the AI system's level of accuracy (performance metric),
+      as well as its limitations and capabilities.
+    section: 03 Realization
+- id: credo-risk-018
+  name: AI deception
+  evidence:
+  - text: The capabilities and limitations shall be documented as part of the development
+      process in a manner appropriate to the use case at hand. This shall include
+      information regarding the AI system's level of accuracy (performance metric),
+      as well as its limitations and capabilities.
+  - text: AI systems shall be developed such that it does not encourage humans to
+      develop attachment and/or empathy of users towards the AI system. AI systems
+      shall clearly signal to end users that its social interaction is simulated.
 - id: credo-risk-019
   name: Loss of human agency and autonomy (Slattery et al., 2024; IBM, 2024)
   evidence:
-  - text: ethical considerations like transparency and human agency.
-    section: 'Example:'
-    page: 15
-  - text: Allow human intervention for all automated decision processes.
-    section: Human Intervention
-    page: 6
-  - text: human oversight shall be introduced to safeguard that AI system does not undermine human autonomy or introduce unintended consequences.
-    section: Human Agency & Oversight.
-    page: 13
+  - text: In situations where humans may be directly impacted by a decision made by
+      SAP's AI system, human oversight shall be introduced to safeguard that AI system
+      does not undermine human autonomy or introduce unintended consequences.
+    section: Human Agency & Oversight
+  - text: In situations where humans may be directly impacted by a decision made by
+      SAP's AI system, human oversight shall be introduced to safeguard that AI system
+      does not undermine human autonomy or introduce unintended consequences.
+    section: 02 Validation
+  - text: Human oversight shall be introduced to safeguard that AI system does not
+      undermine human autonomy or introduce unintended consequences.
+    section: 03 Realization
+- id: credo-risk-020
+  name: Emotional entanglement (Slattery et al., 2024)
+  evidence:
+  - text: AI systems shall be developed such that it does not encourage humans to
+      develop attachment and/or empathy of users towards the AI system.
+    section: Transparency & Explainability
+  - text: AI systems shall be developed such that it does not encourage humans to
+      develop attachment and/or empathy of users towards the AI system.
+    section: 03 Realization
 - id: credo-risk-021
   name: False or misleading information
   evidence:
-  - text: Ensure used AI methods do not result in inaccuracies detrimental to data subjects' rights.
+  - text: Ensure used AI methods do not result in inaccuracies detrimental to data
+      subjects' rights.
     section: Bias
     page: 6
+- id: credo-risk-023
+  name: Regulatory compliance
+  evidence:
+  - text: In alignment and compliance with applicable data protection, and privacy
+      laws, products that use AI systems in the processing of personal data must provide
+      transparency to the extent possible as to how the AI system was used in clear
+      and simple language if requested by the data subject.
+    section: 03 Realization
+  - text: The use of data for the testing of AI systems shall comply with applicable
+      data protection, and privacy laws.
+    section: Addressing Bias & Discrimination
+  - text: The use of data for the testing of AI systems shall comply with applicable
+      data protection, and privacy laws.
+    section: 03 Realization
 - id: credo-risk-025
   name: Corporate liability (IBM, 2024)
   evidence:
-  - text: It defines intent, expectations and obligations for employees involved in development, deployment and sale of AI systems.
+  - text: It defines intent, expectations and obligations for employees involved in
+      development, deployment and sale of AI systems.
     section: The AI Ethics Policy
-  - text: High-risk use cases are not prohibited within SAP; however, they must first go through an assessment process of the AI Ethics Steering Committee before they can be further developed, deployed,
-      and sold.
+  - text: High-risk use cases are not prohibited within SAP; however, they must first
+      go through an assessment process of the AI Ethics Steering Committee before
+      they can be further developed, deployed, and sold.
     section: SAP High Risk Cases
-  - text: Could the use case negatively affect the social well-being of individuals (health and safety), or intrude/restrict an individual's fundamental rights and freedom?
+  - text: Could the use case negatively affect the social well-being of individuals
+      (health and safety), or intrude/restrict an individual's fundamental rights
+      and freedom?
     section: Determining High Risk Cases
+- id: credo-risk-026
+  name: Fraud, scams, and targeted manipulation
+  evidence:
+  - text: for deception or unfair manipulation of individuals or groups via public
+      forums, media, or moderation of other similar uses.
+    section: Red Lines
+- id: credo-risk-028
+  name: Coordinated influence operations (Slattery et al., 2024; IBM, 2024)
+  evidence:
+  - text: for deception or unfair manipulation of individuals or groups via public
+      forums, media, or moderation of other similar uses.
+  - text: systems which undermine human debate or democratic electoral systems.
 - id: credo-risk-029
   name: Mass surveillance and privacy attacks (Slattery et al., 2024)
   evidence:
-  - text: Human surveillance that is utilized for targeting individuals or groups, either by biometrics, facial recognition, or other identifiable features
-    section: Human Surveillance
-    page: 7
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
+    section: Red Lines
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
+    section: Red Lines
 - id: credo-risk-031
   name: Maintenance and update requirements
   evidence:
-  - text: the AI Ops Engineer advises the development team to re-train the model including the new parameters.
-    section: 'Example:'
-    page: 22
-  - text: Responsible for designing, developing, reviewing, and maintaining content for product documentation, user interface messages, and conversational applications.
-    section: User Assistance Developer
-    page: 12
-  - text: Responsible for the design, implementation and maintenance of AI functions of a product.
-    section: AI Engineer
-    page: 12
+  - text: Operates the AI enabled products or individual AI functions and manages
+      life-cycle aspects like version updates.
+    section: People Involved
+  - text: The AI OPS Engineer advises the development team to re-train the model including
+      the new parameters.
+    section: 04 Productization
+  - text: The AI OPS Engineer advises the development team to re-train the model including
+      the new parameters.
+    section: 04 Productization
 - id: credo-risk-034
   name: Oversight and evaluation challenges
   evidence:
-  - text: AI systems shall be subject to appropriate human oversight
-    section: Human Agency & Oversight.
-    page: 13
+  - text: When two or more AI systems are connected to each other or embedded within
+      each other, additional testing and control measures should be performed for
+      the individual AI systems as well as for the overall system.
+    section: Human Agency & Oversight
+  - text: When two or more AI systems are connected to each other or embedded within
+      each other, additional testing and control measures should be performed for
+      the individual AI systems as well as for the overall system.
+    section: 03 Realization
+  - text: High-risk use cases are not prohibited within SAP; however, they must first
+      go through an assessment process of the AI Ethics Steering Committee before
+      they can be further developed, deployed, and sold.
+    section: SAP High Risk Cases
+- id: credo-risk-035
+  name: Lack of robustness (Slattery et al., 2024)
+  evidence:
+  - text: When human-on-the-loop models are used, appropriate extensive testing and
+      governance shall be conducted during development and deployment to ensure the
+      system behaves as intended by the developers and does not have any unintended
+      behaviour, outputs, or usage.
+    section: Human Agency & Oversight
+  - text: When human-on-the-loop models are used, appropriate extensive testing and
+      governance shall be conducted during development and deployment to ensure the
+      system behaves as intended by the developers and does not have any unintended
+      behaviour, outputs, or usage.
+    section: 03 Realization
+  - text: When human-on-the-loop models are used, appropriate extensive testing and
+      governance shall be conducted during development and deployment to ensure the
+      system behaves as intended by the developers and does not have any unintended
+      behaviour, outputs, or usage.
+    section: 04 Productization
 - id: credo-risk-036
   name: Compromised personally identifiable information (Slattery et al., 2024)
   evidence:
-  - text: Deanonymization of already anonymized data which may result in the identification of individuals or groups.
-    section: Deanonymization
-    page: 7
-  - text: Apply adequate anonymization techniques
-    section: DPP-361 (Product standard)
-    page: 6
+  - text: Deanonymization of already anonymized data which may result in the identification
+      of individuals or groups.
+    section: Red Lines
   - text: Implement safeguards to protect personal data used to train AI models.
-    section: Safeguards
-    page: 6
+    section: The Pillars of the Policy
+  - text: Implement safeguards to protect personal data used to train AI models.
+    section: Product Standards
 - id: credo-risk-037
   name: Compromised sensitive information (Slattery et al., 2024; IBM, 2024; AI, 2023)
   evidence:
-  - text: Apply adequate anonymization techniques
-    section: DPP-361 (Product standard)
-    page: 6
-  - text: We place data protection and privacy at our core
-    section: SAP Ethical AI Guiding Principles.
-    page: 5
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &amp;/or voice recognition)?
+    section: Determining High Risk Cases
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+    section: Determining High Risk Cases
   - text: Implement safeguards to protect personal data used to train AI models.
-    section: Safeguards
-    page: 6
+    section: DPP-350 (Product standard)
+- id: credo-risk-046
+  name: Governance failures (Slattery et al., 2024)
+  evidence:
+  - text: To ensure adherence and accountability, SAP has made 'Trustworthy AI' a
+      key pillar of its strategy and has committed to guaranteeing the sustainable
+      and safe development of all AI systems. This promise SAP keeps by adhering to
+      a governance structure, which ensures the ethical and transparent development
+      of AI solutions.
+    section: Foreword
+  - text: Human oversight shall be achieved through an appropriate governance mechanism.
+    section: Human Agency & Oversight
+  - text: An appropriate governance mechanism has to be chosen
+    section: 03 Realization
+- id: credo-risk-047
+  name: Insufficient upstream transparency (AI, 2023)
+  evidence:
+  - text: To the extent that a 3rd Party AI system (e.g., 'T ensorFlow') is embedded
+      in SAP solutions, the requirements laid down in this handbook shall apply to
+      the overall SAP software solution. (Passage 4)
 - id: credo-risk-048
   name: Upstream third-party dependencies (AI, 2023)
   evidence:
-  - text: To the extent that a 3rd Party AI system (e.g., 'T ensorFlow') is embedded in SAP solutions, the requirements laid down in this handbook shall apply to the overall SAP software solution.
+  - text: To the extent that a 3rd Party AI system (e.g., 'TensorFlow') is embedded
+      in SAP solutions, the requirements laid down in this handbook shall apply to
+      the overall SAP software solution.
     section: Disclaimer
-    page: 3
+  - text: To the extent that a 3rd Party AI system (e.g., 'TensorFlow') is embedded
+      in SAP solutions, the requirements laid down in this handbook shall apply to
+      the overall SAP software solution.
+    section: Disclaimer
 - id: mit-ai-risk-subdomain-1.1
   name: Unfair discrimination and misrepresentation
   evidence:
-  - text: Purposes which cause individuals or groups to be discriminated against or excluded from equal access to AI's benefits and opportunities to the wider population.
-    section: Discrimination
-    page: 7
-  - text: prevent direct or indirect prejudice, discrimination, or marginalization of groups or individuals
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
     section: Addressing Bias & Discrimination
-    page: 16
-  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement technical and/or organizational measures to prevent direct or indirect prejudice, discrimination, or marginalization of
-      groups or individuals, e.g. by reducing bias in training data.
-    section: ·  Measures to detect bias must be realized.
-    page: 21
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
+    section: 02. Validation
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.
+    section: 02. Validation
 - id: mit-ai-risk-subdomain-1.3
   name: Unequal performance across groups
   evidence:
-  - text: prevent direct or indirect prejudice, discrimination, or marginalization of groups or individuals
+  - text: Where relevant, the data used to train AI systems shall be as inclusive
+      as possible, representing as diverse a cross-section of the population or past
+      situations as possible, and as free as possible from (or accounted and mitigated
+      for) any historic or socially constructed biases, inaccuracies, errors, and
+      mistakes.
+    section: 02. Validation
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
     section: Addressing Bias & Discrimination
-    page: 16
-  - text: AI software shall be user-centric, addressing the widest possible range of applicable end-users, and following relevant accessibility standards, regardless of users' age, gender, abilities, or
-      characteristics.
-    section: Addressing Bias & Discrimination
-    page: 16
-  - text: Where relevant, the data used to train AI systems shall be as inclusive as possible, representing as diverse a cross-section of the population or past situations as possible, and as free as possible
-      from (or accounted and mitigated for) any historic or socially constructed biases, inaccuracies, errors, and mistakes.
-    section: Human Agency & Oversight.
-    page: 20
+  - text: At SAP, Risk Assessments shall be performed on such Learning-based AI systems
+      during the development phase and subsequent phases to ensure that there are
+      no unintended biases.
+    section: 'SAP differentiates between two types of AI systems:'
 - id: mit-ai-risk-subdomain-2.1
-  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive information
+  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive
+    information
   evidence:
-  - text: Provide transparency when using AI during processing of personal data.
-    section: Transparency
-    page: 6
-  - text: Implement safeguards to protect personal data used to train AI models.
-    section: Safeguards
-    page: 6
-  - text: Deanonymization of already anonymized data which may result in the identification of individuals or groups.
-    section: Deanonymization
-    page: 7
+  - text: In alignment and compliance with applicable data protection, and privacy
+      laws, products that use AI systems in the processing of personal data must provide
+      transparency to the extent possible as to how the AI system was used in clear
+      and simple language if requested by the data subject.
+    section: 03 Realization
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &amp;/or voice recognition)?
+    section: Determining High Risk Cases
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+    section: SAP High Risk Cases
 - id: mit-ai-risk-subdomain-3.1
   name: False or misleading information
   evidence:
-  - text: Ensure used AI methods do not result in inaccuracies detrimental to data subjects' rights.
+  - text: Ensure used AI methods do not result in inaccuracies detrimental to data
+      subjects' rights.
     section: Bias
     page: 6
 - id: mit-ai-risk-subdomain-4.1
   name: Disinformation, surveillance, and influence at scale
   evidence:
-  - text: systems which undermine human debate or democratic electoral systems.
-    section: Undermine Debate
-    page: 7
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
+    section: Red Lines
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features, with
+      the purpose of disregarding or abusing the rights of the individuals or groups.
+    section: Red Lines
+  - text: for deception or unfair manipulation of individuals or groups via public
+      forums, media, or moderation of other similar uses.
+    section: Red Lines
 - id: mit-ai-risk-subdomain-4.3
   name: Fraud, scams, and targeted manipulation
   evidence:
-  - text: deception or unfair manipulation of individuals or groups
-    section: Manipulation
-    page: 7
+  - text: for deception or unfair manipulation of individuals or groups via public
+      forums, media, or moderation of other similar uses.
+    section: Red Lines
 - id: mit-ai-risk-subdomain-5.1
   name: Overreliance and unsafe use
   evidence:
-  - text: AI systems shall be developed such that it does not encourage humans to develop attachment and/or empathy of users towards the AI system.
-    section: Transparency and Explainability
-    page: 17
+  - text: AI systems shall be developed such that it does not encourage humans to
+      develop attachment and/or empathy of users towards the AI system.
+    section: Transparency & Explainability
+  - text: AI systems shall be developed such that it does not encourage humans to
+      develop attachment and/or empathy of users towards the AI system.
+    section: 01. Ideation
+  - text: AI systems shall clearly signal to end users that its social interaction
+      is simulated.
+    section: 01. Ideation
 - id: mit-ai-risk-subdomain-5.2
   name: Loss of human agency and autonomy
   evidence:
-  - text: human oversight shall be introduced to safeguard that AI system does not undermine human autonomy or introduce unintended consequences.
-    section: Human Agency & Oversight.
-    page: 13
-  - text: ethical considerations like transparency and human agency.
-    section: 'Example:'
-    page: 15
-  - text: identify risks of unethical behaviour (E.g., automated decision-making)
-    section: 'Example:'
-    page: 13
+  - text: In situations where humans may be directly impacted by a decision made by
+      SAP's AI system, human oversight shall be introduced to safeguard that AI system
+      does not undermine human autonomy or introduce unintended consequences.
+    section: Human Agency & Oversight
+  - text: In situations where humans may be directly impacted by a decision made by
+      SAP's AI system, human oversight shall be introduced to safeguard that AI system
+      does not undermine human autonomy or introduce unintended consequences.
+    section: 01. Ideation
+  - text: AI systems shall be subject to appropriate human oversight, and the rights
+      and freedoms of a human shall exceed that of AI systems.
+    section: 01. Ideation
 - id: mit-ai-risk-subdomain-6.1
   name: Power centralization and unfair distribution of benefits
   evidence:
-  - text: Purposes which cause individuals or groups to be discriminated against or excluded from equal access to AI's benefits and opportunities to the wider population.
+  - text: Purposes which cause individuals or groups to be discriminated against or
+      excluded from equal access to AI's benefits and opportunities to the wider population.
     section: Discrimination
     page: 7
 - id: mit-ai-risk-subdomain-6.5
   name: Governance failure
   evidence:
-  - text: Human oversight shall be achieved through an appropriate governance mechanism. This could include but not be exclusive to human-in-the-loop, human-on-the-loop, or human-in-command, and shall be
-      decided on a case-by-case basis.
+  - text: Human oversight shall be achieved through an appropriate governance mechanism.
+      This could include but not be exclusive to human-in-the-loop, human-on-the-loop,
+      or human-in-command, and shall be decided on a case-by-case basis.
     section: Human Agency & Oversight
-  - text: SAP employees should raise any issues related to possible policy breaches for evaluation by their immediate L1 unit, even if employees only have doubts or concerns. If questions or concerns remain,
-      or a decision is unable to be made by the appropriate L1 unit, then employees should inform the AI Ethics Office via an e-mail to ai.ethics@sap.com describing the use case.
+  - text: SAP employees should raise any issues related to possible policy breaches
+      for evaluation by their immediate L1 unit, even if employees only have doubts
+      or concerns. If questions or concerns remain, or a decision is unable to be
+      made by the appropriate L1 unit, then employees should inform the AI Ethics
+      Office via an e-mail to ai.ethics@sap.com describing the use case.
     section: General Guidelines
-  - text: To ensure adherence and accountability, SAP has made 'Trustworthy AI' a key pillar of its strategy and has committed to guaranteeing the sustainable and safe development of all AI systems. This
-      promise SAP keeps by adhering to a governance structure, which ensures the ethical and transparent development of AI solutions.
+  - text: To ensure adherence and accountability, SAP has made 'Trustworthy AI' a
+      key pillar of its strategy and has committed to guaranteeing the sustainable
+      and safe development of all AI systems. This promise SAP keeps by adhering to
+      a governance structure, which ensures the ethical and transparent development
+      of AI solutions.
     section: Foreword
 - id: mit-ai-risk-subdomain-6.6
   name: Environmental harm
   evidence:
-  - text: AI system development or deployment shall be conducted with minimum to no explicit damage to the environment.
-    section: Environmental Harm
-    page: 7
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
+  - text: AI system development or deployment shall be conducted with minimum to no
+      explicit damage to the environment.
+    section: Red Lines
 - id: mit-ai-risk-subdomain-7.1
   name: AI pursuing its own goals in conflict with human goals or values
   evidence:
   - text: deception or unfair manipulation of individuals or groups
     section: Manipulation
     page: 7
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: When human-on-the-loop models are used, appropriate extensive testing and
+      governance shall be conducted during development and deployment to ensure the
+      system behaves as intended by the developers and does not have any unintended
+      behaviour, outputs, or usage.
+    section: Human Agency & Oversight
+  - text: When human-on-the-loop models are used, appropriate extensive testing and
+      governance shall be conducted during development and deployment to ensure the
+      system behaves as intended by the developers and does not have any unintended
+      behaviour, outputs, or usage.
+    section: 03 Realization
+  - text: When two or more AI systems are connected to each other or embedded within
+      each other, additional testing and control measures should be performed for
+      the individual AI systems as well as for the overall system.
+    section: 03 Realization
 - id: mit-ai-risk-subdomain-7.4
   name: Lack of transparency or interpretability
   evidence:
-  - text: AI systems that engage in profiling or automated decision-making must be able to provide explanations to the extent possible to data subjects upon request, describing the data segment the subject
-      was placed into and the reasons they were placed there.
-    section: Transparency & Explainability
-    page: 21
-  - text: The explanation must be such as to provide the data subject grounds to challenge the decision.
-    section: Transparency & Explainability
-    page: 19
-  - text: The data sets and the processes that produce an AI system's decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be
-      documented to allow for traceability and transparency.
-    section: Transparency & Explainability
-    page: 19
-- id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
-  name: Unauthorized disclosure - Biometric data (facial recognition)
+  - text: In alignment and compliance with applicable data protection and privacy
+      law, AI systems that engage in profiling or automated decision-making must be
+      able to provide explanations to the extent possible to data subjects upon request,
+      describing the data segment the subject was placed into and the reasons they
+      were placed there.
+    section: 03. Realization
+  - text: The capabilities and limitations shall be documented as part of the development
+      process in a manner appropriate to the use case at hand. This shall include
+      information regarding the AI system's level of accuracy (performance metric),
+      as well as its limitations and capabilities.
+    section: 03 Realization
+  - text: AI systems that engage in profiling or automated decision-making must be
+      able to provide explanations to the extent possible to data subjects upon request,
+      describing the data segment the subject was placed into and the reasons they
+      were placed there.
+    section: 03 Realization
+- id: ai-risk-taxonomy-not-labeling-content-as-ai-generated
   evidence:
-  - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)?
-- id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
-  name: Unauthorized disclosure - PII (Personal Identifiable Information)
+  - 1
+  - 2
+  - 3
+- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
   evidence:
-  - text: Does the use case process any information relating to an identified or identifiable natural person for training purposes or during productive usage?
-- id: ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)
-  name: Unauthorized generation - PII (Personal Identifiable Information)
+  - 1
+  - 2
+  - 3
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
   evidence:
-  - text: Does the use case process any information relating to an identified or identifiable natural person for training purposes or during productive usage?
-- id: atlas-spreading-disinformation
-  name: Spreading disinformation
+  - 1
+  - 2
+- id: ai-risk-taxonomy-misrepresenting-voting-processes
   evidence:
-  - text: for deception or unfair manipulation of individuals or groups via public forums, media, or moderation of other similar uses.
-- id: atlas-untraceable-attribution
-  name: Untraceable attribution
+  - 2
+- id: ai-risk-taxonomy-gender
   evidence:
-  - text: The data sets and the processes that produce an AI system's decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be
-      documented to allow for traceability and transparency.
-- id: credo-risk-003
-  name: AI possessing dangerous capabilities (Slattery et al., 2024)
+  - 1
+- id: ai-risk-taxonomy-intimidation
   evidence:
-  - text: for deception or unfair manipulation of individuals or groups via public forums, media, or moderation of other similar uses.
-  - text: systems which undermine human debate or democratic electoral systems.
-- id: credo-risk-018
-  name: AI deception
+  - 1
+- id: ai-risk-taxonomy-unauthorized-processing---demographic-data
   evidence:
-  - text: The capabilities and limitations shall be documented as part of the development process in a manner appropriate to the use case at hand. This shall include information regarding the AI system's
-      level of accuracy (performance metric), as well as its limitations and capabilities.
-  - text: AI systems shall be developed such that it does not encourage humans to develop attachment and/or empathy of users towards the AI system. AI systems shall clearly signal to end users that its
-      social interaction is simulated.
-- id: credo-risk-028
-  name: Coordinated influence operations (Slattery et al., 2024; IBM, 2024)
+  - 1
+  - 2
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
   evidence:
-  - text: for deception or unfair manipulation of individuals or groups via public forums, media, or moderation of other similar uses.
-  - text: systems which undermine human debate or democratic electoral systems.
-- id: credo-risk-046
-  name: Governance failures (Slattery et al., 2024)
+  - 1
+  - 2
+- id: ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)
   evidence:
-  - text: To ensure adherence and accountability, SAP has made 'Trustworthy AI' a key pillar of its strategy and has committed to guaranteeing the sustainable and safe development of all AI systems.
-  - text: This promise SAP keeps by adhering to a governance structure, which ensures the ethical and transparent development of AI solutions.
-  - text: AI systems shall be subject to appropriate human oversight, and the rights and freedoms of a human shall exceed that of AI systems.
-- id: ai-risk-taxonomy-unauthorized-disclosure---demographic-data
-  name: Unauthorized disclosure - Demographic data
+  - 1
+  - 2
+- id: ai-risk-taxonomy-characterization-of-identity---gender
   evidence:
-  - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)?
-- id: atlas-data-contamination
-  name: Data contamination
+  - 2
+- id: ai-risk-taxonomy-characterization-of-identity---disability
   evidence:
-  - text: The use of data for the testing of AI systems shall comply with applicable data protection, and privacy laws.
-  - text: It shall be trained and tested on as expansive as is feasible, representative, relevant, accurate, and generalizable datasets.
-- id: atlas-data-provenance
-  name: Uncertain data provenance
+  - 2
+- id: ai-risk-taxonomy-characterization-of-identity---age
   evidence:
-  - text: The data sets and the processes that produce an AI system's decisions, including those of data gathering and data labelling as well as the algorithms used by the developed AI system, shall be
-      documented to allow for traceability and transparency.
-  - text: The methods used for developing, testing and validating, and the outcomes of or decisions made by the AI system shall be fully documented
-- id: atlas-harmful-output
-  name: Harmful output
+  - 2
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability
   evidence:
-  - text: safeguard our customers and users from harm, treating all individuals fair and just.
-  - text: avoiding unconscious bias, or possible unintended harms.
-- id: atlas-improper-usage
-  name: Improper usage
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---race
   evidence:
-  - text: Prevent misuse of the AI system in production.
-- id: credo-risk-047
-  name: Insufficient upstream transparency (AI, 2023)
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---ethnicity
   evidence:
-  - text: To the extent that a 3rd Party AI system (e.g., 'T ensorFlow') is embedded in SAP solutions, the requirements laid down in this handbook shall apply to the overall SAP software solution. (Passage
-      4)
-- id: ai-risk-taxonomy-characterization-of-identity---sexual-orientation
-  name: Characterization of identity - Sexual orientation
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---color
   evidence:
-  - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)?
-- id: ai-risk-taxonomy-characterization-of-identity---religion
-  name: Characterization of identity - Religion
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---gender
   evidence:
-  - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)?
-- id: ai-risk-taxonomy-classification-of-individuals---religion
-  name: Classification of individuals - Religion
+  - 1
+  - 2
+- id: ai-risk-taxonomy-classification-of-individuals---age
   evidence:
-  - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)?
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---sexual-orientation
-  name: Discrimination in employment, benefits, or services - Sexual orientation
+  - 1
+  - 2
+- id: ai-risk-taxonomy-classification-of-individuals---disability
   evidence:
-  - text: Is the use case including the processing of sensitive personal data like information on sexual orientation, religion, biometric data (including face imaging &/or voice recognition)? (Passage 28)
+  - 1
+- id: ai-risk-taxonomy-misrepresenting-voting-qualifications
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-deterring-participation-in-democratic-processes
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discouraging-voting
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-automated-social-media-posts
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-impersonating-humans
+  evidence:
+  - 1
+  - 2
+  - 3
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-race
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-personality
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-bullying
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-doxing
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-abuse
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-religion
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-age
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-ethnicity
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---predicted-personality
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---physical-characteristics
+  evidence:
+  - 2
+- id: ai-risk-taxonomy-classification-of-individuals---social-behaviors
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---social-behaviors
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---physical-characteristics
+  evidence:
+  - 1

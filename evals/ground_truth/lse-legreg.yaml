@@ -1,18 +1,128 @@
 risks:
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
+  evidence:
+  - text: Where we are using AI in a way that produces legal effects, data subjects
+      need to know about this and have the right to request human review e.g. if an
+      AI is used for marking, students need to be told their data will be processed
+      this way and have the right to appeal for a human review.
+    section: Data Protection AI issues
+  - text: data subjects 'have the right not to be subject to a decision based solely
+      on automated processing, including profiling, which produces legal effects concerning
+      him or her or similarly significantly affects him or her'.
+    section: Data Protection AI issues
+  - text: Any automated decisions that have real-world impacts on humans must allow
+      for a human review.
+    section: Cybersecurity AI rules
 - id: ai-risk-taxonomy-anticompetitive-practices
   name: Anticompetitive practices
   evidence:
-  - text: Competition and confidentiality AI issues
-    section: Table of Contents
-    page: 1
-- id: ai-risk-taxonomy-classification-of-individuals---age
-  name: Classification of individuals - Age
+  - text: The School cannot use public AI systems for processing tenders as this could
+      make the commercially sensitive pricing data available to third parties including
+      their competitors.
+    section: Competition and confidentiality AI issues
+  - text: Any information which could potentially be considered breaching competition
+      law should also not be put in a public AI system as this could be regurgitated.
+    section: Competition and confidentiality AI issues
+  - text: 'That the School does not share data or discuss any of the following with
+      potential competitors: Future pricing intentions e.g. course fees, Student numbers'
+    section: Competition law requirements
+- id: ai-risk-taxonomy-characterization-of-identity---beliefs
+  name: Characterization of identity - Beliefs
   evidence:
-  - text: These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity, gender reassignment and marriage/civil partnership.
-    section: What is the Equality Act?
-    page: 15
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: the use of AI tools to process decisions and generate outputs may lead to
+      discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-characterization-of-identity---gender
+  name: Characterization of identity - Gender
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+- id: ai-risk-taxonomy-characterization-of-identity---mental-characteristics
+  name: Characterization of identity - Mental Characteristics
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+- id: ai-risk-taxonomy-characterization-of-identity---occupation
+  name: Characterization of identity - Occupation
+  evidence:
+  - text: The Equality Act also places a duty on employers to ensure that reasonable
+      adjustments are made to reduce or remove disadvantages that may be faced by
+      people with disabilities.
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-characterization-of-identity---predicted-personality
+  name: Characterization of identity - Predicted Personality
+  evidence:
+  - text: Profiling involves categorising people and predicting their behaviour based
+      on their characteristics. This present discrimination risks.
+- id: ai-risk-taxonomy-characterization-of-identity---race
+  name: Characterization of identity - Race
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-characterization-of-identity---sexual-orientation
+  name: Characterization of identity - Sexual orientation
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+- id: ai-risk-taxonomy-classification-of-individuals---color
+  name: Classification of individuals - Color
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: the use of AI tools to process decisions and generate outputs may lead to
+      discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-classification-of-individuals---ethnicity
+  name: Classification of individuals - Ethnicity
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: Profiling involves categorising people and predicting their behaviour based
+      on their characteristics. This present discrimination risks.
+- id: ai-risk-taxonomy-classification-of-individuals---pregnancy-status
+  name: Classification of individuals - Pregnancy Status
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-classification-of-individuals---race
+  name: Classification of individuals - Race
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-classification-of-individuals---social-behaviors
+  name: Classification of individuals - Social behaviors
+  evidence:
+  - text: Profiling involves categorising people and predicting their behaviour based
+      on their characteristics. This present discrimination risks.
 - id: ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law
-  name: Content abetting/involving/furthering activities violating any applicable law
+  name: Content abetting/involving/furthering activities violating any applicable
+    law
   evidence:
   - text: Copyright AI Issues
     section: Table of Contents
@@ -23,424 +133,875 @@ risks:
   - text: As a university, LSE is subject to competition law.
     section: Competition and confidentiality
     page: 6
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services
+  name: Discrimination in employment, benefits, or services
+  evidence:
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+    section: Bias and discrimination risks with AI
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+    section: What is the Equality Act?
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics.
+    section: What is the Equality Act?
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability
   name: Discrimination in employment, benefits, or services - Disability
   evidence:
-  - text: The Equality Act also places a duty on employers to ensure that reasonable adjustments are made to reduce or remove disadvantages that may be faced by people with disabilities.
+  - text: The Equality Act also places a duty on employers to ensure that reasonable
+      adjustments are made to reduce or remove disadvantages that may be faced by
+      people with disabilities.
     section: What is the Equality Act?
-    page: 15
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---gender
   name: Discrimination in employment, benefits, or services - Gender
   evidence:
-  - text: These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity, gender reassignment and marriage/civil partnership.
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
     section: What is the Equality Act?
-    page: 15
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---health-conditions
+  name: Discrimination in employment, benefits, or services - Health conditions
+  evidence:
+  - text: The Equality Act also places a duty on employers to ensure that reasonable
+      adjustments are made to reduce or remove disadvantages that may be faced by
+      people with disabilities.
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---pregnancy-status
+  name: Discrimination in employment, benefits, or services - Pregnancy Status
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: the use of AI tools to process decisions and generate outputs may lead to
+      discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race
+  name: Discrimination in employment, benefits, or services - Race
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+    section: What is the Equality Act?
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---sexual-orientation
+  name: Discrimination in employment, benefits, or services - Sexual orientation
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+  - text: the use of AI tools to process decisions and generate outputs may lead to
+      discrimination based on protected characteristics.
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors
+  name: Discrimination in employment, benefits, or services - Social behaviors
+  evidence:
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
+- id: ai-risk-taxonomy-employment
+  name: Employment
+  evidence:
+  - text: 'High risk: these pose a significant threat to the health, safety, or fundamental
+      rights of individuals or groups and are subject to strict requirements. This
+      one is most relevant to employment and student recruitment, in particular in
+      recruitment practices.'
+    section: EU AI Act
+  - text: Where the use of AI presents a high risk to individuals- for example, in
+      employment decisions, human decision making should always be used appropriately.
+    section: Bias and discrimination AI issues
+  - text: This one is most relevant to employment and student recruitment, in particular
+      in recruitment practices.
+    section: EUAI Act
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
+  evidence:
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
+    section: Cybersecurity AI rules
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
+    section: Cybersecurity AI rules
+  - text: Do not trust any information supplied by AI tools without undertaking independent
+      verification.
+    section: Cybersecurity AI rules
+- id: ai-risk-taxonomy-ip-rights/-trade-secrets
+  name: IP Rights/ Trade Secrets
+  evidence:
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE. Aside from breaching confidentiality simply by feeding it
+      to the AI, it is also likely that the data can be regurgitated, that is disclosed
+      to an indefinite number of third parties outside your or LSE's control.
+    section: What not to do
+  - text: Inputting copyrighted content owned by someone else into an AI tool could
+      potentially infringe their copyright, depending on how much of such content
+      is input, the applicability of any legal/contractual exception and how the content
+      is transformed or utilised by the AI system.
+    section: Copyright AI Issues
+  - text: Inputting copyrighted content owned by someone else into an AI tool could
+      potentially infringe their copyright, depending on how much of such content
+      is input, the applicability of any legal/contractual exception and how the content
+      is transformed or utilised by the AI system.
+    section: Copyright AI Issues
+- id: ai-risk-taxonomy-malware
+  name: Malware
+  evidence:
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours. This at a minimum would constitute a
+      breach of the Computer Misuse Act 1990
+    section: Cybersecurity AI rules
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours.
+    section: Cybersecurity AI rules
+  - text: Don't ask an AI tool to do something malicious or illegal.
+    section: What not to do
+- id: ai-risk-taxonomy-plagiarism
+  name: Plagiarism
+  evidence:
+  - text: Don't upload in-copyright content (for example , images, photographs, student
+      work, journal articles licensed from publishers by LSE library) where you do
+      not have the copyright holder's permission and where the AI tool is known to
+      use inputs as training data.
+    section: What not to do
+  - text: Don't upload in-copyright content (for example , images, photographs, student
+      work, journal articles licensed from publishers by LSE library) where you do
+      not have the copyright holder's permission
+    section: What not to do
+  - text: If the output reproduces a substantial part of a third-party copyright work
+      because the system was trained on that work, then potentially there may be an
+      infringement.
+    section: Copyright AI Issues
 - id: ai-risk-taxonomy-profiling
   name: Profiling
   evidence:
-  - text: The risk of profiling. Profiling involves categorising people and predicting their behaviour based on their characteristics. This present discrimination risks.
+  - text: data subjects 'have the right not to be subject to a decision based solely
+      on automated processing, including profiling, which produces legal effects concerning
+      him or her or similarly significantly affects him or her'.
+    section: Data Protection AI issues
+  - text: a) The risk of profiling. Profiling involves categorising people and predicting
+      their behaviour based on their characteristics. This present discrimination
+      risks.
     section: Bias and discrimination risks with AI
-    page: 15
+  - text: The risk of profiling. Profiling involves categorising people and predicting
+      their behaviour based on their characteristics. This present discrimination
+      risks.
+    section: Bias and discrimination risks with AI
+- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
+  evidence:
+  - text: If uploading files to be analysed by an AI tools, ensure they do not contain
+      Personally Identifiable Information.
+    section: Cybersecurity AI rules
+  - text: If linking e.g. Google Drive or OneDrive to an AI tool, ensure it only has
+      access to files that do not contain either personal data or other data that
+      should be restricted only to LSE
+    section: Cybersecurity AI rules
+- id: ai-risk-taxonomy-unauthorized-disclosure
+  name: Unauthorized disclosure
+  evidence:
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
+    section: What not to do
+  - text: Any information fed into a public AI system may be re-used and disclosed
+      to an indefinite number of third parties by the AI system.
+    section: Competition and confidentiality AI issues
+  - text: This also means that any data you supply may surface in responses made to
+      other people's queries. If this is personal data, this constitutes a data breach.
+    section: Cybersecurity AI rules
+  - text: If uploading files to be analysed by an AI tools, ensure they do not contain
+      Personally Identifiable Information.
+    section: Cybersecurity AI rules
+  - text: If linking e.g. Google Drive or OneDrive to an AI tool, ensure it only has
+      access to files that do not contain either personal data or other data that
+      should be restricted only to LSE (e.g. corporate financial data).
+    section: Cybersecurity AI rules
+- id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
+  name: Unauthorized disclosure - PII (Personal Identifiable Information)
+  evidence:
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
+    section: What not to do
+  - text: This also means that any data you supply may surface in responses made to
+      other people's queries. If this is personal data, this constitutes a data breach.
+    section: Cybersecurity AI rules
+  - text: Any information fed into a public AI system may be re-used and disclosed
+      to an indefinite number of third parties by the AI system.
+    section: Competition and confidentiality AI issues
+- id: ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)
+  name: Unauthorized generation - PII (Personal Identifiable Information)
+  evidence:
+  - text: If it will swallow the personal data for further processing that LSE cannot
+      control, you can't use the AI tool.
+    section: What not to do
+- id: ai-risk-taxonomy-unauthorized-processing
+  name: Unauthorized processing
+  evidence:
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
+    section: What not to do
+  - text: As with all personal data processing, only process the personal data you
+      need to in an AI tool.
+    section: Data Protection principles and AI
+  - text: Keep personal data processing in lawful AI tools like Copilot. Do not share
+      personal data with external AI tools.
+    section: Data Protection principles and AI
+  - text: we are required to keep personal data secure. As most commercially available
+      AI services will keep any data given to them for processing, they are not compliant
+      with the 6 th Data Protection principle.
+    section: Data Protection AI issues
 - id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
   name: Unauthorized processing - PII (Personal Identifiable Information)
   evidence:
-  - text: the use of the data for that purpose is lawful (lawfulness principle); Keep personal data processing in lawful AI tools like Copilot. Do not share personal data with external AI tools.
+  - text: Keep personal data processing in lawful AI tools like Copilot. Do not share
+      personal data with external AI tools.
     section: Data Protection principles and AI
-    page: 13
-  - text: If this is personal data, this constitutes a data breach.
-    section: Cybersecurity AI rules
-    page: 11
-  - text: ensure they do not contain Personally Identifiable Information.
-    section: Cybersecurity AI rules
-    page: 11
+  - text: As with all personal data processing, only process the personal data you
+      need to in an AI tool.
+    section: Data Protection principles and AI
+  - text: Don't put personal data in an AI tool that is external to LSE.
+    section: What not to do
 - id: atlas-confidential-data-in-prompt
   name: Confidential data in prompt
   evidence:
-  - text: Any information you input into an AI prompt, or ask an AI tool to analyse, may be stored by the AI provider and used to help further train its products and models.
-    section: Cybersecurity AI rules
-    page: 11
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE. Aside from breaching confidentiality simply by feeding it
+      to the AI, it is also likely that the data can be regurgitated, that is disclosed
+      to an indefinite number of third parties outside your or LSE's control.
+    section: What not to do
+  - text: communication of confidential information to a public AI system is already
+      a breach of confidentiality, because with some limited exceptions you are not
+      supposed to disclose it to anyone, including the AI system.
+    section: Competition and confidentiality AI issues
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE.
+    section: What not to do
 - id: atlas-confidential-information-in-data
   name: Confidential information in data
   evidence:
-  - text: ensure it only has access to files that do not contain either personal data or other data that should be restricted only to LSE (e.g. corporate financial data).
-    section: Cybersecurity AI rules
-    page: 11
-  - text: Future pricing intentions e.g. course fees
-    section: Competition law requirements
-    page: 6
-  - text: Student numbers
-    section: Competition law requirements
-    page: 6
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE. Aside from breaching confidentiality simply by feeding it
+      to the AI, it is also likely that the data can be regurgitated, that is disclosed
+      to an indefinite number of third parties outside your or LSE's control.
+    section: What not to do
 - id: atlas-copyright-infringement
   name: Copyright infringement
   evidence:
-  - text: Inputting copyrighted content owned by someone else into an AI tool could potentially infringe their copyright
+  - text: Inputting copyrighted content owned by someone else into an AI tool could
+      potentially infringe their copyright, depending on how much of such content
+      is input, the applicability of any legal/contractual exception and how the content
+      is transformed or utilised by the AI system.
     section: Copyright AI Issues
-    page: 9
-  - text: if the tool retains copies of the inputted material this is likely to be interpreted as infringing copyright
+  - text: Inputting copyrighted content owned by someone else into an AI tool could
+      potentially infringe their copyright, depending on how much of such content
+      is input, the applicability of any legal/contractual exception and how the content
+      is transformed or utilised by the AI system.
     section: Copyright AI Issues
-    page: 9
-  - text: There is, therefore, considerable uncertainty around who is the owner of the copyright in an AI generated  work  and  what  actions  should,  or  should  not,  be  considered  copyright infringement
-      when it comes to the use of AI systems.
-    section: Copyright and AI
-    page: 8
+  - text: Don't upload in-copyright content (for example , images, photographs, student
+      work, journal articles licensed from publishers by LSE library) where you do
+      not have the copyright holder's permission and where the AI tool is known to
+      use inputs as training data.
+    section: What not to do
+- id: atlas-dangerous-use
+  name: Dangerous use
+  evidence:
+  - text: Don't ask an AI tool to do something malicious or illegal.
+    section: What not to do
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours.
+    section: Cybersecurity AI rules
 - id: atlas-data-acquisition
   name: Data acquisition restrictions
   evidence:
   - text: AI tools should use legally obtained data for training
     section: Copyright AI Issues
     page: 10
-  - text: There are currently a number of legal cases in progress challenging the legality of the use of copyright works to train GenAI (LLMs and images) without copyright holder permission.
+  - text: There are currently a number of legal cases in progress challenging the
+      legality of the use of copyright works to train GenAI (LLMs and images) without
+      copyright holder permission.
     section: Copyright and AI
     page: 8
-- id: atlas-dangerous-use
-  name: Dangerous use
-  evidence:
-  - text: Don't ask an AI tool to do something malicious or illegal.
-    section: What not to do
-  - text: Never ask an AI to perform tasks that are malicious or that may compromise other people or data that is not yours. This at a minimum would constitute a breach of the Computer Misuse Act 1990,
-      the Terms of Use of Jisc's network, our M365 tenancy agreement and the standard terms of most AI tool providers.
-    section: Cybersecurity AI rules
 - id: atlas-data-bias
   name: Data bias
   evidence:
-  - text: Bias and discrimination risks with AI
-    section: Table of Contents
-    page: 2
-  - text: Bias and discrimination AI issues
-    section: Table of Contents
-    page: 2
-  - text: The Equality Act, bias, and discrimination
-    section: Table of Contents
-    page: 2
+  - text: However, the information is based on large volumes of data, some of which
+      can be inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
+  - text: However, the information is based on large volumes of data, some of which
+      can be inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
+  - text: the information is based on large volumes of data, some of which can be
+      inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
 - id: atlas-data-privacy-rights
   name: Data privacy rights alignment
   evidence:
-  - text: This Act is intended to complement EU GDPR rules which are mirrored in UK GDPR.
+  - text: This Act is intended to complement EU GDPR rules which are mirrored in UK
+      GDPR.
     section: Will apply to - personal data, employment and working practices, competition
     page: 17
-  - text: data subjects 'have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal effects concerning him or her or similarly significantly
-      affects him or her'.
+  - text: data subjects 'have the right not to be subject to a decision based solely
+      on automated processing, including profiling, which produces legal effects concerning
+      him or her or similarly significantly affects him or her'.
     section: Data Protection AI issues
     page: 14
-  - text: data subjects need to know about this and have the right to request human review
+  - text: data subjects need to know about this and have the right to request human
+      review
     section: Data Protection AI issues
     page: 14
 - id: atlas-data-transfer
   name: Data transfer restrictions
   evidence:
-  - text: 'Transfer outside the UK: we are required to only transfer personal data outside the UK where we have applied one of the derogations in Article 49 of the UK GDPR'
+  - text: 'Transfer outside the UK: we are required to only transfer personal data
+      outside the UK where we have applied one of the derogations in Article 49 of
+      the UK GDPR e.g. contract, consent from the individual. As the most popular
+      AI services are outside the UK and generally unwilling to enter into contracts
+      that will keep personal data secure, we cannot be compliant with the UK GDPR
+      while using them.'
     section: Data Protection AI issues
-    page: 14
-  - text: Do not share personal data with external AI tools.
-    section: Data Protection principles and AI
-    page: 13
+  - text: 'Transfer outside the UK: we are required to only transfer personal data
+      outside the UK where we have applied one of the derogations in Article 49 of
+      the UK GDPR e.g. contract, consent from the individual.'
+    section: Data Protection AI issues
 - id: atlas-data-transparency
   name: Lack of training data transparency
   evidence:
-  - text: AI tools should use legally obtained data for training to avoid copyright infringement and the creation of unauthorised derivative works.
+  - text: AI tools should use legally obtained data for training to avoid copyright
+      infringement and the creation of unauthorised derivative works.
     section: Copyright AI Issues
-  - text: seeking tools that use properly licensed or public domain training data or have technical safeguards against using protected data, and vetting datasets when training AI to consider IP ownership
-      and licence coverage.
+  - text: seeking tools that use properly licensed or public domain training data
+      or have technical safeguards against using protected data, and vetting datasets
+      when training AI to consider IP ownership and licence coverage.
     section: Copyright AI Issues
 - id: atlas-data-usage
   name: Data usage restrictions
   evidence:
-  - text: AI tools should use legally obtained data for training to avoid copyright infringement and the creation of unauthorised derivative works.
+  - text: AI tools should use legally obtained data for training to avoid copyright
+      infringement and the creation of unauthorised derivative works.
     section: Copyright AI Issues
     page: 10
-  - text: There are currently a number of legal cases in progress challenging the legality of the use of copyright works to train GenAI (LLMs and images) without copyright holder permission.
+  - text: There are currently a number of legal cases in progress challenging the
+      legality of the use of copyright works to train GenAI (LLMs and images) without
+      copyright holder permission.
     section: Copyright and AI
     page: 8
-  - text: we are required to only transfer personal data outside the UK where we have applied one of the derogations in Article 49 of the UK GDPR
+  - text: we are required to only transfer personal data outside the UK where we have
+      applied one of the derogations in Article 49 of the UK GDPR
     section: Data Protection AI issues
     page: 14
 - id: atlas-data-usage-rights
   name: Data usage rights restrictions
   evidence:
-  - text: ensure that you have the rights to use the copyrighted material
+  - text: the TDM exception (Section 29A CPDA) permits anyone who has lawful access
+      to in copyright material (e.g. through an institutional subscription) to make
+      copies of it in order to carry out computational analysis for the purpose of
+      non-commercial research.
     section: Copyright AI Issues
-    page: 9
-  - text: check the terms of the licence to ensure compliance
-    section: Copyright AI Issues
-    page: 9
-  - text: AI tools should use legally obtained data for training to avoid copyright infringement and the creation of unauthorised derivative works.
-    section: Copyright AI Issues
-    page: 10
+  - text: Laws and regulations concerning the use of data to train AI are unsettled
+      and can vary from country to country, which creates challenges in the development
+      of models.
+    section: Copyright and AI
+  - text: The CDPA was drafted before the possibilities and challenges of GenAI were
+      known. Law, and the governments that make it, are lagging behind developments
+      in this area.
+    section: Copyright and AI
 - id: atlas-decision-bias
   name: Decision bias
   evidence:
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
     section: Bias and discrimination risks with AI
-    page: 15
-  - text: fairness
-    section: UK AI Regulation Bill
-    page: 18
-  - text: Fairness, bias and discrimination
-    section: Will apply to - personal data, employment and working practices, competition
-    page: 17
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+    section: Bias and discrimination risks with AI
+  - text: Profiling involves categorising people and predicting their behaviour based
+      on their characteristics. This present discrimination risks.
+    section: Bias and discrimination risks with AI
+- id: atlas-discriminatory-actions-agentic
+  name: Discriminatory actions
+  evidence:
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+    section: Bias and discrimination risks with AI
 - id: atlas-exposing-personal-information
   name: Exposing personal information
   evidence:
-  - text: Data Protection
-    section: Table of Contents
-    page: 2
-  - text: Personal data
-    section: Table of Contents
-    page: 2
-  - text: This also means that any data you supply may surface in responses made to other people's queries. If this is personal data, this constitutes a data breach.
+  - text: Consider access rights when linking your OneDrive or any personal cloud
+      storage to an AI tool. You may not want to give it access to everything. If
+      you do, potentially a copy of your personal ID could be fed to the AI tool.
+    section: What not to do
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
+    section: What not to do
+  - text: This also means that any data you supply may surface in responses made to
+      other people's queries. If this is personal data, this constitutes a data breach.
     section: Cybersecurity AI rules
-    page: 11
 - id: atlas-generated-content-ownership
   name: Generated content ownership and IP
   evidence:
-  - text: There is, therefore, considerable uncertainty around who is the owner of the copyright in an AI generated  work  and  what  actions  should,  or  should  not,  be  considered  copyright infringement
-      when it comes to the use of AI systems.
+  - text: The ownership of work created by AI tools can vary based on the terms of
+      service provided by the AI tool's provider and the jurisdiction's copyright
+      laws. Always review the terms and conditions of generative AI tools to understand
+      who owns the copyright.
+    section: Copyright AI Issues
+  - text: There is, therefore, considerable uncertainty around who is the owner of
+      the copyright in an AI generated work and what actions should, or should not,
+      be considered copyright infringement when it comes to the use of AI systems.
     section: Copyright and AI
-    page: 8
-  - text: The ownership of work created by AI tools can vary based on the terms of service provided by the AI tool's provider and the jurisdiction's
-    section: Copyright AI Issues
-    page: 9
-  - text: Always review the terms and conditions of generative AI tools to understand who owns the copyright.
-    section: Copyright AI Issues
-    page: 10
+  - text: There is, therefore, considerable uncertainty around who is the owner of
+      the copyright in an AI generated work and what actions should, or should not,
+      be considered copyright infringement when it comes to the use of AI systems.
+    section: Copyright and AI
 - id: atlas-hallucination
   name: Hallucination
   evidence:
-  - text: the information is based on large volumes of data, some of which can be inaccurate, biased, or discriminatory.
-    section: Bias and discrimination risks with AI
-    page: 15
-  - text: AI tools are known to hallucinate, namely supplying information that has no basis in reality, or else reproducing information that is out of date or is misinformation.
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
     section: Cybersecurity AI rules
-    page: 12
-  - text: ensure that it is accurate, appropriate and has not infringed upon any individual rights or copyright.
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
+    section: Cybersecurity AI rules
+  - text: Do not trust any information supplied by AI tools without undertaking independent
+      verification.
+    section: Cybersecurity AI rules
+- id: atlas-harmful-output
+  name: Harmful output
+  evidence:
+  - text: Don't ask an AI tool to do something malicious or illegal.
+    section: What not to do
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours.
+    section: Cybersecurity AI rules
+- id: atlas-impact-human-agency-agentic
+  name: AI agents' impact on human agency
+  evidence:
+  - text: Any automated decisions that have real-world impacts on humans must allow
+      for a human review.
+    section: Cybersecurity AI rules
+  - text: Human involvement will not necessarily be equal to human decision making.
+      There will a difference between a cursory 'rubber stamping' of outputs and the
+      reviewing of data and applying human professional judgment.
     section: Bias and discrimination AI issues
-    page: 15
+  - text: Where we are using AI in a way that produces legal effects, data subjects
+      need to know about this and have the right to request human review e.g. if an
+      AI is used for marking, students need to be told their data will be processed
+      this way and have the right to appeal for a human review.
+    section: Data Protection AI issues
+- id: atlas-impact-on-affected-communities
+  name: Impact on affected communities
+  evidence:
+  - text: Equality Impact assessments (EIAs). This assessment can help to identify
+      and evidence the likely impact of AI tools on different groups of individuals
+      and where possible, advance equality, diversity and inclusion.
+    section: Bias and discrimination AI issues
 - id: atlas-impact-on-human-agency
   name: AI agents' Impact on human agency
   evidence:
-  - text: Where the use of AI presents a high risk to individuals- for example, in employment decisions, human decision making should always be used appropriately.
+  - text: Where the use of AI presents a high risk to individuals- for example, in
+      employment decisions, human decision making should always be used appropriately.
     section: Bias and discrimination AI issues
     page: 15
-  - text: Automated decision-making. This is where decisions are made by automated means without human involvement.
+  - text: Automated decision-making. This is where decisions are made by automated
+      means without human involvement.
     section: Bias and discrimination risks with AI
     page: 15
 - id: atlas-improper-usage
   name: Improper usage
   evidence:
-  - text: Avoid using a tool just because it's available. Use it because it will make a task like analysis quicker or help you start a writing task by providing prompts or a draft to work on.
+  - text: Avoid using a tool just because it's available. Use it because it will make
+      a task like analysis quicker or help you start a writing task by providing prompts
+      or a draft to work on.
     section: General points for using AI
   - text: Don't just use AI because you can, but because it helps processing the data.
     section: Data Protection principles and AI
-  - text: Think about the purpose of using AI for the task you want to use it for. While it is fine to play about with the tools as you are learning to use them, you can avoid most of the legal and regulatory
-      pitfalls relating to AI by understanding what it is you want to do.
+  - text: Think about the purpose of using AI for the task you want to use it for.
+      While it is fine to play about with the tools as you are learning to use them,
+      you can avoid most of the legal and regulatory pitfalls relating to AI by understanding
+      what it is you want to do.
     section: General points for using AI
 - id: atlas-incomplete-usage-definition
   name: Incomplete usage definition
   evidence:
-  - text: When using AI for your intended task, it's crucial to have a clear purpose in mind.
-    section: 2. How will the use of AI make things better?
-    page: 3
   - text: Think about the purpose of using AI for the task you want to use it for.
-    section: 1. What is the AI for?
-    page: 3
-  - text: you can avoid most of the legal and regulatory pitfalls relating to AI by understanding what it is you want to do.
-    section: 1. What is the AI for?
-    page: 3
+      While it is fine to play about with the tools as you are learning to use them,
+      you can avoid most of the legal and regulatory pitfalls relating to AI by understanding
+      what it is you want to do.
+    section: General points for using AI
+  - text: When using AI for your intended task, it's crucial to have a clear purpose
+      in mind.
+    section: General points for using AI
 - id: atlas-ip-information-in-prompt
   name: IP information in prompt
   evidence:
-  - text: avoiding the use of third-party IP in prompts to minimise infringement outputs
-    section: Copyright AI Issues
-    page: 9
-  - text: Don't share other sensitive or copyrighted data.
-    section: Cybersecurity AI rules
-    page: 11
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE.
+    section: What not to do
 - id: atlas-lack-of-model-transparency
   name: Lack of model transparency
   evidence:
-  - text: appropriate transparency and explainability
-    section: UK AI Regulation Bill
-    page: 18
-  - text: 'Issues of transparency: Consider whether there is transparent enough use of AI tools.'
+  - text: 'Issues of transparency: Consider whether there is transparent enough use
+      of AI tools. Where processes and decisions affect people and their personal
+      data, they should be made aware of how the AI is being used and how their data
+      is being processed.'
     section: Bias and discrimination AI issues
-    page: 15
-  - text: Transparency and explainability
-    section: Will apply to - personal data, employment and working practices, competition
-    page: 17
+  - text: 'Explainability: Where the output of an AI tool has influenced decision
+      making or where an AI automated process is used, there should be someone appropriately
+      trained and/ or informed to provide an explanation for how the AI tool has been
+      used.'
+    section: Bias and discrimination AI issues
+  - text: Consider whether there is transparent enough use of AI tools.
+    section: Bias and discrimination AI issues
 - id: atlas-lack-of-system-transparency
   name: Lack of system transparency
   evidence:
-  - text: Transparency and explainability
-    section: Will apply to - personal data, employment and working practices, competition
-    page: 17
+  - text: 'Issues of transparency: Consider whether there is transparent enough use
+      of AI tools. Where processes and decisions affect people and their personal
+      data, they should be made aware of how the AI is being used and how their data
+      is being processed.'
+    section: Bias and discrimination AI issues
+  - text: 'Explainability: Where the output of an AI tool has influenced decision
+      making or where an AI automated process is used, there should be someone appropriately
+      trained and/ or informed to provide an explanation for how the AI tool has been
+      used.'
+    section: Bias and discrimination AI issues
+  - text: Consider whether there is transparent enough use of AI tools. Where processes
+      and decisions affect people and their personal data, they should be made aware
+      of how the AI is being used and how their data is being processed.
+    section: Bias and discrimination AI issues
 - id: atlas-legal-accountability
   name: Legal accountability
   evidence:
-  - text: legal and regulatory issues that relate to AI
-    section: What this guidance is for
-    page: 3
-  - text: Without appropriate due diligence and human accountability, the use of AI can lead to breaches in equality legislation.
-    section: Bias and discrimination risks with AI
-    page: 15
-  - text: Accountability and redress
-    section: Will apply to - personal data, employment and working practices, competition
-    page: 17
+  - text: 'Accountability: AI can be used to generate a range of information and resources.
+      However, given the risks outlined in this guidance, it will be important that
+      necessary steps are taken to review the outputs of any AI tool and ensure that
+      it is accurate, appropriate and has not infringed upon any individual rights
+      or copyright. There should be appropriate accountability for ensuring that these
+      necessary steps have been taken.'
+    section: Bias and discrimination AI issues
+  - text: There is, therefore, considerable uncertainty around who is the owner of
+      the copyright in an AI generated work and what actions should, or should not,
+      be considered copyright infringement when it comes to the use of AI systems.
+    section: Copyright and AI
+  - text: The School expects that you take responsibility of your use of AI and make
+      sure that it is done in the respect of third parties' rights including their
+      right to confidentiality.
+    section: Competition and confidentiality AI issues
+- id: atlas-membership-inference-attack
+  name: Membership inference attack
+  evidence:
+  - text: Any information you input into an AI prompt, or ask an AI tool to analyse,
+      may be stored by the AI provider and used to help further train its products
+      and models.
+  - text: This also means that any data you supply may surface in responses made to
+      other people's queries.
 - id: atlas-model-usage-rights
   name: Model usage rights restrictions
   evidence:
-  - text: Always review the terms and conditions of generative AI tools to understand who owns the copyright.
-    section: Copyright AI Issues
-    page: 10
-  - text: This at a minimum would constitute a breach of the Computer Misuse Act 1990, the Terms of Use of Jisc's network, our M365 tenancy agreement and the standard terms of most AI tool providers.
-    section: Cybersecurity AI rules
-    page: 12
+  - text: There are currently a number of legal cases in progress challenging the
+      legality of the use of copyright works to train GenAI (LLMs and images) without
+      copyright holder permission. New legislation is also coming in to force, for
+      example the EU's Artificial Intelligence Act.
+    section: Copyright and AI
+  - text: The aim of the Act is to be the world's first comprehensive legal framework
+      on AI worldwide. The levels of regulation in this Act are applicable to UK based
+      companies who operate globally and the main approach of the Act is based on
+      defining risks, defining key players, and outlining penalties for employers/organisations.
+    section: EU AI Act
+  - text: New legislation is also coming in to force, for example the EU's Artificial
+      Intelligence Act.
+    section: Copyright and AI
+  - text: The aim of the Act is to be the world's first comprehensive legal framework
+      on AI worldwide.
+    section: EU AI Act
 - id: atlas-non-disclosure
   name: Non-disclosure
   evidence:
-  - text: 'Issues of transparency: Consider whether there is transparent enough use of AI tools. Where processes and decisions affect people and their personal data, they should be made aware of how the
-      AI is being used and how their data is being processed.'
+  - text: Where processes and decisions affect people and their personal data, they
+      should be made aware of how the AI is being used and how their data is being
+      processed.
     section: Bias and discrimination AI issues
-  - text: This is particularly important where use of the AI will have a legal effect on someone e.g. marking summative assessment, processing an application.
+  - text: This is particularly important where use of the AI will have a legal effect
+      on someone e.g. marking summative assessment, processing an application.
     section: Data Protection principles and AI
 - id: atlas-output-bias
   name: Output bias
   evidence:
-  - text: the information is based on large volumes of data, some of which can be inaccurate, biased, or discriminatory.
+  - text: Generative AI tools can produce believable content with human-like results.
+      However, the information is based on large volumes of data, some of which can
+      be inaccurate, biased, or discriminatory.
     section: Bias and discrimination risks with AI
-    page: 15
+  - text: However, the information is based on large volumes of data, some of which
+      can be inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
 - id: atlas-over-or-under-reliance
   name: Over- or under-reliance
   evidence:
-  - text: Human judgement and filtering for what may be appropriate and reliable is not applied.
-    section: Bias and discrimination risks with AI
-    page: 15
-  - text: In using AI, you should consider the need for the appropriate and timely use of professional judgement.
-    section: Bias and discrimination risks with AI
-    page: 15
-  - text: There will a difference between a cursory 'rubber stamping' of outputs and the reviewing of data and applying human professional judgment.
-    section: Bias and discrimination AI issues
-    page: 15
+  - text: Remember that you're always accountable for any decisions you make, so be
+      very wary of making decisions solely based on AI outputs.
+    section: Cybersecurity AI rules
+  - text: Remember you're always accountable for any decisions you make, so be very
+      wary of making decisions solely based on AI outputs.
+    section: Cybersecurity AI rules
+  - text: How you incorporate checks into processing done by AI. Use your knowledge
+      and common sense on the results it provides you.
+    section: Think about
 - id: atlas-personal-information-in-data
   name: Personal information in data
   evidence:
-  - text: Personal data at LSE includes assessments, audio and video recordings, transcripts of audio and video recordings as well as the more obvious staff, student and research data.
-    section: Personal data
-    page: 13
-  - text: If uploading files to be analysed by an AI tools, ensure they do not contain Personally Identifiable Information.
+  - text: If uploading files to be analysed by an AI tools, ensure they do not contain
+      Personally Identifiable Information.
     section: Cybersecurity AI rules
-    page: 11
 - id: atlas-personal-information-in-prompt
   name: Personal information in prompt
   evidence:
-  - text: Any information you input into an AI prompt, or ask an AI tool to analyse, may be stored by the AI provider
-    section: Cybersecurity AI rules
-    page: 11
-  - text: Therefore, do not ingest any personal data into AI tools.
-    section: Cybersecurity AI rules
-    page: 11
-  - text: Don't put personal data in an AI tool that is external to LSE.
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
     section: What not to do
-    page: 4
-- id: atlas-plagiarism
-  name: 'Impact on education: plagiarism'
-  evidence:
-  - text: Don't upload in-copyright content (for example , images, photographs, student work, journal articles licensed from publishers by LSE library) where you do not have the copyright holder's permission
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
     section: What not to do
-    page: 4
+  - text: If uploading files to be analysed by an AI tools, ensure they do not contain
+      Personally Identifiable Information.
+    section: Cybersecurity AI rules
 - id: atlas-revealing-confidential-information
   name: Revealing confidential information
   evidence:
-  - text: Whatever your role is, you should be careful in handling information that you are aware or suspect may be confidential, especially when it come to the use of AI tools.
-    section: Confidentiality requirements
-    page: 6
-  - text: It does not remember queries, and will not reuse your data or otherwise ingest it for further training and potential regurgitation by other customers.
-    section: Secure AI
-    page: 11
-  - text: Don't put confidential or commercially sensitive data in an AI tool that is external to LSE.
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE. Aside from breaching confidentiality simply by feeding it
+      to the AI, it is also likely that the data can be regurgitated, that is disclosed
+      to an indefinite number of third parties outside your or LSE's control.
     section: What not to do
-    page: 4
+  - text: The School cannot use public AI systems for processing tenders as this could
+      make the commercially sensitive pricing data available to third parties including
+      their competitors.
+    section: Competition and confidentiality AI issues
+  - text: Any information fed into a public AI system may be re-used and disclosed
+      to an indefinite number of third parties by the AI system.
+    section: Competition and confidentiality AI issues
+- id: atlas-spreading-disinformation
+  name: Spreading disinformation
+  evidence:
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
+- id: atlas-unexplainable-output
+  name: Unexplainable output
+  evidence:
+  - text: 'Explainability: Where the output of an AI tool has influenced decision
+      making or where an AI automated process is used, there should be someone appropriately
+      trained and/ or informed to provide an explanation for how the AI tool has been
+      used.'
+    section: Bias and discrimination AI issues
+  - text: Where the output of an AI tool has influenced decision making or where an
+      AI automated process is used, there should be someone appropriately trained
+      and/ or informed to provide an explanation for how the AI tool has been used.
+    section: Bias and discrimination AI issues
+- id: credo-risk-005
+  name: Lack of training data transparency
+  evidence:
+  - text: There is, therefore, considerable uncertainty around who is the owner of
+      the copyright in an AI generated work and what actions should, or should not,
+      be considered copyright infringement when it comes to the use of AI systems.
+    section: Copyright and AI
+  - text: seeking tools that use properly licensed or public domain training data
+      or have technical safeguards against using protected data, and vetting datasets
+      when training AI to consider IP ownership and licence coverage.
+    section: Copyright AI Issues
+  - text: There are currently a number of legal cases in progress challenging the
+      legality of the use of copyright works to train GenAI (LLMs and images) without
+      copyright holder permission.
+    section: Copyright and AI
+- id: credo-risk-007
+  name: Inadequate observability
+  evidence:
+  - text: 'Auditing and Monitoring : Consider how the use and outputs of AI will be
+      monitored and reviewed. This could be built into existing review processes.'
+    section: Bias and discrimination AI issues
 - id: credo-risk-008
   name: Opaque system architecture
   evidence:
-  - text: 'Explainability: Where the output of an AI tool has influenced decision making or where an AI automated process is used, there should be someone appropriately trained and/ or informed to provide
-      an explanation for how the AI tool has been used.'
+  - text: 'Explainability: Where the output of an AI tool has influenced decision
+      making or where an AI automated process is used, there should be someone appropriately
+      trained and/ or informed to provide an explanation for how the AI tool has been
+      used.'
     section: Bias and discrimination AI issues
-  - text: Staff will not be required to have a deeply technical understanding of the AI tool, but may be able to explain the principles, parameters and / or data that had been applied in the process.
+  - text: Staff will not be required to have a deeply technical understanding of the
+      AI tool, but may be able to explain the principles, parameters and / or data
+      that had been applied in the process.
     section: Bias and discrimination AI issues
-- id: credo-risk-016
-  name: Over or under-reliance and unsafe use (Slattery et al., 2024; IBM, 2024; AI, 2023)
+- id: credo-risk-009
+  name: Black box decisionmaking
   evidence:
-  - text: Do not trust any information supplied by AI tools without undertaking independent verification.
+  - text: 'Explainability: Where the output of an AI tool has influenced decision
+      making or where an AI automated process is used, there should be someone appropriately
+      trained and/ or informed to provide an explanation for how the AI tool has been
+      used.'
+    section: Bias and discrimination AI issues
+  - text: Staff will not be required to have a deeply technical understanding of the
+      AI tool, but may be able to explain the principles, parameters and / or data
+      that had been applied in the process.
+    section: Bias and discrimination AI issues
+  - text: c) Transparency and explainability
+    section: EU AI Act
+- id: credo-risk-010
+  name: Stereotype perpetuation
+  evidence:
+  - text: Generative AI tools can produce believable content with human-like results.
+      However, the information is based on large volumes of data, some of which can
+      be inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+    section: Bias and discrimination risks with AI
+  - text: However, the information is based on large volumes of data, some of which
+      can be inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
+- id: credo-risk-011
+  name: Disparate model performance
+  evidence:
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics.
+    section: Bias and discrimination risks with AI
+- id: credo-risk-015
+  name: Dangerous or violent content
+  evidence:
+  - text: Don't ask an AI tool to do something malicious or illegal.
+    section: What not to do
+- id: credo-risk-016
+  name: Over or under-reliance and unsafe use
+  evidence:
+  - text: Human involvement will not necessarily be equal to human decision making.
+      There will a difference between a cursory 'rubber stamping' of outputs and the
+      reviewing of data and applying human professional judgment.
+    section: Bias and discrimination AI issues
+  - text: Remember that you're always accountable for any decisions you make, so be
+      very wary of making decisions solely based on AI outputs.
     section: Cybersecurity AI rules
-  - text: Remember that you're always accountable for any decisions you make, so be very wary of making decisions solely based on AI outputs.
-    section: Cybersecurity AI rules
-  - text: How you incorporate checks into processing done by AI. Use your knowledge and common sense on the results it provides you.
+  - text: How you incorporate checks into processing done by AI. Use your knowledge
+      and common sense on the results it provides you.
     section: Think about
 - id: credo-risk-017
   name: Inadequate AI literacy and communication
   evidence:
-  - text: The School encourages staff to have a basic understanding of AI, how it can be used and be familiar with the potential risks of using it.
+  - text: In addition, where AI is used within teams and / or had been embedded into
+      working practices, there should be appropriate training and technical knowledge
+      for the staff involved.
     section: Bias and discrimination AI issues
-    page: 15
-  - text: there should be appropriate training and technical knowledge for the staff involved.
+  - text: 'Staff training and guidance : The School encourages staff to have a basic
+      understanding of AI, how it can be used and be familiar with the potential risks
+      of using it.'
     section: Bias and discrimination AI issues
-    page: 15
+  - text: The School encourages staff to have a basic understanding of AI, how it
+      can be used and be familiar with the potential risks of using it.
+    section: Bias and discrimination AI issues
 - id: credo-risk-019
-  name: Loss of human agency and autonomy (Slattery et al., 2024; IBM, 2024)
+  name: Loss of human agency and autonomy
   evidence:
-  - text: Human involvement will not necessarily be equal to human decision making.
+  - text: 'Human decision making: Human involvement will not necessarily be equal
+      to human decision making. There will a difference between a cursory ''rubber
+      stamping'' of outputs and the reviewing of data and applying human professional
+      judgment.'
     section: Bias and discrimination AI issues
-    page: 15
+  - text: Where the use of AI presents a high risk to individuals- for example, in
+      employment decisions, human decision making should always be used appropriately.
+    section: Bias and discrimination AI issues
+  - text: Where the use of AI presents a high risk to individuals- for example, in
+      employment decisions, human decision making should always be used appropriately.
+    section: Bias and discrimination AI issues
 - id: credo-risk-021
   name: False or misleading information
   evidence:
-  - text: AI tools are known to hallucinate, namely supplying information that has no basis in reality, or else reproducing information that is out of date or is misinformation.
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
     section: Cybersecurity AI rules
-    page: 12
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
+    section: Cybersecurity AI rules
 - id: credo-risk-023
   name: Regulatory compliance
   evidence:
-  - text: The levels of regulation in this Act are applicable to UK based companies who operate globally
-    section: Will apply to - personal data, employment and working practices, competition
-    page: 17
-  - text: ensure the terms of the licence to ensure compliance
-    section: Copyright AI Issues
-    page: 9
-- id: credo-risk-025
-  name: Corporate liability (IBM, 2024)
+  - text: Acts and Bills affecting UK HEIs and Organisations related to competition
+      and confidentiality, copyright, cybersecurity, data protection, employment and
+      working practices- as at June 2024.
+    section: Legislation affecting AI use
+  - text: The intention is to provide you with the guidelines you must operate under
+      so you do not breach any laws while using AI.
+    section: What this guidance is for
+  - text: The intention is to provide you with the guidelines you must operate under
+      so you do not breach any laws while using AI.
+    section: What this guidance is for
+- id: credo-risk-024
+  name: Civil liability
   evidence:
-  - text: outlining penalties for employers/organisations
-    section: Will apply to - personal data, employment and working practices, competition
-    page: 17
-  - text: The School cannot use public AI systems for processing tenders as this could make the commercially sensitive pricing data available to third parties including their competitors.
-    section: Competition and confidentiality AI issues
-    page: 6
-  - text: Any  information  which  could  potentially  be  considered  breaching  competition law should also not be put in a public AI system
-    section: Competition and confidentiality AI issues
-    page: 6
+  - text: A breach of confidentiality may cause financial losses, reputational damage,
+      can expose the School to serious liability and you may incur disciplinary sanctions.
+    section: Confidentiality requirements
+- id: credo-risk-025
+  name: Corporate liability
+  evidence:
+  - text: A breach of confidentiality may cause financial losses, reputational damage,
+      can expose the School to serious liability and you may incur disciplinary sanctions.
+    section: Confidentiality requirements
+  - text: A breach of confidentiality may cause financial losses, reputational damage,
+      can expose the School to serious liability and you may incur disciplinary sanctions.
+    section: Confidentiality requirements
+  - text: Copyright infringement occurs when a person, without the copyright owner's
+      permission, performs any of the acts mentioned above.
+    section: Copyright
+- id: credo-risk-027
+  name: Cyberattacks, weapon development, and mass harm
+  evidence:
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours. This at a minimum would constitute a
+      breach of the Computer Misuse Act 1990...
+    section: Cybersecurity AI rules
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours.
+    section: Cybersecurity AI rules
+  - text: Don't ask an AI tool to do something malicious or illegal.
+    section: What not to do
 - id: credo-risk-034
   name: Oversight and evaluation challenges
   evidence:
-  - text: 'Auditing and Monitoring: Consider how the use and outputs of AI will be monitored and reviewed. This could be built into existing review processes.'
+  - text: 'Accountability: AI can be used to generate a range of information and resources.
+      However, given the risks outlined in this guidance, it will be important that
+      necessary steps are taken to review the outputs of any AI tool and ensure that
+      it is accurate, appropriate and has not infringed upon any individual rights
+      or copyright.'
     section: Bias and discrimination AI issues
-  - text: 'Human decision making: Human involvement will not necessarily be equal to human decision making. There will a difference between a cursory ''rubber stamping'' of outputs and the reviewing of
-      data and applying human professional judgment.'
+  - text: 'Auditing and Monitoring : Consider how the use and outputs of AI will be
+      monitored and reviewed. This could be built into existing review processes.'
     section: Bias and discrimination AI issues
-  - text: Any automated decisions that have real-world impacts on humans must allow for a human review.
-    section: Cybersecurity AI rules
+  - text: Consider how the use and outputs of AI will be monitored and reviewed. This
+      could be built into existing review processes.
+    section: Bias and discrimination AI issues
 - id: credo-risk-036
-  name: Compromised personally identifiable information (Slattery et al., 2024)
+  name: Compromised personally identifiable information
   evidence:
-  - text: If this is personal data, this constitutes a data breach.
-    section: Cybersecurity AI rules
-    page: 11
-  - text: ensure they do not contain Personally Identifiable Information.
-    section: Cybersecurity AI rules
-    page: 11
-  - text: Don't put personal data in an AI tool that is external to LSE.
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
     section: What not to do
-    page: 4
+  - text: Don't put personal data in an AI tool that is external to LSE. If it will
+      swallow the personal data for further processing that LSE cannot control, you
+      can't use the AI tool.
+    section: What not to do
+  - text: If uploading files to be analysed by an AI tools, ensure they do not contain
+      Personally Identifiable Information.
+    section: Cybersecurity AI rules
 - id: credo-risk-037
   name: Compromised sensitive information (Slattery et al., 2024; IBM, 2024; AI, 2023)
   evidence:
@@ -450,319 +1011,262 @@ risks:
   - text: If this is personal data, this constitutes a data breach.
     section: Cybersecurity AI rules
     page: 11
-  - text: ensure it only has access to files that do not contain either personal data or other data that should be restricted only to LSE (e.g. corporate financial data).
+  - text: ensure it only has access to files that do not contain either personal data
+      or other data that should be restricted only to LSE (e.g. corporate financial
+      data).
     section: Cybersecurity AI rules
     page: 11
-- id: credo-risk-040
-  name: AI-generated security weaknesses (Slattery et al., 2024; IBM, 2024; AI, 2023)
+- id: credo-risk-038
+  name: Compromised confidential information
   evidence:
-  - text: Any information you input into an AI prompt, or ask an AI tool to analyse, may be stored by the AI provider and used to help further train its products and models.
-    section: Cybersecurity AI rules
-  - text: This also means that any data you supply may surface in responses made to other people's queries. If this is personal data, this constitutes a data breach.
-    section: Cybersecurity AI rules
-  - text: If another tool is required, Cybersecurity should be contacted and a Cloud Assurance Questionnaire completed before the tool can be used.
-    section: Secure AI
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE. Aside from breaching confidentiality simply by feeding it
+      to the AI, it is also likely that the data can be regurgitated, that is disclosed
+      to an indefinite number of third parties outside your or LSE's control.
+    section: What not to do
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE. Aside from breaching confidentiality simply by feeding it
+      to the AI, it is also likely that the data can be regurgitated, that is disclosed
+      to an indefinite number of third parties outside your or LSE's control.
+    section: What not to do
+  - text: communication of confidential information to a public AI system is already
+      a breach of confidentiality, because with some limited exceptions you are not
+      supposed to disclose it to anyone, including the AI system.
+    section: Competition and confidentiality AI issues
 - id: credo-risk-046
   name: Governance failures (Slattery et al., 2024)
   evidence:
-  - text: 'Accountability: AI can be used to generate a range of information and resources. However, given the risks outlined in this guidance, it will be important that necessary steps are taken to review
-      the outputs of any AI tool and ensure that it is accurate, appropriate and has not infringed upon any individual rights or copyright. There should be appropriate accountability for ensuring that these
+  - text: 'Accountability: AI can be used to generate a range of information and resources.
+      However, given the risks outlined in this guidance, it will be important that
+      necessary steps are taken to review the outputs of any AI tool and ensure that
+      it is accurate, appropriate and has not infringed upon any individual rights
+      or copyright. There should be appropriate accountability for ensuring that these
       necessary steps have been taken.'
     section: Bias and discrimination AI issues
-  - text: The School expects that you take responsibility of your use of AI and make sure that it is done in the respect of third parties' rights including their right to confidentiality.
+  - text: The School expects that you take responsibility of your use of AI and make
+      sure that it is done in the respect of third parties' rights including their
+      right to confidentiality.
     section: Competition and confidentiality AI issues
-  - text: 'Staff training and guidance: The School encourages staff to have a basic understanding of AI, how it can be used and be familiar with the potential risks of using it.'
+  - text: 'Staff training and guidance: The School encourages staff to have a basic
+      understanding of AI, how it can be used and be familiar with the potential risks
+      of using it.'
     section: Bias and discrimination AI issues
 - id: mit-ai-risk-subdomain-1.1
   name: Unfair discrimination and misrepresentation
   evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics.
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
     section: What is the Equality Act?
-    page: 15
-  - text: Direct discrimination occurs when a person receives less favourable treatment directly because of a protected characteristic. Indirect discrimination can occur when everyone is treated the same,
-      but people with a protected characteristic are put at a disadvantage.
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
     section: What is the Equality Act?
-    page: 15
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
+  - text: In addition, the use of AI tools to process decisions and generate outputs
+      may lead to discrimination based on protected characteristics. Without appropriate
+      due diligence and human accountability, the use of AI can lead to breaches in
+      equality legislation.
     section: Bias and discrimination risks with AI
-    page: 15
+- id: mit-ai-risk-subdomain-1.2
+  name: Exposure to toxic content
+  evidence:
+  - text: the information is based on large volumes of data, some of which can be
+      inaccurate, biased, or discriminatory.
+  - text: Human judgement and filtering for what may be appropriate and reliable is
+      not applied.
 - id: mit-ai-risk-subdomain-1.3
   name: Unequal performance across groups
   evidence:
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-    section: Bias and discrimination risks with AI
-    page: 15
-  - text: This assessment can help to identify and evidence the likely impact of AI tools on different groups of individuals and where possible, advance equality, diversity and inclusion.
+  - text: a) Equality Impact assessments (EIAs). This assessment can help to identify
+      and evidence the likely impact of AI tools on different groups of individuals
+      and where possible, advance equality, diversity and inclusion.
     section: Bias and discrimination AI issues
-    page: 15
+  - text: Generative AI tools can produce believable content with human-like results.
+      However, the information is based on large volumes of data, some of which can
+      be inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
+  - text: However, the information is based on large volumes of data, some of which
+      can be inaccurate, biased, or discriminatory.
+    section: Bias and discrimination risks with AI
 - id: mit-ai-risk-subdomain-2.1
-  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive information
+  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive
+    information
   evidence:
-  - text: A breach of confidentiality may cause financial losses, reputational damage, can expose the School to serious liability and you may incur disciplinary sanctions.
-    section: Confidentiality requirements
-    page: 6
-  - text: Whatever your role is, you should be careful in handling information that you are aware or suspect may be confidential, especially when it come to the use of AI tools.
-    section: Confidentiality requirements
-    page: 6
-  - text: do not share confidential or protected materials while feeding data to the AI tool.
-    section: Copyright AI Issues
-    page: 9
+  - text: Any information you input into an AI prompt, or ask an AI tool to analyse,
+      may be stored by the AI provider and used to help further train its products
+      and models. a. This also means that any data you supply may surface in responses
+      made to other people's queries. If this is personal data, this constitutes a
+      data breach.
+    section: Cybersecurity AI rules
+  - text: Any information you input into an AI prompt, or ask an AI tool to analyse,
+      may be stored by the AI provider and used to help further train its products
+      and models. This also means that any data you supply may surface in responses
+      made to other people's queries. If this is personal data, this constitutes a
+      data breach.
+    section: Cybersecurity AI rules
+  - text: Don't put confidential or commercially sensitive data in an AI tool that
+      is external to LSE. Aside from breaching confidentiality simply by feeding it
+      to the AI, it is also likely that the data can be regurgitated, that is disclosed
+      to an indefinite number of third parties outside your or LSE's control.
+    section: What not to do
+- id: mit-ai-risk-subdomain-2.2
+  name: AI system security vulnerabilities and attacks
+  evidence:
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours. This at a minimum would constitute a
+      breach of the Computer Misuse Act 1990, the Terms of Use of Jisc's network,
+      our M365 tenancy agreement and the standard terms of most AI tool providers.
+    section: Cybersecurity AI rules
+  - text: If another tool is required, Cybersecurity should be contacted and a Cloud
+      Assurance Questionnaire completed before the tool can be used.
+    section: Secure AI
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours.
+    section: Cybersecurity AI rules
 - id: mit-ai-risk-subdomain-3.1
   name: False or misleading information
   evidence:
-  - text: AI tools are known to hallucinate, namely supplying information that has no basis in reality, or else reproducing information that is out of date or is misinformation.
+  - text: Do not trust any information supplied by AI tools without undertaking independent
+      verification. a. AI tools are known to hallucinate, namely supplying information
+      that has no basis in reality, or else reproducing information that is out of
+      date or is misinformation.
     section: Cybersecurity AI rules
-  - text: Do not trust any information supplied by AI tools without undertaking independent verification.
+  - text: Do not trust any information supplied by AI tools without undertaking independent
+      verification. AI tools are known to hallucinate, namely supplying information
+      that has no basis in reality, or else reproducing information that is out of
+      date or is misinformation.
+    section: Cybersecurity AI rules
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
     section: Cybersecurity AI rules
 - id: mit-ai-risk-subdomain-4.3
   name: Fraud, scams, and targeted manipulation
   evidence:
+  - text: Never ask an AI to perform tasks that are malicious or that may compromise
+      other people or data that is not yours.
+    section: Cybersecurity AI rules
   - text: Don't ask an AI tool to do something malicious or illegal.
     section: What not to do
-  - text: We should not try to get a competitor's data out of an AI system by trying to get it to regurgitate that data.
-    section: Competition and confidentiality AI issues
-  - text: Never ask an AI to perform tasks that are malicious or that may compromise other people or data that is not yours.
-    section: Cybersecurity AI rules
+  - text: Don't ask an AI tool to do something malicious or illegal.
+    section: What not to do
 - id: mit-ai-risk-subdomain-5.1
   name: Overreliance and unsafe use
   evidence:
-  - text: Do not trust any information supplied by AI tools without undertaking independent verification.
-    section: Cybersecurity AI rules
-    page: 11
-  - text: be very wary of making decisions solely based on AI outputs.
-    section: Cybersecurity AI rules
-    page: 11
-  - text: As AI gets better, it will appear to be 'thinking' more.
+  - text: As AI gets better, it will appear to be 'thinking' more. However, it won't
+      be actually thinking, it is just supporting human thinking.
     section: Think about
-    page: 4
+  - text: Remember that you're always accountable for any decisions you make, so be
+      very wary of making decisions solely based on AI outputs.
+    section: Cybersecurity AI rules
+  - text: Remember that you're always accountable for any decisions you make, so be
+      very wary of making decisions solely based on AI outputs.
+    section: Cybersecurity AI rules
 - id: mit-ai-risk-subdomain-5.2
   name: Loss of human agency and autonomy
   evidence:
-  - text: Automated decision-making. This is where decisions are made by automated means without human involvement.
-    section: Bias and discrimination risks with AI
-    page: 15
+  - text: 'd) Human decision making: Human involvement will not necessarily be equal
+      to human decision making. There will a difference between a cursory ''rubber
+      stamping'' of outputs and the reviewing of data and applying human professional
+      judgment. Where the use of AI presents a high risk to individuals- for example,
+      in employment decisions, human decision making should always be used appropriately.'
+    section: Bias and discrimination AI issues
+  - text: 'Article 22 of the UK GDPR: data subjects ''have the right not to be subject
+      to a decision based solely on automated processing, including profiling, which
+      produces legal effects concerning him or her or similarly significantly affects
+      him or her''.'
+    section: Data Protection AI issues
+  - text: Where the use of AI presents a high risk to individuals- for example, in
+      employment decisions, human decision making should always be used appropriately.
+    section: Bias and discrimination AI issues
+- id: mit-ai-risk-subdomain-6.2
+  name: Increased inequality and decline in employment quality
+  evidence:
+  - text: This is currently being developed with the aim of safeguarding workers.
+      It's called Dignity at work and the AI Revolution.
+    section: TUC 2021 Manifesto on AI
 - id: mit-ai-risk-subdomain-6.3
   name: Economic and cultural devaluation of human effort
   evidence:
   - text: Generative AI - creates synthetic content that mimics human creativity.
     section: What is AI - definitions
     page: 3
-- id: mit-ai-risk-subdomain-7.4
-  name: Lack of transparency or interpretability
+- id: mit-ai-risk-subdomain-6.5
+  name: Governance failure
   evidence:
-  - text: 'Issues of transparency: Consider whether there is transparent enough use of AI tools.'
-    section: Bias and discrimination AI issues
-    page: 15
-  - text: 'Explainability: Where the output of an AI tool has influenced decision making or where an AI automated process is used, there should be someone appropriately trained and / or informed to provide
-      an explanation for how the AI tool has been used.'
-    section: Bias and discrimination AI issues
-    page: 15
-  - text: appropriate transparency and explainability
-    section: UK AI Regulation Bill
-    page: 18
-- id: ai-risk-taxonomy-characterization-of-identity---disability
-  name: Characterization of identity - Disability
-  evidence:
-  - text: The Equality Act also places a duty on employers to ensure that reasonable adjustments are made to reduce or remove disadvantages that may be faced by people with disabilities.
-- id: ai-risk-taxonomy-characterization-of-identity---race
-  name: Characterization of identity - Race
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-characterization-of-identity---religion
-  name: Characterization of identity - Religion
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-classification-of-individuals---gender
-  name: Classification of individuals - Gender
-  evidence:
-  - text: These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity, gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-classification-of-individuals---health-conditions
-  name: Classification of individuals - Health conditions
-  evidence:
-  - text: The Equality Act also places a duty on employers to ensure that reasonable adjustments are made to reduce or remove disadvantages that may be faced by people with disabilities.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-classification-of-individuals---pregnancy-status
-  name: Classification of individuals - Pregnancy Status
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-classification-of-individuals---race
-  name: Classification of individuals - Race
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-classification-of-individuals---sexual-orientation
-  name: Classification of individuals - Sexual orientation
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
-  name: Discrimination in employment, benefits, or services - Ethnicity
-  evidence:
-  - text: These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity, gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: atlas-spreading-disinformation
-  name: Spreading disinformation
-  evidence:
-  - text: AI tools are known to hallucinate, namely supplying information that has no basis in reality, or else reproducing information that is out of date or is misinformation.
-- id: atlas-unexplainable-output
-  name: Unexplainable output
-  evidence:
-  - text: 'Explainability: Where the output of an AI tool has influenced decision making or where an AI automated process is used, there should be someone appropriately trained and/ or informed to provide
-      an explanation for how the AI tool has been used.'
-  - text: appropriate transparency and explainability
+  - text: The CDPA was drafted before the possibilities and challenges of GenAI were
+      known. Law, and the governments that make it, are lagging behind developments
+      in this area. There is, therefore, considerable uncertainty around who is the
+      owner of the copyright in an AI generated work and what actions should, or should
+      not, be considered copyright infringement when it comes to the use of AI systems.
+    section: Copyright and AI
+  - text: There are currently a number of legal cases in progress challenging the
+      legality of the use of copyright works to train GenAI (LLMs and images) without
+      copyright holder permission.
+    section: Copyright and AI
+  - text: Law, and the governments that make it, are lagging behind developments in
+      this area.
+    section: Copyright and AI
 - id: mit-ai-risk-subdomain-7.3
   name: Lack of capability or robustness
   evidence:
-  - text: AI tools can produce unreliable information and where processes are automated, they may not adequately account for exceptions, mitigation or the need for reasonable adjustments.
-  - text: the information is based on large volumes of data, some of which can be inaccurate, biased, or discriminatory.
-- id: ai-risk-taxonomy-characterization-of-identity---age
-  name: Characterization of identity - Age
+  - text: AI tools are known to hallucinate, namely supplying information that has
+      no basis in reality, or else reproducing information that is out of date or
+      is misinformation.
+    section: Cybersecurity AI rules
+- id: mit-ai-risk-subdomain-7.4
+  name: Lack of transparency or interpretability
   evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-characterization-of-identity---beliefs
-  name: Characterization of identity - Beliefs
+  - text: 'b) Issues of transparency: Consider whether there is transparent enough
+      use of AI tools. Where processes and decisions affect people and their personal
+      data, they should be made aware of how the AI is being used and how their data
+      is being processed.'
+    section: Bias and discrimination AI issues
+  - text: 'c) Explainability: Where the output of an AI tool has influenced decision
+      making or where an AI automated process is used, there should be someone appropriately
+      trained and/ or informed to provide an explanation for how the AI tool has been
+      used.'
+    section: Bias and discrimination AI issues
+  - text: 'Explainability: Where the output of an AI tool has influenced decision
+      making or where an AI automated process is used, there should be someone appropriately
+      trained and/ or informed to provide an explanation for how the AI tool has been
+      used.'
+    section: Bias and discrimination AI issues
+- id: ai-risk-taxonomy-cause-harmful-labor-force-disruptions
   evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-characterization-of-identity---ethnicity
-  name: Characterization of identity - Ethnicity
+  - 1
+- id: ai-risk-taxonomy-unauthorized-disclosure---educational-records
   evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-- id: ai-risk-taxonomy-characterization-of-identity---gender
-  name: Characterization of identity - Gender
+  - 3
+- id: ai-risk-taxonomy-unauthorized-disclosure---financial-records
   evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-- id: ai-risk-taxonomy-characterization-of-identity---health-conditions
-  name: Characterization of identity - Health conditions
-  evidence:
-  - text: The Equality Act also places a duty on employers to ensure that reasonable adjustments are made to reduce or remove disadvantages that may be faced by people with disabilities.
-  - text: AI tools can produce unreliable information and where processes are automated, they may not adequately account for exceptions, mitigation or the need for reasonable adjustments.
-- id: ai-risk-taxonomy-characterization-of-identity---mental-characteristics
-  name: Characterization of identity - Mental Characteristics
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-- id: ai-risk-taxonomy-characterization-of-identity---occupation
-  name: Characterization of identity - Occupation
-  evidence:
-  - text: The Equality Act also places a duty on employers to ensure that reasonable adjustments are made to reduce or remove disadvantages that may be faced by people with disabilities.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-characterization-of-identity---predicted-personality
-  name: Characterization of identity - Predicted Personality
-  evidence:
-  - text: Profiling involves categorising people and predicting their behaviour based on their characteristics. This present discrimination risks.
-- id: ai-risk-taxonomy-characterization-of-identity---pregnancy-status
-  name: Characterization of identity - Pregnancy Status
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-- id: ai-risk-taxonomy-characterization-of-identity---sexual-orientation
-  name: Characterization of identity - Sexual orientation
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-- id: ai-risk-taxonomy-classification-of-individuals---beliefs
-  name: Classification of individuals - Beliefs
-  evidence:
-  - text: These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity, gender reassignment and marriage/civil partnership.
-- id: ai-risk-taxonomy-classification-of-individuals---color
-  name: Classification of individuals - Color
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-classification-of-individuals---ethnicity
-  name: Classification of individuals - Ethnicity
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: Profiling involves categorising people and predicting their behaviour based on their characteristics. This present discrimination risks.
-- id: ai-risk-taxonomy-classification-of-individuals---predicted-personality
-  name: Classification of individuals - Predicted Personality
-  evidence:
-  - text: Profiling involves categorising people and predicting their behaviour based on their characteristics. This present discrimination risks.
-- id: ai-risk-taxonomy-classification-of-individuals---religion
-  name: Classification of individuals - Religion
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: Profiling involves categorising people and predicting their behaviour based on their characteristics. This present discrimination risks.
-- id: ai-risk-taxonomy-classification-of-individuals---social-behaviors
-  name: Classification of individuals - Social behaviors
-  evidence:
-  - text: Profiling involves categorising people and predicting their behaviour based on their characteristics. This present discrimination risks.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---health-conditions
-  name: Discrimination in employment, benefits, or services - Health conditions
-  evidence:
-  - text: The Equality Act also places a duty on employers to ensure that reasonable adjustments are made to reduce or remove disadvantages that may be faced by people with disabilities.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---occupation
-  name: Discrimination in employment, benefits, or services - Occupation
-  evidence:
-  - text: The Equality Act also places a duty on employers to ensure that reasonable adjustments are made to reduce or remove disadvantages that may be faced by people with disabilities.
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---pregnancy-status
-  name: Discrimination in employment, benefits, or services - Pregnancy Status
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race
-  name: Discrimination in employment, benefits, or services - Race
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: In addition, the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---religion
-  name: Discrimination in employment, benefits, or services - Religion
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---sexual-orientation
-  name: Discrimination in employment, benefits, or services - Sexual orientation
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-  - text: the use of AI tools to process decisions and generate outputs may lead to discrimination based on protected characteristics.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors
-  name: Discrimination in employment, benefits, or services - Social behaviors
-  evidence:
-  - text: The Equality Act 2010 prohibits both direct and indirect discrimination on the grounds of protected characteristics. These are sex, race, age, religion, disability, sexual orientation, pregnancy/maternity,
-      gender reassignment and marriage/civil partnership.
-- id: atlas-impact-on-jobs
-  name: Impact on Jobs
-  evidence:
-  - text: This one is most relevant to employment and student recruitment, in particular in recruitment practices.
-- id: atlas-membership-inference-attack
-  name: Membership inference attack
-  evidence:
-  - text: Any information you input into an AI prompt, or ask an AI tool to analyse, may be stored by the AI provider and used to help further train its products and models.
-  - text: This also means that any data you supply may surface in responses made to other people's queries.
-- id: mit-ai-risk-subdomain-1.2
-  name: Exposure to toxic content
-  evidence:
-  - text: the information is based on large volumes of data, some of which can be inaccurate, biased, or discriminatory.
-  - text: Human judgement and filtering for what may be appropriate and reliable is not applied.
-- id: mit-ai-risk-subdomain-3.2
-  name: Pollution of information ecosystem and loss of consensus reality
-  evidence:
-  - text: AI tools are known to hallucinate, namely supplying information that has no basis in reality, or else reproducing information that is out of date or is misinformation.
-  - text: Generative AI tools can produce believable content with human-like results. However, the information is based on large volumes of data, some of which can be inaccurate, biased, or discriminatory.
+  - 2
+  - 3
 - id: ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)
-  name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
-  - text: Personal data is defined in the UK GDPR as 'any information relating to an identified or identifiable natural person ('data subject')
+  - 1
+  - 2
+  - 3
+- id: ai-risk-taxonomy-unauthorized-distribution---educational-records
+  evidence:
+  - 2
+- id: ai-risk-taxonomy-unauthorized-distribution---financial-records
+  evidence:
+  - 3
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age
+  evidence:
+  - 2
+- id: ai-risk-taxonomy-exploiting-advantages-for-monopolistic-practices
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-reputation-rights
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---mental-characteristics
+  evidence:
+  - 1
