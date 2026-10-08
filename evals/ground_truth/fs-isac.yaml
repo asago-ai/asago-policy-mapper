@@ -1,330 +1,767 @@
 risks:
-- id: atlas-hallucination
-  name: Hallucination
+- id: ai-risk-taxonomy-accounting
+  name: Accounting
   evidence:
-  - text: These systems may "hallucinate" when their answers appear convincing but are completely wrong.
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
     section: Accuracy
-  - text: Generative AI systems are far from perfect, especially with fact-based output. These systems may "hallucinate" when their answers appear convincing but are completely wrong. Users should not rely
-      on their accuracy.
-    section: Data Received from Generative AI Systems - Accuracy
-  - text: That the accuracy of these systems is still suspect; they have been known to "hallucinate"
-    section: Responsibility
-- id: atlas-over-or-under-reliance
-  name: Over or Under Reliance
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
+    section: Accuracy
+- id: ai-risk-taxonomy-financial
+  name: Financial
   evidence:
-  - text: Generative AI systems are far from perfect, especially with fact-based output. These systems may "hallucinate" when their answers appear convincing but are completely wrong. Users should not rely
-      on their accuracy.
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
     section: Accuracy
-  - text: Incorrect answers can cause severe issues for companies. For example, inaccurate instructions for IT administrators may lead to data loss or other system damage.
+  - text: Distortion of statistics or other facts may lead to employees making public
+      claims or key decisions based on erroneous information.
     section: Accuracy
-- id: credo-risk-021
-  name: False or Misleading Information
-  evidence:
-  - text: Distortion of statistics or other facts may lead to employees making public claims or key decisions based on erroneous information.
+  - text: manipulating financial services transactions for personal gain
     section: Accuracy
-  - text: Since generative AI may not be current on legislation, answers on accounting, tax, or other legal considerations may be inaccurate
-    section: Accuracy
-- id: atlas-poor-model-accuracy
-  name: Poor Model Accuracy
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
   evidence:
   - text: Generative AI systems are far from perfect, especially with fact-based output.
+      These systems may 'hallucinate' when their answers appear convincing but are
+      completely wrong.
     section: Accuracy
-  - text: Given that the accuracy of generative AI is imperfect, the firm strongly encourages employees to manually verify the output before use.
-    section: Accuracy - Policy Guidance
-- id: atlas-confidential-data-in-prompt
-  name: Confidential Data in Prompt
+  - text: Distortion of statistics or other facts may lead to employees making public
+      claims or key decisions based on erroneous information.
+    section: Accuracy
+  - text: These systems may 'hallucinate' when their answers appear convincing but
+      are completely wrong.
+    section: Accuracy
+- id: ai-risk-taxonomy-impersonating-humans
+  name: Impersonating humans
   evidence:
-  - text: Currently, most external generative AI systems use queries for future training (although some systems allow opt-outs). The service may preserve the queries, which hackers could breach and release.
-      Queries with sensitive data put companies at significant risk.
-    section: Confidentiality
-  - text: The policy assumes as an overarching principle that data loss risks are present in the use of generative AI systems, like any other third-party system.
-    section: Introduction - Policy Guidance
-- id: atlas-revealing-confidential-information
-  name: Revealing Confidential Information
-  evidence:
-  - text: The service may preserve the queries, which hackers could breach and release. Queries with sensitive data put companies at significant risk.
-    section: Confidentiality
-  - text: Any data having Personally Identifiable Information, Nonpublic Personal Information, or other data under the purview of regulators or similar entities.
-    section: Confidentiality - Policy Guidance (Stringent)
-- id: atlas-confidential-information-in-data
-  name: Confidential Information in Data
-  evidence:
-  - text: Employees must take care to preserve the confidentiality of the company's work products above any uses of generative AI systems.
-    section: Confidentiality - Policy Guidance (Permissive)
-  - text: 'Employees must not share: The company''s internal IP, especially proprietary, copyrighted, or related IP'
-    section: Confidentiality - Policy Guidance (Stringent)
-- id: atlas-ip-information-in-prompt
-  name: IP Information in Prompt
-  evidence:
-  - text: The impact, importance, or uniqueness of the company's intellectual property (IP) before sharing it. Consider genericizing and stripping any company references, especially if the data is proprietary
-      or copyrighted
-    section: Confidentiality - Policy Guidance (Permissive)
-  - text: The company's internal IP, especially proprietary, copyrighted, or related IP
-    section: Confidentiality - Policy Guidance (Stringent)
-  - text: Ensure protection of the company's intellectual property
-    section: Introduction - Policy Guidance
-- id: atlas-personal-information-in-prompt
-  name: Personal Information in Prompt
-  evidence:
-  - text: Limiting or obfuscating the data if it has Personally Identifiable Information (PII), Nonpublic Personal Information (NPI), or other data under the purview of regulators or similar entities
-    section: Confidentiality - Policy Guidance (Permissive)
-  - text: Any data having Personally Identifiable Information, Nonpublic Personal Information, or other data under the purview of regulators or similar entities.
-    section: Confidentiality - Policy Guidance (Stringent)
-- id: atlas-personal-information-in-data
-  name: Personal Information in Data
-  evidence:
-  - text: Any data having Personally Identifiable Information, Nonpublic Personal Information, or other data under the purview of regulators or similar entities.
-    section: Confidentiality - Policy Guidance (Stringent)
-  - text: Remove references to IP, NPI, PII
-    section: Responsibility - Policy Guidance
-- id: credo-risk-036
-  name: Compromised PII
-  evidence:
-  - text: The service may preserve the queries, which hackers could breach and release. Queries with sensitive data put companies at significant risk.
-    section: Confidentiality
-  - text: Any data having Personally Identifiable Information, Nonpublic Personal Information, or other data under the purview of regulators or similar entities.
-    section: Confidentiality - Policy Guidance (Stringent)
-- id: credo-risk-037
-  name: Compromised Sensitive Information
-  evidence:
-  - text: Currently, most external generative AI systems use queries for future training (although some systems allow opt-outs). The service may preserve the queries, which hackers could breach and release.
-    section: Confidentiality
-  - text: Queries with sensitive data put companies at significant risk.
-    section: Confidentiality
-- id: atlas-copyright-infringement
-  name: Copyright Infringement
-  evidence:
-  - text: Ensure compliance with the terms of use of many generative AI systems (especially attribution and lack of copyright protection)
-    section: Introduction - Policy Guidance
-  - text: Open users to copyright violations
+  - text: In internal documents on behalf of the employee (emails, HR documents, et
+      cetera.), employees must remember that the output stands for them.
     section: Representation as the Employee or Company
-  - text: Ensure compliance with applicable regulations, laws, and acceptable fair use of others' copyright protections
-    section: Accuracy - Policy Guidance
-- id: atlas-generated-content-ownership
-  name: Generated Content Ownership
-  evidence:
-  - text: External generative AI systems often require users to give attribution to the system for any output, for example, in the Open AI's Terms of Use.
+  - text: Employees must not use the output of generative AI systems to stand for
+      activity they undertook.
     section: Representation as the Employee or Company
-  - text: Consumers of these systems cannot (typically) treat the output as their proprietary IP, so use of this output can only advise and guide users.
-    section: Attribution
-- id: atlas-model-usage-rights
-  name: Model Usage Rights
+  - text: Other multimedia creation tools (e.g., 'deepfake' tools)
+    section: Defining External Generative AI
+- id: ai-risk-taxonomy-impersonating-others
+  name: Impersonating others
   evidence:
-  - text: Several commercial generative AI tools require attribution in their Terms of Use. Given that users often do not attribute output to AI, firms may be liable for violations of these terms.
-    section: Attribution
-  - text: Any output from generative AI systems must follow the policies of the various external systems, specifically where they require supplying attribution to those systems.
-    section: Attribution - Policy Guidance
-- id: credo-risk-023
-  name: Regulatory Compliance
-  evidence:
-  - text: Ensure compliance with all applicable laws, rules, and regulations, including privacy requirements such as General Data Protection Regulation (GDPR)
-    section: Introduction - Policy Guidance
-  - text: Since generative AI may not be current on legislation, answers on accounting, tax, or other legal considerations may be inaccurate
-    section: Accuracy
-  - text: Depending on how users ask the questions, generative AI may not apply GDPR or other applicable laws to the answers given.
-    section: Accuracy
-- id: atlas-legal-accountability
-  name: Legal Accountability
-  evidence:
-  - text: Any information that if exposed publicly might tarnish the reputation of the company, or information that would open the company to regulatory or legal action
-    section: Confidentiality - Policy Guidance (Stringent)
-  - text: Could open the company to regulatory or legal action
-    section: Confidentiality - Policy Guidance (Permissive)
-- id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
-  name: Unauthorized Processing - PII
-  evidence:
-  - text: Any data having Personally Identifiable Information, Nonpublic Personal Information, or other data under the purview of regulators or similar entities.
-    section: Confidentiality - Policy Guidance (Stringent)
-  - text: Ensure compliance with all applicable laws, rules, and regulations, including privacy requirements such as General Data Protection Regulation (GDPR)
-    section: Introduction - Policy Guidance
-- id: ai-risk-taxonomy-ip-rights/-trade-secrets
-  name: IP Rights / Trade Secrets
-  evidence:
-  - text: Ensure protection of the company's intellectual property
-    section: Introduction - Policy Guidance
-  - text: The company's internal IP, especially proprietary, copyrighted, or related IP
-    section: Confidentiality - Policy Guidance (Stringent)
-  - text: May give access to IP or systems
-    section: Confidentiality - Policy Guidance (Permissive)
-- id: ai-risk-taxonomy-not-labeling-content-as-ai-generated
-  name: Not Labeling Content as AI-Generated
-  evidence:
-  - text: Employees must not use the output of generative AI systems to stand for activity they undertook.
-    section: Representation as the Employee or Company - Policy Guidance (Stringent)
-  - text: In internal documents on behalf of the employee (emails, HR documents, et cetera.), employees must remember that the output stands for them.
-    section: Representation as the Employee or Company - Policy Guidance (Permissive)
-- id: credo-risk-016
-  name: Over/Under-Reliance on AI
-  evidence:
-  - text: Users should not rely on their accuracy.
-    section: Accuracy
-  - text: Given that the accuracy of generative AI is imperfect, the firm strongly encourages employees to manually verify the output before use.
-    section: Accuracy - Policy Guidance (Permissive)
-- id: credo-risk-025
-  name: Corporate Liability
-  evidence:
-  - text: Any information that if exposed publicly might tarnish the reputation of the company, or information that would open the company to regulatory or legal action
-    section: Confidentiality - Policy Guidance (Stringent)
-  - text: Given that users often do not attribute output to AI, firms may be liable for violations of these terms.
-    section: Attribution
-- id: credo-risk-026
-  name: Fraud and Scams
-  evidence:
-  - text: Although generative AI has the power to increase cyber crime through convincing mimicking of existing communications, excellent translation capabilities, deep fake images, audio, and video, ease
-      of finding code vulnerabilities, and much more, the kinds of threats still are the same as when using other third-party systems. For instance, phishing emails may become more personalized with generative
-      AI
+  - text: 'Employees must specifically not use the output of generative AI to: > Write
+      any internal documents on behalf of the employee (emails, HR documents, et cetera.)'
+    section: Representation as the Employee or Company
+  - text: generative AI has the power to increase cyber crime through convincing mimicking
+      of existing communications
     section: Responsibility
-  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance, unapproved network uses, or manipulating financial services transactions for personal gain
-    section: Accuracy
-- id: atlas-dangerous-use
-  name: Dangerous Use
+  - text: Employees must not use the output of generative AI systems to stand for
+      activity they undertook.
+    section: Representation as the Employee or Company
+- id: ai-risk-taxonomy-ip-rights/-trade-secrets
+  name: IP Rights/ Trade Secrets
   evidence:
-  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance, unapproved network uses, or manipulating financial services transactions for personal gain
-    section: Accuracy
-  - text: Fraudulent, destructive, and/or inappropriate system usage
-    section: Accuracy - Policy Guidance
-- id: credo-risk-048
-  name: Third-Party Dependencies
-  evidence:
-  - text: The policy assumes as an overarching principle that data loss risks are present in the use of generative AI systems, like any other third-party system.
-    section: Introduction - Policy Guidance
-  - text: Generative AI systems are no different from any third-party system. They bring massive benefits, if used responsibly. They can do harm too
-    section: Responsibility - Policy Guidance (Permissive)
-- id: mit-ai-risk-subdomain-2.1
-  name: Privacy
-  evidence:
-  - text: Ensure compliance with all applicable laws, rules, and regulations, including privacy requirements such as General Data Protection Regulation (GDPR)
-    section: Introduction - Policy Guidance
-  - text: Any data having Personally Identifiable Information, Nonpublic Personal Information, or other data under the purview of regulators or similar entities.
-    section: Confidentiality - Policy Guidance (Stringent)
-- id: mit-ai-risk-subdomain-2.2
-  name: Security
-  evidence:
-  - text: The service may preserve the queries, which hackers could breach and release.
+  - text: 'Employees must not share: > The company''s internal IP , especially proprietary,
+      copyrighted, or related IP'
     section: Confidentiality
-  - text: Any information that someone may use to reverse engineer or give access to IP or systems
-    section: Confidentiality - Policy Guidance (Stringent)
-- id: mit-ai-risk-subdomain-3.1
-  name: False Information
-  evidence:
-  - text: Distortion of statistics or other facts may lead to employees making public claims or key decisions based on erroneous information.
-    section: Accuracy
-  - text: These systems may "hallucinate" when their answers appear convincing but are completely wrong.
-    section: Accuracy
-- id: mit-ai-risk-subdomain-4.3
-  name: Fraud
-  evidence:
-  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance, unapproved network uses, or manipulating financial services transactions for personal gain
-    section: Accuracy
-  - text: Fraudulent, destructive, and/or inappropriate system usage
-    section: Accuracy - Policy Guidance
-- id: mit-ai-risk-subdomain-5.1
-  name: Overreliance
-  evidence:
-  - text: Generative AI systems are far from perfect, especially with fact-based output. These systems may "hallucinate" when their answers appear convincing but are completely wrong. Users should not rely
-      on their accuracy.
-    section: Accuracy
-  - text: Incorrect answers can cause severe issues for companies. For example, inaccurate instructions for IT administrators may lead to data loss or other system damage.
-    section: Accuracy
-- id: atlas-exposing-personal-information
-  name: Exposing Personal Information
-  evidence:
-  - text: The service may preserve the queries, which hackers could breach and release. Queries with sensitive data put companies at significant risk.
+  - text: The impact, importance, or uniqueness of the company's intellectual property
+      (IP) before sharing it.
+    section: Data Provided to Generative AI Systems
+  - text: The impact, importance, or uniqueness of the company's intellectual property
+      (IP) before sharing it.
     section: Confidentiality
-  - text: Any data having Personally Identifiable Information, Nonpublic Personal Information, or other data under the purview of regulators or similar entities.
-    section: Confidentiality - Policy Guidance (Stringent)
-- id: atlas-data-usage
-  name: Data Usage
+- id: ai-risk-taxonomy-legal
+  name: Legal
   evidence:
-  - text: Currently, most external generative AI systems use queries for future training (although some systems allow opt-outs).
-    section: Confidentiality
-  - text: The policy assumes as an overarching principle that data loss risks are present in the use of generative AI systems, like any other third-party system.
-    section: Introduction - Policy Guidance
-- id: atlas-data-usage-rights
-  name: Data Usage Rights
-  evidence:
-  - text: Currently, most external generative AI systems use queries for future training (although some systems allow opt-outs). The service may preserve the queries
-    section: Confidentiality
-  - text: This can be adjusted if, through contractual agreements, the firm has the keys to their data vault and can protect the data held at the service.
-    section: Confidentiality - Policy Guidance (Stringent) - Footnote 1
-- id: atlas-data-privacy-rights
-  name: Data Privacy Rights
-  evidence:
-  - text: Ensure compliance with all applicable laws, rules, and regulations, including privacy requirements such as General Data Protection Regulation (GDPR)
-    section: Introduction - Policy Guidance
-  - text: Depending on how users ask the questions, generative AI may not apply GDPR or other applicable laws to the answers given.
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
     section: Accuracy
-- id: atlas-decision-bias
-  name: Decision bias
+  - text: Could open the company to regulatory or legal action
+    section: Data Provided to Generative AI Systems
+- id: ai-risk-taxonomy-not-labeling-content-as-ai-generated
+  name: Not labeling content as AI-generated (Using chatbots to convince people they
+    are communicating with a human)
   evidence:
-  - text: Poor, biased, and/or unethical business practices or decisions
-    section: Accuracy - Policy Guidance
-- id: credo-risk-024
-  name: Civil Liability
+  - text: Any output from generative AI systems must follow the policies of the various
+      external systems, specifically where they require supplying attribution to those
+      systems.
+    section: Attribution
+  - text: In internal documents on behalf of the employee (emails, HR documents, et
+      cetera.), employees must remember that the output stands for them.
+    section: Representation as the Employee or Company
+  - text: Several commercial generative AI tools require attribution in their Terms
+      of Use.
+    section: Attribution
+- id: ai-risk-taxonomy-plagiarism
+  name: Plagiarism
   evidence:
-  - text: Any information that if exposed publicly might tarnish the reputation of the company, or information that would open the company to regulatory or legal action
-    section: Confidentiality - Policy Guidance (Stringent)
-  - text: Reputational and/or financial harm of the company
-    section: Accuracy - Policy Guidance
-- id: atlas-temporal-gap
-  name: Temporal Gap
-  evidence:
-  - text: Since generative AI may not be current on legislation, answers on accounting, tax, or other legal considerations may be inaccurate
+  - text: Consumers of these systems cannot (typically) treat the output as their
+      proprietary IP , so use of this output can only advise and guide users.
+    section: Attribution
+  - text: Ensure compliance with applicable regulations, laws, and acceptable fair
+      use of others' copyright protections
     section: Accuracy
+  - text: Employees must not use the output of generative AI systems to stand for
+      activity they undertook.
+    section: Representation as the Employee or Company
+- id: ai-risk-taxonomy-reputation-rights
+  name: Reputation rights
+  evidence:
+  - text: Might tarnish the reputation of the company
+    section: Data Provided to Generative AI Systems
+- id: ai-risk-taxonomy-social-engineering
+  name: Social engineering
+  evidence:
+  - text: generative AI has the power to increase cyber crime through convincing mimicking
+      of existing communications
+    section: Responsibility
+- id: ai-risk-taxonomy-spear-phishing
+  name: Spear phishing
+  evidence:
+  - text: For instance, phishing emails may become more personalized with generative
+      AI, but the way these enter the organization still is the same.
+    section: Responsibility
+  - text: phishing emails may become more personalized with generative AI
+    section: Responsibility
+  - text: phishing emails may become more personalized with generative AI
+    section: Responsibility
 - id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
   name: Unauthorized disclosure - PII (Personal Identifiable Information)
   evidence:
-  - text: Limiting or obfuscating the data if it has Personally Identifiable Informa -tion  (PII), Nonpublic Personal Information (NPI), or other data under the purview of reg -ulators or similar entities
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Data Provided to Generative AI Systems
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Confidentiality
+  - text: Any data having Personally Identifiable Information, Nonpublic Personal
+      Information, or other data under the purview of regulators or similar entities.
+    section: Confidentiality
 - id: ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)
   name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
-  - text: Limiting or obfuscating the data if it has Personally Identifiable Informa -tion  (PII), Nonpublic Personal Information (NPI), or other data under the purview of reg -ulators or similar entities
-- id: atlas-improper-usage
-  name: Improper usage
-  evidence:
-  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance, unapproved network uses, or manipulating financial services transactions for personal gain
-- id: mit-ai-risk-subdomain-5.2
-  name: Loss of human agency and autonomy
-  evidence:
-  - text: Distortion of statistics or other facts may lead to employees making public claims or key decisions based on erroneous information.
-  - text: Since an actual human did not write the appraisal, there is good reason to believe that the employee's grievances would be upheld.
-- id: atlas-incomplete-usage-definition
-  name: Incomplete usage definition
-  evidence:
-  - text: This policy defines requirements for the acceptable use of external generative AI services.
-- id: credo-risk-003
-  name: AI possessing dangerous capabilities (Slattery et al., 2024)
-  evidence:
-  - text: Although generative AI has the power to increase cyber crime through convincing mimicking of existing communications, excellent translation capabilities, deep fake images, audio, and video, ease
-      of finding code vulnerabilities, and much more
-  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance, unapproved network uses, or manipulating financial services transactions for personal gain
-- id: credo-risk-018
-  name: AI deception
-  evidence:
-  - text: Generative AI systems are far from perfect, especially with fact-based output. These systems may 'hallucinate' when their answers appear convincing but are completely wrong. Users should not rely
-      on their accuracy.
-- id: credo-risk-027
-  name: Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)
-  evidence:
-  - text: Although generative AI has the power to increase cyber crime through convincing mimicking of  existing  communications, excellent translation capabilities,  deep fake images, audio, and video,
-      ease of finding code vulnerabilities, and much more
-  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance, unapproved network uses, or manipulating financial services transactions for personal gain
-- id: credo-risk-029
-  name: Mass surveillance and privacy attacks (Slattery et al., 2024)
-  evidence:
-  - text: The company has the right to monitor the use of these systems per applicable laws and regulations.
-  - text: Firms need to consider what they intercept, monitor, limit, etc.
-- id: credo-risk-045
-  name: Competitive dynamics (Slattery et al., 2024)
-  evidence:
-  - text: Given the rapid development and adoption of generative AI
-- id: credo-risk-046
-  name: Governance failures (Slattery et al., 2024)
-  evidence:
-  - text: Given the rapid development and adoption of generative AI, we hope this guide serves as a helpful tool for firms to upgrade their security and risk management policies to incorporate safe and
-      responsible AI use into their security programs and beyond.
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Informa
+      -tion  (PII), Nonpublic Personal Information (NPI), or other data under the
+      purview of reg -ulators or similar entities
 - id: ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)
   name: Unauthorized generation - PII (Personal Identifiable Information)
   evidence:
   - text: Remove references to IP , NPI, PII
     section: Responsibility
+- id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
+  name: Unauthorized Processing - PII
+  evidence:
+  - text: Any data having Personally Identifiable Information, Nonpublic Personal
+      Information, or other data under the purview of regulators or similar entities.
+    section: Confidentiality - Policy Guidance (Stringent)
+  - text: Ensure compliance with all applicable laws, rules, and regulations, including
+      privacy requirements such as General Data Protection Regulation (GDPR)
+    section: Introduction - Policy Guidance
+- id: ai-risk-taxonomy-vulnerability-probing
+  name: Vulnerability probing
+  evidence:
+  - text: ease of finding code vulnerabilities
+    section: Responsibility
+  - text: ease of finding code vulnerabilities
+    section: Responsibility
+- id: atlas-confidential-data-in-prompt
+  name: Confidential data in prompt
+  evidence:
+  - text: Currently, most external generative AI systems use queries for future training
+      (although some systems allow opt-outs). The service may preserve the queries,
+      which hackers could breach and release. Queries with sensitive data put companies
+      at significant risk.
+    section: Data Provided to Generative AI Systems
+  - text: Employees must take care to preserve the confidentiality of the company's
+      work products above any uses of generative AI systems.
+    section: Confidentiality
+  - text: Queries with sensitive data put companies at significant risk.
+    section: Confidentiality
+- id: atlas-confidential-information-in-data
+  name: Confidential information in data
+  evidence:
+  - text: The service may preserve the queries, which hackers could breach and release.
+      Queries with sensitive data put companies at significant risk.
+    section: Confidentiality
+- id: atlas-copyright-infringement
+  name: Copyright infringement
+  evidence:
+  - text: When there is doubt around the accuracy, completeness, or copyright protections
+      of the output from a generative AI system, the employee must not use the output
+      and, instead, rely on other sources of information.
+    section: Accuracy
+  - text: Several commercial generative AI tools require attribution in their Terms
+      of Use. Given that users often do not attribute output to AI, firms may be liable
+      for violations of these terms.
+    section: Attribution
+  - text: Ensure compliance with all applicable laws, rules, and regulations, including
+      privacy requirements such as General Data Protection Regulation (GDPR)
+    section: Introduction
+- id: atlas-dangerous-use
+  name: Dangerous Use
+  evidence:
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+    section: Accuracy
+  - text: Fraudulent, destructive, and/or inappropriate system usage
+    section: Accuracy - Policy Guidance
+- id: atlas-data-privacy-rights
+  name: Data Privacy Rights
+  evidence:
+  - text: Ensure compliance with all applicable laws, rules, and regulations, including
+      privacy requirements such as General Data Protection Regulation (GDPR)
+    section: Introduction - Policy Guidance
+  - text: Depending on how users ask the questions, generative AI may not apply GDPR
+      or other applicable laws to the answers given.
+    section: Accuracy
+- id: atlas-data-usage-rights
+  name: Data Usage Rights
+  evidence:
+  - text: Currently, most external generative AI systems use queries for future training
+      (although some systems allow opt-outs). The service may preserve the queries
+    section: Confidentiality
+  - text: This can be adjusted if, through contractual agreements, the firm has the
+      keys to their data vault and can protect the data held at the service.
+    section: Confidentiality - Policy Guidance (Stringent) - Footnote 1
+- id: atlas-decision-bias
+  name: Decision bias
+  evidence:
+  - text: 'Employees should ensure the output does not lead to: > Poor, biased, and/or
+      unethical business practices or decisions'
+    section: Accuracy
+  - text: 'Ensure the output does not lead to: > Poor, biased, and/or unethical business
+      practices or decisions'
+    section: Accuracy
+- id: atlas-exposing-personal-information
+  name: Exposing Personal Information
+  evidence:
+  - text: The service may preserve the queries, which hackers could breach and release.
+      Queries with sensitive data put companies at significant risk.
+    section: Confidentiality
+  - text: Any data having Personally Identifiable Information, Nonpublic Personal
+      Information, or other data under the purview of regulators or similar entities.
+    section: Confidentiality - Policy Guidance (Stringent)
+- id: atlas-generated-content-ownership
+  name: Generated content ownership and IP
+  evidence:
+  - text: Consumers of these systems cannot (typically) treat the output as their
+      proprietary IP , so use of this output can only advise and guide users.
+    section: Attribution
+  - text: Invalidate some uses of the output for proprietary or copyrighted work
+    section: Representation as the Employee or Company
+- id: atlas-hallucination
+  name: Hallucination
+  evidence:
+  - text: Generative AI systems are far from perfect, especially with fact-based output.
+      These systems may 'hallucinate' when their answers appear convincing but are
+      completely wrong.
+    section: Accuracy
+  - text: That the accuracy of these systems is still suspect; they have been known
+      to 'hallucinate' (see 'Accuracy' section below)
+    section: Responsibility
+  - text: These systems may 'hallucinate' when their answers appear convincing but
+      are completely wrong.
+    section: Accuracy
+- id: atlas-harmful-output
+  name: Harmful output
+  evidence:
+  - text: 'Employees must check that the output does not lead to: > Fraudulent, destructive,
+      and/or inappropriate system usage > Poor, biased, and/or unethical business
+      practices or decisions > Reputational and/or financial harm of the company'
+    section: Accuracy
+  - text: 'Employees should ensure the output does not lead to: > Fraudulent, destructive,
+      and/or inappropriate system usage > Poor, biased, and/or unethical business
+      practices or decisions > Reputational and/or financial harm of the company'
+    section: Accuracy
+  - text: 'Employees should ensure the output does not lead to: > Fraudulent, destructive,
+      and/or inappropriate system usage'
+    section: Accuracy
+- id: atlas-improper-usage
+  name: Improper usage
+  evidence:
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+- id: atlas-incomplete-advice
+  name: Incomplete advice
+  evidence:
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
+    section: Accuracy
+  - text: Generative AI cannot know organizational culture or intricacies of industries,
+      leading to suggestions that may do more harm than good.
+    section: Accuracy
+- id: atlas-incomplete-usage-definition
+  name: Incomplete usage definition
+  evidence:
+  - text: This policy defines requirements for the acceptable use of external generative
+      AI services.
+- id: atlas-ip-information-in-prompt
+  name: IP information in prompt
+  evidence:
+  - text: The impact, importance, or uniqueness of the company's intellectual property
+      (IP) before sharing it. Consider genericizing and stripping any company references,
+      especially if the data is proprietary or copyrighted
+    section: Confidentiality
+  - text: The impact, importance, or uniqueness of the company's intellectual property
+      (IP) before sharing it.
+    section: Confidentiality
+  - text: The company's internal IP , especially proprietary, copyrighted, or related
+      IP
+    section: Confidentiality
+- id: atlas-legal-accountability
+  name: Legal accountability
+  evidence:
+  - text: Any information that if exposed publicly might tarnish the reputation of
+      the company, or information that would open the company to regulatory or legal
+      action
+    section: Confidentiality
+  - text: Ensure compliance with all applicable laws, rules, and regulations, including
+      privacy requirements such as General Data Protection Regulation (GDPR)
+    section: Introduction
+  - text: Any information that if exposed publicly could reveal the company's strategy
+      and/or would be in violation of safe harbor statements
+    section: Confidentiality
+- id: atlas-model-usage-rights
+  name: Model Usage Rights
+  evidence:
+  - text: Several commercial generative AI tools require attribution in their Terms
+      of Use. Given that users often do not attribute output to AI, firms may be liable
+      for violations of these terms.
+    section: Attribution
+  - text: Any output from generative AI systems must follow the policies of the various
+      external systems, specifically where they require supplying attribution to those
+      systems.
+    section: Attribution - Policy Guidance
+- id: atlas-non-disclosure
+  name: Non-disclosure
+  evidence:
+  - text: The onus is on the user to attribute the output correctly.
+    section: Representation as the Employee or Company
+  - text: Any output from generative AI systems must follow the policies of the various
+      external systems, specifically where they require supplying attribution to those
+      systems.
+    section: Attribution
+- id: atlas-nonconsensual-use
+  name: Nonconsensual use
+  evidence:
+  - text: Other multimedia creation tools (e.g., 'deepfake' tools)
+    section: Defining External Generative AI
+  - text: Other multimedia creation tools (e.g., 'deepfake' tools)
+    section: Defining External Generative AI
+  - text: deep fake images, audio, and video
+    section: Responsibility
+- id: atlas-over-or-under-reliance
+  name: Over- or under-reliance
+  evidence:
+  - text: Employees must assume the output accuracy of generative AI systems are imperfect,
+      and therefore must manually check the accuracy of the output (especially with
+      regards to fact-based queries).
+    section: Accuracy
+  - text: the firm strongly encourages employees to manually verify the output before
+      use.
+    section: Accuracy
+  - text: Users should not rely on their accuracy.
+    section: Accuracy
+- id: atlas-personal-information-in-data
+  name: Personal Information in Data
+  evidence:
+  - text: Any data having Personally Identifiable Information, Nonpublic Personal
+      Information, or other data under the purview of regulators or similar entities.
+    section: Confidentiality - Policy Guidance (Stringent)
+  - text: Remove references to IP, NPI, PII
+    section: Responsibility - Policy Guidance
+- id: atlas-personal-information-in-prompt
+  name: Personal information in prompt
+  evidence:
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Confidentiality
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Confidentiality
+  - text: Any data having Personally Identifiable Information, Nonpublic Personal
+      Information, or other data under the purview of regulators or similar entities.
+    section: Confidentiality
+- id: atlas-plagiarism
+  name: 'Impact on education: plagiarism'
+  evidence:
+  - text: The onus is on the user to attribute the output correctly.
+    section: Representation as the Employee or Company
+- id: atlas-poor-model-accuracy
+  name: Poor model accuracy
+  evidence:
+  - text: Incorrect answers can cause severe issues for companies. For example, inaccurate
+      instructions for IT administrators may lead to data loss or other system damage.
+      Distortion of statistics or other facts may lead to employees making public
+      claims or key decisions based on erroneous information.
+    section: Accuracy
+  - text: Given that the accuracy of generative AI is imperfect, the firm strongly
+      encourages employees to manually verify the output before use.
+    section: Accuracy
+  - text: Distortion of statistics or other facts may lead to employees making public
+      claims or key decisions based on erroneous information.
+    section: Accuracy
+- id: atlas-revealing-confidential-information
+  name: Revealing confidential information
+  evidence:
+  - text: Any information that if exposed publicly might tarnish the reputation of
+      the company, or information that would open the company to regulatory or legal
+      action
+    section: Confidentiality
+  - text: Any information that if exposed publicly could reveal the company's strategy
+      and/or would be in violation of safe harbor statements
+    section: Confidentiality
+  - text: Any information that someone may use to reverse engineer or give access
+      to IP or systems
+    section: Confidentiality
+- id: atlas-spreading-disinformation
+  name: Spreading disinformation
+  evidence:
+  - text: Distortion of statistics or other facts may lead to employees making public
+      claims or key decisions based on erroneous information.
+    section: Accuracy
+- id: atlas-temporal-gap
+  name: Temporal Gap
+  evidence:
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
+    section: Accuracy
+- id: atlas-unreliable-source-attribution
+  name: Unreliable source attribution
+  evidence:
+  - text: The onus is on the user to attribute the output correctly.
+    section: Representation as the Employee or Company
+- id: credo-risk-003
+  name: AI possessing dangerous capabilities (Slattery et al., 2024)
+  evidence:
+  - text: Although generative AI has the power to increase cyber crime through convincing
+      mimicking of existing communications, excellent translation capabilities, deep
+      fake images, audio, and video, ease of finding code vulnerabilities, and much
+      more
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+- id: credo-risk-005
+  name: Lack of training data transparency
+  evidence:
+  - text: Currently, most external generative AI systems use queries for future training
+      (although some systems allow opt-outs). The service may preserve the queries,
+      which hackers could breach and release.
+    section: Confidentiality
+  - text: Currently, most external generative AI systems use queries for future training
+      (although some systems allow opt-outs).
+    section: Confidentiality
+  - text: Currently, most external generative AI systems use queries for future training
+      (although some systems allow opt-outs).
+    section: Data Provided to Generative AI Systems - Confidentiality
+- id: credo-risk-010
+  name: Stereotype perpetuation
+  evidence:
+  - text: 'Employees must check that the output does not lead to: > Fraudulent, destructive,
+      and/or inappropriate system usage > Poor, biased, and/or unethical business
+      practices or decisions'
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: 'Employees should ensure the output does not lead to: > Fraudulent, destructive,
+      and/or inappropriate system usage > Poor, biased, and/or unethical business
+      practices or decisions'
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: 'Employees should ensure the output does not lead to: > Poor, biased, and/or
+      unethical business practices or decisions'
+    section: Accuracy
+- id: credo-risk-015
+  name: Dangerous or violent content
+  evidence:
+  - text: The AI system may produce content that incites violence or provides instructions
+      for committing crimes.
+    section: Accuracy
+- id: credo-risk-016
+  name: Over or under-reliance and unsafe use
+  evidence:
+  - text: Employees must assume the output accuracy of generative AI systems are imperfect,
+      and therefore must manually check the accuracy of the output (espe - cially
+      with regards to fact-based queries).
+    section: Accuracy
+  - text: Employees must assume the output accuracy of generative AI systems are imperfect,
+      and therefore must manually check the accuracy of the output
+    section: Data Received from Generative AI Systems
+  - text: Given that the accuracy of generative AI is imperfect, the firm strongly
+      encourages employees to manually verify the output before use.
+    section: Accuracy
+- id: credo-risk-017
+  name: Inadequate AI literacy and communication
+  evidence:
+  - text: It would be more produc - tive and indeed, more secure, to educate employees
+      on how to safely use them.
+    section: Introduction
+  - text: It would be more productive and indeed, more secure, to educate employees
+      on how to safely use them.
+    section: Introduction
+- id: credo-risk-021
+  name: False or misleading information
+  evidence:
+  - text: Generative AI systems are far from perfect, especially with fact-based output.
+      These systems may 'hallucinate' when their answers appear convincing but are
+      completely wrong.
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Distortion of statistics or other facts may lead to employees making public
+      claims or key decisions based on erroneous information.
+    section: Data Received from Generative AI Systems
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
+    section: Data Received from Generative AI Systems
+- id: credo-risk-023
+  name: Regulatory compliance
+  evidence:
+  - text: Ensure compliance with all applicable laws, rules, and regulations, including
+      privacy requirements such as General Data Protection Regulation (GDPR)
+    section: Introduction
+  - text: Ensure compliance with all applicable laws, rules, and regulations, including
+      privacy requirements such as General Data Protection Regulation (GDPR)
+    section: Introduction
+  - text: Depending on how users ask the questions, generative AI may not apply GDPR
+      or other applicable laws to the answers given.
+    section: Data Received from Generative AI Systems
+- id: credo-risk-024
+  name: Civil Liability
+  evidence:
+  - text: Any information that if exposed publicly might tarnish the reputation of
+      the company, or information that would open the company to regulatory or legal
+      action
+    section: Confidentiality - Policy Guidance (Stringent)
+  - text: Reputational and/or financial harm of the company
+    section: Accuracy - Policy Guidance
+- id: credo-risk-025
+  name: Corporate liability
+  evidence:
+  - text: Given that users often do not attribute output to AI, firms may be liable
+      for violations of these terms.
+    section: Attribution
+  - text: Could open the company to regulatory or legal action
+    section: Confidentiality
+  - text: Reputational and/or financial harm of the company
+    section: Accuracy
+- id: credo-risk-026
+  name: Fraud, scams, and targeted manipulation
+  evidence:
+  - text: Although generative AI has the power to increase cyber crime through convincing
+      mimicking of existing communications, excellent translation capabilities, deep
+      fake images, audio, and video, ease of finding code vulnerabilities, and much
+      more
+    section: Responsibility
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+    section: Accuracy
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+    section: Data Received from Generative AI Systems
+- id: credo-risk-027
+  name: Cyberattacks, weapon development, and mass harm (AI, 2023; IBM, 2024)
+  evidence:
+  - text: Although generative AI has the power to increase cyber crime through convincing
+      mimicking of  existing  communications, excellent translation capabilities,  deep
+      fake images, audio, and video, ease of finding code vulnerabilities, and much
+      more
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+- id: credo-risk-029
+  name: Mass surveillance and privacy attacks (Slattery et al., 2024)
+  evidence:
+  - text: The company has the right to monitor the use of these systems per applicable
+      laws and regulations.
+  - text: Firms need to consider what they intercept, monitor, limit, etc.
+- id: credo-risk-033
+  name: Lack of adequate capabilities
+  evidence:
+  - text: Generative AI systems are far from perfect, especially with fact-based output.
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Generative AI cannot know organizational culture or intricacies of industries,
+      leading to suggestions that may do more harm than good.
+    section: Data Received from Generative AI Systems - Accuracy
+- id: credo-risk-036
+  name: Compromised personally identifiable information
+  evidence:
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Informa
+      - tion (PII), Nonpublic Personal Information (NPI), or other data under the
+      purview of reg - ulators or similar entities
+    section: Confidentiality
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Confidentiality
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Confidentiality
+- id: credo-risk-037
+  name: Compromised sensitive information
+  evidence:
+  - text: Any information that if exposed publicly might tarnish the reputation of
+      the company, or information that would open the company to regulatory or legal
+      action
+    section: Data Provided to Generative AI Systems - Confidentiality
+  - text: Employees must take care to preserve the confidentiality of the company's
+      work products above any uses of generative AI systems.
+    section: Confidentiality
+  - text: Queries with sensitive data put companies at significant risk.
+    section: Confidentiality
+- id: credo-risk-038
+  name: Compromised confidential information
+  evidence:
+  - text: Any information that if exposed publicly could reveal the company's strategy
+      and/or would be in violation of safe harbor statements
+    section: Confidentiality
+  - text: The impact, importance, or uniqueness of the company's intellectual property
+      (IP) before sharing it.
+    section: Confidentiality
+  - text: Any information that someone may use to reverse engineer or give access
+      to IP or systems
+    section: Data Provided to Generative AI Systems - Confidentiality
+- id: credo-risk-040
+  name: AI-generated security weaknesses
+  evidence:
+  - text: ease of finding code vulnerabilities
+    section: Responsibility
+  - text: ease of finding code vulnerabilities
+    section: Responsibility
+- id: credo-risk-046
+  name: Governance failures (Slattery et al., 2024)
+  evidence:
+  - text: Given the rapid development and adoption of generative AI, we hope this
+      guide serves as a helpful tool for firms to upgrade their security and risk
+      management policies to incorporate safe and responsible AI use into their security
+      programs and beyond.
+- id: credo-risk-048
+  name: Upstream third-party dependencies
+  evidence:
+  - text: Currently, most external generative AI systems use queries for future training
+      (although some systems allow opt-outs). The service may preserve the queries,
+      which hackers could breach and release.
+    section: Confidentiality
+  - text: The policy assumes as an overarching principle that data loss risks are
+      present in the use of generative AI systems, like any other third-party system.
+    section: Introduction
+  - text: The policy assumes as an overarching principle that data loss risks are
+      present in the use of generative AI systems, like any other third-party system.
+    section: Introduction
+- id: mit-ai-risk-subdomain-1.1
+  name: Unfair discrimination and misrepresentation
+  evidence:
+  - text: 'Employees should ensure the output does not lead to: > Poor, biased, and/or
+      unethical business practices or decisions'
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: 'Employees must check that the output does not lead to: > Poor, biased,
+      and/or unethical business practices or decisions'
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Poor, biased, and/or unethical business practices or decisions
+    section: Accuracy
+- id: mit-ai-risk-subdomain-2.1
+  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive
+    information
+  evidence:
+  - text: Currently, most external generative AI systems use queries for future training
+      (although some systems allow opt-outs). The service may preserve the queries,
+      which hackers could breach and release. Queries with sensitive data put companies
+      at significant risk.
+    section: Data Provided to Generative AI Systems - Confidentiality
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Data Provided to Generative AI Systems
+  - text: Limiting or obfuscating the data if it has Personally Identifiable Information
+      (PII), Nonpublic Personal Information (NPI), or other data under the purview
+      of regulators or similar entities
+    section: Data Provided to Generative AI Systems - Confidentiality
+- id: mit-ai-risk-subdomain-2.2
+  name: AI system security vulnerabilities and attacks
+  evidence:
+  - text: Although generative AI has the power to increase cyber crime through convincing
+      mimicking of existing communications, excellent translation capabilities, deep
+      fake images, audio, and video, ease of finding code vulnerabilities, and much
+      more, the kinds of threats still are the same as when using other third-party
+      systems.
+    section: Responsibility
+  - text: Although generative AI has the power to increase cyber crime through convincing
+      mimicking of existing communications, excellent translation capabilities, deep
+      fake images, audio, and video, ease of finding code vulnerabilities, and much
+      more...
+    section: Responsibility
+  - text: The responsibility to safeguard against malicious activity when using generative
+      AI is therefore same as general internet usage to protect IP and other concerns
+      such as compliance.
+    section: Responsibility
+- id: mit-ai-risk-subdomain-3.1
+  name: False or misleading information
+  evidence:
+  - text: Incorrect answers can cause severe issues for companies. For example, inaccurate
+      instructions for IT administrators may lead to data loss or other system damage.
+      Distortion of statistics or other facts may lead to employees making public
+      claims or key decisions based on erroneous information.
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Generative AI systems are far from perfect, especially with fact-based output.
+      These systems may 'hallucinate' when their answers appear convincing but are
+      completely wrong. Users should not rely on their accuracy.
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Employees must assume the output accuracy of generative AI systems are imperfect,
+      and therefore must manually check the accuracy of the output (especially with
+      regards to fact-based queries).
+    section: Data Received from Generative AI Systems - Accuracy
+- id: mit-ai-risk-subdomain-4.2
+  name: Cyberattacks, weapon development or use, and mass harm
+  evidence:
+  - text: Although generative AI has the power to increase cyber crime through convincing
+      mimicking of existing communications, excellent translation capabilities, deep
+      fake images, audio, and video, ease of finding code vulnerabilities, and much
+      more
+    section: Responsibility
+- id: mit-ai-risk-subdomain-4.3
+  name: Fraud, scams, and targeted manipulation
+  evidence:
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+    section: Accuracy
+  - text: Employees can use these systems for nefarious purposes, such as proxy avoidance,
+      unapproved network uses, or manipulating financial services transactions for
+      personal gain
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: 'Employees must check that the output does not lead to: > Fraudulent, destructive,
+      and/or inappropriate system usage'
+    section: Data Received from Generative AI Systems - Accuracy
+- id: mit-ai-risk-subdomain-5.1
+  name: Overreliance and unsafe use
+  evidence:
+  - text: Employees must assume the output accuracy of generative AI systems are imperfect,
+      and therefore must manually check the accuracy of the output (especially with
+      regards to fact-based queries).
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Given that the accuracy of generative AI is imperfect, the firm strongly
+      encourages employees to manually verify the output before use.
+    section: Accuracy
+  - text: Given that the accuracy of generative AI is imperfect, the firm strongly
+      encourages employees to manually verify the output before use.
+    section: Data Received from Generative AI Systems - Accuracy
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: Generative AI cannot know organizational culture or intricacies of industries,
+      leading to suggestions that may do more harm than good.
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: Since generative AI may not be current on legislation, answers on accounting,
+      tax, or other legal considerations may be inaccurate
+    section: Data Received from Generative AI Systems - Accuracy
+  - text: These systems may 'hallucinate' when their answers appear convincing but
+      are completely wrong.
+    section: Accuracy
+- id: ai-risk-taxonomy-spoofing
+  evidence:
+  - 1

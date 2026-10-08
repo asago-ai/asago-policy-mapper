@@ -1,497 +1,1307 @@
 risks:
-- id: atlas-hallucination
-  name: Hallucination
+- id: ai-risk-taxonomy-characterization-of-identity---beliefs
+  name: Characterization of identity - Beliefs
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: atlas-poor-model-accuracy
-  name: Poor Model Accuracy
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+- id: ai-risk-taxonomy-characterization-of-identity---gender
+  name: Characterization of identity - Gender
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: credo-risk-021
-  name: False or Misleading Information
+  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes
+      - in particular around gender and race
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-characterization-of-identity---nationality
+  name: Characterization of identity - Nationality
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: mit-ai-risk-subdomain-3.1
-  name: False Information
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+- id: ai-risk-taxonomy-characterization-of-identity---race
+  name: Characterization of identity - Race
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: atlas-over-or-under-reliance
-  name: Over or Under Reliance
+  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes
+      - in particular around gender and race
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-characterization-of-identity---religion
+  name: Characterization of identity - Religion
   evidence:
-  - text: The ICRC pays specific attention to ensure that the use and development of AI solutions do not jeopardize our ability to demonstrate humanity and empathy through direct and in-person human engagement
-      in the delivery of our external and internal activities and programmes.
-    section: 5. VALUE-BASED APPROACH - Humanity
-  - text: We focus on AI solutions that can enhance human autonomy and agency and complement face-to-face human interactions, as well as our physical presence and proximity with affected people.
-    section: 5. VALUE-BASED APPROACH - Humanity
-- id: credo-risk-016
-  name: Over/Under-Reliance
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+- id: ai-risk-taxonomy-classification-of-individuals---gender
+  name: Classification of individuals - Gender
   evidence:
-  - text: The ICRC pays specific attention to ensure that the use and development of AI solutions do not jeopardize our ability to demonstrate humanity and empathy through direct and in-person human engagement
-      in the delivery of our external and internal activities and programmes.
-    section: 5. VALUE-BASED APPROACH - Humanity
-- id: mit-ai-risk-subdomain-5.1
-  name: Overreliance
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes
+      - in particular around gender and race.
+- id: ai-risk-taxonomy-classification-of-individuals---nationality
+  name: Classification of individuals - Nationality
   evidence:
-  - text: The ICRC pays specific attention to ensure that the use and development of AI solutions do not jeopardize our ability to demonstrate humanity and empathy through direct and in-person human engagement
-      in the delivery of our external and internal activities and programmes.
-    section: 5. VALUE-BASED APPROACH - Humanity
-- id: atlas-impact-on-human-agency
-  name: Impact on Human Agency
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+- id: ai-risk-taxonomy-classification-of-individuals---race
+  name: Classification of individuals - Race
   evidence:
-  - text: We focus on AI solutions that can enhance human autonomy and agency and complement face-to-face human interactions, as well as our physical presence and proximity with affected people.
-    section: 5. VALUE-BASED APPROACH - Humanity
-- id: credo-risk-019
-  name: Loss of Human Agency
+  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes
+      - in particular around gender and race.
+- id: ai-risk-taxonomy-classification-of-individuals---religion
+  name: Classification of individuals - Religion
   evidence:
-  - text: We focus on AI solutions that can enhance human autonomy and agency and complement face-to-face human interactions, as well as our physical presence and proximity with affected people.
-    section: 5. VALUE-BASED APPROACH - Humanity
-- id: mit-ai-risk-subdomain-5.2
-  name: Loss of Agency
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+- id: ai-risk-taxonomy-criminal-justice/predictive-policing
+  name: Criminal justice/Predictive policing
   evidence:
-  - text: We focus on AI solutions that can enhance human autonomy and agency and complement face-to-face human interactions, as well as our physical presence and proximity with affected people.
-    section: 5. VALUE-BASED APPROACH - Humanity
-- id: atlas-decision-bias
-  name: Decision Bias
+  - text: assess the risk of an individual committing a criminal offence based solely
+      on profiling or personality traits, except when used to augment human assessments
+    section: 5.1. A humanitarian and principled approach
+  - text: assess the risk of an individual committing a criminal offence based solely
+      on profiling or personality traits
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---gender
+  name: Discrimination in employment, benefits, or services - Gender
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: atlas-output-bias
-  name: Output Bias
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination
+    section: 5.1. A humanitarian and principled approach
+  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes
+      - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---nationality
+  name: Discrimination in employment, benefits, or services - Nationality
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: atlas-data-bias
-  name: Data Bias
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race
+  name: Discrimination in employment, benefits, or services - Race
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-  - text: Additional systematic data quality control and meaningful and effective human oversight mechanisms are put in place to control and review relevant training models, algorithmic systems, inputs
-      and outputs throughout the lifecycle of AI solutions
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: credo-risk-010
-  name: Stereotype Perpetuation
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination
+    section: 5.1. A humanitarian and principled approach
+  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes
+      - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---religion
+  name: Discrimination in employment, benefits, or services - Religion
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: mit-ai-risk-subdomain-1.1
-  name: Unfair Discrimination
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-ip-rights/-trade-secrets
+  name: IP Rights/ Trade Secrets
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes –
-      in particular around gender and race.
-    section: 5. VALUE-BASED APPROACH - Impartiality
-- id: credo-risk-041
-  name: Vulnerability to Adversarial Attacks
-  evidence:
-  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and potential related harms and damage are systematically considered, and the highest possible standards of data protection
-      and cybersecurity measures are put in place to prevent and mitigate them, in line with assessed risk levels.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: mit-ai-risk-subdomain-2.2
-  name: Security
-  evidence:
-  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and potential related harms and damage are systematically considered, and the highest possible standards of data protection
-      and cybersecurity measures are put in place to prevent and mitigate them, in line with assessed risk levels.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: atlas-revealing-confidential-information
-  name: Revealing Confidential Information
-  evidence:
-  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC information or personal data are handled with the utmost care and are not used in or transferred to non-approved, external
-      online AI systems, in line with the duty of discretion stated in the ICRC's Code of Conduct.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-  - text: Awareness-raising, training and compliance efforts are made to ensure that (i) the ICRC's use of AI solutions does not breach applicable international, regional and national legal restrictions,
-      and that (ii) ICRC staff and users do not input any critical humanitarian information, other confidential and/or strictly confidential information, or any proprietary information protected by intellectual
-      property rights when using external or commercial online AI services.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: atlas-confidential-information-in-data
-  name: Confidential Information in Data
-  evidence:
-  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC information or personal data are handled with the utmost care and are not used in or transferred to non-approved, external
-      online AI systems, in line with the duty of discretion stated in the ICRC's Code of Conduct.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: credo-risk-037
-  name: Compromised Sensitive Information
-  evidence:
-  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC information or personal data are handled with the utmost care and are not used in or transferred to non-approved, external
-      online AI systems, in line with the duty of discretion stated in the ICRC's Code of Conduct.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: atlas-data-privacy-rights
-  name: Data Privacy Rights
-  evidence:
-  - text: Mechanisms are put in place to ensure that the data required for AI systems is collected, used, shared, archived and deleted in ways that are consistent with the right to privacy of affected people
-      and users.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-  - text: Systematic data protection impact assessments are carried out prior to the acquisition, deployment or use of considered AI solutions, and when relevant and feasible, solutions are put in place
-      to restrict processing and enable rectification and/or erasure of the data used.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: atlas-personal-information-in-data
-  name: Personal Information in Data
-  evidence:
-  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC information or personal data are handled with the utmost care and are not used in or transferred to non-approved, external
-      online AI systems, in line with the duty of discretion stated in the ICRC's Code of Conduct.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: atlas-exposing-personal-information
-  name: Exposing Personal Information
-  evidence:
-  - text: Mechanisms are put in place to ensure that the data required for AI systems is collected, used, shared, archived and deleted in ways that are consistent with the right to privacy of affected people
-      and users.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: credo-risk-036
-  name: Compromised PII
-  evidence:
-  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC information or personal data are handled with the utmost care and are not used in or transferred to non-approved, external
-      online AI systems, in line with the duty of discretion stated in the ICRC's Code of Conduct.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: mit-ai-risk-subdomain-2.1
-  name: Privacy
-  evidence:
-  - text: Mechanisms are put in place to ensure that the data required for AI systems is collected, used, shared, archived and deleted in ways that are consistent with the right to privacy of affected people
-      and users.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: atlas-data-usage
-  name: Data Usage
-  evidence:
-  - text: The ICRC ensures that the use of internal and external AI solutions are aligned with the rules and the principles of lawfulness, fairness, transparency, purpose limitation, data minimization,
-      accuracy, storage limitation, security and accountability.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: atlas-data-usage-rights
-  name: Data Usage Rights
-  evidence:
-  - text: Systematic data protection impact assessments are carried out prior to the acquisition, deployment or use of considered AI solutions, and when relevant and feasible, solutions are put in place
-      to restrict processing and enable rectification and/or erasure of the data used.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-- id: atlas-lack-of-system-transparency
-  name: Lack of System Transparency
-  evidence:
-  - text: Transparency and 'explainability' are essential elements of a safe, ethical and responsible approach to AI, and to ensure respect for the ICRC's principles, rules and values. The ICRC therefore
-      ensures at all times the highest possible levels of transparency in our use and management of AI solutions, in accordance with the context, risks and impact of the systems and tools considered, and
-      with due consideration to the principles of safety, security and privacy.
-    section: 6. GUIDING PRINCIPLES - Transparency and 'explainability'
-- id: atlas-lack-of-model-transparency
-  name: Lack of Model Transparency
-  evidence:
-  - text: As much as feasible and in accordance with the applicable risk level, context and use case, meaningful traceability, disclosure and notification measures are put in place in relation to the use
-      of AI systems that support the ICRC's activities and decision-making processes, including, as appropriate, releasing AI systems as open-source.
-    section: 6. GUIDING PRINCIPLES - Transparency and 'explainability'
-- id: atlas-unexplainable-output
-  name: Unexplainable Output
-  evidence:
-  - text: Relevant and intelligible information about the use of AI systems is systematically provided to affected people and users when these systems could have an impact on them or their rights, or when
-      decisions with significant consequences for the organization are concerned.
-    section: 6. GUIDING PRINCIPLES - Transparency and 'explainability'
-  - text: This includes adequate and meaningful information about why, when and how AI solutions are used, and explanations on the causal link between AI inputs and outputs and the functioning of algorithmic
-      processes.
-    section: 6. GUIDING PRINCIPLES - Transparency and 'explainability'
-- id: atlas-non-disclosure
-  name: Non-disclosure
-  evidence:
-  - text: As much as feasible and in accordance with the applicable risk level, context and use case, meaningful traceability, disclosure and notification measures are put in place in relation to the use
-      of AI systems that support the ICRC's activities and decision-making processes, including, as appropriate, releasing AI systems as open-source.
-    section: 6. GUIDING PRINCIPLES - Transparency and 'explainability'
-- id: atlas-legal-accountability
-  name: Legal Accountability
-  evidence:
-  - text: The ICRC ensures the highest possible levels of responsibility and accountability in the use and management of AI solutions through continuous monitoring, assessment and reporting on the procurement,
-      use, management and review of AI solutions – including through publicly accessible reporting, when relevant.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-  - text: Responsibility and accountability for decision-making supported by AI always lies with the ICRC and/or the staff using the tools or system concerned, in line with the ICRC's Code of Conduct and
-      other applicable internal rules.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: credo-risk-046
-  name: Governance Failures
-  evidence:
-  - text: The ICRC puts in place effective governance mechanisms to ensure that our use of AI solutions is aligned with our broader organizational obligations and commitments and complies with applicable
-      rules and regulations.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: credo-risk-023
-  name: Regulatory Compliance
-  evidence:
-  - text: Awareness-raising, training and compliance efforts are made to ensure that (i) the ICRC's use of AI solutions does not breach applicable international, regional and national legal restrictions,
-      and that (ii) ICRC staff and users do not input any critical humanitarian information, other confidential and/or strictly confidential information, or any proprietary information protected by intellectual
-      property rights when using external or commercial online AI services.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: atlas-impact-on-the-environment
-  name: Impact on the Environment
-  evidence:
-  - text: All possible efforts are made to integrate and mitigate the environmental impact and carbon footprint of considered AI solutions through a life-cycle approach. This includes favouring solutions
-      and tools that have a lighter footprint, in line with the ICRC's Plan of Action under the Climate and Environment Charter for Humanitarian Organizations and the ICRC's Framework for Sustainable Development.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: credo-risk-004
-  name: Environmental Harm
-  evidence:
-  - text: All possible efforts are made to integrate and mitigate the environmental impact and carbon footprint of considered AI solutions through a life-cycle approach. This includes favouring solutions
-      and tools that have a lighter footprint, in line with the ICRC's Plan of Action under the Climate and Environment Charter for Humanitarian Organizations and the ICRC's Framework for Sustainable Development.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: mit-ai-risk-subdomain-6.6
-  name: Environmental Harm
-  evidence:
-  - text: All possible efforts are made to integrate and mitigate the environmental impact and carbon footprint of considered AI solutions through a life-cycle approach. This includes favouring solutions
-      and tools that have a lighter footprint, in line with the ICRC's Plan of Action under the Climate and Environment Charter for Humanitarian Organizations and the ICRC's Framework for Sustainable Development.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: atlas-nonconsensual-use
-  name: Nonconsensual Use
-  evidence:
-  - text: Provided that it does not prevent affected people from benefiting from equivalent opportunities, the possibility of opting out of AI systems and having access to alternative solutions and complaint
-      and remedy mechanisms are made available to them.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: ai-risk-taxonomy-social-scoring
-  name: Social Scoring
-  evidence:
-  - text: 'In light of the above, the ICRC will refrain from using, deploying or providing AI systems that: deploy subliminal, manipulative, or deceptive techniques to distort behaviour and impair informed
-      decision-making; exploit vulnerabilities related to age, disability, or socio-economic circumstances to distort behaviour; use biometric categorization systems that infer sensitive personal attributes,
-      except for labelling or filtering lawfully acquired biometric datasets; rely on or infer social scoring, (i.e. evaluating or classifying individuals or groups based on social behaviour or personal
-      traits); assess the risk of an individual committing a criminal offence based solely on profiling or personality traits, except when used to augment human assessments; compile facial recognition databases
-      by untargeted scraping of facial images from the internet or CCTV footage; or infer emotions, except for medical or safety reasons.'
-    section: 5. VALUE-BASED APPROACH - Humanity
+  - text: ICRC staff and users do not input any critical humanitarian information,
+      other confidential and/or strictly confidential information, or any proprietary
+      information protected by intellectual property rights when using external or
+      commercial online AI services
+    section: 6.4. Responsibility and accountability
+  - text: ICRC staff and users do not input any critical humanitarian information,
+      other confidential and/or strictly confidential information, or any proprietary
+      information protected by intellectual property rights when using external or
+      commercial online AI services.
+    section: 6.4. Responsibility and accountability
 - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---biometric-data-(facial-recognition)
-  name: Non-consensual Tracking/Monitoring/Stalking/Spyware - Biometric Data (Facial Recognition)
+  name: Non-consensual Tracking/Monitoring/Stalking/Spyware - Biometric Data (Facial
+    Recognition)
   evidence:
-  - text: 'In light of the above, the ICRC will refrain from using, deploying or providing AI systems that: deploy subliminal, manipulative, or deceptive techniques to distort behaviour and impair informed
-      decision-making; exploit vulnerabilities related to age, disability, or socio-economic circumstances to distort behaviour; use biometric categorization systems that infer sensitive personal attributes,
-      except for labelling or filtering lawfully acquired biometric datasets; rely on or infer social scoring, (i.e. evaluating or classifying individuals or groups based on social behaviour or personal
-      traits); assess the risk of an individual committing a criminal offence based solely on profiling or personality traits, except when used to augment human assessments; compile facial recognition databases
-      by untargeted scraping of facial images from the internet or CCTV footage; or infer emotions, except for medical or safety reasons.'
+  - text: 'In light of the above, the ICRC will refrain from using, deploying or providing
+      AI systems that: deploy subliminal, manipulative, or deceptive techniques to
+      distort behaviour and impair informed decision-making; exploit vulnerabilities
+      related to age, disability, or socio-economic circumstances to distort behaviour;
+      use biometric categorization systems that infer sensitive personal attributes,
+      except for labelling or filtering lawfully acquired biometric datasets; rely
+      on or infer social scoring, (i.e. evaluating or classifying individuals or groups
+      based on social behaviour or personal traits); assess the risk of an individual
+      committing a criminal offence based solely on profiling or personality traits,
+      except when used to augment human assessments; compile facial recognition databases
+      by untargeted scraping of facial images from the internet or CCTV footage; or
+      infer emotions, except for medical or safety reasons.'
     section: 5. VALUE-BASED APPROACH - Humanity
 - id: ai-risk-taxonomy-profiling
   name: Profiling
   evidence:
-  - text: 'In light of the above, the ICRC will refrain from using, deploying or providing AI systems that: deploy subliminal, manipulative, or deceptive techniques to distort behaviour and impair informed
-      decision-making; exploit vulnerabilities related to age, disability, or socio-economic circumstances to distort behaviour; use biometric categorization systems that infer sensitive personal attributes,
-      except for labelling or filtering lawfully acquired biometric datasets; rely on or infer social scoring, (i.e. evaluating or classifying individuals or groups based on social behaviour or personal
-      traits); assess the risk of an individual committing a criminal offence based solely on profiling or personality traits, except when used to augment human assessments; compile facial recognition databases
-      by untargeted scraping of facial images from the internet or CCTV footage; or infer emotions, except for medical or safety reasons.'
+  - text: 'In light of the above, the ICRC will refrain from using, deploying or providing
+      AI systems that: deploy subliminal, manipulative, or deceptive techniques to
+      distort behaviour and impair informed decision-making; exploit vulnerabilities
+      related to age, disability, or socio-economic circumstances to distort behaviour;
+      use biometric categorization systems that infer sensitive personal attributes,
+      except for labelling or filtering lawfully acquired biometric datasets; rely
+      on or infer social scoring, (i.e. evaluating or classifying individuals or groups
+      based on social behaviour or personal traits); assess the risk of an individual
+      committing a criminal offence based solely on profiling or personality traits,
+      except when used to augment human assessments; compile facial recognition databases
+      by untargeted scraping of facial images from the internet or CCTV footage; or
+      infer emotions, except for medical or safety reasons.'
     section: 5. VALUE-BASED APPROACH - Humanity
-- id: atlas-impact-on-affected-communities
-  name: Impact on Affected Communities
+- id: ai-risk-taxonomy-social-scoring
+  name: Social scoring
   evidence:
-  - text: In line with the 'do no harm' principle, the ICRC systematically assesses the potential negative short- and long-term secondary impacts that the use of AI solutions may have on the safety, dignity,
-      agency and respect for the fundamental rights of affected people and takes all possible measures to avoid and mitigate them.
-    section: 5. VALUE-BASED APPROACH - Humanity
+  - text: rely on or infer social scoring, (i.e. evaluating or classifying individuals
+      or groups based on social behaviour or personal traits)
+    section: 5.1. A humanitarian and principled approach
+  - text: rely on or infer social scoring, (i.e. evaluating or classifying individuals
+      or groups based on social behaviour or personal traits)
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)
+  name: Unauthorized collection/gathering/stealing - Biometric data (facial recognition)
+  evidence:
+  - text: compile facial recognition databases by untargeted scraping of facial images
+      from the internet or CCTV footage.
+    section: 5.1. A humanitarian and principled approach
+  - text: compile facial recognition databases by untargeted scraping of facial images
+      from the internet or CCTV footage
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
+  name: Unauthorized disclosure - Biometric data (facial recognition)
+  evidence:
+  - text: compile facial recognition databases by untargeted scraping of facial images
+      from the internet or CCTV footage
+- id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
+  name: Unauthorized disclosure - PII (Personal Identifiable Information)
+  evidence:
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
+  - text: ensures that confidential or sensitive internal ICRC information or personal
+      data are handled with the utmost care and are not used in or transferred to
+      non-approved, external online AI systems
+    section: 6.2. Safety and security
+  - text: confidential or sensitive internal ICRC information or personal data are
+      handled with the utmost care and are not used in or transferred to non-approved,
+      external online AI systems
+    section: 6.2. Safety and security
+- id: ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)
+  name: Unauthorized generation - Biometric data (facial recognition)
+  evidence:
+  - text: compile facial recognition databases by untargeted scraping of facial images
+      from the internet or CCTV footage.
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
+  name: Unauthorized inference/synthesis - Biometric data (facial recognition)
+  evidence:
+  - text: use biometric categorization systems that infer sensitive personal attributes
+    section: 5.1. A humanitarian and principled approach
+- id: ai-risk-taxonomy-unauthorized-processing---biometric-data-(facial-recognition)
+  name: Unauthorized processing - Biometric data (facial recognition)
+  evidence:
+  - text: use biometric categorization systems that infer sensitive personal attributes,
+      except for labelling or filtering lawfully acquired biometric datasets
+  - text: compile facial recognition databases by untargeted scraping of facial images
+      from the internet or CCTV footage
+- id: atlas-confidential-data-in-prompt
+  name: Confidential data in prompt
+  evidence:
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
+  - text: ICRC staff and users do not input any critical humanitarian information,
+      other confidential and/or strictly confidential information, or any proprietary
+      information protected by intellectual property rights when using external or
+      commercial online AI services.
+    section: 6.4. Responsibility and accountability
+- id: atlas-confidential-information-in-data
+  name: Confidential information in data
+  evidence:
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
 - id: atlas-dangerous-use
   name: Dangerous Use
   evidence:
-  - text: 'the ICRC will refrain from using, deploying or providing AI systems that: deploy subliminal, manipulative, or deceptive techniques to distort behaviour and impair informed decision-making'
+  - text: 'the ICRC will refrain from using, deploying or providing AI systems that:
+      deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making'
     section: 5. VALUE-BASED APPROACH - Humanity
+- id: atlas-data-bias
+  name: Data bias
+  evidence:
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race. We make proactive
+      and sustained efforts to understand, avoid and mitigate these risks through
+      our choice and use of AI solutions, and by avoiding their use where these biases
+      cannot be effectively avoided or mitigated.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: atlas-data-privacy-rights
+  name: Data privacy rights alignment
+  evidence:
+  - text: Systematic data protection impact assessments are carried out prior to the
+      acquisition, deployment or use of considered AI solutions, and when relevant
+      and feasible, solutions are put in place to restrict processing and enable rectification
+      and/or erasure of the data used.
+    section: 6.2. Safety and security
+- id: atlas-data-usage
+  name: Data Usage
+  evidence:
+  - text: The ICRC ensures that the use of internal and external AI solutions are
+      aligned with the rules and the principles of lawfulness, fairness, transparency,
+      purpose limitation, data minimization, accuracy, storage limitation, security
+      and accountability.
+    section: 6. GUIDING PRINCIPLES - Safety and security
+- id: atlas-decision-bias
+  name: Decision bias
+  evidence:
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race. We make proactive
+      and sustained efforts to understand, avoid and mitigate these risks through
+      our choice and use of AI solutions, and by avoiding their use where these biases
+      cannot be effectively avoided or mitigated.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: atlas-discriminatory-actions-agentic
+  name: Discriminatory actions
+  evidence:
+  - text: We use AI solutions that strengthen our ability to identify, analyse, prioritize
+      and respond to affected people's needs based on their scale and level of urgency,
+      without making any adverse distinctions on the basis of race, nationality, gender,
+      religion, class, political opinion or other potential sources of discrimination.
+    section: 5.1. A humanitarian and principled approach
+  - text: We use AI solutions that strengthen our ability to identify, analyse, prioritize
+      and respond to affected people's needs based on their scale and level of urgency,
+      without making any adverse distinctions on the basis of race, nationality, gender,
+      religion, class, political opinion or other potential sources of discrimination.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
 - id: atlas-exclusion
   name: Exclusion
   evidence:
-  - text: 'the ICRC will refrain from using, deploying or providing AI systems that: exploit vulnerabilities related to age, disability, or socio-economic circumstances to distort behaviour'
+  - text: 'the ICRC will refrain from using, deploying or providing AI systems that:
+      exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour'
     section: 5. VALUE-BASED APPROACH - Humanity
-  - text: The ICRC makes all possible efforts to ensure that the AI solutions and tools we use are inclusive by design and in their impact, and that they enable fair, non-discriminatory, equal and equitable
-      delivery of assistance and services to all affected people and users, taking into account the varying degrees of need and capacity.
+  - text: The ICRC makes all possible efforts to ensure that the AI solutions and
+      tools we use are inclusive by design and in their impact, and that they enable
+      fair, non-discriminatory, equal and equitable delivery of assistance and services
+      to all affected people and users, taking into account the varying degrees of
+      need and capacity.
     section: 5. VALUE-BASED APPROACH - Impartiality
-- id: credo-risk-048
-  name: Third-Party Dependencies
+- id: atlas-exposing-personal-information
+  name: Exposing personal information
   evidence:
-  - text: we strive to explore available, safe and adequate free and/or open-source AI solutions to mitigate risks of increased dependency on politicized or proprietary tools and systems that could (i)
-      jeopardize the perception of our neutrality and independence from entities involved in political or conflict-related controversies; (ii) endanger our operational independence and autonomy; or (iii)
-      restrict our ability to opt for alternatives without incurring disproportionate costs.
-    section: 5. VALUE-BASED APPROACH - Neutrality and independence
-- id: atlas-confidential-data-in-prompt
-  name: Confidential Data in Prompt
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or approved, external online AI systems, in line with the duty of discretion
+      stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: Mechanisms are put in place to ensure that the data required for AI systems
+      is collected, used, shared, archived and deleted in ways that are consistent
+      with the right to privacy of affected people and users.
+    section: 6.2. Safety and security
+- id: atlas-hallucination
+  name: Hallucination
   evidence:
-  - text: ICRC staff and users do not input any critical humanitarian information, other confidential and/or strictly confidential information, or any proprietary information protected by intellectual property
-      rights when using external or commercial online AI services.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: atlas-personal-information-in-prompt
-  name: Personal Information in Prompt
+  - text: Additional systematic data quality control and meaningful and effective
+      human oversight mechanisms are put in place to control and review relevant training
+      models, algorithmic systems, inputs and outputs throughout the lifecycle of
+      AI solutions used to support operational activities and decision-making processes
+      that have an impact and present a risk of harm for affected people and users.
+    section: 6.2. Safety and security
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: atlas-harmful-output
+  name: Harmful output
   evidence:
-  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC information or personal data are handled with the utmost care and are not used in or transferred to non-approved, external
-      online AI systems, in line with the duty of discretion stated in the ICRC's Code of Conduct.
-    section: 6. GUIDING PRINCIPLES - Safety and security
-  - text: ICRC staff and users do not input any critical humanitarian information, other confidential and/or strictly confidential information, or any proprietary information protected by intellectual property
-      rights when using external or commercial online AI services.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: credo-risk-049
-  name: Vendor Lock-in and Innovation Barriers
+  - text: 'The ICRC will refrain from using, deploying or providing AI systems that:
+      deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making; exploit vulnerabilities related to age,
+      disability, or socio-economic circumstances to distort behaviour; use biometric
+      categorization systems that infer sensitive personal attributes, except for
+      labelling or filtering lawfully acquired biometric datasets; rely on or infer
+      social scoring, (i.e. evaluating or classifying individuals or groups based
+      on social behaviour or personal traits); assess the risk of an individual committing
+      a criminal offence based solely on profiling or personality traits, except when
+      used to augment human assessments; compile facial recognition databases by untargeted
+      scraping of facial images from the internet or CCTV footage; or infer emotions,
+      except for medical or safety reasons.'
+    section: 5.1. A humanitarian and principled approach
+  - text: In line with the 'do no harm' principle, the ICRC systematically assesses
+      the potential negative short- and long-term secondary impacts that the use of
+      AI solutions may have on the safety, dignity, agency and respect for the fundamental
+      rights of affected people and takes all possible measures to avoid and mitigate
+      them.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC systematically assesses the potential negative short- and long-term
+      secondary impacts that the use of AI solutions may have on the safety, dignity,
+      agency and respect for the fundamental rights of affected people and takes all
+      possible measures to avoid and mitigate them.
+    section: 5.1. A humanitarian and principled approach
+- id: atlas-impact-on-affected-communities
+  name: Impact on affected communities
   evidence:
-  - text: we strive to explore available, safe and adequate free and/or open-source AI solutions to mitigate risks of increased dependency on politicized or proprietary tools and systems that could (i)
-      jeopardize the perception of our neutrality and independence from entities involved in political or conflict-related controversies; (ii) endanger our operational independence and autonomy; or (iii)
-      restrict our ability to opt for alternatives without incurring disproportionate costs.
-    section: 5. VALUE-BASED APPROACH - Neutrality and independence
-- id: credo-risk-017
-  name: Inadequate AI Literacy and Communication
+  - text: When relevant and feasible, meaningful and accessible engagement mechanisms
+      are put in place to consult affected people and users on the design, use and
+      impact of considered AI solutions.
+    section: 6.4. Responsibility and accountability
+  - text: When relevant and feasible, meaningful and accessible engagement mechanisms
+      are put in place to consult affected people and users on the design, use and
+      impact of considered AI solutions.
+    section: 6.4. Responsibility and accountability
+- id: atlas-impact-on-human-agency
+  name: AI agents' Impact on human agency
   evidence:
-  - text: The ICRC invests in adapted learning and development programmes to support our staff members' understanding of what AI systems are, how they function and what opportunities and risks they bring
-      in relation to staff members' professional activities. This includes awareness and understanding of the ethical considerations and different internal rules and regulations that apply to AI internal
-      and external tools and technologies.
-    section: 5. VALUE-BASED APPROACH - Competence and capacity building
-  - text: When necessary, the ICRC restricts access to AI tools to specifically trained and authorized personnel.
-    section: 5. VALUE-BASED APPROACH - Competence and capacity building
-- id: atlas-human-exploitation
-  name: Human Exploitation
+  - text: We focus on AI solutions that can enhance human autonomy and agency and
+      complement face-toface human interactions, as well as our physical presence
+      and proximity with affected people.
+    section: 5.1. A humanitarian and principled approach
+  - text: deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making
+    section: 5.1. A humanitarian and principled approach
+- id: atlas-impact-on-the-environment
+  name: Impact on the environment
   evidence:
-  - text: 'the ICRC will refrain from using, deploying or providing AI systems that: deploy subliminal, manipulative, or deceptive techniques to distort behaviour and impair informed decision-making; exploit
-      vulnerabilities related to age, disability, or socio-economic circumstances to distort behaviour'
-    section: 5. VALUE-BASED APPROACH - Humanity
-- id: credo-risk-034
-  name: Oversight and Evaluation Challenges
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint of considered AI solutions through a life-cycle
+      approach. This includes favouring solutions and tools that have a lighter footprint,
+      in line with the ICRC's Plan of Action under the Climate and Environment Charter
+      for Humanitarian Organizations and the ICRC's Framework for Sustainable Development.
+    section: 6.4. Responsibility and accountability
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint  of  considered  AI  solutions  through  a  life-cycle  approach.
+    section: 6.4. Responsibility and accountability
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint of considered AI solutions through a life-cycle
+      approach.
+    section: 6.4. Responsibility and accountability
+- id: atlas-incomplete-usage-definition
+  name: Incomplete usage definition
   evidence:
-  - text: Systematic review and auditing systems supported by regular internal and external feedback mechanisms are put in place to ensure a continuous and multidimensional risks analysis based on their
-      likelihood and the severity of their potential impact for affected populations, users or the organization, including from a legal perspective.
-    section: 6. GUIDING PRINCIPLES - Proportionality, precaution, and do no harm
-  - text: When relevant and feasible, systematic impact, verifiability and replicability assessments are put in place and supported by effective evaluation and auditing processes to ensure the ICRC's AI
-      systems and tools comply with this policy.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
+  - text: Potential AI solutions are only considered and used when necessary and adequate
+      to achieve a positive impact and respond to clear, pre-defined objectives.
+    section: 6.1. Proportionality, precaution, and 'do no harm'
 - id: atlas-ip-information-in-prompt
-  name: IP Information in Prompt
+  name: IP information in prompt
   evidence:
-  - text: ICRC staff and users do not input any critical humanitarian information, other confidential and/or strictly confidential information, or any proprietary information protected by intellectual property
-      rights when using external or commercial online AI services.
-    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
-- id: credo-risk-008
-  name: Opaque system architecture
+  - text: ICRC staff and users do not input any critical humanitarian information,
+      other confidential and/or strictly confidential information, or any proprietary
+      information protected by intellectual property rights when using external or
+      commercial online AI services.
+    section: 6.4. Responsibility and accountability
+- id: atlas-lack-of-model-transparency
+  name: Lack of model transparency
   evidence:
-  - text: Transparency and 'explainability' are essential elements of a safe, ethical and responsible approach to AI
-  - text: explanations on the causal link between AI inputs and outputs and the functioning of algorithmic processes.
-- id: credo-risk-009
-  name: Black box decisionmaking (Slattery et al., 2024; IBM, 2024)
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+  - text: Transparency and 'explainability' are essential elements of a safe, ethical
+      and responsible approach to AI, and to ensure respect for the ICRC's principles,
+      rules and values.
+    section: 6.3. Transparency and 'explainability'
+- id: atlas-lack-of-system-transparency
+  name: Lack of system transparency
   evidence:
-  - text: explanations on the causal link between AI inputs and outputs and the functioning of algorithmic processes.
-  - text: This includes adequate and meaningful information about why, when and how AI solutions are used, and explanations on the causal link between AI inputs and outputs and the functioning of algorithmic
-      processes.
-- id: credo-risk-011
-  name: Disparate model performance (Slattery et al., 2024; IBM, 2024)
+  - text: Transparency and 'explainability' are essential elements of a safe, ethical
+      and responsible approach to AI, and to ensure respect for the ICRC's principles,
+      rules and values. The ICRC therefore ensures at all times the highest possible
+      levels of transparency in our use and management of AI solutions, in accordance
+      with the context, risks and impact of the systems and tools considered, and
+      with due consideration to the principles of safety, security and privacy.
+    section: 6.3. Transparency and 'explainability'
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+  - text: Transparency and 'Explainability' are essential elements of a safe, ethical
+      and responsible approach to AI, and to ensure respect for the ICRC's principles,
+      rules and values.
+    section: 6.3. Transparency and 'explainability'
+- id: atlas-legal-accountability
+  name: Legal accountability
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes -
-      in particular around gender and race.
-  - text: The ICRC makes all possible efforts to ensure that the AI solutions and tools we use are inclusive by design and in their impact, and that they enable fair, non-discriminatory, equal and equitable
-      delivery of assistance and services to all affected people and users, taking into account the varying degrees of need and capacity.
-- id: credo-risk-029
-  name: Mass surveillance and privacy attacks (Slattery et al., 2024)
+  - text: Responsibility and accountability for decision-making supported by AI always
+      lies with the ICRC and/or the staff using the tools or system concerned, in
+      line with the ICRC's Code of Conduct and other applicable internal rules.
+    section: 6.4. Responsibility and accountability
+  - text: Responsibility and accountability for decision-making supported by AI always
+      lies with the ICRC and/or the staff using the tools or system concerned, in
+      line with the ICRC's Code of Conduct and other applicable internal rules.
+    section: 6.4. Responsibility and accountability
+  - text: Decisions on the use or provision to others of AI systems, tools or technologies
+      should be informed by legal considerations, and legal advice should be obtained
+      during any AI-related decision-making process.
+    section: 6.4. Responsibility and accountability
+- id: atlas-non-disclosure
+  name: Non-disclosure
   evidence:
-  - text: Considering the multiple and significant risks that AI solutions present for the confidentiality and protection of the data that the ICRC collects, processes and manages for the purposes of our
-      activities
-  - text: Mechanisms are put in place to ensure that the data required for AI systems is collected, used, shared, archived and deleted in ways that are consistent with the right to privacy of affected people
-      and users.
-- id: mit-ai-risk-subdomain-1.3
-  name: Unequal performance across groups
+  - text: Relevant and intelligible information about the use of AI systems is systematically
+      provided to affected people and users when these systems could have an impact
+      on them or their rights, or when decisions with significant consequences for
+      the organization are concerned.
+    section: 6.3. Transparency and 'explainability'
+- id: atlas-output-bias
+  name: Output bias
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes -
-      in particular around gender and race.
-  - text: The ICRC makes all possible efforts to ensure that the AI solutions and tools we use are inclusive by design and in their impact, and that they enable fair, non-discriminatory, equal and equitable
-      delivery of assistance and services to all affected people and users, taking into account the varying degrees of need and capacity.
-- id: mit-ai-risk-subdomain-7.3
-  name: Lack of capability or robustness
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race. We make proactive
+      and sustained efforts to understand, avoid and mitigate these risks through
+      our choice and use of AI solutions, and by avoiding their use where these biases
+      cannot be effectively avoided or mitigated.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: atlas-over-or-under-reliance
+  name: Over- or under-reliance
   evidence:
-  - text: The technical complexity and potential risks attached to AI systems and their functioning requires a significant level of knowledge and expertise to select, operate and manage them effectively
-      and responsibly.
-  - text: The necessary evidence is gathered through scientific experimentation and 'sandbox' testing to ensure, as far as possible, the effectiveness and safety of the solutions in context.
+  - text: Additional systematic data quality control and meaningful and effective
+      human oversight mechanisms are put in place to control and review relevant training
+      models, algorithmic systems, inputs and outputs throughout the lifecycle of
+      AI solutions used to support operational activities and decision-making processes
+      that have an impact and present a risk of harm for affected people and users.
+    section: 6.2. Safety and security
+  - text: Additional systematic data quality control and meaningful and effective
+      human oversight mechanisms are put in place to control and review relevant training
+      models, algorithmic systems, inputs and outputs throughout the lifecycle of
+      AI solutions used to support operational activities and decision-making processes
+      that have an impact and present a risk of harm for affected people and users.
+    section: 6.2. Safety and security
+- id: atlas-personal-information-in-data
+  name: Personal information in data
+  evidence:
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: Systematic data protection impact assessments are carried out prior to the
+      acquisition, deployment or use of considered AI solutions, and when relevant
+      and feasible, solutions are put in place to restrict processing and enable rectification
+      and/or erasure of the data used.
+    section: 6.2. Safety and security
+- id: atlas-personal-information-in-prompt
+  name: Personal information in prompt
+  evidence:
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
+- id: atlas-poor-model-accuracy
+  name: Poor Model Accuracy
+  evidence:
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes – in particular around gender and race.
+    section: 5. VALUE-BASED APPROACH - Impartiality
+- id: atlas-revealing-confidential-information
+  name: Revealing confidential information
+  evidence:
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+- id: atlas-unexplainable-output
+  name: Unexplainable output
+  evidence:
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
 - id: atlas-unrepresentative-data
   name: Unrepresentative data
   evidence:
-  - text: The ICRC acknowledges the significant risks of AI systems that could generate false or inaccurate data and replicate or amplify systemic and societal discriminations, biases and stereotypes -
-      in particular around gender and race.
-- id: credo-risk-005
-  name: Lack of training data transparency (IBM, 2024)
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+- id: credo-risk-004
+  name: Environmental harm
   evidence:
-  - text: Additional systematic data quality control and meaningful and effective human oversight mechanisms are put in place to control and review relevant training models, algorithmic systems, inputs
-      and outputs throughout the lifecycle of AI solutions used to support operational activities and decision-making processes that have an impact and present a risk of harm for affected people and users.
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint  of  considered  AI  solutions  through  a  life-cycle  approach.
+    section: 6.4. Responsibility and accountability
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint of considered AI solutions through a life-cycle
+      approach.
+    section: 6.4. Responsibility and accountability
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint of considered AI solutions through a life-cycle
+      approach.
+    section: 6.4. Responsibility and accountability
+- id: credo-risk-005
+  name: Lack of training data transparency
+  evidence:
+  - text: Additional systematic data quality control and meaningful and effective
+      human oversight mechanisms are put in place to control and review relevant training
+      models, algorithmic systems, inputs and outputs throughout the lifecycle of
+      AI solutions
+    section: 6.2. Safety and security
+  - text: Without accurate documentation on how a model's data was collected, curated,
+      and used to train a model, it may be harder to satisfactorily explain the behavior
+      of the model with respect to the data.
+    section: 3. SCOPE
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-007
+  name: Inadequate observability
+  evidence:
+  - text: Systematic review and auditing systems supported by regular internal and
+      external feedback mechanisms are put in place to ensure a continuous and multidimensional
+      risks analysis based on their likelihood and the severity of their potential
+      impact for affected populations, users or the organization, including from a
+      legal perspective.
+    section: 6.1. Proportionality, precaution, and 'do no harm'
+  - text: As much as feasible and in accordance with the applicable risk level, context
+      and use case, meaningful traceability, disclosure and notification measures
+      are put in place in relation to the use of AI systems that support the ICRC's
+      activities and decision-making processes
+    section: 6.3. Transparency and 'explainability'
+  - text: As much as feasible and in accordance with the applicable risk level, context
+      and use case, meaningful traceability, disclosure and notification measures
+      are put in place in relation to the use of AI systems
+    section: 6.3. Transparency and 'explainability'
+- id: credo-risk-008
+  name: Opaque system architecture
+  evidence:
+  - text: Transparency and 'explainability' are essential elements of a safe, ethical
+      and responsible approach to AI
+  - text: explanations on the causal link between AI inputs and outputs and the functioning
+      of algorithmic processes.
+- id: credo-risk-009
+  name: Black box decisionmaking
+  evidence:
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+- id: credo-risk-010
+  name: Stereotype perpetuation
+  evidence:
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-011
+  name: Disparate model performance
+  evidence:
+  - text: The ICRC makes all possible efforts to ensure that the AI solutions and
+      tools we use are inclusive by design and in their impact, and that they enable
+      fair, non-discriminatory, equal and equitable delivery of assistance and services
+      to all affected people and users, taking into account the varying degrees of
+      need and capacity.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC makes all possible efforts to ensure that the AI solutions and
+      tools we use are inclusive by design and in their impact, and that they enable
+      fair, non-discriminatory, equal and equitable delivery of assistance and services
+      to all affected people and users, taking into account the varying degrees of
+      need and capacity.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-012
+  name: Unequal access to AI benefits
+  evidence:
+  - text: The ICRC makes all possible efforts to ensure that the AI solutions and
+      tools we use are inclusive by design and in their impact, and that they enable
+      fair, non-discriminatory, equal and equitable delivery of assistance and services
+      to all affected people and users, taking into account the varying degrees of
+      need and capacity.
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-016
+  name: Over or under-reliance and unsafe use
+  evidence:
+  - text: Additional  systematic  data  quality  control  and  meaningful  and  effective  human  oversight
+      mechanisms are put in place to control and review relevant training models,
+      algorithmic systems, inputs and outputs throughout the lifecycle of AI solutions
+      used to support operational activities and decision-making processes that have
+      an impact and present a risk of harm for affected people and users.
+    section: 6.2. Safety and security
+  - text: The ICRC pays specific attention to ensure that the use and development
+      of AI solutions do not jeopardize our ability to demonstrate humanity and empathy
+      through direct and in-person human engagement... We focus on AI solutions that
+      can enhance human autonomy and agency and complement face-to-face human interactions
+    section: 5.1. A humanitarian and principled approach
+  - text: ensuring sufficient human oversight and verification of AI outputs throughout
+      their lifecycle.
+    section: 6.2. Safety and security
+- id: credo-risk-017
+  name: Inadequate AI literacy and communication
+  evidence:
+  - text: The ICRC invests in adapted learning and development programmes to support
+      our staff members' understanding of what AI systems are, how they function and
+      what opportunities and risks they bring in relation to staff members' professional
+      activities.
+    section: 5.2. An enabling and learning approach
+  - text: The technical complexity and potential risks attached to AI systems and
+      their functioning requires a significant level of knowledge and expertise to
+      select, operate and manage them effectively and responsibly.
+    section: 5.2. An enabling and learning approach
+  - text: At the institutional level, the ICRC incentivizes and enables adequate levels
+      of AI and digital literacy, and training and upskilling for staff members at
+      all levels.
+    section: 5.2. An enabling and learning approach
+- id: credo-risk-019
+  name: Loss of human agency and autonomy
+  evidence:
+  - text: The ICRC pays specific attention to ensure that the use and development
+      of AI solutions do not jeopardize our ability to demonstrate humanity and empathy
+      through direct and in-person human engagement in the delivery of our external
+      and internal activities and programmes. We focus on AI solutions that can enhance
+      human autonomy and agency and complement face-to-face human interactions, as
+      well as our physical presence and proximity with affected people.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC pays specific attention to ensure that the use and development
+      of AI solutions do not jeopardize our ability to demonstrate humanity and empathy
+      through direct and in-person human engagement in the delivery of our external
+      and internal activities and programmes.
+    section: 5.1. A humanitarian and principled approach
+  - text: We focus on AI solutions that can enhance human autonomy and agency and
+      complement face-to-face human interactions, as well as our physical presence
+      and proximity with affected people.
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-021
+  name: False or misleading information
+  evidence:
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-023
+  name: Regulatory compliance
+  evidence:
+  - text: Awareness-raising, training and compliance efforts are made to ensure that
+      (i) the ICRC's use of AI solutions does not breach applicable international,
+      regional and national legal restrictions, and that (ii) ICRC staff and users
+      do not input any critical humanitarian information, other confidential and/or
+      strictly confidential information, or any proprietary information protected
+      by intellectual property rights when using external or commercial online AI
+      services.
+    section: 6.4. Responsibility and accountability
+  - text: Awareness-raising, training and compliance efforts are made to ensure that
+      (i) the ICRC's use of AI solutions does not breach applicable international,
+      regional and national legal restrictions
+    section: 6.4. Responsibility and accountability
+  - text: The ICRC ensures that our use of AI solutions is aligned with our broader
+      organizational obligations and commitments and complies with applicable rules
+      and regulations.
+    section: 6.4. Responsibility and accountability
 - id: credo-risk-024
   name: Civil liability
   evidence:
   - text: the potential negative or harmful consequences arising from them
   - text: when they involve legal or reputational risks for the organization.
-  - text: potential impact on the safety, dignity and rights of affected populations and users
-- id: credo-risk-025
-  name: Corporate liability (IBM, 2024)
+  - text: potential impact on the safety, dignity and rights of affected populations
+      and users
+- id: credo-risk-026
+  name: Fraud, scams, and targeted manipulation
   evidence:
-  - text: when they involve legal or reputational risks for the organization.
+  - text: 'The ICRC will refrain from using, deploying or providing AI systems that:
+      deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making; exploit vulnerabilities related to age,
+      disability, or socio-economic circumstances to distort behaviour'
+    section: 5.1. A humanitarian and principled approach
+  - text: deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-027
+  name: Cyberattacks, weapon development, and mass harm
+  evidence:
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered, and the highest
+      possible standards of data protection and cybersecurity measures are put in
+      place to prevent and mitigate them, in line with assessed risk levels.
+    section: 6.2. Safety and security
+  - text: The ICRC uses our ethical frameworks... to ensure as much as possible that
+      we do not use AI providers that (i) are directly engaged in activities contributing
+      to armed conflict or closely associated with military activities of parties
+      to conflict
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-029
+  name: Mass surveillance and privacy attacks
+  evidence:
+  - text: Mechanisms are put in place to ensure that the data required for AI systems
+      is collected, used, shared, archived and deleted in ways that are consistent
+      with the right to privacy of affected people and users.
+    section: 6.2. Safety and security
+  - text: 'The ICRC will refrain from using, deploying or providing AI systems that:
+      ... compile facial recognition databases by untargeted scraping of facial images
+      from the internet or CCTV footage'
+    section: 5.1. A humanitarian and principled approach
+  - text: compile facial recognition databases by untargeted scraping of facial images
+      from the internet or CCTV footage
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-031
+  name: Maintenance and update requirements
+  evidence:
+  - text: The ICRC maintains a long-term perspective to ensure AI research and development
+      investments are financially responsible and sustainable, focusing on relevance,
+      impact and effectiveness, and  also  considers  added-value,  interoperability,  scalability  and  cost-efficiency  (including
+      maintenance, training, verification and compliance-related costs).
+    section: 5.2. An enabling and learning approach
 - id: credo-risk-033
   name: Lack of adequate capabilities (Slattery et al., 2024; IBM, 2024; AI, 2023)
   evidence:
-  - text: Its implementation will require investments in specific operational and governance capabilities, within the limits of the ICRC's operational and financial capacities.
-  - text: The technical complexity and potential risks attached to AI systems and their functioning requires a significant level of knowledge and expertise to select, operate and manage them effectively
-      and responsibly.
+  - text: Its implementation will require investments in specific operational and
+      governance capabilities, within the limits of the ICRC's operational and financial
+      capacities.
+  - text: The technical complexity and potential risks attached to AI systems and
+      their functioning requires a significant level of knowledge and expertise to
+      select, operate and manage them effectively and responsibly.
+- id: credo-risk-034
+  name: Oversight and evaluation challenges
+  evidence:
+  - text: Systematic review and auditing systems supported by regular internal and
+      external feedback mechanisms are put in place to ensure a continuous and multidimensional
+      risks analysis based on their likelihood and the severity of their potential
+      impact for affected populations, users or the organization, including from a
+      legal perspective.
+    section: 6.1. Proportionality, precaution, and 'do no harm'
+  - text: Additional systematic data quality control and meaningful and effective
+      human oversight mechanisms are put in place to control and review relevant training
+      models, algorithmic systems, inputs and outputs throughout the lifecycle of
+      AI solutions
+    section: 6.2. Safety and security
+  - text: Systematic review and auditing systems supported by regular internal and
+      external feedback mechanisms are put in place to ensure a continuous and multidimensional
+      risks analysis
+    section: 6.1. Proportionality, precaution, and 'do no harm'
 - id: credo-risk-035
   name: Lack of robustness (Slattery et al., 2024)
   evidence:
-  - text: When the potential benefits of AI outweigh identified risks, solutions under consideration are thoroughly tested before being rolled out. The necessary evidence is gathered through scientific
-      experimentation and 'sandbox' testing to ensure, as far as possible, the effectiveness and safety of the solutions in context.
-- id: credo-risk-040
-  name: AI-generated security weaknesses (Slattery et al., 2024; IBM, 2024; AI, 2023)
+  - text: When the potential benefits of AI outweigh identified risks, solutions under
+      consideration are thoroughly tested before being rolled out. The necessary evidence
+      is gathered through scientific experimentation and 'sandbox' testing to ensure,
+      as far as possible, the effectiveness and safety of the solutions in context.
+- id: credo-risk-036
+  name: Compromised personally identifiable information
   evidence:
-  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and potential related harms and damage are systematically considered, and the highest possible standards of data protection
-      and cybersecurity measures are put in place to prevent and mitigate them, in line with assessed risk levels.
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: As the development and use of AI involve in most cases the use of personal
+      data, the present policy complements, and is without prejudice to, the application
+      of the ICRC's Rules on Personal Data Protection (the Rules), which are binding
+      on the organization.
+    section: 3. SCOPE
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
+- id: credo-risk-037
+  name: Compromised sensitive information
+  evidence:
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
+- id: credo-risk-038
+  name: Compromised confidential information
+  evidence:
+  - text: Awareness-raising, training and compliance efforts are made to ensure that...
+      (ii) ICRC staff and users do not input any critical humanitarian information,
+      other confidential and/or strictly confidential information, or any proprietary
+      information protected by intellectual property rights when using external or
+      commercial online AI services.
+    section: 6.4. Responsibility and accountability
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
+- id: credo-risk-040
+  name: AI-generated security weaknesses
+  evidence:
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered, and the highest
+      possible standards of data protection and cybersecurity measures are put in
+      place to prevent and mitigate them
+    section: 6.2. Safety and security
+- id: credo-risk-041
+  name: Vulnerability to adversarial attacks
+  evidence:
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered, and the highest
+      possible standards of data protection and cybersecurity measures are put in
+      place to prevent and mitigate them
+    section: 6.2. Safety and security
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered
+    section: 6.2. Safety and security
 - id: credo-risk-045
   name: Competitive dynamics (Slattery et al., 2024)
   evidence:
-  - text: the speed and scale of AI-related innovations in the past few years, the emergence of new technological tools, their simplified accessibility, push-and-pull factors inside and outside the ICRC,
-      and ongoing debates about the opportunities and risks they create - including for humanitarian action - have triggered a need to ensure that the organization is adequately equipped to explore and
-      manage these developments in a timely, coherent and responsible manner.
-- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)
-  name: Unauthorized collection/gathering/stealing - Biometric data (facial recognition)
+  - text: the speed and scale of AI-related innovations in the past few years, the
+      emergence of new technological tools, their simplified accessibility, push-and-pull
+      factors inside and outside the ICRC, and ongoing debates about the opportunities
+      and risks they create - including for humanitarian action - have triggered a
+      need to ensure that the organization is adequately equipped to explore and manage
+      these developments in a timely, coherent and responsible manner.
+- id: credo-risk-046
+  name: Governance Failures
   evidence:
-  - text: compile facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage
+  - text: The ICRC puts in place effective governance mechanisms to ensure that our
+      use of AI solutions is aligned with our broader organizational obligations and
+      commitments and complies with applicable rules and regulations.
+    section: 6. GUIDING PRINCIPLES - Responsibility and accountability
+- id: credo-risk-048
+  name: Upstream third-party dependencies
+  evidence:
+  - text: When relevant, we strive to explore available, safe and adequate free and/or
+      open-source AI solutions to mitigate risks of increased dependency on politicized
+      or proprietary tools and systems that could (i) jeopardize the perception of
+      our neutrality and independence from entities involved in political or conflict-related
+      controversies; (ii) endanger our operational independence and autonomy; or (iii)
+      restrict our ability to opt for alternatives without incurring disproportionate
+      costs.
     section: 5.1. A humanitarian and principled approach
-- id: ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)
-  name: Unauthorized generation - Biometric data (facial recognition)
+  - text: When relevant, we strive to explore available, safe and adequate free and/or
+      open-source AI solutions to mitigate risks of increased dependency on politicized
+      or proprietary tools and systems that could (i) jeopardize the perception of
+      our neutrality and independence from entities involved in political or conflict-related
+      controversies; (ii) endanger our operational independence and autonomy; or (iii)
+      restrict our ability to opt for alternatives without incurring disproportionate
+      costs.
+    section: 5.1. A humanitarian and principled approach
+  - text: When relevant, we strive to explore available, safe and adequate free and/or
+      open-source AI solutions to mitigate risks of increased dependency on politicized
+      or proprietary tools and systems
+    section: 5.1. A humanitarian and principled approach
+- id: credo-risk-049
+  name: Vendor lock-in and innovation barriers
   evidence:
-  - text: compile facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage
-- id: ai-risk-taxonomy-characterization-of-identity---nationality
-  name: Characterization of identity - Nationality
+  - text: When relevant, we strive to explore available, safe and adequate free and/or
+      open-source AI solutions to mitigate risks of increased dependency on politicized
+      or proprietary tools and systems that could (i) jeopardize the perception of
+      our neutrality and independence from entities involved in political or conflict-related
+      controversies; (ii) endanger our operational independence and autonomy; or (iii)
+      restrict our ability to opt for alternatives without incurring disproportionate
+      costs.
+    section: 5.1. A humanitarian and principled approach
+  - text: When relevant, we strive to explore available, safe and adequate free and/or
+      open-source AI solutions to mitigate risks of increased dependency on politicized
+      or proprietary tools and systems that could... (iii) restrict our ability to
+      opt for alternatives without incurring disproportionate costs.
+    section: 5.1. A humanitarian and principled approach
+  - text: restrict our ability to opt for alternatives without incurring disproportionate
+      costs.
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-1.1
+  name: Unfair discrimination and misrepresentation
   evidence:
-  - text: without making any adverse distinctions on the basis of race, nationality, gender, religion, class, political opinion or other potential sources of discrimination.
-- id: ai-risk-taxonomy-characterization-of-identity---beliefs
-  name: Characterization of identity - Beliefs
+  - text: We use AI solutions that strengthen our ability to identify, analyse, prioritize
+      and respond to affected people's needs based on their scale and level of urgency,
+      without making any adverse distinctions on the basis of race, nationality, gender,
+      religion, class, political opinion or other potential sources of discrimination.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-1.3
+  name: Unequal performance across groups
   evidence:
-  - text: without making any adverse distinctions on the basis of race, nationality, gender, religion, class, political opinion or other potential sources of discrimination.
-- id: ai-risk-taxonomy-characterization-of-identity---religion
-  name: Characterization of identity - Religion
+  - text: The ICRC makes all possible efforts to ensure that the AI solutions and
+      tools we use are inclusive by design and in their impact, and that they enable
+      fair, non-discriminatory, equal and equitable delivery of assistance and services
+      to all affected people and users, taking into account the varying degrees of
+      need and capacity.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-2.1
+  name: Compromise of privacy by obtaining, leaking or correctly inferring sensitive
+    information
   evidence:
-  - text: without making any adverse distinctions on the basis of race, nationality, gender, religion, class, political opinion or other potential sources of discrimination.
-- id: ai-risk-taxonomy-classification-of-individuals---race
-  name: Classification of individuals - Race
+  - text: Considering the multiple and significant risks that AI solutions present
+      for the confidentiality and protection of the data that the ICRC collects, processes
+      and manages for the purposes of our activities - and the potential negative
+      or harmful consequences arising from them - the ICRC explores and uses AI solutions
+      through a human-centred approach anchored in the highest possible levels of
+      safety, security and privacy in their design
+    section: 6.2. Safety and security
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered, and the highest
+      possible standards of data protection and cybersecurity measures are put in
+      place to prevent and mitigate them, in line with assessed risk levels.
+    section: 6.2. Safety and security
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems, in line with
+      the duty of discretion stated in the ICRC's Code of Conduct.
+    section: 6.2. Safety and security
+- id: mit-ai-risk-subdomain-2.2
+  name: AI system security vulnerabilities and attacks
   evidence:
-  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes - in particular around gender and race.
-- id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
-  name: Unauthorized disclosure - Biometric data (facial recognition)
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered, and the highest
+      possible standards of data protection and cybersecurity measures are put in
+      place to prevent and mitigate them, in line with assessed risk levels.
+    section: 6.2. Safety and security
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered, and the highest
+      possible standards of data protection and cybersecurity measures are put in
+      place to prevent and mitigate them, in line with assessed risk levels.
+    section: 6.2. Safety and security
+  - text: Risks of misuse, abuse, infiltration and attacks against AI systems and
+      potential related harms and damage are systematically considered, and the highest
+      possible standards of data protection and cybersecurity measures are put in
+      place to prevent and mitigate them
+    section: 6.2. Safety and security
+- id: mit-ai-risk-subdomain-3.1
+  name: False or misleading information
   evidence:
-  - text: compile facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage
-- id: ai-risk-taxonomy-classification-of-individuals---religion
-  name: Classification of individuals - Religion
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
+  - text: deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-4.1
+  name: Disinformation, surveillance, and influence at scale
   evidence:
-  - text: without making any adverse distinctions on the basis of race, nationality, gender, religion, class, political opinion or other potential sources of discrimination.
-- id: ai-risk-taxonomy-classification-of-individuals---nationality
-  name: Classification of individuals - Nationality
+  - text: 'the ICRC will refrain from using, deploying or providing AI systems that:
+      deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making; exploit vulnerabilities related to age,
+      disability, or socio-economic circumstances to distort behaviour; use biometric
+      categorization systems that infer sensitive personal attributes, except for
+      labelling or filtering lawfully acquired biometric datasets; rely on or infer
+      social scoring, (i.e. evaluating or classifying individuals or groups based
+      on social behaviour or personal traits); assess the risk of an individual committing
+      a criminal offence based solely on profiling or personality traits, except when
+      used to augment human assessments; compile facial recognition databases by untargeted
+      scraping of facial images from the internet or CCTV footage; or infer emotions,
+      except for medical or safety reasons.'
+    section: 5.1. A humanitarian and principled approach
+  - text: 'the ICRC will refrain from using, deploying or providing AI systems that:
+      deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making; exploit vulnerabilities related to age,
+      disability, or socio-economic circumstances to distort behaviour; use biometric
+      categorization systems that infer sensitive personal attributes, except for
+      labelling or filtering lawfullyfully acquired biometric datasets; rely on or
+      infer social scoring, (i.e. evaluating or classifying individuals or groups
+      based on social behaviour or personal traits); assess the risk of an individual
+      committing a criminal offence based solely on profiling or personality traits,
+      except when used to augment human assessments; compile facial recognition databases
+      by untargeted scraping of facial images from the internet or CCTV footage; or
+      infer emotions, except for medical or safety reasons.'
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-4.2
+  name: Cyberattacks, weapon development or use, and mass harm
   evidence:
-  - text: without making any adverse distinctions on the basis of race, nationality, gender, religion, class, political opinion or other potential sources of discrimination.
-- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---race
-  name: Discrimination in employment, benefits, or services - Race
+  - text: we do not use AI providers that (i) are directly engaged in activities contributing
+      to armed conflict or closely associated with military activities of parties
+      to conflict, or (ii) promote particular political interests or values that are
+      contradictory to the ICRC's humanitarian mandate and ethical values.
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-4.3
+  name: Fraud, scams, and targeted manipulation
   evidence:
-  - text: without making any adverse distinctions on the basis of race, nationality, gender, religion, class, political opinion or other potential sources of discrimination.
-  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes - in particular around gender and race.
-- id: ai-risk-taxonomy-classification-of-individuals---gender
-  name: Classification of individuals - Gender
+  - text: 'the ICRC will refrain from using, deploying or providing AI systems that:
+      deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making; exploit vulnerabilities related to age,
+      disability, or socio-economic circumstances to distort behaviour; use biometric
+      categorization systems that infer sensitive personal attributes, except for
+      labelling or filtering lawfully acquired biometric datasets; rely on or infer
+      social scoring, (i.e. evaluating or classifying individuals or groups based
+      on social behaviour or personal traits); assess the risk of an individual committing
+      a criminal offence based solely on profiling or personality traits, except when
+      used to augment human assessments; compile facial recognition databases by untargeted
+      scraping of facial images from the internet or CCTV footage; or infer emotions,
+      except for medical or safety reasons.'
+    section: 5.1. A humanitarian and principled approach
+  - text: deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making; exploit vulnerabilities related to age,
+      disability, or socio-economic circumstances to distort behaviour
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-5.1
+  name: Overreliance
   evidence:
-  - text: without making any adverse distinctions on the basis of race, nationality, gender, religion, class, political opinion or other potential sources of discrimination.
-  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes - in particular around gender and race.
-- id: ai-risk-taxonomy-characterization-of-identity---race
-  name: Characterization of identity - Race
+  - text: The ICRC pays specific attention to ensure that the use and development
+      of AI solutions do not jeopardize our ability to demonstrate humanity and empathy
+      through direct and in-person human engagement in the delivery of our external
+      and internal activities and programmes.
+    section: 5. VALUE-BASED APPROACH - Humanity
+- id: mit-ai-risk-subdomain-5.2
+  name: Loss of human agency and autonomy
   evidence:
-  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes - in particular around gender and race.
-- id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
-  name: Unauthorized inference/synthesis - Biometric data (facial recognition)
+  - text: Additional systematic data quality control and meaningful and effective
+      human oversight mechanisms are put in place to control and review relevant training
+      models, algorithmic systems, inputs and outputs throughout the lifecycle of
+      AI solutions used to support operational activities and decision-making processes
+      that have an impact and present a risk of harm for affected people and users.
+    section: 6.2. Safety and security
+  - text: Responsibility and accountability for decision-making supported by AI always
+      lies with the ICRC and/or the staff using the tools or system concerned, in
+      line with the ICRC's Code of Conduct and other applicable internal rules.
+    section: 6.4. Responsibility and accountability
+  - text: Responsibility and accountability for decision-making supported by AI always
+      lies with the ICRC and/or the staff using the tools or system concerned, in
+      line with the ICRC's Code of Conduct and other applicable internal rules.
+    section: 6.4. Responsibility and accountability
+- id: mit-ai-risk-subdomain-6.4
+  name: Competitive dynamics
   evidence:
-  - text: use biometric categorization systems that infer sensitive personal attributes, except for labelling or filtering lawfully acquired biometric datasets
-  - text: compile facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage
-- id: ai-risk-taxonomy-unauthorized-processing---biometric-data-(facial-recognition)
-  name: Unauthorized processing - Biometric data (facial recognition)
+  - text: Externally, AI-related debates - on opportunities, risks and regulatory
+      needs and options - have become politicized in the context of global strategic
+      competition between states that disincentivizes controls and limits, market
+      forces that incentivize risk-taking by private sector actors and vastly differing
+      assessments of the relevance and impact AI will have for societies and people.
+    section: 4. RATIONALE
+  - text: AI-related debates - on opportunities, risks and regulatory needs and options
+      - have become politicized in the context of global strategic competition between
+      states that disincentivizes controls and limits, market forces that incentivize
+      risk-taking by private sector actors
+    section: 4. RATIONALE
+  - text: AI is an object of increasing politicization and competition between states
+      at the global level, as well as private-sector and non-state actors.
+    section: 5.1. A humanitarian and principled approach
+- id: mit-ai-risk-subdomain-6.5
+  name: Governance failure
   evidence:
-  - text: use biometric categorization systems that infer sensitive personal attributes, except for labelling or filtering lawfully acquired biometric datasets
-  - text: compile facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage
+  - text: Yet, the ICRC currently lacks a common policy framework to ensure that these
+      various activities are organized and managed by a clear, consistent, formal
+      and professional methodology. This policy is intended to help bridge this gap
+      and inform the ICRC's efforts to leverage technological innovation efficiently
+      through effective governance mechanisms and a responsible approach that focuses
+      on generating relevant and sustainable humanitarian impact and upholding the
+      organization's principles and values.
+    section: 4. RATIONALE
+  - text: the ICRC currently lacks a common policy framework to ensure that these
+      various activities are organized and managed by a clear, consistent, formal
+      and professional methodology.
+    section: 4. RATIONALE
+- id: mit-ai-risk-subdomain-6.6
+  name: Environmental harm
+  evidence:
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint of considered AI solutions through a life-cycle
+      approach. This includes favouring solutions and tools that have a lighter footprint,
+      in line with the ICRC's Plan of Action under the Climate and Environment Charter
+      for Humanitarian Organizations and the ICRC's Framework for Sustainable Development.
+    section: 6.4. Responsibility and accountability
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint  of  considered  AI  solutions  through  a  life-cycle  approach.
+    section: 6.4. Responsibility and accountability
+  - text: All possible efforts are made to integrate and mitigate the environmental
+      impact and carbon footprint of considered AI solutions through a life-cycle
+      approach.
+    section: 6.4. Responsibility and accountability
+- id: mit-ai-risk-subdomain-7.3
+  name: Lack of capability or robustness
+  evidence:
+  - text: Additional  systematic  data  quality  control  and  meaningful  and  effective  human  oversight
+      mechanisms are put in place to control and review relevant training models,
+      algorithmic systems, inputs and outputs throughout the lifecycle of AI solutions
+      used to support operational activities and decision-making processes that have
+      an impact and present a risk of harm for affected people and users.
+    section: 6.2. Safety and security
+  - text: When the potential benefits of AI outweigh identified risks, solutions under
+      consideration are thoroughly tested before being rolled out. The necessary evidence
+      is gathered through scientific experimentation and 'sandbox' testing to ensure,
+      as far as possible, the effectiveness and safety of the solutions in context.
+    section: 6.1. Proportionality, precaution, and 'do no harm'
+  - text: When the potential benefits of AI outweigh identified risks, solutions under
+      consideration are thoroughly tested before being rolled out. The necessary evidence
+      is gathered through scientific experimentation and 'sandbox' testing to ensure,
+      as far as possible, the effectiveness and safety of the solutions in context.
+    section: 6.1. Proportionality, precaution, and 'do no harm'
+- id: mit-ai-risk-subdomain-7.4
+  name: Lack of transparency or interpretability
+  evidence:
+  - text: Transparency and 'explainability' are essential elements of a safe, ethical
+      and responsible approach to AI, and to ensure respect for the ICRC's principles,
+      rules and values. The ICRC therefore ensures at all times the highest possible
+      levels of transparency in our use and management of AI solutions, in accordance
+      with the context, risks and impact of the systems and tools considered, and
+      with due consideration to the principles of safety, security and privacy.
+    section: 6.3. Transparency and 'explainability'
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+  - text: This includes adequate and meaningful information about why, when and how
+      AI solutions are used, and explanations on the causal link between AI inputs
+      and outputs and the functioning of algorithmic processes.
+    section: 6.3. Transparency and 'explainability'
+- id: ai-risk-taxonomy-personality
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-gender
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-nationality
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-social-behaviors
+  evidence:
+  - 1
 - id: ai-risk-taxonomy-unauthorized-processing---demographic-data
-  name: Unauthorized processing - Demographic data
   evidence:
-  - text: use biometric categorization systems that infer sensitive personal attributes
-  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes - in particular around gender and race
+  - 1
+  - 2
+  - 3
+- id: ai-risk-taxonomy-unauthorized-processing---behavioral/-preference-data
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
+  evidence:
+  - 2
+- id: ai-risk-taxonomy-unauthorized-generation---demographic-data
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---social-behaviors
+  evidence:
+  - 1
+  - 2
+- id: ai-risk-taxonomy-classification-of-individuals---predicted-personality
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---disability
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---age
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---social-behaviors
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---predicted-personality
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---disability
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---age
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---beliefs
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-disability
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-race
+  evidence:
+  - 1
+  - 2
+- id: ai-risk-taxonomy-religion
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-adversely-affects-legal-rights
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-characterization-of-identity---ethnicity
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-classification-of-individuals---ethnicity
+  evidence:
+  - 1
+- id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
+  evidence:
+  - 1
+  - 2
+- id: ai-risk-taxonomy-classification-of-individuals---beliefs
+  evidence:
+  - 1
