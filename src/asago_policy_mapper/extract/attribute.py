@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 import logging
 import time
 
-from instructor.core import InstructorRetryException
+from instructor.core import AsyncValidationError, InstructorRetryException, ResponseParsingError
+from pydantic import ValidationError
 
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
@@ -265,6 +267,19 @@ def ground_risk_group(
     return result
 
 
+_OUTPUT_VALIDATION_ERRORS = (ValidationError, json.JSONDecodeError, ResponseParsingError, AsyncValidationError)
+
+
+def _is_output_validation_exhaustion(exc: InstructorRetryException) -> bool:
+    """Tell whether instructor gave up on unparseable model output rather than on a failed API call.
+
+    instructor wraps every exception from the API call in InstructorRetryException (chained with
+    ``from``), so the exception class alone cannot separate the two. Only parse and validation
+    failures are recorded in ``failed_attempts``.
+    """
+    return bool(exc.failed_attempts) and isinstance(exc.__cause__, _OUTPUT_VALIDATION_ERRORS)
+
+
 def synthesize_causal_chain(
     risk_match: RiskMatch,
     chunk_texts: dict[int, str],
@@ -294,6 +309,7 @@ def synthesize_causal_chain(
     )
 
     t0 = time.time()
+    retry_exhausted = False
     try:
         results_resp = client.chat.completions.create(
             model=model,
@@ -302,12 +318,15 @@ def synthesize_causal_chain(
         )
         results = results_resp.items
     except InstructorRetryException as exc:
+        if not _is_output_validation_exhaustion(exc):
+            raise
         logger.warning(
             "Causal synthesis exhausted retries for %s (%s); no causal chain",
             risk_match.risk_id,
-            type(exc).__name__,
+            type(exc.__cause__).__name__,
         )
         results = []
+        retry_exhausted = True
     duration_ms = (time.time() - t0) * 1000
 
     chain = results[0] if results else None
@@ -330,7 +349,7 @@ def synthesize_causal_chain(
                 messages=messages,
                 response=chain.model_dump() if chain else {},
                 duration_ms=duration_ms,
-                result_summary="synthesized" if chain else "empty",
+                result_summary="synthesized" if chain else "retry_exhausted" if retry_exhausted else "empty",
             )
         )
 

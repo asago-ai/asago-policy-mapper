@@ -1,8 +1,15 @@
+import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
 from instructor.core import InstructorRetryException
+from instructor_errors import (
+    authentication_failure,
+    connection_failure,
+    server_error,
+    validation_exhaustion,
+)
 
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
@@ -723,32 +730,41 @@ def _causal_client(failing_risk_id, error):
     return client
 
 
-def test_run_causal_synthesis_skips_risk_with_exhausted_retries():
+def test_run_causal_synthesis_skips_risk_with_validation_exhaustion(caplog):
     from asago_policy_mapper.llm import LLMConfig
 
     merged, chunks = _causal_risk_and_chunks(["atlas-a", "atlas-b", "atlas-c"])
-    error = InstructorRetryException("empty", n_attempts=3, total_usage=0, failed_attempts=None)
-    client = _causal_client("atlas-b", error)
+    client = _causal_client("atlas-b", validation_exhaustion())
     config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model")
 
-    result = _run_causal_synthesis(merged, chunks, client, config, 4, [])
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.extract.attribute"):
+        result = _run_causal_synthesis(merged, chunks, client, config, 4, [])
 
     by_id = {m.risk_id: m for m in result}
     assert by_id["atlas-a"].threat == "Threat"
     assert by_id["atlas-c"].impact == "Impact"
     assert by_id["atlas-b"].threat is None
     assert by_id["atlas-b"].impact is None
+    assert any("atlas-b" in r.getMessage() for r in caplog.records if r.levelno == logging.WARNING)
 
 
-def test_run_causal_synthesis_propagates_non_retry_errors():
+@pytest.mark.parametrize(
+    "make_error",
+    [connection_failure, server_error, authentication_failure],
+    ids=["connection-error", "http-5xx", "http-401"],
+)
+def test_run_causal_synthesis_propagates_wrapped_api_errors(make_error):
     from asago_policy_mapper.llm import LLMConfig
 
     merged, chunks = _causal_risk_and_chunks(["atlas-a", "atlas-b"])
-    client = _causal_client("atlas-b", ConnectionError("endpoint down"))
+    error = make_error()
+    client = _causal_client("atlas-b", error)
     config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model")
 
-    with pytest.raises(ConnectionError):
+    with pytest.raises(InstructorRetryException) as excinfo:
         _run_causal_synthesis(merged, chunks, client, config, 4, [])
+
+    assert excinfo.value is error
 
 
 # --- query-gen integration test ---
