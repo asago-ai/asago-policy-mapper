@@ -1,5 +1,9 @@
+import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+
+import pytest
+from instructor.core import InstructorRetryException
 
 from asago_policy_mapper.extract.attribute import (
     ground_and_extract_evidence,
@@ -547,6 +551,47 @@ def test_synthesize_causal_chain_empty_strings_return_none(mock_client):
     )
 
     assert result is None
+
+
+def _make_retry_exc():
+    return InstructorRetryException(
+        "1 validation error for _CausalChains",
+        n_attempts=3,
+        total_usage=0,
+        failed_attempts=None,
+    )
+
+
+def test_synthesize_causal_chain_exhausted_retries_return_none(mock_client, caplog):
+    mock_client.chat.completions.create.side_effect = _make_retry_exc()
+    collector: list[LLMCallRecord] = []
+
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.extract.attribute"):
+        result = synthesize_causal_chain(
+            risk_match=_make_risk_match("atlas-bias"),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=mock_client,
+            model="test-model",
+            call_collector=collector,
+        )
+
+    assert result is None
+    warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert any("atlas-bias" in r.getMessage() and "InstructorRetryException" in r.getMessage() for r in warnings)
+    assert len(collector) == 1
+    assert collector[0].result_summary == "empty"
+
+
+def test_synthesize_causal_chain_non_retry_error_propagates(mock_client):
+    mock_client.chat.completions.create.side_effect = ConnectionError("endpoint down")
+
+    with pytest.raises(ConnectionError):
+        synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=mock_client,
+            model="test-model",
+        )
 
 
 def test_synthesize_causal_chain_records_call(mock_client):

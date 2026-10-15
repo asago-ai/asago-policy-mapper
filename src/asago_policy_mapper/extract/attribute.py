@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import time
 
+from instructor.core import InstructorRetryException
+
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
     LLMCallRecord,
@@ -292,12 +294,20 @@ def synthesize_causal_chain(
     )
 
     t0 = time.time()
-    results_resp = client.chat.completions.create(
-        model=model,
-        response_model=_CausalChains,
-        messages=messages,
-    )
-    results = results_resp.items
+    try:
+        results_resp = client.chat.completions.create(
+            model=model,
+            response_model=_CausalChains,
+            messages=messages,
+        )
+        results = results_resp.items
+    except InstructorRetryException as exc:
+        logger.warning(
+            "Causal synthesis exhausted retries for %s (%s); no causal chain",
+            risk_match.risk_id,
+            type(exc).__name__,
+        )
+        results = []
     duration_ms = (time.time() - t0) * 1000
 
     chain = results[0] if results else None
