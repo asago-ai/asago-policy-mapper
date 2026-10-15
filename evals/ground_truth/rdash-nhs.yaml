@@ -760,28 +760,54 @@ risks:
       employment, work or care; the logic behind it must be explainable
     section: 5 Procedure
 - id: ai-risk-taxonomy-unauthorized-network-entry
+  name: Unauthorized network entry
   evidence:
-  - 1
+  - text: it is important to use artificial intelligence appropriately to ensure that
+      it does not compromise ... our network integrity.
+    section: 5.3 Use of publicly available artificial intelligence in clinical practice
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data
+  name: Unauthorized inference/synthesis - Demographic data
   evidence:
-  - 2
+  - text: The combined details of a local area, a rare disease and a very young age
+      may enable a patient to be identified.
+    section: 4.4 Senior information risk owner (SIRO)
 - id: ai-risk-taxonomy-unauthorized-disclosure---demographic-data
+  name: Unauthorized disclosure - Demographic data
   evidence:
-  - 2
+  - text: The combined details of a local area, a rare disease and a very young age
+      may enable a patient to be identified.
+    section: 4.4 Senior information risk owner (SIRO)
 - id: ai-risk-taxonomy-unauthorized-processing---demographic-data
+  name: Unauthorized processing - Demographic data
   evidence:
-  - 1
+  - text: The combined details of a local area, a rare disease and a very young age
+      may enable a patient to be identified.
+    section: 4.6 Information technology or technical and business intelligence
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---location-data
+  name: Unauthorized inference/synthesis - Location data
   evidence:
-  - 1
+  - text: The combined details of a local area, a rare disease and a very young age
+      may enable a patient to be identified.
+    section: 4.4 Senior information risk owner (SIRO)
 - id: ai-risk-taxonomy-unauthorized-generation---health-data
+  name: Unauthorized generation - Health data
   evidence:
-  - 1
-  - 2
+  - text: ChatGPT (and other as per 5.4) must not be used to process patient-identifiable
+      information, confidential or business sensitive data, or make clinical decisions.
+  - text: do not use publicly available artificial intelligence for generating entries
+      into Clinical records
 - id: ai-risk-taxonomy-unauthorized-distribution---financial-records
+  name: Unauthorized distribution - Financial records
   evidence:
-  - 1
+  - text: Business sensitive data refers to any information that, if disclosed without
+      proper authorisation, could negatively impact trust’s operations, reputation,
+      financial standing, or strategic interests. This includes, but is not limited
+      to, unpublished financial reports, procurement details, strategic plans, internal
+      communications, contractual agreements, and any data that supports decision-making
+      or competitive positioning.
 - id: ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)
+  name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
-  - 1
-  - 2
+  - text: ChatGPT (and other as per 5.4) must not be used to process patient-identifiable
+      information, confidential or business sensitive data, or make clinical decisions.
+  - text: do not use person identifiable data.

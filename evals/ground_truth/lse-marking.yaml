@@ -621,14 +621,28 @@ risks:
       transparency.
     section: 5. Research Context and Rationale
 - id: ai-risk-taxonomy-impersonating-humans
+  name: Impersonating humans
   evidence:
-  - 1
+  - text: students who mistakenly assume AI-generated feedback comes from humans tend
+      to rate it higher.
+    section: Scenario C -- Bridging Traditional and Digital Practices
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---pii-(personal-identifiable-information)
+  name: Unauthorized inference/synthesis - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: This prevents personal data from being collected, stored, accessed, and
+      shared
+    section: 3. Principles of AI-assisted Marking and Feedback, and Moderation at
+      LSE
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---educational-records
+  name: Unauthorized inference/synthesis - Educational records
   evidence:
-  - 1
+  - text: Staff must not include student details or upload student work into GenAI
+      tools without explicit permission.
+    section: 3. Principles of AI-assisted Marking and Feedback, and Moderation at
+      LSE
 - id: ai-risk-taxonomy-unauthorized-distribution---educational-records
+  name: Unauthorized distribution - Educational records
   evidence:
-  - 1
+  - text: Staff must not include student details or upload student work into GenAI
+      tools without explicit permission.
+    section: Scenario A -- Scaling Feedback While Maintaining Quality

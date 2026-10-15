@@ -693,5 +693,10 @@ risks:
       ensure a proportionate and responsible use that builds public confidence.
     section: 1 Introduction
 - id: ai-risk-taxonomy-social-scoring
+  name: Social scoring
   evidence:
-  - 1
+  - text: Avon and Somerset Constabulary use supervised machine learning to assess
+      factors such as likelihood of reoffending, likelihood of victimisation/vulnerability,
+      and likelihood of committing a range of specific offences. Through an app on
+      their mobile devices, neighbourhood officers can instantly access the risk profiles
+      for each offender registered in the force area, which are recalculated daily.

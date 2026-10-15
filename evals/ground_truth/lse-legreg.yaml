@@ -1235,38 +1235,76 @@ risks:
       used.'
     section: Bias and discrimination AI issues
 - id: ai-risk-taxonomy-cause-harmful-labor-force-disruptions
+  name: Cause harmful labor-force disruptions
   evidence:
-  - 1
+  - text: This is currently being developed with the aim of safeguarding workers.
+      It's called Dignity at work and the AI Revolution.
+    section: Version history
 - id: ai-risk-taxonomy-unauthorized-disclosure---educational-records
+  name: Unauthorized disclosure - Educational records
   evidence:
-  - 3
+  - text: Don't upload in-copyright content (for example , images, photographs, student
+      work, journal articles licensed from publishers by LSE library)
+    section: What not to do
 - id: ai-risk-taxonomy-unauthorized-disclosure---financial-records
+  name: Unauthorized disclosure - Financial records
   evidence:
-  - 2
-  - 3
+  - text: commercially sensitive pricing data
+    section: Competition and confidentiality AI issues
+  - text: The School cannot use public AI systems for processing tenders as this could
+      make the commercially sensitive pricing data available to third parties including
+      their competitors.
+    section: Competition and confidentiality
 - id: ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)
+  name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: Don't put personal data in an AI tool that is external to LSE.
+    section: Competition law requirements
+  - text: potentially a copy of your personal ID could be fed to the AI tool.
+    section: Competition law requirements
+  - text: If you do, potentially a copy of your personal ID could be fed to the AI
+      tool.
+    section: Competition and confidentiality
 - id: ai-risk-taxonomy-unauthorized-distribution---educational-records
+  name: Unauthorized distribution - Educational records
   evidence:
-  - 2
+  - text: Don't upload in-copyright content (for example , images, photographs, student
+      work, journal articles licensed from publishers by LSE library)
+    section: What AI tool does the School provide
 - id: ai-risk-taxonomy-unauthorized-distribution---financial-records
+  name: Unauthorized distribution - Financial records
   evidence:
-  - 3
+  - text: ensure it only has access to files that do not contain either personal data
+      or other data that should be restricted only to LSE (e.g. corporate financial
+      data).
+    section: Personal data
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age
+  name: Discrimination in employment, benefits, or services - Age
   evidence:
-  - 2
+  - text: protected characteristics. These are sex, race, age, religion, disability,
+      sexual orientation, pregnancy/maternity, gender reassignment and marriage/civil
+      partnership.
+    section: Data Protection AI issues
 - id: ai-risk-taxonomy-exploiting-advantages-for-monopolistic-practices
+  name: Exploiting advantages for monopolistic practices
   evidence:
-  - 1
+  - text: The more detailed the data, the more likely it is to breach competition
+      law.
 - id: ai-risk-taxonomy-reputation-rights
+  name: Reputation rights
   evidence:
-  - 1
+  - text: A breach of confidentiality may cause financial losses, reputational damage,
+      can expose the School to serious liability and you may incur disciplinary sanctions.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
+  name: Discrimination in employment, benefits, or services - Ethnicity
   evidence:
-  - 1
+  - text: The Equality Act 2010 prohibits both direct and indirect discrimination
+      on the grounds of protected characteristics. These are sex, race, age, religion,
+      disability, sexual orientation, pregnancy/maternity, gender reassignment and
+      marriage/civil partnership.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---mental-characteristics
+  name: Discrimination in employment, benefits, or services - Mental Characteristics
   evidence:
-  - 1
+  - text: The Equality Act also places a duty on employers to ensure that reasonable
+      adjustments are made to reduce or remove disadvantages that may be faced by
+      people with disabilities.

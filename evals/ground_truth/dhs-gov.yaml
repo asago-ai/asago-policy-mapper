@@ -825,33 +825,76 @@ risks:
       revisions
     section: Governance
 - id: ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law
+  name: Content abetting/involving/furthering activities violating any applicable
+    law
   evidence:
-  - 1
-  - 2
+  - text: Lawful and mission-appropriate — compliant with the Constitution, laws,
+      and policies
+    section: Common Commercial AI
+  - text: Any other uses of AI or related data that are prohibited by applicable laws
+      and policies
+    section: Common Commercial AI
 - id: ai-risk-taxonomy-negative-stereotyping-of-any-group
+  name: Negative stereotyping of any group
   evidence:
-  - 1
+  - text: Discriminatory decision-making — Using AI to make or support decisions based
+      on the unlawful or improper consideration of race, ethnicity, gender, national
+      origin, religion, sexual orientation, gender identity, age, nationality, medical
+      condition, disability, emotional state, or future behavior predictions
+    section: Principles
 - id: ai-risk-taxonomy-unauthorized-distribution---biometric-data-(facial-recognition)
+  name: Unauthorized distribution - Biometric data (facial recognition)
   evidence:
-  - 1
+  - text: 'Face recognition misuse
+
+      Potential Policy Concept: Biometric Identification & Civil Liberties'
+    section: Training
 - id: ai-risk-taxonomy-unauthorized-processing---demographic-data
+  name: Unauthorized processing - Demographic data
   evidence:
-  - 1
-  - 2
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics
+    section: Training
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: U.S. Department of Homeland Security — Artificial Intelligence Use Directive
 - id: ai-risk-taxonomy-unauthorized-distribution---demographic-data
+  name: Unauthorized distribution - Demographic data
   evidence:
-  - 1
+  - text: Unauthorized data sharing—Sharing DHS data or AI outputs with third parties
+      for uses that are prohibited by law or DHS policy
+    section: ICE — Immigration and Customs Enforcement
 - id: ai-risk-taxonomy-unauthorized-generation---demographic-data
+  name: Unauthorized generation - Demographic data
   evidence:
-  - 1
-  - 2
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: Training
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics
+    section: Training
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data
+  name: Unauthorized inference/synthesis - Demographic data
   evidence:
-  - 1
-  - 2
+  - text: Using AI to make or support decisions based on the unlawful or improper
+      consideration of race, ethnicity, gender, national origin, religion, sexual
+      orientation, gender identity, age, nationality, medical condition, disability,
+      emotional state, or future behavior predictions
+    section: ICE — Immigration and Customs Enforcement
+  - text: Improperly profiling, targeting, or discriminating against individuals or
+      entities based on protected characteristics
+    section: ICE — Immigration and Customs Enforcement
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
+  name: Unauthorized inference/synthesis - Biometric data (facial recognition)
   evidence:
-  - 1
+  - text: Contactless airport security using facial recognition (passenger opt-in)
+    section: ICE — Immigration and Customs Enforcement
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data
+  name: Unauthorized inference/synthesis - Behavioral/ Preference data
   evidence:
-  - 1
+  - text: emotional state, or future behavior predictions
+    section: ICE — Immigration and Customs Enforcement

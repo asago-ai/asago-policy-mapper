@@ -516,17 +516,27 @@ risks:
       violations and avoid directly replicating the output of a generative AI tool
       in public documents.
 - id: ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)
+  name: Unauthorized generation - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: When in doubt, services should consult their Data Protection Coordinator
+      before initiating any processing of personal data.
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---pii-(personal-identifiable-information)
+  name: Unauthorized inference/synthesis - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: When in doubt, services should consult their Data Protection Coordinator
+      before initiating any processing of personal data.
 - id: ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)
+  name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: When in doubt, services should consult their Data Protection Coordinator
+      before initiating any processing of personal data.
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: When in doubt, services should consult their Data Protection Coordinator
+      before initiating any processing of personal data.
 - id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
+  name: Unauthorized disclosure - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: When in doubt, services should consult their Data Protection Coordinator
+      before initiating any processing of personal data.

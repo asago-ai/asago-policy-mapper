@@ -555,11 +555,22 @@ risks:
       public.
     section: Principles
 - id: ai-risk-taxonomy-property-damage
+  name: Property damage
   evidence:
-  - 1
+  - text: harm to property, communities or the environment.
+    section: AI incident
 - id: ai-risk-taxonomy-ip-rights/-trade-secrets
+  name: IP Rights/ Trade Secrets
   evidence:
-  - 1
+  - text: violations of human rights or harms arising from a breach of obligations
+      under applicable laws, including intellectual property, privacy and Indigenous
+      cultural and intellectual property;
+    section: AI incident
 - id: ai-risk-taxonomy-persons-(including-murder)
+  name: Persons (including murder)
   evidence:
-  - 1
+  - text: 'an event, circumstance or series of events where the development, use or
+      malfunction of one or more AI systems by, or under the direction of, an Australian
+      Government agency directly or indirectly leads to any of the following:
+
+      - a.  injury or harm to the health of a person or groups of people;'

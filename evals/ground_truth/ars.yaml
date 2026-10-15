@@ -347,5 +347,7 @@ risks:
       possible.
     section: Our journalism is human-authored
 - id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: Fake online engagement (fake reviews, fake grassroots support)
   evidence:
-  - 1
+  - text: 'The short version: Ars Technica is written by humans. Our reporting, analysis,
+      and commentary are human-authored.'

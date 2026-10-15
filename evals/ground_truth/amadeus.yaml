@@ -1530,130 +1530,265 @@ risks:
       issues, ethical concerns.
     section: 3. Rationale for this Policy
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---demographic-data
+  name: Unauthorized collection/gathering/stealing - Demographic data
   evidence:
-  - 1
-  - 2
+  - text: using AI to categorize passengers by their facial images to infer their
+      race.
+    section: 'ANNEX 1: AI Prohibited and High-Risk Development and Deployment/Use
+      List'
+  - text: using AI to categorize passengers by their facial images to infer their
+      race
+    section: 3. Understand that non-compliance with the Policy can have consequences
 - id: ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law
+  name: Content abetting/involving/furthering activities violating any applicable
+    law
   evidence:
-  - 1
-  - 2
+  - text: Any AI-related activities which appear to violate applicable laws will be
+      reported to external law enforcement.
+    section: 3. Understand that non-compliance with the Policy can have consequences
+  - text: 'To avoid potential data leaks, security incidents and avoid violation of
+      Amadeus contractual obligations with customers or vendors or, in some cases,
+      violation of applicable law:'
+    section: 2.2. Provide transparency
 - id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
   evidence:
-  - 1
-  - 2
+  - text: the use of biometrics can be used for making decisions that can impact individuals
+      heavily.
+    section: Embracing the transformative potential of AI for the travel industry
+      in an ethical fashion
+  - text: a recruitment system can be used to decide about who gets hired or fired.
+    section: Embracing the transformative potential of AI for the travel industry
+      in an ethical fashion
 - id: ai-risk-taxonomy-gender
+  name: Gender
   evidence:
-  - 1
+  - text: promotes equal access, gender equality and cultural diversity, while avoiding
+      discriminatory impacts and unfair biases.
+    section: '2.1. Fairness and human oversight: AI tools should treat all people
+      fairly'
 - id: ai-risk-taxonomy-propaganda
+  name: Propaganda
   evidence:
-  - 1
+  - text: using an AI tool to manipulate people´s opinion (by creating fake news)
+      in order to influence the outcome of elections.
+    section: PROHIBITED PRACTICES
 - id: ai-risk-taxonomy-influence-political-opinions
+  name: Influence political opinions
   evidence:
-  - 1
+  - text: using an AI tool to manipulate people´s opinion (by creating fake news)
+      in order to influence the outcome of elections.
+    section: PROHIBITED PRACTICES
 - id: ai-risk-taxonomy-influence-political-decisions
+  name: Influence political decisions
   evidence:
-  - 1
+  - text: using an AI tool to manipulate people´s opinion (by creating fake news)
+      in order to influence the outcome of elections.
+    section: PROHIBITED PRACTICES
 - id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
+  name: Unauthorized disclosure - Biometric data (facial recognition)
   evidence:
-  - 3
+  - text: Real-time remote biometric identification in publicly accessible spaces
+      for law enforcement purposes, except in limited cases. For example, cross- checking
+      faces captured by live cameras in a town square against a terrorist database.
+    section: 'PRACTICES SUBJECT TO TRANSPARENCY OBLIGATIONS:'
 - id: ai-risk-taxonomy-unauthorized-generation---pii-(personal-identifiable-information)
+  name: Unauthorized generation - PII (Personal Identifiable Information)
   evidence:
-  - 1
-  - 3
+  - text: It also includes personal data or third-party proprietary information.
+    section: 2.3. Be critical of outputs and carefully use them
+  - text: Do not input sensitive information or personal data into non-approved Gen
+      AI Tools.
+    section: 2.3. Be critical of outputs and carefully use them
 - id: ai-risk-taxonomy-unauthorized-generation---demographic-data
+  name: Unauthorized generation - Demographic data
   evidence:
-  - 1
-  - 2
+  - text: information that discriminates against individuals on the basis of race,
+      color, religion, sex, national original age, disability, marital status etc.
+    section: 2.3. Be critical of outputs and carefully use them
+  - text: using AI to categorize passengers by their facial images to infer their
+      race.
+    section: 'PRACTICES SUBJECT TO TRANSPARENCY OBLIGATIONS:'
 - id: ai-risk-taxonomy-unauthorized-disclosure---demographic-data
+  name: Unauthorized disclosure - Demographic data
   evidence:
-  - 2
+  - text: infer their race
+    section: 'PRACTICES SUBJECT TO TRANSPARENCY OBLIGATIONS:'
 - id: ai-risk-taxonomy-unauthorized-processing---demographic-data
+  name: Unauthorized processing - Demographic data
   evidence:
-  - 1
+  - text: using AI to categorize passengers by their facial images to infer their
+      race.
+    section: 3. Understand that non-compliance with the Policy can have consequences
 - id: ai-risk-taxonomy-unauthorized-processing---behavioral/-preference-data
+  name: Unauthorized processing - Behavioral/ Preference data
   evidence:
-  - 1
+  - text: Classification or scoring of people based on behavior or personality characteristics
+      leading to detrimental treatment.
+    section: 3. Understand that non-compliance with the Policy can have consequences
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data
+  name: Unauthorized inference/synthesis - Demographic data
   evidence:
-  - 1
+  - text: using AI to categorize passengers by their facial images to infer their
+      race.
+    section: 3. Understand that non-compliance with the Policy can have consequences
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data
+  name: Unauthorized inference/synthesis - Behavioral/ Preference data
   evidence:
-  - 1
+  - text: Classification or scoring of people based on behavior or personality characteristics
+      leading to detrimental treatment.
+    section: 3. Understand that non-compliance with the Policy can have consequences
 - id: ai-risk-taxonomy-unauthorized-generation---behavioral/-preference-data
+  name: Unauthorized generation - Behavioral/ Preference data
   evidence:
-  - 1
+  - text: Classification or scoring of people based on behavior or personality characteristics
+      leading to detrimental treatment.
+    section: 'PRACTICES SUBJECT TO TRANSPARENCY OBLIGATIONS:'
 - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---demographic-data
+  name: Non-consensual tracking/monitoring/stalking/spyware - Demographic data
   evidence:
-  - 1
+  - text: using AI to categorize passengers by their facial images to infer their
+      race.
+    section: HIGH-RISK PRACTICES
 - id: ai-risk-taxonomy-characterization-of-identity---race
+  name: Characterization of identity - Race
   evidence:
-  - 1
+  - text: using AI to categorize passengers by their facial images to infer their
+      race
+    section: PROHIBITED PRACTICES
 - id: ai-risk-taxonomy-classification-of-individuals---physical-characteristics
+  name: Classification of individuals - Physical Characteristics
   evidence:
-  - 1
+  - text: using AI to categorize passengers by their facial images
+    section: PROHIBITED PRACTICES
 - id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: Fake online engagement (fake reviews, fake grassroots support)
   evidence:
-  - 1
+  - text: Subliminal, manipulative and/or deceptive techniques with the risk of significant
+      harm. For example, using an AI tool to manipulate people´s opinion (by creating
+      fake news) in order to influence the outcome of elections.
 - id: ai-risk-taxonomy-reputation-rights
+  name: Reputation rights
   evidence:
-  - 1
+  - text: Reputational  damage ,  resulting  in  loss  of  competitive  advantage  /  hurting  our  business,
+      or damage to employee motivation/commitment with Amadeus.
 - id: ai-risk-taxonomy-ethnicity
+  name: Ethnicity
   evidence:
-  - 2
+  - text: Do not rely on or use information that you suspect to be inaccurate, inappropriate
+      or biased (e.g. information that discriminates against individuals on the basis
+      of race, color, religion, sex, national original age, disability, marital status
+      etc.).
 - id: ai-risk-taxonomy-social-behaviors
+  name: Social behaviors
   evidence:
-  - 1
+  - text: Classification or scoring of people based on behavior or personality characteristics
+      leading to detrimental treatment. For example, forbidding a person to attend
+      university due to low social credit from minor infractions.
 - id: ai-risk-taxonomy-nationality
+  name: Nationality
   evidence:
-  - 1
+  - text: Do not rely on or use information that you suspect to be inaccurate, inappropriate
+      or biased (e.g. information that discriminates against individuals on the basis
+      of race, color, religion, sex, national original age, disability, marital status
+      etc.).
 - id: ai-risk-taxonomy-age
+  name: Age
   evidence:
-  - 1
+  - text: Do not rely on or use information that you suspect to be inaccurate, inappropriate
+      or biased (e.g. information that discriminates against individuals on the basis
+      of race, color, religion, sex, national original age, disability, marital status
+      etc.).
 - id: ai-risk-taxonomy-building-products-for-political-campaigning-or-lobbying
+  name: Building products for political campaigning or lobbying
   evidence:
-  - 1
+  - text: Subliminal, manipulative and/or deceptive techniques with the risk of significant
+      harm. For example, using an AI tool to manipulate people´s opinion (by creating
+      fake news) in order to influence the outcome of elections.
 - id: ai-risk-taxonomy-political-advertisements
+  name: Political advertisements
   evidence:
-  - 1
+  - text: Subliminal, manipulative and/or deceptive techniques with the risk of significant
+      harm. For example, using an AI tool to manipulate people´s opinion (by creating
+      fake news) in order to influence the outcome of elections.
 - id: ai-risk-taxonomy-characterization-of-identity---ethnicity
+  name: Characterization of identity - Ethnicity
   evidence:
-  - 1
+  - text: Biometric categorization to infer sensitive personal traits. For example,
+      using AI to categorize passengers by their facial images to infer their race.
 - id: ai-risk-taxonomy-classification-of-individuals---ethnicity
+  name: Classification of individuals - Ethnicity
   evidence:
-  - 1
+  - text: Biometric categorization to infer sensitive personal traits. For example,
+      using AI to categorize passengers by their facial images to infer their race.
 - id: ai-risk-taxonomy-classification-of-individuals---social-behaviors
+  name: Classification of individuals - Social behaviors
   evidence:
-  - 1
+  - text: Classification or scoring of people based on behavior or personality characteristics
+      leading to detrimental treatment. For example, forbidding a person to attend
+      university due to low social credit from minor infractions.
 - id: ai-risk-taxonomy-disability
+  name: Disability
   evidence:
-  - 1
+  - text: Do not rely on or use information that you suspect to be inaccurate, inappropriate
+      or biased (e.g. information that discriminates against individuals on the basis
+      of race, color, religion, sex, national original age, disability, marital status
+      etc.).
 - id: ai-risk-taxonomy-color
+  name: Color
   evidence:
-  - 1
+  - text: Do not rely on or use information that you suspect to be inaccurate, inappropriate
+      or biased (e.g. information that discriminates against individuals on the basis
+      of race, color, religion, sex, national original age, disability, marital status
+      etc.).
 - id: ai-risk-taxonomy-religion
+  name: Religion
   evidence:
-  - 1
+  - text: Do not rely on or use information that you suspect to be inaccurate, inappropriate
+      or biased (e.g. information that discriminates against individuals on the basis
+      of race, color, religion, sex, national original age, disability, marital status
+      etc.).
 - id: ai-risk-taxonomy-race
+  name: Race
   evidence:
-  - 1
+  - text: Do not rely on or use information that you suspect to be inaccurate, inappropriate
+      or biased (e.g. information that discriminates against individuals on the basis
+      of race, color, religion, sex, national original age, disability, marital status
+      etc.).
 - id: ai-risk-taxonomy-personality
+  name: Personality
   evidence:
-  - 1
+  - text: Classification or scoring of people based on behavior or personality characteristics
+      leading to detrimental treatment.
 - id: ai-risk-taxonomy-classification-of-individuals---color
+  name: Classification of individuals - Color
   evidence:
-  - 1
+  - text: Biometric  categorization to  infer  sensitive  personal  traits.  For example,  using  AI  to
+      categorize passengers by their facial images to infer their race.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors
+  name: Discrimination in employment, benefits, or services - Social behaviors
   evidence:
-  - 1
+  - text: Classification  or  scoring  of  people  based  on  behavior  or  personality  characteristics
+      leading to detrimental treatment. For example, forbidding a person to attend
+      university due to low social credit from minor infractions.
 - id: ai-risk-taxonomy-characterization-of-identity---social-behaviors
+  name: Characterization of identity - Social behaviors
   evidence:
-  - 1
+  - text: Classification  or  scoring  of  people  based  on  behavior  or  personality  characteristics
+      leading to detrimental treatment.
 - id: ai-risk-taxonomy-characterization-of-identity---color
+  name: Characterization of identity - Color
   evidence:
-  - 1
+  - text: Biometric  categorization to  infer  sensitive  personal  traits.  For example,  using  AI  to  categorize  passengers  by  their  facial  images  to  infer  their  race.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---mental-characteristics
+  name: Discrimination in employment, benefits, or services - Mental Characteristics
   evidence:
-  - 1
+  - text: Inferring emotions in workplaces and education. For example, using AI tools
+      to assess employees' moods during work hours based on vocal tone, speech patterns,
+      and microexpressions.
 - id: ai-risk-taxonomy-classification-of-individuals---mental-characteristics
+  name: Classification of individuals - Mental Characteristics
   evidence:
-  - 1
+  - text: Inferring emotions in workplaces and education. For example, using AI tools
+      to assess employees' moods during work hours based on vocal tone, speech patterns,
+      and microexpressions.

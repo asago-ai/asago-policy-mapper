@@ -474,20 +474,38 @@ risks:
       will prioritize transparency to our audiences.
     section: Guidelines for Use of Generative AI
 - id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: Fake online engagement (fake reviews, fake grassroots support)
   evidence:
-  - 1
+  - text: However, AIgenerated content can distort and misrepresent information, lack
+      context, and create convincing but false statements.
 - id: ai-risk-taxonomy-reputation-rights
+  name: Reputation rights
   evidence:
-  - 1
+  - text: However, AIgenerated content can distort and misrepresent information, lack
+      context, and create convincing but false statements.
 - id: ai-risk-taxonomy-honor-rights
+  name: Honor rights
   evidence:
-  - 1
+  - text: However, AIgenerated content can distort and misrepresent information, lack
+      context, and create convincing but false statements.
 - id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
+  name: Unauthorized processing - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: Unless explicitly approved by the AI Policy Team, users of AI tools are
+      prohibited from sharing confidential or sensitive information with generative
+      AI tools, including but not limited to employee identifying information, passwords,
+      or other proprietary information.
 - id: ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)
+  name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: Unless explicitly approved by the AI Policy Team, users of AI tools are
+      prohibited from sharing confidential or sensitive information with generative
+      AI tools, including but not limited to employee identifying information, passwords,
+      or other proprietary information.
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: Unless explicitly approved by the AI Policy Team, users of AI tools are
+      prohibited from sharing confidential or sensitive information with generative
+      AI tools, including but not limited to employee identifying information, passwords,
+      or other proprietary information.

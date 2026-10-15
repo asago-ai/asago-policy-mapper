@@ -1087,17 +1087,27 @@ risks:
       when making automated decisions.
     section: 5.1.6 Governance
 - id: ai-risk-taxonomy-unauthorized-disclosure---educational-records
+  name: Unauthorized disclosure - Educational records
   evidence:
-  - 1
+  - text: Family Educational Rights and Privacy Act (FERPA)
+    section: 5.2.6.1 Production Code and Proprietary Information
 - id: ai-risk-taxonomy-unauthorized-generation---educational-records
+  name: Unauthorized generation - Educational records
   evidence:
-  - 1
+  - text: Family Educational Rights and Privacy Act (FERPA)
+    section: 8. Revision History
 - id: ai-risk-taxonomy-unauthorized-generation---financial-records
+  name: Unauthorized generation - Financial records
   evidence:
-  - 1
+  - text: Payment Card Industry Data Security Standard (PCI DSS)
+    section: 8. Revision History
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---educational-records
+  name: Unauthorized inference/synthesis - Educational records
   evidence:
-  - 1
+  - text: Family Educational Rights and Privacy Act (FERPA)
+    section: 8. Revision History
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---financial-records
+  name: Unauthorized inference/synthesis - Financial records
   evidence:
-  - 1
+  - text: Payment Card Industry Data Security Standard (PCI DSS)
+    section: 8. Revision History
