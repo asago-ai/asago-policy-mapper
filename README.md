@@ -163,8 +163,11 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 | `--bi-encoder-model` | `POLICY_MAPPER_BI_ENCODER_MODEL` | Bi-encoder endpoint URL or local model name |
 | `--bi-encoder-model-name` | `POLICY_MAPPER_BI_ENCODER_MODEL_NAME` | Explicit remote bi-encoder model name |
 | `--cross-encoder-model` | `POLICY_MAPPER_CROSS_ENCODER_MODEL` | Cross-encoder endpoint URL or local model name |
+| `--cross-encoder-model-name` | `POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME` | Explicit remote cross-encoder model name |
 
-If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` to set it explicitly.
+If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` and `--cross-encoder-model-name` to set it explicitly. A bare IP host derives a meaningless name (the first octet), so always set the name for those endpoints.
+
+`--cross-encoder-type` selects the remote reranker API: `score` (default, POSTs `{text_1, text_2}` to `/v1/score`), `rerank` (POSTs `{model, query, documents}` to `/v1/rerank`, as served by vLLM for Qwen3-Reranker), or `generative` (logprob scoring through `/v1/completions`). The `rerank` type raises on HTTP errors and on responses that omit a document, so a failing reranker never produces silent zero scores. Extraction metadata records `cross_encoder_type` and `cross_encoder_model_name`.
 
 Reusable, secret-free environment templates are provided for the recommended GPU configuration and the OpenAI cloud configuration:
 

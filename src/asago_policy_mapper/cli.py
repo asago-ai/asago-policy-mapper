@@ -109,7 +109,16 @@ def extract(
     cross_encoder_type: str = typer.Option(
         "score",
         "--cross-encoder-type",
-        help="Cross-encoder API type: 'score' for /v1/score, 'generative' for /v1/chat/completions logprob rerankers",
+        help=(
+            "Cross-encoder API type: 'score' for /v1/score, 'rerank' for /v1/rerank, "
+            "'generative' for /v1/completions logprob rerankers"
+        ),
+    ),
+    cross_encoder_model_name: str = typer.Option(
+        None,
+        "--cross-encoder-model-name",
+        envvar="POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME",
+        help="Cross-encoder model name (overrides name derived from endpoint URL)",
     ),
     bm25_rescue_rank: int = typer.Option(
         0, "--bm25-rescue-rank", help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled)"
@@ -285,6 +294,7 @@ def extract(
         query_instruction=query_instruction if query_instruction is not None else RetrievalConfig.query_instruction,
         cross_encoder_model=cross_encoder_model,
         cross_encoder_type=cross_encoder_type,
+        cross_encoder_model_name=cross_encoder_model_name or None,
         colbert_model=colbert_model or None,
         chunk_max_tokens=chunk_max_tokens,
         top_n_accept=top_n_accept,
