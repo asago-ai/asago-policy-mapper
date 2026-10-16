@@ -469,6 +469,7 @@ class RiskIndex:
         self._embeddings: np.ndarray | None = None
         self._colbert_doc_embeddings: list[np.ndarray] | None = None
         self._variant_map: dict[str, list[dict]] = {}
+        self._variant_taxonomy: dict[str, str] = {}
 
         self._remote_bi_encoder: _RemoteBiEncoder | None = None
         self._remote_cross_encoder: _RemoteCrossEncoder | None = None
@@ -480,6 +481,9 @@ class RiskIndex:
             return
 
         index_risks, self._variant_map = _collapse_variants(risks)
+        self._variant_taxonomy = {
+            v["risk_id"]: v["taxonomy"] for variants in self._variant_map.values() for v in variants
+        }
 
         for r in index_risks:
             rid = r.id
@@ -566,6 +570,9 @@ class RiskIndex:
         return self._colbert is not None
 
     def get_taxonomy(self, risk_id: str) -> str:
+        # Variants are collapsed out of ``_risk_meta``; their taxonomy lives only in the variant map.
+        if risk_id in self._variant_taxonomy:
+            return self._variant_taxonomy[risk_id]
         return str(self._risk_meta.get(risk_id, {}).get("taxonomy", ""))
 
     def set_query_instruction(self, instruction: str) -> None:

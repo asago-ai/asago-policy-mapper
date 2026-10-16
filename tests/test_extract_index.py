@@ -171,6 +171,40 @@ def test_parse_remote_url():
     assert base4 == "https://host.com/v1"
 
 
+def test_get_taxonomy_resolves_collapsed_variant_ids():
+    """Variants are collapsed out of the index, yet each keeps the taxonomy it was defined by."""
+    risks = [
+        _make_risk("R-001", "Model Bias", "Systematic errors in AI model outputs"),
+        SimpleNamespace(
+            id="tax-unauthorized-use---pii",
+            name="Unauthorized use - PII",
+            description="Unauthorized use of PII.",
+            concern="",
+            isDefinedByTaxonomy="variant-taxonomy",
+            isPartOf="",
+        ),
+        SimpleNamespace(
+            id="tax-unauthorized-use---health",
+            name="Unauthorized use - Health",
+            description="Unauthorized use of health records.",
+            concern="",
+            isDefinedByTaxonomy="variant-taxonomy",
+            isPartOf="",
+        ),
+    ]
+    with (
+        patch("asago_policy_mapper.extract.index._load_bi_encoder", return_value=(None, None, None)),
+        patch("asago_policy_mapper.extract.index._load_cross_encoder", return_value=(None, None, False, False)),
+    ):
+        index = RiskIndex(risks)
+
+    assert index.get_taxonomy("R-001") == "test-taxonomy"
+    assert index.get_taxonomy("tax-unauthorized-use") == "variant-taxonomy"
+    assert index.get_taxonomy("tax-unauthorized-use---pii") == "variant-taxonomy"
+    assert index.get_taxonomy("tax-unauthorized-use---health") == "variant-taxonomy"
+    assert index.get_taxonomy("unknown-risk") == ""
+
+
 def test_colbert_remote_rejected():
     with pytest.raises(ValueError, match="ColBERT models cannot be served remotely"):
         RiskIndex(RISKS, colbert_model="https://lateon.example.com/v1/embeddings")
