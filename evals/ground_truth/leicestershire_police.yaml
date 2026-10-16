@@ -945,52 +945,99 @@ risks:
   - text: Declare when AI has been used in formal reports, public documents, or decision-making.
     section: 5.6 Expectations when using AI
 - id: ai-risk-taxonomy-unauthorized-disclosure---demographic-data
+  name: Unauthorized disclosure - Demographic data
   evidence:
-  - 2
+  - text: Sensitive personal information such as race, religion, health, or sexual
+      orientation, which requires extra protection.
+    section: 4.1 Integrated AI Tools
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: Do not input personal, sensitive, or operationally classified information
+      into AI.
+    section: Strategic Lead
 - id: ai-risk-taxonomy-vulgar-terms
+  name: Vulgar terms
   evidence:
-  - 1
+  - text: AI may generate content that is offensive, controversial, or inappropriate,
+      including text, images, or audio containing harmful symbols, language, or themes.
+    section: 4. Verify and Validate Outputs
 - id: ai-risk-taxonomy-derogatory-comments
+  name: Derogatory comments
   evidence:
-  - 1
+  - text: AI may generate content that is offensive, controversial, or inappropriate,
+      including text, images, or audio containing harmful symbols, language, or themes.
+    section: 4. Verify and Validate Outputs
 - id: ai-risk-taxonomy-perpetuating-racism
+  name: Perpetuating racism
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: AI systems may reflect or amplify societal biases present in their training
+      data. This can result in unintended reinforcement of stereotypes related to
+      gender, race, profession, or other protected characteristics.
+    section: '- Inappropriate or Offensive Content'
+  - text: Recognises the risk of racial bias in AI outputs.
+    section: Code of Ethics | College of Policing
+  - text: Promotes vigilance and correction of racially biased content.
+    section: Code of Ethics | College of Policing
 - id: ai-risk-taxonomy-gender
+  name: Gender
   evidence:
-  - 1
+  - text: AI systems may reflect or amplify societal biases present in their training
+      data. This can result in unintended reinforcement of stereotypes related to
+      gender, race, profession, or other protected characteristics.
+    section: '- Inappropriate or Offensive Content'
 - id: ai-risk-taxonomy-race
+  name: Race
   evidence:
-  - 1
+  - text: AI systems may reflect or amplify societal biases present in their training
+      data. This can result in unintended reinforcement of stereotypes related to
+      gender, race, profession, or other protected characteristics.
+    section: '- Inappropriate or Offensive Content'
 - id: ai-risk-taxonomy-sexual-orientation
+  name: Sexual orientation
   evidence:
-  - 2
+  - text: Supports inclusion by requiring users to report and address biased or inaccurate
+      content related to LGBTQIA+ topics.
+    section: Code of Ethics | College of Policing
 - id: ai-risk-taxonomy-perpetuating-sexism
+  name: Perpetuating sexism
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: Acknowledges potential for gender bias in AI tools.
+    section: Code of Ethics | College of Policing
+  - text: Promotes fair representation and requires users to identify and correct
+      biased outputs.
+    section: Code of Ethics | College of Policing
+  - text: Acknowledge potential for gender bias in AI tools.
+    section: Code of Ethics | College of Policing
 - id: ai-risk-taxonomy-unauthorized-disclosure---health-data
+  name: Unauthorized disclosure - Health data
   evidence:
-  - 1
+  - text: Sensitive personal information such as race, religion, health, or sexual
+      orientation, which requires extra protection.
+    section: 4.1 Integrated AI Tools
 - id: ai-risk-taxonomy-unauthorized-processing---demographic-data
+  name: Unauthorized processing - Demographic data
   evidence:
-  - 1
+  - text: This policy has been developed with consideration for the potential risks
+      and benefits of generative AI use across all protected characteristics.
+    section: IT and Digital Services Team
 - id: ai-risk-taxonomy-personality
+  name: Personality
   evidence:
-  - 2
-  - 3
+  - text: Promotes inclusive use of AI tools and ensures outputs do not discriminate
+      based on age.
+  - text: Policy prohibits discriminatory or biased outputs.
 - id: ai-risk-taxonomy-age
+  name: Age
   evidence:
-  - 1
+  - text: Ensures outputs do not discriminate based on age. Encourages review of content
+      to avoid age-related bias.
 - id: ai-risk-taxonomy-ethnicity
+  name: Ethnicity
   evidence:
-  - 2
+  - text: Promotes vigilance and correction of racially biased content.
 - id: ai-risk-taxonomy-beliefs
+  name: Beliefs
   evidence:
-  - 1
+  - text: Encourages sensitivity in AI-generated content and prohibits offensive or
+      inappropriate outputs.

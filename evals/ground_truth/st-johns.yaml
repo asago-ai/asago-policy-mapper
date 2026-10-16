@@ -676,12 +676,26 @@ risks:
       of their use with their direct supervisors.
     section: Policy
 - id: ai-risk-taxonomy-unauthorized-disclosure---educational-records
+  name: Unauthorized disclosure - Educational records
   evidence:
-  - 1
-  - 2
+  - text: submitting personal information (e.g., names, contact information, dates
+      of birth, social security numbers, etc.) about employees, students, and other
+      members of the St. John’s community into AI tools.
+    section: Policy
+  - text: submitting personal information (e.g., names, contact information, dates
+      of birth, social security numbers, etc.) about employees, students, and other
+      members of the St. John’s community
+    section: Policy
 - id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: Fake online engagement (fake reviews, fake grassroots support)
   evidence:
-  - 1
+  - text: These technologies must not be used to create content that is inappropriate,
+      discriminatory, deceptive, or otherwise harmful to others or to the University.
 - id: ai-risk-taxonomy-non-consensual-tracking/monitoring/stalking/spyware---pii-(personal-identifiable-information)
+  name: Non-consensual tracking/monitoring/stalking/spyware - PII (Personal Identifiable
+    Information)
   evidence:
-  - 1
+  - text: This includes but is not limited to copying, pasting, typing, or in any
+      way submitting personal information (e.g., names, contact information, dates
+      of birth, social security numbers, etc.) about employees, students, and other
+      members of the St. John’s community into AI tools.

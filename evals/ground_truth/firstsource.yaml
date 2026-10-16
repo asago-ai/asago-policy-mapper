@@ -1536,44 +1536,88 @@ risks:
       interacting with whole AI model/system/tool or in part.'
     section: 5. Ethical use of AI
 - id: ai-risk-taxonomy-cause-harmful-labor-force-disruptions
+  name: Cause harmful labor-force disruptions
   evidence:
-  - 1
+  - text: Workforce - People Strategy (AI will amplify human potential and not displace)
+    section: Artificial Intelligence (AI) Policy v 1.0
 - id: ai-risk-taxonomy-negative-stereotyping-of-any-group
+  name: Negative stereotyping of any group
   evidence:
-  - 1
+  - text: 'Fairness: AI systems should be inclusive and accessible and should not
+      involve or result in unfair discrimination against individuals, communities,
+      or groups. Measures to identify and mitigate biases that may arise from biased,
+      non-inclusive training data or bias in algorithms, thereby promoting equitable
+      outcomes for all user groups'
+    section: 2. Policy Statement
 - id: ai-risk-taxonomy-profiling
+  name: Profiling
   evidence:
-  - 1
-  - 2
+  - text: biased AI models that discriminate
+    section: 8.3 Additional Restrictions
+  - text: 'Examples of prohibited AI tools: ... biased AI models that discriminate'
+    section: 7. Prohibited AI Tools
 - id: ai-risk-taxonomy-network-intrusion
+  name: Network intrusion
   evidence:
-  - 1
+  - text: Employees must not use AI programs to create or disseminate malicious software
+      or engage in hacking or other unauthorized activities.
+    section: 7. Prohibited AI Tools
 - id: ai-risk-taxonomy-unauthorized-network-entry
+  name: Unauthorized network entry
   evidence:
-  - 1
+  - text: Employees must not use AI programs to create or disseminate malicious software
+      or engage in hacking or other unauthorized activities.
+    section: 7. Prohibited AI Tools
 - id: ai-risk-taxonomy-unauthorized-generation---health-data
+  name: Unauthorized generation - Health data
   evidence:
-  - 1
-  - 3
+  - text: Do not input Sensitive Personal Data. This includes information such as
+      social security numbers, financial information like credit card or bank account
+      numbers, personal addresses, or personal health information but not limited
+      to these.
+    section: 8.1 Guidelines
+  - text: Examples include passwords and other credentials, protected health information,
+      personnel material
+    section: 8.3 Additional Restrictions
 - id: ai-risk-taxonomy-unauthorized-generation---financial-records
+  name: Unauthorized generation - Financial records
   evidence:
-  - 2
+  - text: Do not input Sensitive Personal Data. This includes information such as
+      social security numbers, financial information like credit card or bank account
+      numbers, personal addresses, or personal health information but not limited
+      to these.
+    section: 8.3 Additional Restrictions
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---health-data
+  name: Unauthorized collection/gathering/stealing - Health data
   evidence:
-  - 1
+  - text: Do not input Sensitive Personal Data. This includes information such as
+      social security numbers, financial information like credit card or bank account
+      numbers, personal addresses, or personal health information but not limited
+      to these.
+    section: 7. Prohibited AI Tools
 - id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: Fake online engagement (fake reviews, fake grassroots support)
   evidence:
-  - 1
-  - 2
+  - text: Don't Use AI to Spread Misinformation or Disinformation
+  - text: Prohibit the use of AI tools that do not comply with data protection regulations,
+      promoting mis information, inadequate security, tools with proprietary risks,
+      or that do not guarantee the confidentiality of input data.
 - id: ai-risk-taxonomy-vulnerability-probing
+  name: Vulnerability probing
   evidence:
-  - 1
+  - text: Employees must not use AI programs to create or disseminate malicious software
+      or engage in hacking or other unauthorized activities.
 - id: ai-risk-taxonomy-spoofing
+  name: Spoofing
   evidence:
-  - 1
+  - text: Malicious chatbots can be designed to steal or convince you to divulge information.
 - id: ai-risk-taxonomy-social-engineering
+  name: Social engineering
   evidence:
-  - 1
+  - text: Malicious chatbots can be designed to steal or convince you to divulge information.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---occupation
+  name: Discrimination in employment, benefits, or services - Occupation
   evidence:
-  - 1
+  - text: Do not use GenAI tools to make or help you make employment decisions about
+      applicants or employees, including recruitment, hiring, retention, promotions,
+      transfers, performance monitoring, discipline, demotion, or terminations.

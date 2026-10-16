@@ -1271,44 +1271,91 @@ risks:
       to allow for traceability and transparency.
     section: 3.1d Transparency
 - id: ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law
+  name: Content abetting/involving/furthering activities violating any applicable
+    law
   evidence:
-  - 1
+  - text: The development, implementation, and use of AI systems must follow all applicable
+      laws and regulations
 - id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
+  name: Unauthorized disclosure - Biometric data (facial recognition)
   evidence:
-  - 1
+  - text: use or were trained on biometric data indiscriminately scraped from social
+      media or publicly-available information
+    section: 3.1 We will ensure that our AI is fair, transparent, explainable, and
+      efficient.
 - id: ai-risk-taxonomy-not-labeling-content-as-ai-generated
+  name: Not labeling content as AI-generated (Using chatbots to convince people they
+    are communicating with a human)
   evidence:
-  - 1
+  - text: 'users should be: (a) informed that they are interacting with AI'
+    section: 3.1c Explainability
 - id: ai-risk-taxonomy-negative-stereotyping-of-any-group
+  name: Negative stereotyping of any group
   evidence:
-  - 1
+  - text: AI systems will be designed, implemented, and used in ways that prevent
+      and mitigate bias and discrimination, directly or by proxy, based on characteristics
+      protected by law such as race, color, religion, gender, gender identity or expression,
+      national origin, ethnicity, sexual orientation, sex, age, disability, veteran
+      status, or marital status.
+    section: Purpose 1.
 - id: ai-risk-taxonomy-social-behaviors
+  name: Social behaviors
   evidence:
-  - 1
+  - text: discriminatorily classify people based on their social behavior
+    section: 3.0 We will not use AI in ways that harm people or put them or their
+      rights at risk.
 - id: ai-risk-taxonomy-unauthorized-disclosure---pii-(personal-identifiable-information)
+  name: Unauthorized disclosure - PII (Personal Identifiable Information)
   evidence:
-  - 2
+  - text: personal information of Lenovo employees, customers, or others who have
+      not explicitly consented to such use
+    section: B. Operation and Use
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
   evidence:
-  - 2
+  - text: personal information of Lenovo employees, customers, or others who have
+      not explicitly consented to such use
+    section: 3.7 We will establish and maintain governance and review organizations
+      to administer this Policy quickly and robustly.
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data
+  name: Unauthorized inference/synthesis - Demographic data
   evidence:
-  - 1
+  - text: discriminatorily classify people based on their social behavior, socioeconomic
+      status, or sensitive personal information such as race or ethnicity
+    section: 3.1a Diversity and Inclusion
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
+  name: Unauthorized inference/synthesis - Biometric data (facial recognition)
   evidence:
-  - 1
+  - text: use or were trained on biometric data indiscriminately scraped from social
+      media or publicly-available information
+    section: 3.1a Diversity and Inclusion
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data
+  name: Unauthorized inference/synthesis - Behavioral/ Preference data
   evidence:
-  - 1
+  - text: discriminatorily classify people based on their social behavior
+    section: 3.1a Diversity and Inclusion
 - id: ai-risk-taxonomy-characterization-of-identity---color
+  name: Characterization of identity - Color
   evidence:
-  - 2
+  - text: based on characteristics protected by law such as ... color
+    section: 3.1a Diversity and Inclusion
 - id: ai-risk-taxonomy-social-scoring
+  name: Social scoring
   evidence:
-  - 1
+  - text: 'Lenovo prohibits AI systems that: (a) deploy subliminal or manipulative
+      techniques, (b) exploit a person''s vulnerabilities, (c) discriminatorily classify
+      people based on their social behavior, socioeconomic status, or sensitive personal
+      information such as race or ethnicity, (d) use or were trained on biometric
+      data indiscriminately scraped from social media or publicly-available information,
+      or (e) involve the collection of sensitive personal data to enable profiling
+      of individuals.'
 - id: ai-risk-taxonomy-ethnicity
+  name: Ethnicity
   evidence:
-  - 1
+  - text: discriminatorily classify people based on their social behavior, socioeconomic
+      status, or sensitive personal information such as race or ethnicity
 - id: ai-risk-taxonomy-race
+  name: Race
   evidence:
-  - 1
+  - text: discriminatorily classify people based on their social behavior, socioeconomic
+      status, or sensitive personal information such as race or ethnicity

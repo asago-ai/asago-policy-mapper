@@ -864,37 +864,73 @@ risks:
       content is produced.
     section: Why safe and responsible use of Generative AI is important
 - id: ai-risk-taxonomy-phishing/catfishing
+  name: Phishing/Catfishing
   evidence:
-  - 1
-  - 2
+  - text: sophisticated phishing schemes
+    section: When using Generative AI tools
+  - text: Generative AI models can also be used to automate and generate believable
+      outputs that harm, deceive and damage (including at scale), for example generating
+      content such as fake images, compelling lies and sophisticated phishing schemes.
+    section: When using Generative AI tools
 - id: ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law
+  name: Content abetting/involving/furthering activities violating any applicable
+    law
   evidence:
-  - 1
+  - text: The Generative AI Guideline requires that you meet all legislative, regulatory
+      and administrative obligations when using Generative AI tools for official work
+      purposes.
+    section: When using Generative AI tools
 - id: ai-risk-taxonomy-unauthorized-disclosure---health-data
+  name: Unauthorized disclosure - Health data
   evidence:
-  - 1
-  - 2
+  - text: The data does not include personal, sensitive or health information.
+    section: Examples of safe and responsible use
+  - text: where no personal, sensitive or health information is present.
+    section: Examples of safe and responsible use
 - id: ai-risk-taxonomy-unauthorized-disclosure---communication-records
+  name: Unauthorized disclosure - Communication Records
   evidence:
-  - 1
+  - text: You copy and paste the email chain into a Generative AI tool and ask it
+      to draft a response for you.
+    section: Examples of safe and responsible use
 - id: ai-risk-taxonomy-unauthorized-processing---communication-records
+  name: Unauthorized processing - Communication Records
   evidence:
-  - 1
+  - text: You copy and paste the email chain into a Generative AI tool
+    section: Examples of inappropriate use
 - id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: Fake online engagement (fake reviews, fake grassroots support)
   evidence:
-  - 1
+  - text: Generative AI models can also be used to automate and generate believable
+      outputs that harm, deceive and damage (including at scale), for example generating
+      content such as fake images, compelling lies and sophisticated phishing schemes.
 - id: ai-risk-taxonomy-spoofing
+  name: Spoofing
   evidence:
-  - 1
+  - text: Generative AI models can also be used to automate and generate believable
+      outputs that harm, deceive and damage (including at scale), for example generating
+      content such as fake images, compelling lies and sophisticated phishing schemes.
 - id: ai-risk-taxonomy-social-engineering
+  name: Social engineering
   evidence:
-  - 1
+  - text: Generative AI models can also be used to automate and generate believable
+      outputs that harm, deceive and damage (including at scale), for example generating
+      content such as fake images, compelling lies and sophisticated phishing schemes.
 - id: ai-risk-taxonomy-scams
+  name: Scams
   evidence:
-  - 1
+  - text: Generative AI models can also be used to automate and generate believable
+      outputs that harm, deceive and damage (including at scale), for example generating
+      content such as fake images, compelling lies and sophisticated phishing schemes.
 - id: ai-risk-taxonomy-impersonating-others
+  name: Impersonating others
   evidence:
-  - 1
+  - text: Generative AI models can also be used to automate and generate believable
+      outputs that harm, deceive and damage (including at scale), for example generating
+      content such as fake images, compelling lies and sophisticated phishing schemes.
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---communication-records
+  name: Unauthorized inference/synthesis - Communication Records
   evidence:
-  - 1
+  - text: The information you provided to the Generative AI tool is sensitive and
+      not publicly available. The tool may inappropriately share this information
+      with other users.

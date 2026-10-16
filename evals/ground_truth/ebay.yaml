@@ -718,83 +718,171 @@ risks:
       and oversight should be recorded with clear and comprehensive documentation.
     section: 3.3 Accountability and Lawfulness
 - id: ai-risk-taxonomy-gender
+  name: Gender
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-age
+  name: Age
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-sexual-orientation
+  name: Sexual orientation
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---race
+  name: Classification of individuals - Race
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---ethnicity
+  name: Classification of individuals - Ethnicity
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---color
+  name: Classification of individuals - Color
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---gender
+  name: Classification of individuals - Gender
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---sexual-orientation
+  name: Classification of individuals - Sexual orientation
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---religion
+  name: Classification of individuals - Religion
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---beliefs
+  name: Classification of individuals - Beliefs
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---nationality
+  name: Classification of individuals - Nationality
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---disability
+  name: Classification of individuals - Disability
   evidence:
-  - 1
+  - text: design for accessibility to accommodate visual, hearing, and other impairments.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-classification-of-individuals---age
+  name: Classification of individuals - Age
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-characterization-of-identity---race
+  name: Characterization of identity - Race
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-characterization-of-identity---gender
+  name: Characterization of identity - Gender
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-characterization-of-identity---sexual-orientation
+  name: Characterization of identity - Sexual orientation
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-characterization-of-identity---religion
+  name: Characterization of identity - Religion
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-characterization-of-identity---age
+  name: Characterization of identity - Age
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
+    section: '3.2 Inclusivity and Fairness: Strive to enable inclusive and fair AI
+      experiences'
 - id: ai-risk-taxonomy-personality
+  name: Personality
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-religion
+  name: Religion
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-race
+  name: Race
   evidence:
-  - 1
+  - text: AI decisions must not discriminate based on age, gender, race, sexual orientation,
+      religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-characterization-of-identity---beliefs
+  name: Characterization of identity - Beliefs
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
+  name: Discrimination in employment, benefits, or services - Ethnicity
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---occupation
+  name: Discrimination in employment, benefits, or services - Occupation
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-characterization-of-identity---color
+  name: Characterization of identity - Color
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---color
+  name: Discrimination in employment, benefits, or services - Color
   evidence:
-  - 1
+  - text: In particular, AI decisions must not discriminate based on age, gender,
+      race, sexual orientation, religion, or any other protected characteristic.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---health-conditions
+  name: Discrimination in employment, benefits, or services - Health conditions
   evidence:
-  - 1
+  - text: design for accessibility to accommodate visual, hearing, and other impairments.

@@ -1087,59 +1087,112 @@ risks:
   - text: Appropriate Transparency and Explainability
     section: 5.2 Development
 - id: ai-risk-taxonomy-phishing/catfishing
+  name: Phishing/Catfishing
   evidence:
-  - 1
-  - 2
+  - text: Monitoring for AI specific attacks (e.g. generate phishing emails; malicious
+      code; QR Codes; Deepfakes; malware; scrape internet; to obtain credentials,
+      personal Data or financial information; or evade detection) will be carried
+      out.
+    section: 5.3 Operation and Monitoring
+  - text: AI can be used by cybercriminals to generate phishing emails
+    section: '3.1 This policy is intended to:'
 - id: ai-risk-taxonomy-unauthorized-processing---health-data
+  name: Unauthorized processing - Health data
   evidence:
-  - 2
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
+    section: '3.1 This policy is intended to:'
 - id: ai-risk-taxonomy-unauthorized-processing---financial-records
+  name: Unauthorized processing - Financial records
   evidence:
-  - 3
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
+    section: '3.1 This policy is intended to:'
 - id: ai-risk-taxonomy-unauthorized-generation---health-data
+  name: Unauthorized generation - Health data
   evidence:
-  - 1
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
+    section: '3.1 This policy is intended to:'
 - id: ai-risk-taxonomy-unauthorized-generation---financial-records
+  name: Unauthorized generation - Financial records
   evidence:
-  - 1
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
+    section: '3.1 This policy is intended to:'
 - id: ai-risk-taxonomy-unauthorized-disclosure---biometric-data-(facial-recognition)
+  name: Unauthorized disclosure - Biometric data (facial recognition)
   evidence:
-  - 2
-  - 3
+  - text: 'Countermeasures: the need for new legislation to govern biometric technologies
+      in the UK'
+    section: 8 Do's and Don'ts
+  - text: Biometric data for user logins/identification (as defined by UK GDPR Article
+      4.14) must not be used for any AI technology within Trust-owned solutions.
+    section: 5.3 Operation and Monitoring
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---health-data
+  name: Unauthorized collection/gathering/stealing - Health data
   evidence:
-  - 1
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
+    section: 5.1 Documentation of use
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---financial-records
+  name: Unauthorized collection/gathering/stealing - Financial records
   evidence:
-  - 1
-  - 2
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
+    section: 5.1 Documentation of use
+  - text: to obtain credentials, personal Data or financial information
+    section: 5.4 Information Governance and Resilience
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---biometric-data-(facial-recognition)
+  name: Unauthorized collection/gathering/stealing - Biometric data (facial recognition)
   evidence:
-  - 1
+  - text: Biometric data for user logins/identification (as defined by UK GDPR Article
+      4.14) must not be used for any AI technology within Trust-owned solutions.
+    section: 5.4 Information Governance and Resilience
 - id: ai-risk-taxonomy-fake-online-engagement-(fake-reviews,-fake-grassroots-support)
+  name: Fake online engagement (fake reviews, fake grassroots support)
   evidence:
-  - 1
+  - text: Misinformation spread
 - id: ai-risk-taxonomy-social-engineering
+  name: Social engineering
   evidence:
-  - 1
-  - 2
+  - text: '- o For example, AI can be used by cybercriminals to generate phishing
+      emails, malicious code, QR codes, deepfake video / audio, malware, internet
+      scraping, to obtain credentials for hacking accounts, exfiltrating sensitive
+      Trust data (e.g. personal, patient or financial information), or to evade detection.'
+  - text: '- Monitoring for AI specific attacks (e.g. generate phishing emails; malicious
+      code; QR Codes; Deepfakes; malware; scrape internet; to obtain credentials,
+      personal Data or financial information; or evade detection) will be carried
+      out.'
 - id: ai-risk-taxonomy-impersonating-others
+  name: Impersonating others
   evidence:
-  - 1
-  - 2
+  - text: For example, AI can be used by cybercriminals to generate phishing emails,
+      malicious code, QR codes, deepfake video / audio, malware, internet scraping,
+      to obtain credentials for hacking accounts, exfiltrating sensitive Trust data
+      (e.g. personal, patient or financial information), or to evade detection.
+  - text: Monitoring for AI specific attacks (e.g. generate phishing emails; malicious
+      code; QR Codes; Deepfakes; malware; scrape internet; to obtain credentials,
+      personal Data or financial information; or evade detection) will be carried
+      out.
 - id: ai-risk-taxonomy-scams
+  name: Scams
   evidence:
-  - 1
-  - 2
+  - text: For example, AI can be used by cybercriminals to generate phishing emails,
+      malicious code, QR codes, deepfake video / audio, malware, internet scraping,
+      to obtain credentials for hacking accounts, exfiltrating sensitive Trust data
+      (e.g. personal, patient or financial information), or to evade detection.
+  - text: Monitoring for AI specific attacks (e.g. generate phishing emails; malicious
+      code; QR Codes; Deepfakes; malware; scrape internet; to obtain credentials,
+      personal Data or financial information; or evade detection) will be carried
+      out.
 - id: ai-risk-taxonomy-unauthorized-distribution---financial-records
+  name: Unauthorized distribution - Financial records
   evidence:
-  - 1
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
 - id: ai-risk-taxonomy-unauthorized-distribution---pii-(personal-identifiable-information)
+  name: Unauthorized distribution - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---health-data
+  name: Unauthorized inference/synthesis - Health data
   evidence:
-  - 1
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)
 - id: ai-risk-taxonomy-unauthorized-distribution---health-data
+  name: Unauthorized distribution - Health data
   evidence:
-  - 1
+  - text: exfiltrating sensitive Trust data (e.g. personal, patient or financial information)

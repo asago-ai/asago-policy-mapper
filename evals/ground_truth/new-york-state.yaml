@@ -880,19 +880,37 @@ risks:
       with a machine rather than with a human.
     section: 4.4 Transparency
 - id: ai-risk-taxonomy-content-abetting/involving/furthering-activities-violating-any-applicable-law
+  name: Content abetting/involving/furthering activities violating any applicable
+    law
   evidence:
-  - 1
+  - text: All use of AI must comply with State policies, standards, procedures, and
+      guidelines, as well as Executive Orders, any applicable license agreements,
+      and Federal and State, laws, rules, and regulations
+    section: 6.0 Definitions of Key Terms
 - id: ai-risk-taxonomy-criminal-justice/predictive-policing
+  name: Criminal justice/Predictive policing
   evidence:
-  - 1
+  - text: Examples of such activities include but are not limited to assessments or
+      decisions about individuals including in law enforcement
+    section: 4.1 Use of AI
 - id: ai-risk-taxonomy-unauthorized-processing---educational-records
+  name: Unauthorized processing - Educational records
   evidence:
-  - 1
+  - text: assessments or decisions about individuals including in law enforcement,
+      housing, hiring and employment, financial, educational, or healthcare contexts
+    section: 1.0 Purpose and Benefits
 - id: ai-risk-taxonomy-unauthorized-processing---financial-records
+  name: Unauthorized processing - Financial records
   evidence:
-  - 1
+  - text: assessments or decisions about individuals including in law enforcement,
+      housing, hiring and employment, financial, educational, or healthcare contexts
+    section: 1.0 Purpose and Benefits
 - id: ai-risk-taxonomy-impersonating-humans
+  name: Impersonating humans
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: For example, if an SE is using an AI-enabled chatbot to answer questions
+      from members of the public, the user should be made aware that they are interacting
+      with a machine rather than with a human.
+  - text: Using an AI-powered chatbot that is not identified as such and that intentionally
+      deceives users.
+  - text: Use of AI to generate content with the intent to deceive users.

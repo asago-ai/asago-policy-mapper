@@ -763,5 +763,9 @@ risks:
       are completely wrong.
     section: Accuracy
 - id: ai-risk-taxonomy-spoofing
+  name: Spoofing
   evidence:
-  - 1
+  - text: Although generative AI has the power to increase cyber crime through convincing
+      mimicking of  existing  communications, excellent translation capabilities,  deep
+      fake images, audio, and video, ease of finding code vulnerabilities, and much
+      more, the kinds of threats still are the same as  when  using  other  third-party  systems.

@@ -1062,128 +1062,255 @@ risks:
       were placed there.
     section: 03 Realization
 - id: ai-risk-taxonomy-not-labeling-content-as-ai-generated
+  name: Not labeling content as AI-generated (Using chatbots to convince people they
+    are communicating with a human)
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: AI systems interacting directly with humans must be identifiable as such.
+    section: Customer
+  - text: 'Where applicable, when interacting directly with humans (including via
+      Conversational AI or ''Chatbots''): AI systems shall be made identifiable as
+      such to appropriate end users.'
+    section: Customer
+  - text: AI systems shall clearly signal to end users that its social interaction
+      is simulated.
+    section: Customer
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: Does the use case process any information relating to an identified or identifiable
+      natural person for training purposes or during productive usage?
+    section: SAP AI Factory Process
+  - text: Use Cases with anonymized data sets or only the process of anonymizing Personal
+      data does not qualify as High Risk Case.
+    section: SAP AI Factory Process
+  - text: Provide transparency when using AI during processing of personal data.
+    section: 'High-risk application:'
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
+  name: Discrimination in employment, benefits, or services - Ethnicity
   evidence:
-  - 1
-  - 2
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race, ethnicity
+    section: Product Standards
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race, ethnicity, religion, age, and gender.
 - id: ai-risk-taxonomy-misrepresenting-voting-processes
+  name: Misrepresenting voting processes
   evidence:
-  - 2
+  - text: systems which undermine human debate or democratic electoral systems.
+    section: SAP AI Factory Process
 - id: ai-risk-taxonomy-gender
+  name: Gender
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
+    section: Foreword.
 - id: ai-risk-taxonomy-intimidation
+  name: Intimidation
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
+    section: Foreword.
 - id: ai-risk-taxonomy-unauthorized-processing---demographic-data
+  name: Unauthorized processing - Demographic data
   evidence:
-  - 1
-  - 2
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race, ethnicity, religion, age, and gender.
+    section: Disclaimer
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+    section: DPP-361 (Product standard)
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---biometric-data-(facial-recognition)
+  name: Unauthorized inference/synthesis - Biometric data (facial recognition)
   evidence:
-  - 1
-  - 2
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features
+    section: DPP-361 (Product standard)
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+    section: DPP-361 (Product standard)
 - id: ai-risk-taxonomy-unauthorized-generation---biometric-data-(facial-recognition)
+  name: Unauthorized generation - Biometric data (facial recognition)
   evidence:
-  - 1
-  - 2
+  - text: Human surveillance that is utilized for targeting individuals or groups,
+      either by biometrics, facial recognition, or other identifiable features
+    section: Undermine Debate
+  - text: Is the use case including the processing of sensitive personal data like
+      information on sexual orientation, religion, biometric data (including face
+      imaging &/or voice recognition)?
+    section: Undermine Debate
 - id: ai-risk-taxonomy-characterization-of-identity---gender
+  name: Characterization of identity - Gender
   evidence:
-  - 2
+  - text: regardless of users' age, gender, abilities, or characteristics.
+    section: Transparency and Explainability
 - id: ai-risk-taxonomy-characterization-of-identity---disability
+  name: Characterization of identity - Disability
   evidence:
-  - 2
+  - text: regardless of users' age, gender, abilities, or characteristics.
+    section: Transparency and Explainability
 - id: ai-risk-taxonomy-characterization-of-identity---age
+  name: Characterization of identity - Age
   evidence:
-  - 2
+  - text: regardless of users' age, gender, abilities, or characteristics.
+    section: Transparency and Explainability
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability
+  name: Discrimination in employment, benefits, or services - Disability
   evidence:
-  - 1
+  - text: regardless of users' age, gender, abilities, or characteristics.
+    section: People Involved
 - id: ai-risk-taxonomy-classification-of-individuals---race
+  name: Classification of individuals - Race
   evidence:
-  - 1
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race
+    section: Transparency
 - id: ai-risk-taxonomy-classification-of-individuals---ethnicity
+  name: Classification of individuals - Ethnicity
   evidence:
-  - 1
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race, ethnicity
+    section: Transparency
 - id: ai-risk-taxonomy-classification-of-individuals---color
+  name: Classification of individuals - Color
   evidence:
-  - 1
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race, ethnicity, religion, age, and gender.
+    section: Transparency
 - id: ai-risk-taxonomy-classification-of-individuals---gender
+  name: Classification of individuals - Gender
   evidence:
-  - 1
-  - 2
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race, ethnicity, religion, age, and gender.
+    section: Transparency
+  - text: regardless of users' age, gender, abilities, or characteristics.
+    section: ·  Measures to detect bias must be realized.
 - id: ai-risk-taxonomy-classification-of-individuals---age
+  name: Classification of individuals - Age
   evidence:
-  - 1
-  - 2
+  - text: prohibiting discrimination and harassment of humans based on personal factors,
+      such as race, ethnicity, religion, age, and gender.
+    section: Transparency
+  - text: regardless of users' age, gender, abilities, or characteristics.
+    section: ·  Measures to detect bias must be realized.
 - id: ai-risk-taxonomy-classification-of-individuals---disability
+  name: Classification of individuals - Disability
   evidence:
-  - 1
+  - text: regardless of users' age, gender, abilities, or characteristics.
+    section: ·  Measures to detect bias must be realized.
 - id: ai-risk-taxonomy-misrepresenting-voting-qualifications
+  name: Misrepresenting voting qualifications
   evidence:
-  - 1
+  - text: systems which undermine human debate or democratic electoral systems.
 - id: ai-risk-taxonomy-deterring-participation-in-democratic-processes
+  name: Deterring participation in democratic processes
   evidence:
-  - 1
+  - text: systems which undermine human debate or democratic electoral systems.
 - id: ai-risk-taxonomy-discouraging-voting
+  name: Discouraging voting
   evidence:
-  - 1
+  - text: systems which undermine human debate or democratic electoral systems.
 - id: ai-risk-taxonomy-automated-social-media-posts
+  name: Automated social media posts
   evidence:
-  - 1
+  - text: for deception or unfair manipulation of individuals or groups via public
+      forums, media, or moderation of other similar uses.
 - id: ai-risk-taxonomy-impersonating-humans
+  name: Impersonating humans
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: AI systems interacting directly with humans must be identifiable as such.
+  - text: 'Where applicable, when interacting directly with humans (including via
+      Conversational AI or ''Chatbots''): AI systems shall be made identifiable as
+      such to appropriate end users.'
+  - text: AI systems shall clearly signal to end users that its social interaction
+      is simulated.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors
+  name: Discrimination in employment, benefits, or services - Social behaviors
   evidence:
-  - 1
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
 - id: ai-risk-taxonomy-race
+  name: Race
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
 - id: ai-risk-taxonomy-personality
+  name: Personality
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
 - id: ai-risk-taxonomy-bullying
+  name: Bullying
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
 - id: ai-risk-taxonomy-doxing
+  name: Doxing
   evidence:
-  - 1
+  - text: Deanonymization of already anonymized data which may result in the identification
+      of individuals or groups.
 - id: ai-risk-taxonomy-abuse
+  name: Abuse
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
 - id: ai-risk-taxonomy-religion
+  name: Religion
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
 - id: ai-risk-taxonomy-age
+  name: Age
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
 - id: ai-risk-taxonomy-ethnicity
+  name: Ethnicity
   evidence:
-  - 1
+  - text: An essential part of this is prohibiting discrimination and harassment of
+      humans based on personal factors, such as race, ethnicity, religion, age, and
+      gender.
 - id: ai-risk-taxonomy-characterization-of-identity---predicted-personality
+  name: Characterization of identity - Predicted Personality
   evidence:
-  - 1
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---physical-characteristics
+  name: Discrimination in employment, benefits, or services - Physical Characteristics
   evidence:
-  - 2
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.
 - id: ai-risk-taxonomy-classification-of-individuals---social-behaviors
+  name: Classification of individuals - Social behaviors
   evidence:
-  - 1
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
 - id: ai-risk-taxonomy-characterization-of-identity---social-behaviors
+  name: Characterization of identity - Social behaviors
   evidence:
-  - 1
+  - text: SAP shall endeavour to detect unfairly biased outputs and shall implement
+      technical and/or organizational measures to prevent direct or indirect prejudice,
+      discrimination, or marginalization of groups or individuals, e.g. by reducing
+      bias in training data.
 - id: ai-risk-taxonomy-characterization-of-identity---physical-characteristics
+  name: Characterization of identity - Physical Characteristics
   evidence:
-  - 1
+  - text: AI software shall be user-centric, addressing the widest possible range
+      of applicable end-users, and following relevant accessibility standards, regardless
+      of users' age, gender, abilities, or characteristics.

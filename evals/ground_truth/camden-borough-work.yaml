@@ -530,6 +530,10 @@ risks:
       or answers that make no sense which are referred to 'hallucinations'.
     section: What are the risks associated with them?
 - id: ai-risk-taxonomy-unauthorized-disclosure---health-data
+  name: Unauthorized disclosure - Health data
   evidence:
-  - 1
-  - 2
+  - text: Most importantly do not input in any personal or sensitive information.
+    section: What are the most reliable/best AI tools to use?
+  - text: I've accidentally uploaded some personal or sensitive data into a bot, what
+      should I do?
+    section: What are the most reliable/best AI tools to use?

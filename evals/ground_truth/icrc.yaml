@@ -1205,103 +1205,209 @@ risks:
       and outputs and the functioning of algorithmic processes.
     section: 6.3. Transparency and 'explainability'
 - id: ai-risk-taxonomy-personality
+  name: Personality
   evidence:
-  - 1
+  - text: assess the risk of an individual committing a criminal offence based solely
+      on profiling or personality traits
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-generating-or-promoting-misinformation
+  name: Generating or promoting misinformation
   evidence:
-  - 1
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-gender
+  name: Gender
   evidence:
-  - 1
+  - text: replicate or amplify systemic and societal discriminations, biases and stereotypes
+      - in particular around gender and race.
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-nationality
+  name: Nationality
   evidence:
-  - 1
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-social-behaviors
+  name: Social behaviors
   evidence:
-  - 1
+  - text: evaluating or classifying individuals or groups based on social behaviour
+      or personal traits
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-unauthorized-processing---demographic-data
+  name: Unauthorized processing - Demographic data
   evidence:
-  - 1
-  - 2
-  - 3
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+    section: 5.1. A humanitarian and principled approach
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 5.1. A humanitarian and principled approach
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-unauthorized-processing---behavioral/-preference-data
+  name: Unauthorized processing - Behavioral/ Preference data
   evidence:
-  - 1
+  - text: deploy subliminal, manipulative, or deceptive techniques to distort behaviour
+      and impair informed decision-making
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-unauthorized-processing---pii-(personal-identifiable-information)
+  name: Unauthorized processing - PII (Personal Identifiable Information)
   evidence:
-  - 2
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
 - id: ai-risk-taxonomy-unauthorized-generation---demographic-data
+  name: Unauthorized generation - Demographic data
   evidence:
-  - 1
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-unauthorized-collection/gathering/stealing---pii-(personal-identifiable-information)
+  name: Unauthorized collection/gathering/stealing - PII (Personal Identifiable Information)
   evidence:
-  - 1
+  - text: At all times, the ICRC ensures that confidential or sensitive internal ICRC
+      information or personal data are handled with the utmost care and are not used
+      in or transferred to non-approved, external online AI systems
+    section: 6.2. Safety and security
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---demographic-data
+  name: Unauthorized inference/synthesis - Demographic data
   evidence:
-  - 1
+  - text: use biometric categorization systems that infer sensitive personal attributes
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-unauthorized-inference/synthesis---behavioral/-preference-data
+  name: Unauthorized inference/synthesis - Behavioral/ Preference data
   evidence:
-  - 1
+  - text: rely on or infer social scoring, (i.e. evaluating or classifying individuals
+      or groups based on social behaviour or personal traits)
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-classification-of-individuals---social-behaviors
+  name: Classification of individuals - Social behaviors
   evidence:
-  - 1
-  - 2
+  - text: rely on or infer social scoring, (i.e. evaluating or classifying individuals
+      or groups based on social behaviour or personal traits)
+    section: 4. RATIONALE
+  - text: rely on or infer social scoring, (i.e. evaluating or classifying individuals
+      or groups based on social behaviour or personal traits);
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-classification-of-individuals---predicted-personality
+  name: Classification of individuals - Predicted Personality
   evidence:
-  - 1
+  - text: assess the risk of an individual committing a criminal offence based solely
+      on profiling or personality traits
+    section: 4. RATIONALE
 - id: ai-risk-taxonomy-classification-of-individuals---disability
+  name: Classification of individuals - Disability
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 4. RATIONALE
 - id: ai-risk-taxonomy-classification-of-individuals---age
+  name: Classification of individuals - Age
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 4. RATIONALE
 - id: ai-risk-taxonomy-characterization-of-identity---social-behaviors
+  name: Characterization of identity - Social behaviors
   evidence:
-  - 1
+  - text: rely on or infer social scoring, (i.e. evaluating or classifying individuals
+      or groups based on social behaviour or personal traits)
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-characterization-of-identity---predicted-personality
+  name: Characterization of identity - Predicted Personality
   evidence:
-  - 1
+  - text: assess the risk of an individual committing a criminal offence based solely
+      on profiling or personality traits
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-characterization-of-identity---disability
+  name: Characterization of identity - Disability
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-characterization-of-identity---age
+  name: Characterization of identity - Age
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---social-behaviors
+  name: Discrimination in employment, benefits, or services - Social behaviors
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---disability
+  name: Discrimination in employment, benefits, or services - Disability
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---age
+  name: Discrimination in employment, benefits, or services - Age
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
+    section: 5.1. A humanitarian and principled approach
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---beliefs
+  name: Discrimination in employment, benefits, or services - Beliefs
   evidence:
-  - 1
+  - text: We use AI solutions that strengthen our ability to identify, analyse, prioritize
+      and respond to affected people's needs based on their scale and level of urgency,
+      without making any adverse distinctions on the basis of race, nationality, gender,
+      religion, class, political opinion or other potential sources of discrimination.
 - id: ai-risk-taxonomy-disability
+  name: Disability
   evidence:
-  - 1
+  - text: exploit vulnerabilities related to age, disability, or socio-economic circumstances
+      to distort behaviour
 - id: ai-risk-taxonomy-race
+  name: Race
   evidence:
-  - 1
-  - 2
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
 - id: ai-risk-taxonomy-religion
+  name: Religion
   evidence:
-  - 1
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
 - id: ai-risk-taxonomy-adversely-affects-legal-rights
+  name: Adversely affects legal rights
   evidence:
-  - 1
+  - text: the ICRC systematically assesses the potential negative short- and long-term
+      secondary impacts that the use of AI solutions may have on the safety, dignity,
+      agency and respect for the fundamental rights of affected people and takes all
+      possible measures to avoid and mitigate them.
 - id: ai-risk-taxonomy-characterization-of-identity---ethnicity
+  name: Characterization of identity - Ethnicity
   evidence:
-  - 1
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
 - id: ai-risk-taxonomy-classification-of-individuals---ethnicity
+  name: Classification of individuals - Ethnicity
   evidence:
-  - 1
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
 - id: ai-risk-taxonomy-discrimination-in-employment,-benefits,-or-services---ethnicity
+  name: Discrimination in employment, benefits, or services - Ethnicity
   evidence:
-  - 1
-  - 2
+  - text: The ICRC makes all possible efforts to ensure that the AI solutions and
+      tools we use are inclusive by design and in their impact, and that they enable
+      fair, non-discriminatory, equal and equitable delivery of assistance and services
+      to all affected people and users, taking into account the varying degrees of
+      need and capacity.
+  - text: The ICRC acknowledges the significant risks of AI systems that could generate
+      false or inaccurate data and replicate or amplify systemic and societal discriminations,
+      biases and stereotypes - in particular around gender and race.
 - id: ai-risk-taxonomy-classification-of-individuals---beliefs
+  name: Classification of individuals - Beliefs
   evidence:
-  - 1
+  - text: without making any adverse distinctions on the basis of race, nationality,
+      gender, religion, class, political opinion or other potential sources of discrimination.
