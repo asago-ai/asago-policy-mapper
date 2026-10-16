@@ -10,7 +10,7 @@ from asago_policy_mapper.cli import app
 from asago_policy_mapper.extract.index import _load_cross_encoder, _RemoteCrossEncoder
 from asago_policy_mapper.extract.models import RetrievalConfig
 
-RERANK_URL = "http://100.100.99.66:8001/v1/rerank"
+RERANK_URL = "http://reranker.example:8001/v1/rerank"
 
 runner = CliRunner()
 
@@ -36,7 +36,7 @@ def test_rerank_posts_to_rerank_endpoint(mock_httpx_client_cls):
     encoder.predict([("risk desc", "chunk text")])
 
     mock_client.post.assert_called_once()
-    assert mock_client.post.call_args.args[0] == "http://100.100.99.66:8001/v1/rerank"
+    assert mock_client.post.call_args.args[0] == "http://reranker.example:8001/v1/rerank"
 
 
 @patch("httpx.Client")
@@ -118,7 +118,7 @@ def test_score_type_derives_model_name_from_url_without_override(mock_httpx_clie
 @patch("httpx.Client")
 def test_score_type_honours_model_name_override(mock_httpx_client_cls):
     mock_client, _ = _mock_client(mock_httpx_client_cls, {"data": [{"index": 0, "score": 0.5}]})
-    encoder = _RemoteCrossEncoder("http://100.100.99.66:8001/v1/score", model_name="qwen3-reranker-4b")
+    encoder = _RemoteCrossEncoder("http://reranker.example:8001/v1/score", model_name="qwen3-reranker-4b")
 
     encoder.predict([("a", "q")])
 
