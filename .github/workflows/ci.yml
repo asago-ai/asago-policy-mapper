@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
       - run: uv sync --group dev
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v8 ( longer publishes major/minor tags — SHA pinning is the only supported approach)
         with:
           enable-cache: true
       - run: uv sync --group dev
@@ -37,7 +37,7 @@ jobs:
       OLLAMA_DEBUG: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v8
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v8
         with:
           enable-cache: true
       - run: uv sync --group dev
