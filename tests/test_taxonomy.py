@@ -289,6 +289,35 @@ def test_warn_unterminated_descriptions(caplog):
     assert "'ok'" not in caplog.text
 
 
+# Independent of _DESCRIPTION_OVERRIDES: the truncated texts as shipped in the Nexus
+# CREDO UCF catalog, and the texts from arXiv:2503.05937v1, Appendix A, they must become.
+_PINNED_CREDO_OVERRIDES = [
+    (
+        "credo-risk-010",
+        "The AI system's outputs may explicitly reflect or reinforce harmful stereotypes, prejudices, "
+        "or biased characterizations of specific groups. The AI system may exhibit unjustified or "
+        "harmful differences in accuracy, quality, or outcomes across demographic groups, potentially "
+        "leading to unfair treatment and discrimination. This includes both disparate error rates that "
+        "affect opportunity and",
+        "The AI system's outputs may explicitly reflect or reinforce harmful stereotypes, prejudices, "
+        "or biased characterizations of specific groups.",
+    ),
+    (
+        "credo-risk-018",
+        "The AI system may misrepresent its own capabilities or limitations, potentially leading to "
+        "misplaced trust or inappropriate",
+        "The AI system may misrepresent its own capabilities or limitations, potentially leading to "
+        "misplaced trust or inappropriate use.",
+    ),
+]
+
+
+@pytest.mark.parametrize(("risk_id", "truncated", "restored"), _PINNED_CREDO_OVERRIDES)
+def test_pinned_credo_override(risk_id, truncated, restored):
+    (patched,) = apply_description_overrides([_risk(risk_id, truncated)])
+    assert patched.description == restored
+
+
 @pytest.mark.parametrize("risk_id", sorted(_DESCRIPTION_OVERRIDES))
 def test_description_override_restores_truncated_text(risk_id):
     truncated, restored = _DESCRIPTION_OVERRIDES[risk_id]

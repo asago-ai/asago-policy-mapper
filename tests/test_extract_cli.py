@@ -97,7 +97,17 @@ def test_extract_check_risk_text_warnings_only_when_enabled(monkeypatch, tmp_pat
     risks = [
         Risk(id="ok", name="ok", description="Complete sentence.", isDefinedByTaxonomy="test", type="Risk"),
         Risk(id="cut", name="cut", description="This sentence stops in the", isDefinedByTaxonomy="test", type="Risk"),
+        # Truncated upstream text as shipped in the Nexus CREDO UCF catalog.
+        Risk(
+            id="credo-risk-018",
+            name="AI deception",
+            description="The AI system may misrepresent its own capabilities or limitations, "
+            "potentially leading to misplaced trust or inappropriate",
+            isDefinedByTaxonomy="credo-ucf",
+            type="Risk",
+        ),
     ]
+    pipeline_risks: list[Risk] = []
 
     class FakeNexus:
         def __init__(self, base_dir=None):
@@ -107,6 +117,7 @@ def test_extract_check_risk_text_warnings_only_when_enabled(monkeypatch, tmp_pat
             return risks
 
     def stop(**kwargs):
+        pipeline_risks.extend(kwargs["risks"])
         raise _StopAfterRiskLoad
 
     monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
@@ -122,10 +133,17 @@ def test_extract_check_risk_text_warnings_only_when_enabled(monkeypatch, tmp_pat
         result = runner.invoke(app, args)
 
     assert isinstance(result.exception, _StopAfterRiskLoad)
+    # The restored CREDO text, not the truncated upstream one, reaches the pipeline.
+    descriptions = {r.id: r.description for r in pipeline_risks}
+    assert descriptions["credo-risk-018"] == (
+        "The AI system may misrepresent its own capabilities or limitations, "
+        "potentially leading to misplaced trust or inappropriate use."
+    )
     if check_risk_text:
         assert "Risk 'cut' description lacks closing punctuation" in caplog.text
         assert "'ok'" not in caplog.text
-        assert "Risk text check: 1 of 2 risk descriptions lack closing punctuation: cut" in result.output
+        assert "credo-risk-018" not in caplog.text
+        assert "Risk text check: 1 of 3 risk descriptions lack closing punctuation: cut" in result.output
     else:
         assert "lacks closing punctuation" not in caplog.text
         assert "Risk text check" not in result.output
