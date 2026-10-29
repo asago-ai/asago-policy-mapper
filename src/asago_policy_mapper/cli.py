@@ -247,8 +247,12 @@ def extract(
 
     from ai_atlas_nexus import AIAtlasNexus
 
+    from asago_policy_mapper.taxonomy import apply_description_overrides
+
     nexus = AIAtlasNexus(base_dir=nexus_base_dir)
-    all_risks = [r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES]
+    all_risks = apply_description_overrides(
+        r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
+    )
 
     custom_risk_count = 0
     if loaded_custom_risks:

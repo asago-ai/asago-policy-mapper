@@ -15,19 +15,73 @@ logger = logging.getLogger(__name__)
 _BUILTIN_PREFIXES = tuple(prefix for prefix, _ in _TAXONOMY_PREFIXES)
 
 # Sentence-ending punctuation, optionally followed by closing quotes or brackets.
-_CLOSING_PUNCTUATION_RE = re.compile(r"[.!?][\"'\u201d\u2019)\]]*$")
+_CLOSING_PUNCTUATION_RE = re.compile(r"[.!?][\"'\u201d\u2019)\]}]*$")
+# A trailing ellipsis ("..." or U+2026) marks elided text, so it does not count as an ending.
+_TRAILING_ELLIPSIS_RE = re.compile(r"(?:\.\.\.|\u2026)[\"'\u201d\u2019)\]}]*$")
+
+# Upstream Nexus descriptions known to be cut mid-sentence, keyed by risk ID.
+# Each entry maps the exact truncated text Nexus ships to the full text from the
+# source publication. The override applies only while the loaded description still
+# equals the truncated text, so a fixed upstream catalog is never overwritten.
+#
+# Source for the CREDO UCF entries: Eisenberg et al., "The Unified Control Framework:
+# Establishing a Common Foundation for Enterprise AI Governance, Risk Management and
+# Regulatory Compliance", arXiv:2503.05937v1, Appendix A "Risk taxonomy" table.
+# credo-risk-045 ("Competitive dynamics") is not listed: the paper's own text is cut
+# after "The AI system's rapid development", so no complete wording exists to restore.
+_DESCRIPTION_OVERRIDES: dict[str, tuple[str, str]] = {
+    # "Stereotype perpetuation", PDF page 21. Nexus appends a cut copy of the
+    # credo-risk-011 text; the paper's description is the first sentence alone
+    # (the paper typesets the apostrophe as U+2019; the catalog's ASCII ' is kept).
+    "credo-risk-010": (
+        "The AI system's outputs may explicitly reflect or reinforce harmful stereotypes, prejudices, "
+        "or biased characterizations of specific groups. The AI system may exhibit unjustified or "
+        "harmful differences in accuracy, quality, or outcomes across demographic groups, potentially "
+        "leading to unfair treatment and discrimination. This includes both disparate error rates that "
+        "affect opportunity and",
+        "The AI system's outputs may explicitly reflect or reinforce harmful stereotypes, prejudices, "
+        "or biased characterizations of specific groups.",
+    ),
+    # "AI deception", PDF page 22.
+    "credo-risk-018": (
+        "The AI system may misrepresent its own capabilities or limitations, potentially leading to "
+        "misplaced trust or inappropriate",
+        "The AI system may misrepresent its own capabilities or limitations, potentially leading to "
+        "misplaced trust or inappropriate use.",
+    ),
+}
+
+
+def apply_description_overrides(risks: Iterable[Risk]) -> list[Risk]:
+    """Return the risks with known upstream-truncated descriptions restored.
+
+    A risk listed in ``_DESCRIPTION_OVERRIDES`` is replaced by a copy carrying the
+    full description only when its loaded description (ignoring surrounding
+    whitespace) still equals the known truncated text; every other risk is
+    returned unchanged.
+    """
+    patched: list[Risk] = []
+    for risk in risks:
+        override = _DESCRIPTION_OVERRIDES.get(risk.id)
+        if override and (getattr(risk, "description", None) or "").strip() == override[0]:
+            logger.debug("Restoring truncated description of risk '%s'", risk.id)
+            risk = risk.model_copy(update={"description": override[1]})
+        patched.append(risk)
+    return patched
 
 
 def find_unterminated_descriptions(risks: Iterable[Risk]) -> list[Risk]:
     """Return the risks whose non-empty description lacks closing punctuation.
 
     A description that does not end in ``.``, ``!`` or ``?`` (optionally followed
-    by a closing quote or bracket) may have been cut mid-sentence upstream.
+    by closing quotes or brackets) may have been cut mid-sentence upstream. A
+    trailing ellipsis is flagged too, since it marks elided text. Empty and
+    whitespace-only descriptions are not flagged: there is no text to be cut.
     """
     flagged: list[Risk] = []
     for risk in risks:
         desc = (getattr(risk, "description", None) or "").strip()
-        if desc and not _CLOSING_PUNCTUATION_RE.search(desc):
+        if desc and (not _CLOSING_PUNCTUATION_RE.search(desc) or _TRAILING_ELLIPSIS_RE.search(desc)):
             flagged.append(risk)
     return flagged
 

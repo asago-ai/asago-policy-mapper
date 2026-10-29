@@ -340,12 +340,26 @@ python scripts/build_mitigation_index.py
 
 Some Nexus risk descriptions are cut mid-sentence upstream. In the CREDO UCF
 catalog (`ai_atlas_nexus/data/knowledge_graph/credo.yaml`), `credo-risk-018`
-("AI deception") and `credo-risk-045` end mid-sentence. The description of
-`credo-risk-010` ("Stereotype perpetuation") ends with an incomplete copy of the
-`credo-risk-011` text. The source CSV the catalog was generated from has the same
-truncation, so the policy mapper does not patch these descriptions. The complete
-wording must come from the Credo AI Unified Control Framework paper
-(<https://arxiv.org/abs/2503.05937>). Pass `--check-risk-text` to list affected risks.
+("AI deception") and `credo-risk-045` ("Competitive dynamics") end mid-sentence.
+The description of `credo-risk-010` ("Stereotype perpetuation") ends with an
+incomplete copy of the `credo-risk-011` text. The source CSV the catalog was
+generated from has the same truncation.
+
+When `extract` loads the Nexus catalog, it restores these descriptions from the
+Credo AI Unified Control Framework paper (arXiv:2503.05937v1, Appendix A "Risk
+taxonomy" table, <https://arxiv.org/abs/2503.05937>). The overrides are in
+`taxonomy.py::_DESCRIPTION_OVERRIDES`, keyed by risk ID:
+
+- `credo-risk-018` gets the paper's full sentence (page 22).
+- `credo-risk-010` is trimmed to its own first sentence, which is the paper's
+  complete description (page 21).
+- `credo-risk-045` stays as shipped. The paper cuts this description at the same
+  point, so no complete wording is available.
+
+An override applies only while the loaded description still equals the known
+truncated text, so a fixed upstream catalog is never overwritten. Vendored Nexus
+data files are not modified. Pass `--check-risk-text` to list descriptions that
+still lack closing punctuation.
 
 ## Custom Taxonomies
 
