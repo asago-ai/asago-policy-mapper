@@ -79,6 +79,12 @@ def test_extract_service_tier_flag_in_help():
     assert "--service-tier" in output
 
 
+def test_extract_check_risk_text_flag_in_help():
+    result = runner.invoke(app, ["extract", "--help"])
+    assert result.exit_code == 0
+    assert "--check-risk-text" in _strip_ansi(result.stdout)
+
+
 def test_extract_invalid_custom_taxonomy():
     with tempfile.NamedTemporaryFile(suffix=".txt", mode="w", delete=False) as f:
         f.write("test policy")

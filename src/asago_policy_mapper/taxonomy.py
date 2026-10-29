@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Iterable
 from pathlib import Path
 
 import yaml
@@ -11,6 +13,38 @@ from asago_policy_mapper.evals.eval import _TAXONOMY_PREFIXES
 logger = logging.getLogger(__name__)
 
 _BUILTIN_PREFIXES = tuple(prefix for prefix, _ in _TAXONOMY_PREFIXES)
+
+# Sentence-ending punctuation, optionally followed by closing quotes or brackets.
+_CLOSING_PUNCTUATION_RE = re.compile(r"[.!?][\"'\u201d\u2019)\]]*$")
+
+
+def find_unterminated_descriptions(risks: Iterable[Risk]) -> list[Risk]:
+    """Return the risks whose non-empty description lacks closing punctuation.
+
+    A description that does not end in ``.``, ``!`` or ``?`` (optionally followed
+    by a closing quote or bracket) may have been cut mid-sentence upstream.
+    """
+    flagged: list[Risk] = []
+    for risk in risks:
+        desc = (getattr(risk, "description", None) or "").strip()
+        if desc and not _CLOSING_PUNCTUATION_RE.search(desc):
+            flagged.append(risk)
+    return flagged
+
+
+def warn_unterminated_descriptions(risks: Iterable[Risk]) -> list[str]:
+    """Log a warning for each risk whose description lacks closing punctuation.
+
+    Opt-in check (``extract --check-risk-text``); returns the flagged risk IDs.
+    """
+    flagged = find_unterminated_descriptions(risks)
+    for risk in flagged:
+        logger.warning(
+            "Risk '%s' description lacks closing punctuation - text may be truncated: ...%s",
+            risk.id,
+            risk.description.strip()[-60:],
+        )
+    return [risk.id for risk in flagged]
 
 
 def load_custom_taxonomy(path: Path) -> list[Risk]:

@@ -39,6 +39,11 @@ def extract(
     custom_taxonomy: list[Path] = typer.Option(
         [], "--custom-taxonomy", "-t", help="Custom taxonomy YAML file(s) to load alongside Nexus risks"
     ),
+    check_risk_text: bool = typer.Option(
+        False,
+        "--check-risk-text",
+        help="Warn about loaded risks whose description lacks closing punctuation (possible truncation)",
+    ),
     debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
     max_tokens: int = typer.Option(
@@ -255,6 +260,16 @@ def extract(
                 all_risks.append(cr)
                 seen_ids.add(cr.id)
                 custom_risk_count += 1
+
+    if check_risk_text:
+        from asago_policy_mapper.taxonomy import warn_unterminated_descriptions
+
+        flagged = warn_unterminated_descriptions(all_risks)
+        typer.echo(
+            f"Risk text check: {len(flagged)} of {len(all_risks)} risk descriptions lack closing punctuation"
+            + (f": {', '.join(flagged)}" if flagged else ""),
+            err=True,
+        )
 
     from asago_policy_mapper.extract.models import RetrievalConfig
     from asago_policy_mapper.extract.pipeline import run_extraction

@@ -1,8 +1,13 @@
 from pathlib import Path
 
 import pytest
+from ai_atlas_nexus.ai_risk_ontology.datamodel.ai_risk_ontology import Risk
 
-from asago_policy_mapper.taxonomy import load_custom_taxonomy
+from asago_policy_mapper.taxonomy import (
+    find_unterminated_descriptions,
+    load_custom_taxonomy,
+    warn_unterminated_descriptions,
+)
 
 
 @pytest.fixture
@@ -207,3 +212,54 @@ def test_example_file_loads():
     risks = load_custom_taxonomy(example)
     assert len(risks) == 5
     assert all(r.isDefinedByTaxonomy == "red-hat-ai-controls" for r in risks)
+
+
+def _risk(rid: str, description: str) -> Risk:
+    return Risk(id=rid, name=rid, description=description, isDefinedByTaxonomy="test", type="Risk")
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        "The system may fail.",
+        "Is this a risk?",
+        "It fails!",
+        "It may fail (e.g. under load.)",
+        'It is called "unsafe."',
+        "It is called \u201cunsafe.\u201d",
+        "Trailing whitespace is ignored.  \n",
+    ],
+)
+def test_terminated_description_not_flagged(description):
+    assert find_unterminated_descriptions([_risk("r", description)]) == []
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        # Truncated upstream text as shipped in the Nexus CREDO UCF catalog (credo-risk-018).
+        "The AI system may misrepresent its own capabilities or limitations, "
+        "potentially leading to misplaced trust or inappropriate",
+        "Label: definition without a full stop",
+        "Ends with a comma,",
+        "Ends with a closing paren (but no stop)",
+    ],
+)
+def test_unterminated_description_flagged(description):
+    risk = _risk("r", description)
+    assert find_unterminated_descriptions([risk]) == [risk]
+
+
+def test_empty_description_not_flagged():
+    assert find_unterminated_descriptions([_risk("r", "")]) == []
+
+
+def test_warn_unterminated_descriptions(caplog):
+    import logging
+
+    risks = [_risk("ok", "Complete sentence."), _risk("cut", "This sentence stops in the")]
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.taxonomy"):
+        flagged = warn_unterminated_descriptions(risks)
+    assert flagged == ["cut"]
+    assert "Risk 'cut' description lacks closing punctuation" in caplog.text
+    assert "'ok'" not in caplog.text

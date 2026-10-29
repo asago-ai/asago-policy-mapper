@@ -326,9 +326,26 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus --no-query-gen \
   --base-url <url> --model <model>
 
+# Warn about loaded risks whose description lacks closing punctuation
+# (possible upstream truncation); off by default
+uv run asago-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus --check-risk-text \
+  --base-url <url> --model <model>
+
 # Rebuild mitigation index (after data file changes)
 python scripts/build_mitigation_index.py
 ```
+
+### Known upstream text defects
+
+Some Nexus risk descriptions are cut mid-sentence upstream. In the CREDO UCF
+catalog (`ai_atlas_nexus/data/knowledge_graph/credo.yaml`), `credo-risk-018`
+("AI deception") and `credo-risk-045` end mid-sentence. The description of
+`credo-risk-010` ("Stereotype perpetuation") ends with an incomplete copy of the
+`credo-risk-011` text. The source CSV the catalog was generated from has the same
+truncation, so the policy mapper does not patch these descriptions. The complete
+wording must come from the Credo AI Unified Control Framework paper
+(<https://arxiv.org/abs/2503.05937>). Pass `--check-risk-text` to list affected risks.
 
 ## Custom Taxonomies
 
