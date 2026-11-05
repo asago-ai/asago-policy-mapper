@@ -1,7 +1,15 @@
+import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from instructor.core import InstructorRetryException
+from instructor_errors import (
+    authentication_failure,
+    connection_failure,
+    server_error,
+    validation_exhaustion,
+)
 
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
@@ -686,6 +694,77 @@ def test_run_causal_synthesis_skips_empty_results():
 
     assert result[0].threat is None
     assert result[0].impact is None
+
+
+def _causal_risk_and_chunks(risk_ids):
+    merged = [
+        RiskMatch(
+            risk_id=risk_id,
+            risk_name=f"Name {risk_id}",
+            risk_description="Description.",
+            confidence=0.85,
+            grounding_confidence="high",
+            accepted_by="threshold",
+            evidence=[EvidenceSpan(text="q", document="doc.pdf", chunk_index=0)],
+            scores=RetrievalScores(bm25_rank=1, embedding_distance=0.2, cross_encoder_score=0.85, rrf_score=0.03),
+        )
+        for risk_id in risk_ids
+    ]
+    return merged, [SimpleNamespace(text="Policy text about the risk.")]
+
+
+def _causal_client(failing_risk_id, error):
+    def _create(*, model, response_model, messages):
+        if any(failing_risk_id in m["content"] for m in messages):
+            raise error
+        return _CausalChains(
+            items=[
+                _CausalChain(
+                    threat="Threat", threat_source="Source", vulnerability="Vuln", consequence="Cons", impact="Impact"
+                )
+            ]
+        )
+
+    client = MagicMock()
+    client.chat.completions.create.side_effect = _create
+    return client
+
+
+def test_run_causal_synthesis_skips_risk_with_validation_exhaustion(caplog):
+    from asago_policy_mapper.llm import LLMConfig
+
+    merged, chunks = _causal_risk_and_chunks(["atlas-a", "atlas-b", "atlas-c"])
+    client = _causal_client("atlas-b", validation_exhaustion())
+    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model")
+
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.extract.attribute"):
+        result = _run_causal_synthesis(merged, chunks, client, config, 4, [])
+
+    by_id = {m.risk_id: m for m in result}
+    assert by_id["atlas-a"].threat == "Threat"
+    assert by_id["atlas-c"].impact == "Impact"
+    assert by_id["atlas-b"].threat is None
+    assert by_id["atlas-b"].impact is None
+    assert any("atlas-b" in r.getMessage() for r in caplog.records if r.levelno == logging.WARNING)
+
+
+@pytest.mark.parametrize(
+    "make_error",
+    [connection_failure, server_error, authentication_failure],
+    ids=["connection-error", "http-5xx", "http-401"],
+)
+def test_run_causal_synthesis_propagates_wrapped_api_errors(make_error):
+    from asago_policy_mapper.llm import LLMConfig
+
+    merged, chunks = _causal_risk_and_chunks(["atlas-a", "atlas-b"])
+    error = make_error()
+    client = _causal_client("atlas-b", error)
+    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model")
+
+    with pytest.raises(InstructorRetryException) as excinfo:
+        _run_causal_synthesis(merged, chunks, client, config, 4, [])
+
+    assert excinfo.value is error
 
 
 # --- query-gen integration test ---

@@ -184,6 +184,7 @@ class RetrievalConfig:
     )
     cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-12-v2"
     cross_encoder_type: str = "score"
+    cross_encoder_model_name: str | None = None
     colbert_model: str | None = None
     chunk_max_tokens: int = 512
     top_n_accept: int = 10
@@ -220,6 +221,7 @@ class RetrievalConfig:
             "bi_encoder_model": self.bi_encoder_model,
             "cross_encoder_model": self.effective_cross_encoder_model,
             "cross_encoder_type": self.cross_encoder_type,
+            "cross_encoder_model_name": self.cross_encoder_model_name,
             "use_cross_encoder": self.use_cross_encoder,
             "colbert_model": self.colbert_model,
             "chunk_max_tokens": self.chunk_max_tokens,

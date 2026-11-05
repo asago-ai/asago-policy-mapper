@@ -163,8 +163,11 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 | `--bi-encoder-model` | `POLICY_MAPPER_BI_ENCODER_MODEL` | Bi-encoder endpoint URL or local model name |
 | `--bi-encoder-model-name` | `POLICY_MAPPER_BI_ENCODER_MODEL_NAME` | Explicit remote bi-encoder model name |
 | `--cross-encoder-model` | `POLICY_MAPPER_CROSS_ENCODER_MODEL` | Cross-encoder endpoint URL or local model name |
+| `--cross-encoder-model-name` | `POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME` | Explicit remote cross-encoder model name |
 
-If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` to set it explicitly.
+If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` and `--cross-encoder-model-name` to set it explicitly. A bare IP host derives a meaningless name (the first octet), so always set the name for those endpoints.
+
+`--cross-encoder-type` selects the remote reranker API: `score` (default, POSTs `{text_1, text_2}` to `/v1/score`), `rerank` (POSTs `{model, query, documents}` to `/v1/rerank`, as served by vLLM for Qwen3-Reranker), or `generative` (logprob scoring through `/v1/completions`). The `rerank` type raises on HTTP errors and on responses that omit a document, so a failing reranker never produces silent zero scores. Extraction metadata records `cross_encoder_type` and `cross_encoder_model_name`.
 
 Reusable, secret-free environment templates are provided for the recommended GPU configuration and the OpenAI cloud configuration:
 
@@ -326,9 +329,40 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus --no-query-gen \
   --base-url <url> --model <model>
 
+# Warn about loaded risks whose description lacks closing punctuation
+# (possible upstream truncation); off by default
+uv run asago-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus --check-risk-text \
+  --base-url <url> --model <model>
+
 # Rebuild mitigation index (after data file changes)
 python scripts/build_mitigation_index.py
 ```
+
+### Known upstream text defects
+
+Some Nexus risk descriptions are cut mid-sentence upstream. In the CREDO UCF
+catalog (`ai_atlas_nexus/data/knowledge_graph/credo.yaml`), `credo-risk-018`
+("AI deception") and `credo-risk-045` ("Competitive dynamics") end mid-sentence.
+The description of `credo-risk-010` ("Stereotype perpetuation") ends with an
+incomplete copy of the `credo-risk-011` text. The source CSV the catalog was
+generated from has the same truncation.
+
+When `extract` loads the Nexus catalog, it restores these descriptions from the
+Credo AI Unified Control Framework paper (arXiv:2503.05937v1, Appendix A "Risk
+taxonomy" table, <https://arxiv.org/abs/2503.05937>). The overrides are in
+`taxonomy.py::_DESCRIPTION_OVERRIDES`, keyed by risk ID:
+
+- `credo-risk-018` gets the paper's full sentence (page 22).
+- `credo-risk-010` is trimmed to its own first sentence, which is the paper's
+  complete description (page 21).
+- `credo-risk-045` stays as shipped. The paper cuts this description at the same
+  point, so no complete wording is available.
+
+An override applies only while the loaded description still equals the known
+truncated text, so a fixed upstream catalog is never overwritten. Vendored Nexus
+data files are not modified. Pass `--check-risk-text` to list descriptions that
+still lack closing punctuation.
 
 ## Custom Taxonomies
 
