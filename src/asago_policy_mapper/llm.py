@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import os
 import re
 import threading
 from dataclasses import dataclass, field
@@ -86,11 +87,36 @@ class StructuredOutputMode(Enum):
     JSON_SCHEMA sends the schema in the ``response_format`` parameter for
     server-side constrained decoding. JSON falls back to ``json_object`` and
     injects the schema into the system prompt for endpoints without schema
-    support.
+    support. JSON_SCHEMA_WITH_PROMPT also uses server-side constrained
+    decoding, but additionally injects the schema into the system prompt in
+    the block wording the instructor-wrapped client used, preserving the task
+    framing the model saw before the instructor removal.
     """
 
     JSON_SCHEMA = "json_schema"
     JSON = "json"
+    JSON_SCHEMA_WITH_PROMPT = "json_schema_with_prompt"
+
+
+_INSTRUCTOR_SCHEMA_BLOCK = (
+    "\n            As a genius expert, your task is to understand the content and provide\n"
+    "            the parsed objects in json that match the following json_schema:\n"
+    "\n"
+    "\n"
+    "            {schema}\n"
+    "\n"
+    "            Make sure to return an instance of the JSON, not the schema itself\n"
+)
+
+
+def _schema_block(schema: dict[str, Any]) -> str:
+    """Render the schema-in-prompt block exactly as instructor Mode.JSON did.
+
+    The odd 12-space indentation is verbatim from instructor's dedented
+    template: the interpolated schema lines at column 0 break ``dedent``'s
+    common-prefix removal, so the template lines keep their indentation.
+    """
+    return _INSTRUCTOR_SCHEMA_BLOCK.format(schema=json.dumps(schema, indent=2, ensure_ascii=False))
 
 
 _SAFETY_MARGIN = 64
@@ -236,9 +262,17 @@ def budget_max_tokens(
 def create_client(
     config: LLMConfig,
     tracker: TokenTracker | None = None,
-    mode: StructuredOutputMode = StructuredOutputMode.JSON_SCHEMA,
+    mode: StructuredOutputMode | None = None,
 ) -> "_StructuredClient":
-    """Build the tracked structured-output chat client used across the mapper."""
+    """Build the tracked structured-output chat client used across the mapper.
+
+    ``mode`` defaults to ``JSON_SCHEMA``; the ``POLICY_MAPPER_STRUCTURED_OUTPUT_MODE``
+    environment variable overrides it (one of the ``StructuredOutputMode`` values,
+    e.g. ``json_schema_with_prompt`` for battery comparisons).
+    """
+    if mode is None:
+        env = os.environ.get("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE")
+        mode = StructuredOutputMode(env) if env else StructuredOutputMode.JSON_SCHEMA
     client = _StructuredClient(
         OpenAI(base_url=config.base_url, api_key=config.api_key),
         mode=mode,
@@ -531,6 +565,15 @@ class _StructuredClient:
             if getattr(response_model, "__structured_strict__", False):
                 response_format["json_schema"]["strict"] = True
             return response_format
+        if self.mode is StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT:
+            _append_schema_block(messages, schema)
+            response_format = {
+                "type": "json_schema",
+                "json_schema": {"name": response_model.__name__, "schema": schema},
+            }
+            if getattr(response_model, "__structured_strict__", False):
+                response_format["json_schema"]["strict"] = True
+            return response_format
         # JSON fallback: json_object plus the schema appended to the system prompt.
         schema_text = (
             "Respond with a single JSON object that matches this JSON schema exactly:\n"
@@ -541,6 +584,15 @@ class _StructuredClient:
         else:
             messages.insert(0, {"role": "system", "content": schema_text})
         return {"type": "json_object"}
+
+
+def _append_schema_block(messages: list[dict[str, Any]], schema: dict[str, Any]) -> None:
+    """Append the instructor-worded schema block to the first system message."""
+    block = _schema_block(schema)
+    if messages and messages[0].get("role") == "system":
+        messages[0] = {**messages[0], "content": f"{messages[0].get('content', '')}{block}"}
+    else:
+        messages.insert(0, {"role": "system", "content": block.strip("\n")})
 
 
 def _append_correction_messages(messages: list[dict[str, Any]], completion: Any, error: Exception) -> None:

@@ -1,5 +1,21 @@
 # Experiment Log
 
+## 2026-11-05: Structured-Output Mode A/B (instructor removal)
+
+**Description:** Three-arm full-battery comparison (`batteries/risk-selected.yaml`, 27 policies, gemma-4-26b-a4b-it on a vLLM endpoint, catalog at the ai-atlas-nexus pin recorded in `uv.lock`) for replacing instructor with a plain OpenAI SDK structured-output client. Baseline: instructor Mode.JSON (json_object + schema block in the system prompt, free decoding). Arm 2: native `json_schema` response_format (vLLM guided decoding). Arm 3: guided decoding + instructor's verbatim schema block in the prompt (`json_schema_with_prompt`). Wire-level inspection confirmed per-chunk prompts are byte-identical across arms; the divergence enters through the decoding regime.
+
+**Results:**
+
+| Arm | Micro-F1 | Δ vs baseline | Total tokens | Policies F1 down |
+|---|---:|---:|---:|---:|
+| instructor Mode.JSON (baseline) | 0.678 | — | 33,096,644 | — |
+| json_schema (guided decoding) | 0.662 | −0.016 | 27,753,400 (−16.1%) | 22/27 |
+| json_schema + schema block | 0.664 | −0.014 | 32,726,259 (−1.1%) | 18/27 |
+
+Run-to-run noise on the same arm measured ±0.08 F1 per policy (ars: 0.697/0.735/0.776 on identical code), so per-policy deltas are mostly within noise; the systematic direction (sign test, p≈0.001) is real.
+
+**Conclusion:** The F1 shift is caused by vLLM guided decoding itself changing the output distribution; restoring the schema block in the prompt recovers only +0.002 and forfeits the token savings. Prompt wording is not the operative variable (the combined arm tested it directly). `json_schema` is therefore the default: −16% tokens for −0.014 micro-F1. The `json` mode stays available for distribution parity with the instructor stack when quality outweighs tokens. No MLflow run (tracking disabled).
+
 ## 2026-05-28: Cross-Encoder Baseline Evaluation
 
 **Description:** Evaluated off-the-shelf cross-encoder models on a dataset built from enriched ground truth (894 risks
