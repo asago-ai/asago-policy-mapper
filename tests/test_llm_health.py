@@ -3,7 +3,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import httpx
-import instructor
 import pytest
 import test_llm_integration as integration
 from llm_health import (
@@ -15,13 +14,15 @@ from llm_health import (
 )
 from openai import APIConnectionError, APITimeoutError, InternalServerError, OpenAI
 
+from asago_policy_mapper.llm import StructuredOutputMode
+
 BASE_URL = "http://localhost:11434/v1"
 MODEL = "gemma3:1b"
 
 
 @pytest.fixture
 def mock_probe():
-    with patch("llm_health.OpenAI") as factory, patch("llm_health.instructor.from_openai") as wrap:
+    with patch("llm_health.OpenAI") as factory, patch("llm_health._StructuredClient") as wrap:
         api = factory.return_value.__enter__.return_value
         api.models.list.return_value = SimpleNamespace(data=[SimpleNamespace(id=MODEL)])
         client = wrap.return_value
@@ -44,7 +45,7 @@ def test_probe_checks_structured_inference_with_bounded_requests(mock_probe):
 
     factory.assert_called_once_with(base_url=BASE_URL, api_key="none", timeout=PROBE_TIMEOUT_SECONDS, max_retries=0)
     api.models.list.assert_called_once_with()
-    wrap.assert_called_once_with(api, mode=instructor.Mode.JSON_SCHEMA)
+    wrap.assert_called_once_with(api, mode=StructuredOutputMode.JSON_SCHEMA)
     call = client.chat.completions.create.call_args.kwargs
     assert call["model"] == MODEL
     assert call["response_model"] is ProbeAnswer
@@ -128,7 +129,7 @@ def test_probe_rejects_empty_completion(mock_probe, answer):
         (500, "llama-server process has terminated: signal: segmentation fault", "segmentation fault"),
     ],
 )
-def test_probe_with_real_sdk_and_instructor(monkeypatch, status_code, content, expected_error):
+def test_probe_with_real_sdk_and_structured_client(monkeypatch, status_code, content, expected_error):
     requests = []
 
     def respond(request):

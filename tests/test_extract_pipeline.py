@@ -3,8 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from instructor.core import InstructorRetryException
-from instructor_errors import (
+from llm_errors import (
     authentication_failure,
     connection_failure,
     server_error,
@@ -753,7 +752,7 @@ def test_run_causal_synthesis_skips_risk_with_validation_exhaustion(caplog):
     [connection_failure, server_error, authentication_failure],
     ids=["connection-error", "http-5xx", "http-401"],
 )
-def test_run_causal_synthesis_propagates_wrapped_api_errors(make_error):
+def test_run_causal_synthesis_propagates_api_errors(make_error):
     from asago_policy_mapper.llm import LLMConfig
 
     merged, chunks = _causal_risk_and_chunks(["atlas-a", "atlas-b"])
@@ -761,7 +760,7 @@ def test_run_causal_synthesis_propagates_wrapped_api_errors(make_error):
     client = _causal_client("atlas-b", error)
     config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model")
 
-    with pytest.raises(InstructorRetryException) as excinfo:
+    with pytest.raises(type(error)) as excinfo:
         _run_causal_synthesis(merged, chunks, client, config, 4, [])
 
     assert excinfo.value is error

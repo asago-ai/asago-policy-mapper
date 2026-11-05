@@ -125,7 +125,7 @@ def test_group_chunks_none_merges_respects_size_cap():
 
 
 def _make_mock_client(queries_per_call):
-    """Build a mock instructor client that returns GeneratedQueries."""
+    """Build a mock structured-output client that returns GeneratedQueries."""
     client = MagicMock()
 
     def fake_create(**kwargs):

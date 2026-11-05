@@ -5,8 +5,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 import openai
 import pytest
-from instructor.core import InstructorRetryException
-from instructor_errors import (
+from llm_errors import (
     authentication_failure,
     connection_failure,
     json_decode_error,
@@ -31,7 +30,7 @@ from asago_policy_mapper.extract.models import (
     _RiskEvidence,
     _RiskEvidenceList,
 )
-from asago_policy_mapper.llm import LLMConfig, create_client
+from asago_policy_mapper.llm import LLMConfig, ValidationRetryExhausted, create_client
 from asago_policy_mapper.prompts import render_prompt
 
 
@@ -595,12 +594,12 @@ def test_synthesize_causal_chain_validation_exhaustion_returns_none(mock_client,
     [connection_failure, server_error, authentication_failure],
     ids=["connection-error", "http-5xx", "http-401"],
 )
-def test_synthesize_causal_chain_wrapped_api_error_propagates(mock_client, make_error):
+def test_synthesize_causal_chain_api_error_propagates_untouched(mock_client, make_error):
     error = make_error()
     mock_client.chat.completions.create.side_effect = error
     collector: list[LLMCallRecord] = []
 
-    with pytest.raises(InstructorRetryException) as excinfo:
+    with pytest.raises(type(error)) as excinfo:
         synthesize_causal_chain(
             risk_match=_make_risk_match(),
             chunk_texts={0: "Some text.", 2: "More text."},
@@ -613,12 +612,12 @@ def test_synthesize_causal_chain_wrapped_api_error_propagates(mock_client, make_
     assert collector == []
 
 
-def test_synthesize_causal_chain_validation_then_transport_error_propagates(mock_client):
-    # A parse failure on an earlier attempt must not mask a later transport error.
+def test_synthesize_causal_chain_api_error_not_wrapped_as_validation_exhaustion(mock_client):
+    # An APIConnectionError failed_attempts entry must not count as validation exhaustion.
     error = validation_exhaustion(openai.APIConnectionError(request=httpx.Request("POST", "http://localhost")))
     mock_client.chat.completions.create.side_effect = error
 
-    with pytest.raises(InstructorRetryException):
+    with pytest.raises(ValidationRetryExhausted):
         synthesize_causal_chain(
             risk_match=_make_risk_match(),
             chunk_texts={0: "Some text.", 2: "More text."},
@@ -627,7 +626,7 @@ def test_synthesize_causal_chain_validation_then_transport_error_propagates(mock
         )
 
 
-def test_synthesize_causal_chain_non_instructor_error_propagates(mock_client):
+def test_synthesize_causal_chain_non_client_error_propagates(mock_client):
     mock_client.chat.completions.create.side_effect = ConnectionError("endpoint down")
 
     with pytest.raises(ConnectionError):
@@ -640,7 +639,7 @@ def test_synthesize_causal_chain_non_instructor_error_propagates(mock_client):
 
 
 def _real_client(handler):
-    """Build the production client stack (instructor -> tracked create -> retry) over a stubbed transport."""
+    """Build the production client stack (structured client -> tracked create -> retry) over a stubbed transport."""
     config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=1)
     http_client = httpx.Client(transport=httpx.MockTransport(handler))
     with patch(
@@ -688,30 +687,26 @@ def test_synthesize_causal_chain_real_stack_server_error_propagates():
     def handler(request):
         return httpx.Response(503, json={"error": {"message": "unavailable"}})
 
-    with pytest.raises(InstructorRetryException) as excinfo:
+    with pytest.raises(openai.InternalServerError):
         synthesize_causal_chain(
             risk_match=_make_risk_match(),
             chunk_texts={0: "Some text.", 2: "More text."},
             client=_real_client(handler),
             model="test-model",
         )
-
-    assert isinstance(excinfo.value.__cause__, openai.InternalServerError)
 
 
 def test_synthesize_causal_chain_real_stack_connection_error_propagates():
     def handler(request):
         raise httpx.ConnectError("refused", request=request)
 
-    with pytest.raises(InstructorRetryException) as excinfo:
+    with pytest.raises(openai.APIConnectionError):
         synthesize_causal_chain(
             risk_match=_make_risk_match(),
             chunk_texts={0: "Some text.", 2: "More text."},
             client=_real_client(handler),
             model="test-model",
         )
-
-    assert isinstance(excinfo.value.__cause__, openai.APIConnectionError)
 
 
 def test_synthesize_causal_chain_records_call(mock_client):

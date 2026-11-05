@@ -73,6 +73,12 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 - MLflow tracking is enabled by default in the battery runner; set `MLFLOW_TRACKING_URI` to point to your MLflow server. Pass `--no-mlflow` to disable.
 - Prompt templates are synced to the MLflow Prompt Registry at the start of each tracked battery run (hash-based dedup avoids duplicate versions)
 
+## Structured Output Client
+
+`llm.py::create_client` returns a tracked structured-output client over the plain OpenAI SDK (no instructor). Call sites pass `response_model=SomePydanticModel` to `client.chat.completions.create` and receive the validated Pydantic object. The client sends the model's JSON schema as the native `json_schema` `response_format` (`StructuredOutputMode.JSON_SCHEMA`), or `json_object` with the schema in the system prompt (`StructuredOutputMode.JSON`) for endpoints without schema support; JSON content in `message.content` is parsed locally, with markdown-fence stripping.
+
+Error semantics, pinned by tests over a stubbed transport: parse/validation failures retry with an error hint and finally raise `ValidationRetryExhausted` (`failed_attempts` lists every failed attempt). API and transport errors (`openai.APIError`) propagate untouched, except context-length 400s, which reduce the output-token budget and retry. `synthesize_causal_chain` skips a risk only on validation exhaustion and re-raises everything else. `tests/llm_errors.py` builds these exceptions in the shape production raises.
+
 ## Retrieval Architecture Notes
 
 - The default cross-encoder (ms-marco-MiniLM) has AUC ~0.50 on pipeline-mined negatives — it does not discriminate semantically. It functions as a volume reduction filter; the grounding stage provides the actual precision filtering. Do not attempt to tune or rely on its scores for ranking. See `experiments/EXPERIMENT_LOG.md` for details.

@@ -108,7 +108,7 @@ LLM prompts are Jinja2 templates in `src/asago_policy_mapper/templates/prompts/`
 
 ## LLM Integration
 
-All LLM calls go through `llm.py`, which wraps the OpenAI client with [instructor](https://github.com/instructor-ai/instructor) for structured Pydantic outputs. `TokenTracker` accumulates token usage across pipeline stages; `LLMConfig` holds connection details.
+All LLM calls go through `llm.py`, which wraps the plain OpenAI SDK client with a structured-output layer: `response_model=SomePydanticModel` is sent as a `json_schema` `response_format` (or `json_object` with the schema in the prompt for endpoints without schema support) and the JSON content is validated locally against the Pydantic model. `TokenTracker` accumulates token usage across pipeline stages; `LLMConfig` holds connection details.
 
 - Automatic retry on validation errors (appends error hint), context overflow detection (reduces the configured output-token parameter), and prompt truncation on incomplete output
 - `LLMConfig.max_tokens` (default 8192) is always sent on chat completions. Without this, vLLM treats omitted `max_tokens` as “fill the remaining context”, so grounding calls can generate for tens of minutes. Override the budget with `--max-tokens`, `POLICY_MAPPER_MAX_OUTPUT_TOKENS`, or `--max-context`.
