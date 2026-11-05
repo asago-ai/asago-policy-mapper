@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Literal
 
-import instructor
 import pytest
 from llm_health import LLMHealthError, LLMUnavailableError, probe_llm
 
@@ -36,7 +35,7 @@ from asago_policy_mapper.extract.models import (
 from asago_policy_mapper.extract.pipeline import run_extraction
 from asago_policy_mapper.extract.querygen import ChunkGroup, generate_queries
 from asago_policy_mapper.extract.retrieve import judge_borderline
-from asago_policy_mapper.llm import LLMConfig, SlimModel, TokenTracker, create_client
+from asago_policy_mapper.llm import LLMConfig, SlimModel, StructuredOutputMode, TokenTracker, create_client
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -171,13 +170,13 @@ def llm_config():
 
 @pytest.fixture(scope="session")
 def llm_client(llm_config):
-    """Instructor client using JSON_SCHEMA mode for server-side constrained decoding.
+    """Structured client using JSON_SCHEMA mode for server-side constrained decoding.
 
-    Unlike the default Mode.JSON (schema in prompt), Mode.JSON_SCHEMA makes
+    Unlike the default JSON mode (schema in prompt), JSON_SCHEMA makes
     Ollama enforce the schema at the token level, for small models (i.e. Gemma3)
     """
     tracker = TokenTracker()
-    client = create_client(llm_config, tracker=tracker, mode=instructor.Mode.JSON_SCHEMA)
+    client = create_client(llm_config, tracker=tracker, mode=StructuredOutputMode.JSON_SCHEMA)
     return client, tracker
 
 
@@ -203,8 +202,8 @@ class SimpleAnswer(SlimModel):
     confidence: float
 
 
-def test_instructor_structured_output(llm_client, llm_config):
-    """Instructor + model produce valid structured output."""
+def test_structured_output(llm_client, llm_config):
+    """Structured client + model produce valid structured output."""
     client, _ = llm_client
     result = client.chat.completions.create(
         model=llm_config.model,
@@ -223,8 +222,8 @@ class ConstrainedAnswer(SlimModel):
     reason: str
 
 
-def test_instructor_retry_on_validation(llm_client, llm_config):
-    """Instructor retries until the model produces a valid Literal value."""
+def test_retry_on_validation(llm_client, llm_config):
+    """The client retries until the model produces a valid Literal value."""
     client, _ = llm_client
     result = client.chat.completions.create(
         model=llm_config.model,

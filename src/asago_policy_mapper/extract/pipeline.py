@@ -663,6 +663,7 @@ def run_extraction(
             cross_encoder_type=retrieval.cross_encoder_type,
             bi_encoder_api_key=retrieval.bi_encoder_api_key,
             bi_encoder_model_name=retrieval.bi_encoder_model_name,
+            cross_encoder_model_name=retrieval.cross_encoder_model_name,
         )
 
     call_collector: list[LLMCallRecord] = []

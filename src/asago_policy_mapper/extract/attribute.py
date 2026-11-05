@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
 import time
+
+from pydantic import ValidationError
 
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
@@ -12,6 +15,7 @@ from asago_policy_mapper.extract.models import (
     _CausalChains,
     _RiskEvidenceList,
 )
+from asago_policy_mapper.llm import ResponseParsingError, ValidationRetryExhausted
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
@@ -263,6 +267,21 @@ def ground_risk_group(
     return result
 
 
+_OUTPUT_VALIDATION_ERRORS = (ValidationError, json.JSONDecodeError, ResponseParsingError)
+
+
+def _is_output_validation_exhaustion(exc: ValidationRetryExhausted) -> bool:
+    """Tell whether the model output, not the endpoint, caused the exhaustion.
+
+    The structured-output client records one entry per parse or validation
+    failure in ``failed_attempts`` and chains the last error as
+    ``__cause__``, so a non-empty list with a parse/validation cause means the
+    retries ran out on unfixable model output. Anything else is not a
+    validation exhaustion.
+    """
+    return bool(exc.failed_attempts) and isinstance(exc.__cause__, _OUTPUT_VALIDATION_ERRORS)
+
+
 def synthesize_causal_chain(
     risk_match: RiskMatch,
     chunk_texts: dict[int, str],
@@ -292,12 +311,24 @@ def synthesize_causal_chain(
     )
 
     t0 = time.time()
-    results_resp = client.chat.completions.create(
-        model=model,
-        response_model=_CausalChains,
-        messages=messages,
-    )
-    results = results_resp.items
+    retry_exhausted = False
+    try:
+        results_resp = client.chat.completions.create(
+            model=model,
+            response_model=_CausalChains,
+            messages=messages,
+        )
+        results = results_resp.items
+    except ValidationRetryExhausted as exc:
+        if not _is_output_validation_exhaustion(exc):
+            raise
+        logger.warning(
+            "Causal synthesis exhausted retries for %s (%s); no causal chain",
+            risk_match.risk_id,
+            type(exc.__cause__).__name__,
+        )
+        results = []
+        retry_exhausted = True
     duration_ms = (time.time() - t0) * 1000
 
     chain = results[0] if results else None
@@ -320,7 +351,7 @@ def synthesize_causal_chain(
                 messages=messages,
                 response=chain.model_dump() if chain else {},
                 duration_ms=duration_ms,
-                result_summary="synthesized" if chain else "empty",
+                result_summary="synthesized" if chain else "retry_exhausted" if retry_exhausted else "empty",
             )
         )
 

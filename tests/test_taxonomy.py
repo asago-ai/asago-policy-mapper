@@ -1,8 +1,15 @@
 from pathlib import Path
 
 import pytest
+from ai_atlas_nexus.ai_risk_ontology.datamodel.ai_risk_ontology import Risk
 
-from asago_policy_mapper.taxonomy import load_custom_taxonomy
+from asago_policy_mapper.taxonomy import (
+    _DESCRIPTION_OVERRIDES,
+    apply_description_overrides,
+    find_unterminated_descriptions,
+    load_custom_taxonomy,
+    warn_unterminated_descriptions,
+)
 
 
 @pytest.fixture
@@ -207,3 +214,153 @@ def test_example_file_loads():
     risks = load_custom_taxonomy(example)
     assert len(risks) == 5
     assert all(r.isDefinedByTaxonomy == "red-hat-ai-controls" for r in risks)
+
+
+def _risk(rid: str, description: str) -> Risk:
+    return Risk(id=rid, name=rid, description=description, isDefinedByTaxonomy="test", type="Risk")
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        "The system may fail.",
+        "Is this a risk?",
+        "It fails!",
+        "It may fail (e.g. under load.)",
+        'It is called "unsafe."',
+        "It is called \u201cunsafe.\u201d",
+        "Trailing whitespace is ignored.  \n",
+        # Closing braces, and nested closing brackets/quotes, after the stop.
+        "Set to {unsafe.}",
+        "It may fail (e.g. [under load.)]",
+        '{"note": "It fails."}',
+        "Nested (\u201cquoted [text.]\u201d)",
+    ],
+)
+def test_terminated_description_not_flagged(description):
+    assert find_unterminated_descriptions([_risk("r", description)]) == []
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        # Truncated upstream text as shipped in the Nexus CREDO UCF catalog (credo-risk-018).
+        "The AI system may misrepresent its own capabilities or limitations, "
+        "potentially leading to misplaced trust or inappropriate",
+        "Label: definition without a full stop",
+        "Ends with a comma,",
+        "Ends with a closing paren (but no stop)",
+    ],
+)
+def test_unterminated_description_flagged(description):
+    risk = _risk("r", description)
+    assert find_unterminated_descriptions([risk]) == [risk]
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        "The list goes on...",
+        "The list goes on\u2026",
+        "It trails off (and so on...)",
+        "It trails off \u201cand so on\u2026\u201d",
+    ],
+)
+def test_trailing_ellipsis_flagged(description):
+    """An ellipsis marks elided text, so it is flagged even though "..." ends in a full stop."""
+    risk = _risk("r", description)
+    assert find_unterminated_descriptions([risk]) == [risk]
+
+
+@pytest.mark.parametrize("description", ["", "   ", "\n\t "])
+def test_empty_or_whitespace_description_not_flagged(description):
+    """Empty and whitespace-only descriptions have no text that could have been cut."""
+    assert find_unterminated_descriptions([_risk("r", description)]) == []
+
+
+def test_warn_unterminated_descriptions(caplog):
+    import logging
+
+    risks = [_risk("ok", "Complete sentence."), _risk("cut", "This sentence stops in the")]
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.taxonomy"):
+        flagged = warn_unterminated_descriptions(risks)
+    assert flagged == ["cut"]
+    assert "Risk 'cut' description lacks closing punctuation" in caplog.text
+    assert "'ok'" not in caplog.text
+
+
+# Independent of _DESCRIPTION_OVERRIDES: the truncated texts as shipped in the Nexus
+# CREDO UCF catalog, and the texts from arXiv:2503.05937v1, Appendix A, they must become.
+_PINNED_CREDO_OVERRIDES = [
+    (
+        "credo-risk-010",
+        "The AI system's outputs may explicitly reflect or reinforce harmful stereotypes, prejudices, "
+        "or biased characterizations of specific groups. The AI system may exhibit unjustified or "
+        "harmful differences in accuracy, quality, or outcomes across demographic groups, potentially "
+        "leading to unfair treatment and discrimination. This includes both disparate error rates that "
+        "affect opportunity and",
+        "The AI system's outputs may explicitly reflect or reinforce harmful stereotypes, prejudices, "
+        "or biased characterizations of specific groups.",
+    ),
+    (
+        "credo-risk-018",
+        "The AI system may misrepresent its own capabilities or limitations, potentially leading to "
+        "misplaced trust or inappropriate",
+        "The AI system may misrepresent its own capabilities or limitations, potentially leading to "
+        "misplaced trust or inappropriate use.",
+    ),
+]
+
+
+@pytest.mark.parametrize(("risk_id", "truncated", "restored"), _PINNED_CREDO_OVERRIDES)
+def test_pinned_credo_override(risk_id, truncated, restored):
+    (patched,) = apply_description_overrides([_risk(risk_id, truncated)])
+    assert patched.description == restored
+
+
+@pytest.mark.parametrize("risk_id", sorted(_DESCRIPTION_OVERRIDES))
+def test_description_override_restores_truncated_text(risk_id):
+    truncated, restored = _DESCRIPTION_OVERRIDES[risk_id]
+    (patched,) = apply_description_overrides([_risk(risk_id, truncated + "\n")])
+    assert patched.id == risk_id
+    assert patched.description == restored
+
+
+@pytest.mark.parametrize("risk_id", sorted(_DESCRIPTION_OVERRIDES))
+def test_description_override_text_is_terminated(risk_id):
+    truncated, restored = _DESCRIPTION_OVERRIDES[risk_id]
+    assert find_unterminated_descriptions([_risk(risk_id, truncated)])
+    assert find_unterminated_descriptions([_risk(risk_id, restored)]) == []
+
+
+@pytest.mark.parametrize("risk_id", sorted(_DESCRIPTION_OVERRIDES))
+def test_description_override_keeps_surviving_text(risk_id):
+    """Each restoration either completes the truncated text or trims it to a leading part."""
+    truncated, restored = _DESCRIPTION_OVERRIDES[risk_id]
+    assert restored.startswith(truncated) or truncated.startswith(restored)
+
+
+def test_description_override_skips_changed_upstream_text():
+    """A description that no longer equals the known truncated text is left alone."""
+    fixed_upstream = _risk("credo-risk-018", "An upstream fix with different wording.")
+    (result,) = apply_description_overrides([fixed_upstream])
+    assert result is fixed_upstream
+
+
+def test_description_override_skips_other_risks():
+    truncated, _ = _DESCRIPTION_OVERRIDES["credo-risk-018"]
+    other = _risk("custom-001", truncated)
+    (result,) = apply_description_overrides([other])
+    assert result is other
+
+
+def test_description_override_does_not_mutate_input():
+    truncated, _ = _DESCRIPTION_OVERRIDES["credo-risk-018"]
+    original = _risk("credo-risk-018", truncated)
+    apply_description_overrides([original])
+    assert original.description == truncated
+
+
+def test_no_override_for_credo_risk_045():
+    """The UCF paper itself cuts credo-risk-045, so no complete text exists to restore."""
+    assert "credo-risk-045" not in _DESCRIPTION_OVERRIDES

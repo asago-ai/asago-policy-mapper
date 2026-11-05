@@ -3,12 +3,15 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import httpx
+import openai
 import pytest
-from instructor.core import IncompleteOutputException, InstructorRetryException
 
 from asago_policy_mapper.llm import (
+    IncompleteOutputException,
     LLMConfig,
     TokenTracker,
+    ValidationRetryExhausted,
     _call_with_retry,
     _extract_response_content,
     _IncompleteOutput,
@@ -356,7 +359,7 @@ class TestCallWithRetry:
 
     def test_incomplete_output_with_truncatable_messages_retries(self):
         long_content = "x" * 2000
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=[_IncompleteOutput(cause), ("ok", "comp")])
         kwargs = {"messages": [{"role": "user", "content": long_content}], "max_retries": 0}
         config = self._make_config()
@@ -366,7 +369,7 @@ class TestCallWithRetry:
         assert do_call.call_count == 2
 
     def test_incomplete_output_short_messages_raises(self):
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=_IncompleteOutput(cause))
         kwargs = {"messages": [{"role": "user", "content": "short"}], "max_retries": 0}
         config = self._make_config()
@@ -376,7 +379,7 @@ class TestCallWithRetry:
 
     def test_incomplete_output_records_incident_when_cannot_truncate(self):
         tracker = TokenTracker()
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=_IncompleteOutput(cause))
         kwargs = {"messages": [{"role": "user", "content": "short"}], "max_retries": 0}
         config = self._make_config()
@@ -388,7 +391,7 @@ class TestCallWithRetry:
     def test_incomplete_output_records_incident_on_retry(self):
         tracker = TokenTracker()
         long_content = "x" * 2000
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=[_IncompleteOutput(cause), ("ok", "comp")])
         kwargs = {"messages": [{"role": "user", "content": long_content}], "max_retries": 0}
         config = self._make_config()
@@ -398,7 +401,7 @@ class TestCallWithRetry:
 
     def test_messages_shortened_on_retry(self):
         long_content = "x" * 2000
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
 
         captured_kwargs = {}
 
@@ -425,12 +428,18 @@ class TestCallWithRetry:
 
 
 def _make_retry_exc(msg, failed_attempts=None):
-    """Create an InstructorRetryException with the given message and failed attempts."""
-    return InstructorRetryException(
-        msg,
-        n_attempts=1,
-        total_usage=0,
-        failed_attempts=failed_attempts,
+    """Create a ValidationRetryExhausted with the given message and failed attempts."""
+    return ValidationRetryExhausted(msg, failed_attempts=failed_attempts)
+
+
+def _context_overflow_error() -> openai.BadRequestError:
+    """A 400 in the shape endpoints report context-length overflow."""
+    request = httpx.Request("POST", "http://test/v1/chat/completions")
+    response = httpx.Response(400, request=request)
+    return openai.BadRequestError(
+        "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens",
+        response=response,
+        body=None,
     )
 
 
@@ -460,7 +469,7 @@ class TestRetryWithValidation:
         do_call.assert_called_once()
 
     def test_incomplete_output_wraps_in_incomplete_output(self):
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=cause)
         messages = self._make_messages()
         kwargs = {"messages": messages, "max_tokens": 4096}
@@ -480,10 +489,7 @@ class TestRetryWithValidation:
 
     def test_context_overflow_reduces_max_tokens(self):
         """Context overflow with a valid reduction retries with lower max_tokens."""
-        overflow_msg = (
-            "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens"
-        )
-        exc = _make_retry_exc(overflow_msg)
+        exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
         original = copy.deepcopy(messages)
@@ -505,10 +511,7 @@ class TestRetryWithValidation:
         assert kwargs["max_tokens"] == 4160
 
     def test_context_overflow_records_incident(self):
-        overflow_msg = (
-            "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens"
-        )
-        exc = _make_retry_exc(overflow_msg)
+        exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
         original = copy.deepcopy(messages)
@@ -528,10 +531,7 @@ class TestRetryWithValidation:
         assert any(i["kind"] == "context_overflow" for i in tracker.incidents)
 
     def test_context_overflow_reduces_configured_completion_parameter(self):
-        overflow_msg = (
-            "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens"
-        )
-        exc = _make_retry_exc(overflow_msg)
+        exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
         original = copy.deepcopy(messages)
@@ -587,7 +587,7 @@ class TestRetryWithValidation:
         config = self._make_config()
         tracker = TokenTracker()
 
-        with pytest.raises(InstructorRetryException):
+        with pytest.raises(ValidationRetryExhausted):
             _retry_with_validation(
                 do_call,
                 kwargs,
@@ -715,22 +715,22 @@ class TestApplyBudget:
     def test_service_tier_is_added_to_chat_completion_request(self):
         client = MagicMock()
         completion = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=2))
-        client.chat.completions.create_with_completion.return_value = ("parsed", completion)
+        client.create_with_completion.return_value = ("parsed", completion)
         config = LLMConfig(base_url="http://test", model="test-model", service_tier="flex")
 
         _wrap_with_tracking(client, TokenTracker(), config)
         result = client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
 
         assert result == "parsed"
-        assert client.chat.completions.create_with_completion.call_args.kwargs["service_tier"] == "flex"
+        assert client.create_with_completion.call_args.kwargs["service_tier"] == "flex"
 
     def test_service_tier_is_omitted_when_not_configured(self):
         client = MagicMock()
         completion = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=2))
-        client.chat.completions.create_with_completion.return_value = ("parsed", completion)
+        client.create_with_completion.return_value = ("parsed", completion)
         config = LLMConfig(base_url="http://test", model="test-model")
 
         _wrap_with_tracking(client, TokenTracker(), config)
         client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
 
-        assert "service_tier" not in client.chat.completions.create_with_completion.call_args.kwargs
+        assert "service_tier" not in client.create_with_completion.call_args.kwargs

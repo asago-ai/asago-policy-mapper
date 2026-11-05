@@ -1,9 +1,10 @@
 """Tests for variant-selective grounding (ground_variants + pipeline integration)."""
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from asago_policy_mapper.extract.attribute import ground_variants
+from asago_policy_mapper.extract.index import RiskIndex
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
     LLMCallRecord,
@@ -14,6 +15,7 @@ from asago_policy_mapper.extract.models import (
 )
 from asago_policy_mapper.extract.pipeline import (
     _ground_variants_one,
+    _run_expansion,
     _run_variant_grounding,
 )
 from asago_policy_mapper.prompts import render_prompt
@@ -603,3 +605,64 @@ class TestRunVariantGrounding:
         messages = call_args.kwargs.get("messages", call_args[1].get("messages", []))
         user_msg = messages[-1]["content"] if messages else ""
         assert "padded context" in user_msg
+
+
+# ---------------------------------------------------------------------------
+# Sibling expansion onto variant risks
+# ---------------------------------------------------------------------------
+
+
+def _catalog_risk(risk_id, name, description, taxonomy, parent):
+    return SimpleNamespace(
+        id=risk_id,
+        name=name,
+        description=description,
+        concern="",
+        isDefinedByTaxonomy=taxonomy,
+        isPartOf=parent,
+    )
+
+
+def test_expansion_carries_variant_taxonomy_onto_expanded_variant_risks():
+    """A sibling that is a ``---`` variant keeps its own taxonomy, never an empty string."""
+    catalog = [
+        _catalog_risk("R-001", "Model bias", "Systematic errors.", "other-taxonomy", "grp"),
+        *[_catalog_risk(v["risk_id"], v["name"], v["description"], v["taxonomy"], "grp") for v in VARIANTS],
+    ]
+    found = RiskMatch(
+        risk_id="R-001",
+        risk_name="Model bias",
+        risk_description="Systematic errors.",
+        confidence=0.9,
+        grounding_confidence="high",
+        accepted_by="threshold",
+        evidence=[EvidenceSpan(text="quote", document="doc.md", chunk_index=0)],
+        scores=RetrievalScores(bm25_rank=1, embedding_distance=0.1, cross_encoder_score=0.9, rrf_score=0.03),
+    )
+
+    def _ground_all(**kwargs):
+        evidence = [EvidenceSpan(text="quote", document="doc.md", chunk_index=0)]
+        return {r["risk_id"]: (evidence, "medium") for r in kwargs["risks"]}
+
+    with (
+        patch("asago_policy_mapper.extract.index._load_bi_encoder", return_value=(None, None, None)),
+        patch("asago_policy_mapper.extract.index._load_cross_encoder", return_value=(None, None, False, False)),
+        patch("asago_policy_mapper.extract.pipeline.ground_risk_group", side_effect=_ground_all),
+    ):
+        index = RiskIndex(catalog)
+        merged, _ = _run_expansion(
+            catalog,
+            [found],
+            [],
+            _make_chunks(["chunk about biometric and health data"]),
+            ["doc.md"],
+            index,
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            1,
+            None,
+        )
+
+    expanded = {m.risk_id: m for m in merged if m.accepted_by == "expansion"}
+    assert set(expanded) == {v["risk_id"] for v in VARIANTS}
+    assert {m.taxonomy for m in expanded.values()} == {"ai-risk-taxonomy"}

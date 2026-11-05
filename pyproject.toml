@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Policy risk extraction using AI Atlas Nexus risk taxonomy"
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "instructor>=1.0",
     "openai>=1.0",
     "pydantic>=2.0",
     "typer>=0.12",

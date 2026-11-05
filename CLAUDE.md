@@ -66,11 +66,18 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 - `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points to a local clone of `github.com/IBM/ai-atlas-nexus`
 - Risk IDs are taxonomy-prefixed: `atlas-` → ibm-risk-atlas, `nist-` → nist-ai-rmf, `credo-` → credo-ucf, etc. (see `evals/eval.py::_TAXONOMY_PREFIXES`)
 - Excluded taxonomies (not loaded from Nexus): category-level (`nist-ai-rmf`, `owasp-llm-2.0`, `ailuminate-v1.0`, `owasp-asi`, `shieldgemma-taxonomy`) and others (`mit-ai-risk-repository-causal`, `ibm-granite-guardian`) — see `cli.py::EXCLUDED_TAXONOMIES`
+- `--check-risk-text` (off by default) logs a warning for each loaded risk whose description lacks closing punctuation; see `taxonomy.py::warn_unterminated_descriptions`. A trailing ellipsis is flagged too. Empty and whitespace-only descriptions are not flagged. Some CREDO UCF descriptions are truncated upstream, and the Nexus source CSV is truncated too. `taxonomy.py::apply_description_overrides` restores them at catalog load from the Unified Control Framework paper (arXiv:2503.05937v1, Appendix A). Each `_DESCRIPTION_OVERRIDES` entry applies only while the loaded text still equals the known truncated text. `credo-risk-045` is cut in the paper too, so it stays unpatched. Add an override only with text copied verbatim from the original source. Never complete a description yourself.
 - `--custom-taxonomy` flag loads user-provided risk YAML files via `taxonomy.py`; custom risks are tier 1 (individual risks, not categories), appended to Nexus risks before extraction. No mitigations or cross-taxonomy mappings for custom risks.
 - `LLMCallRecord` captures every LLM call (messages, response, timing) in the ExtractionResult for analysis/debugging
 - `debug.py` writes per-call JSON files when `--debug <dir>` is passed
 - MLflow tracking is enabled by default in the battery runner; set `MLFLOW_TRACKING_URI` to point to your MLflow server. Pass `--no-mlflow` to disable.
 - Prompt templates are synced to the MLflow Prompt Registry at the start of each tracked battery run (hash-based dedup avoids duplicate versions)
+
+## Structured Output Client
+
+`llm.py::create_client` returns a tracked structured-output client over the plain OpenAI SDK (no instructor). Call sites pass `response_model=SomePydanticModel` to `client.chat.completions.create` and receive the validated Pydantic object. The client sends the model's JSON schema as the native `json_schema` `response_format` (`StructuredOutputMode.JSON_SCHEMA`, the default), `json_object` with the schema in the system prompt (`StructuredOutputMode.JSON`) for endpoints without schema support, or both (`JSON_SCHEMA_WITH_PROMPT`, kept for battery comparisons). The mode is overridden by the `POLICY_MAPPER_STRUCTURED_OUTPUT_MODE` environment variable. JSON content in `message.content` is parsed locally, with markdown-fence stripping. Battery finding (2026-11-05): vLLM guided decoding under `JSON_SCHEMA` costs about −0.014 micro-F1 and saves about 16% tokens versus the previous schema-in-prompt wire format; `JSON` preserves the old distribution.
+
+Error semantics, pinned by tests over a stubbed transport: parse/validation failures retry with an error hint and finally raise `ValidationRetryExhausted` (`failed_attempts` lists every failed attempt). API and transport errors (`openai.APIError`) propagate untouched, except context-length 400s, which reduce the output-token budget and retry. `synthesize_causal_chain` skips a risk only on validation exhaustion and re-raises everything else. `tests/llm_errors.py` builds these exceptions in the shape production raises.
 
 ## Retrieval Architecture Notes
 

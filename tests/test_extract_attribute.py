@@ -1,5 +1,18 @@
+import logging
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+import httpx
+import openai
+import pytest
+from llm_errors import (
+    authentication_failure,
+    connection_failure,
+    json_decode_error,
+    pydantic_validation_error,
+    server_error,
+    validation_exhaustion,
+)
 
 from asago_policy_mapper.extract.attribute import (
     ground_and_extract_evidence,
@@ -17,6 +30,7 @@ from asago_policy_mapper.extract.models import (
     _RiskEvidence,
     _RiskEvidenceList,
 )
+from asago_policy_mapper.llm import LLMConfig, ValidationRetryExhausted, create_client
 from asago_policy_mapper.prompts import render_prompt
 
 
@@ -547,6 +561,152 @@ def test_synthesize_causal_chain_empty_strings_return_none(mock_client):
     )
 
     assert result is None
+
+
+@pytest.mark.parametrize(
+    "make_cause",
+    [pydantic_validation_error, json_decode_error],
+    ids=["pydantic-validation-error", "json-decode-error"],
+)
+def test_synthesize_causal_chain_validation_exhaustion_returns_none(mock_client, caplog, make_cause):
+    mock_client.chat.completions.create.side_effect = validation_exhaustion(make_cause())
+    collector: list[LLMCallRecord] = []
+
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.extract.attribute"):
+        result = synthesize_causal_chain(
+            risk_match=_make_risk_match("atlas-bias"),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=mock_client,
+            model="test-model",
+            call_collector=collector,
+        )
+
+    assert result is None
+    warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert any("atlas-bias" in r.getMessage() for r in warnings)
+    assert len(collector) == 1
+    assert collector[0].result_summary == "retry_exhausted"
+    assert collector[0].response == {}
+
+
+@pytest.mark.parametrize(
+    "make_error",
+    [connection_failure, server_error, authentication_failure],
+    ids=["connection-error", "http-5xx", "http-401"],
+)
+def test_synthesize_causal_chain_api_error_propagates_untouched(mock_client, make_error):
+    error = make_error()
+    mock_client.chat.completions.create.side_effect = error
+    collector: list[LLMCallRecord] = []
+
+    with pytest.raises(type(error)) as excinfo:
+        synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=mock_client,
+            model="test-model",
+            call_collector=collector,
+        )
+
+    assert excinfo.value is error
+    assert collector == []
+
+
+def test_synthesize_causal_chain_api_error_not_wrapped_as_validation_exhaustion(mock_client):
+    # An APIConnectionError failed_attempts entry must not count as validation exhaustion.
+    error = validation_exhaustion(openai.APIConnectionError(request=httpx.Request("POST", "http://localhost")))
+    mock_client.chat.completions.create.side_effect = error
+
+    with pytest.raises(ValidationRetryExhausted):
+        synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=mock_client,
+            model="test-model",
+        )
+
+
+def test_synthesize_causal_chain_non_client_error_propagates(mock_client):
+    mock_client.chat.completions.create.side_effect = ConnectionError("endpoint down")
+
+    with pytest.raises(ConnectionError):
+        synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=mock_client,
+            model="test-model",
+        )
+
+
+def _real_client(handler):
+    """Build the production client stack (structured client -> tracked create -> retry) over a stubbed transport."""
+    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=1)
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+    with patch(
+        "asago_policy_mapper.llm.OpenAI",
+        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+    ):
+        return create_client(config)
+
+
+def _completion_response(content):
+    return httpx.Response(
+        200,
+        json={
+            "id": "chatcmpl-1",
+            "object": "chat.completion",
+            "created": 0,
+            "model": "test-model",
+            "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": content}}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+        },
+    )
+
+
+def test_synthesize_causal_chain_real_stack_invalid_output_is_skipped(caplog):
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return _completion_response('{"items": "not a list"}')
+
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.extract.attribute"):
+        result = synthesize_causal_chain(
+            risk_match=_make_risk_match("atlas-bias"),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=_real_client(handler),
+            model="test-model",
+        )
+
+    assert result is None
+    assert len(calls) == 2
+    assert any("atlas-bias" in r.getMessage() for r in caplog.records if r.levelno == logging.WARNING)
+
+
+def test_synthesize_causal_chain_real_stack_server_error_propagates():
+    def handler(request):
+        return httpx.Response(503, json={"error": {"message": "unavailable"}})
+
+    with pytest.raises(openai.InternalServerError):
+        synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=_real_client(handler),
+            model="test-model",
+        )
+
+
+def test_synthesize_causal_chain_real_stack_connection_error_propagates():
+    def handler(request):
+        raise httpx.ConnectError("refused", request=request)
+
+    with pytest.raises(openai.APIConnectionError):
+        synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=_real_client(handler),
+            model="test-model",
+        )
 
 
 def test_synthesize_causal_chain_records_call(mock_client):
