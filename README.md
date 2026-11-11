@@ -265,6 +265,13 @@ uv sync
 
 You need a local clone of [ai-atlas-nexus](https://github.com/IBM/ai-atlas-nexus) — set its path via `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag.
 
+The clone **must be checked out at the `ai-atlas-nexus` commit pinned in `uv.lock`**. At startup the clone's data files are validated against the ontology models of the pinned library version, and a clone that is older *or* newer than the pin fails with pydantic validation errors. After cloning (and after any `uv lock --upgrade-package ai-atlas-nexus`), sync the clone to the pin from the repo root:
+
+```bash
+git -C /path/to/ai-atlas-nexus fetch origin
+git -C /path/to/ai-atlas-nexus checkout "$(grep -oE 'ai-atlas-nexus\.git\?rev=[^"]*#[0-9a-f]{40}' uv.lock | head -1 | sed 's/.*#//')"
+```
+
 ## Usage
 
 ### Extract risks from a policy document

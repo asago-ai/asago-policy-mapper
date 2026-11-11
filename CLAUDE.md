@@ -63,7 +63,7 @@ The pipeline in `src/asago_policy_mapper/extract/pipeline.py` has several altern
 
 ## Key Conventions
 
-- `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points to a local clone of `github.com/IBM/ai-atlas-nexus`
+- `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points to a local clone of `github.com/IBM/ai-atlas-nexus`; the clone must be checked out at the `ai-atlas-nexus` commit pinned in `uv.lock` (see README Setup for the sync command) — startup validates the clone's data against the pinned ontology models and fails on any skew
 - Risk IDs are taxonomy-prefixed: `atlas-` → ibm-risk-atlas, `nist-` → nist-ai-rmf, `credo-` → credo-ucf, etc. (see `evals/eval.py::_TAXONOMY_PREFIXES`)
 - Excluded taxonomies (not loaded from Nexus): category-level (`nist-ai-rmf`, `owasp-llm-2.0`, `ailuminate-v1.0`, `owasp-asi`, `shieldgemma-taxonomy`) and others (`mit-ai-risk-repository-causal`, `ibm-granite-guardian`) — see `cli.py::EXCLUDED_TAXONOMIES`
 - `--check-risk-text` (off by default) logs a warning for each loaded risk whose description lacks closing punctuation; see `taxonomy.py::warn_unterminated_descriptions`. A trailing ellipsis is flagged too. Empty and whitespace-only descriptions are not flagged. Some CREDO UCF descriptions are truncated upstream, and the Nexus source CSV is truncated too. `taxonomy.py::apply_description_overrides` restores them at catalog load from the Unified Control Framework paper (arXiv:2503.05937v1, Appendix A). Each `_DESCRIPTION_OVERRIDES` entry applies only while the loaded text still equals the known truncated text. `credo-risk-045` is cut in the paper too, so it stays unpatched. Add an override only with text copied verbatim from the original source. Never complete a description yourself.
