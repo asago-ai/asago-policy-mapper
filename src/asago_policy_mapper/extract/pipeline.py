@@ -121,7 +121,7 @@ def _ground_one(
     chunk = chunks[cr.chunk_index]
     text = context_text if context_text else chunk.text
     merged: dict[str, tuple[list, str]] = {}
-    for _ in range(passes):
+    for pass_num in range(1, passes + 1):
         grounded = ground_and_extract_evidence(
             chunk_text=text,
             candidates=cr.accepted,
@@ -133,6 +133,14 @@ def _ground_one(
             section=chunk.section,
             call_collector=call_collector,
             max_batch_size=max_batch_size,
+        )
+        logger.info(
+            "Grounding chunk %d/%d pass %d/%d: %d risks grounded",
+            cr.chunk_index + 1,
+            len(chunks),
+            pass_num,
+            passes,
+            len(grounded),
         )
         for rid, val in grounded.items():
             if rid not in merged:
@@ -353,6 +361,12 @@ def _run_variant_grounding(
 
     if not parent_matches:
         return grounded_matches
+
+    logger.info(
+        "Variant grounding: %d parent matches (%d non-parent matches kept as-is)",
+        len(parent_matches),
+        len(non_parent_matches),
+    )
 
     variant_matches: list[RiskMatch] = []
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
@@ -639,6 +653,7 @@ def run_extraction(
         if not chunks:
             return _empty_result(documents)
         chunk_contexts = build_chunk_contexts(chunks)
+    logger.info("Chunked %d document(s) into %d chunks", len(parsed), len(chunks))
 
     if not _document_discusses_agents([p.content for p in parsed]):
         original_count = len(risks)

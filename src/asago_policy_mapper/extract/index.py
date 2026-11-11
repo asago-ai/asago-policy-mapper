@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 import numpy as np
 from rank_bm25 import BM25Okapi
@@ -314,7 +315,13 @@ def _load_colbert(model_name, descriptions):
 
 
 def _load_bi_encoder(model_name, descriptions, query_instruction="", api_key="none", remote_model_name=None):
+    t0 = time.monotonic()
     if _is_remote(model_name):
+        logger.info(
+            "Embedding %d risk descriptions via remote bi-encoder %s",
+            len(descriptions),
+            remote_model_name or model_name,
+        )
         remote = _RemoteBiEncoder(
             model_name, query_instruction=query_instruction, api_key=api_key, model_name=remote_model_name
         )
@@ -322,10 +329,22 @@ def _load_bi_encoder(model_name, descriptions, query_instruction="", api_key="no
             embeddings = remote.encode(descriptions, normalize=True)
         except Exception as e:
             raise RuntimeError(f"Failed to encode corpus via remote bi-encoder at {model_name}: {e}") from e
-        logger.info("Remote bi-encoder index built: %d risks, %s", len(descriptions), model_name)
+        logger.info(
+            "Remote bi-encoder index built: %d risks, %s (%.1fs)",
+            len(descriptions),
+            model_name,
+            time.monotonic() - t0,
+        )
         return None, remote, embeddings
+    logger.info("Loading local bi-encoder %s", model_name)
     local = SentenceTransformer(model_name)
     embeddings = local.encode(descriptions, normalize_embeddings=True, show_progress_bar=False)
+    logger.info(
+        "Local bi-encoder index built: %d risks, %s (%.1fs)",
+        len(descriptions),
+        model_name,
+        time.monotonic() - t0,
+    )
     return local, None, embeddings
 
 

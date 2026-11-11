@@ -552,6 +552,13 @@ class _StructuredClient:
                 failed_attempts.append(FailedAttempt(attempt_number, e, completion))
                 if attempt_number >= max_attempts:
                     raise ValidationRetryExhausted(str(e), failed_attempts=failed_attempts) from e
+                summary = str(e).splitlines()[0] if str(e) else type(e).__name__
+                logger.warning(
+                    "Structured output validation failed (attempt %d/%d), retrying with error hint: %s",
+                    attempt_number,
+                    max_attempts,
+                    summary[:200],
+                )
                 _append_correction_messages(messages, completion, e)
         raise ValidationRetryExhausted("Structured output retries exhausted", failed_attempts=failed_attempts)
 

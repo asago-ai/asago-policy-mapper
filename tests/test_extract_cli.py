@@ -120,6 +120,43 @@ def test_extract_envvar_attached_to_option(option_name, envvar):
     assert envvar in (registered or []), f"--{option_name} lost its envvar (expected {envvar})"
 
 
+def test_cli_configures_logging():
+    """The CLI attaches a root handler at INFO so stage logs are visible.
+
+    Without this, the pipeline's logger.info calls are swallowed (Python's
+    last-resort handler only prints WARNING+). basicConfig is a no-op when
+    logging is already configured, so the test resets the root logger first
+    and restores it afterwards.
+    """
+    root = logging.getLogger()
+    saved_handlers = root.handlers[:]
+    saved_level = root.level
+    root.handlers = []
+    root.setLevel(logging.WARNING)
+    try:
+        result = runner.invoke(
+            app,
+            [
+                "extract",
+                "/nonexistent/policy.pdf",
+                "-o",
+                "/tmp/test-output",
+                "--base-url",
+                "http://localhost:8000/v1",
+                "--model",
+                "test",
+                "--nexus-base-dir",
+                "/tmp/nexus",
+            ],
+        )
+        assert result.exit_code != 0
+        assert root.level == logging.INFO
+        assert root.handlers, "CLI should have attached a root logging handler"
+    finally:
+        root.handlers = saved_handlers
+        root.setLevel(saved_level)
+
+
 class _StopAfterRiskLoad(Exception):
     pass
 

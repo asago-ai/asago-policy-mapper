@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 import typer
@@ -12,6 +13,13 @@ app = typer.Typer()
 @app.callback()
 def main():
     """Asago Policy Mapper — policy risk extraction using AI Atlas Nexus."""
+    # Attach a root handler so the pipeline's existing INFO stage logs are
+    # visible. basicConfig is a no-op when logging is already configured, so
+    # an embedding application (e.g. the battery runner) keeps its own setup.
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] %(levelname)s %(name)s: %(message)s",
+    )
 
 
 EXCLUDED_TAXONOMIES = {
