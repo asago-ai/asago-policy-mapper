@@ -283,7 +283,7 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus
 ```
 
-Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both.
+Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both. The JSON includes an `llm_calls` array with every LLM call (messages, response, timing) for analysis; it is written once when the run completes.
 
 ### Evaluate against ground truth
 

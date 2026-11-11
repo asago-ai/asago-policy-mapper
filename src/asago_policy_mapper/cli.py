@@ -4,7 +4,6 @@ from pathlib import Path
 import typer
 import yaml
 
-from asago_policy_mapper import debug
 from asago_policy_mapper.llm import LLMConfig, TokenTracker, create_client
 
 app = typer.Typer()
@@ -44,7 +43,6 @@ def extract(
         "--check-risk-text",
         help="Warn about loaded risks whose description lacks closing punctuation (possible truncation)",
     ),
-    debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
     max_tokens: int = typer.Option(
         8192,
@@ -237,7 +235,6 @@ def extract(
         )
         tracker = TokenTracker()
         client = create_client(config, tracker=tracker)
-    debug.configure(debug_dir)
 
     output.mkdir(parents=True, exist_ok=True)
 
