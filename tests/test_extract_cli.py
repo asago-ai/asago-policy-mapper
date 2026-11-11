@@ -88,6 +88,38 @@ def test_extract_check_risk_text_flag_in_help():
     assert "--check-risk-text" in _strip_ansi(result.stdout)
 
 
+# (option name, envvar) pairs documented in README/.env usage. A rename or an
+# accidentally dropped envvar silently severs .env-based configuration: the
+# option falls back to its default with no error, which is hard to notice.
+_ENVVAR_OPTIONS = [
+    ("base_url", "POLICY_MAPPER_BASE_URL"),
+    ("nexus_base_dir", "NEXUS_BASE_DIR"),
+    ("model", "POLICY_MAPPER_MODEL"),
+    ("api_key", "POLICY_MAPPER_API_KEY"),
+    ("max_tokens", "POLICY_MAPPER_MAX_OUTPUT_TOKENS"),
+    ("output_token_parameter", "POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER"),
+    ("service_tier", "POLICY_MAPPER_SERVICE_TIER"),
+    ("bi_encoder_model", "POLICY_MAPPER_BI_ENCODER_MODEL"),
+    ("bi_encoder_api_key", "POLICY_MAPPER_BI_ENCODER_API_KEY"),
+    ("bi_encoder_model_name", "POLICY_MAPPER_BI_ENCODER_MODEL_NAME"),
+    ("cross_encoder_model", "POLICY_MAPPER_CROSS_ENCODER_MODEL"),
+    ("cross_encoder_model_name", "POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME"),
+]
+
+
+@pytest.mark.parametrize("option_name,envvar", _ENVVAR_OPTIONS)
+def test_extract_envvar_attached_to_option(option_name, envvar):
+    from typer.main import get_command
+
+    command = get_command(app).commands["extract"]
+    params = {p.name: p for p in command.params}
+    assert option_name in params, f"option --{option_name} no longer exists"
+    registered = params[option_name].envvar
+    if isinstance(registered, str):
+        registered = [registered]
+    assert envvar in (registered or []), f"--{option_name} lost its envvar (expected {envvar})"
+
+
 class _StopAfterRiskLoad(Exception):
     pass
 
@@ -147,6 +179,65 @@ def test_extract_check_risk_text_warnings_only_when_enabled(monkeypatch, tmp_pat
     else:
         assert "lacks closing punctuation" not in caplog.text
         assert "Risk text check" not in result.output
+
+
+def test_extract_env_values_reach_llm_config(monkeypatch, tmp_path):
+    """Env-provided service tier, output budget and parameter name reach LLMConfig.
+
+    Regression test for the 2026-11-11 incident: the service tier was believed
+    configured through the environment but the wiring was never verified
+    end-to-end, so a silent override went unnoticed across several runs. This
+    exercises the real CLI path: envvar resolution -> option -> LLMConfig ->
+    the config object the pipeline receives.
+    """
+    captured = {}
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            pass
+
+        def get_all_risks(self):
+            return [
+                Risk(id="r1", name="r1", description="A risk.", isDefinedByTaxonomy="test", type="Risk"),
+            ]
+
+    def stop(**kwargs):
+        captured["config"] = kwargs["config"]
+        raise _StopAfterRiskLoad
+
+    monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
+    monkeypatch.setattr("asago_policy_mapper.extract.pipeline.run_extraction", stop)
+    policy = tmp_path / "policy.txt"
+    policy.write_text("test policy")
+    result = runner.invoke(
+        app,
+        [
+            "extract",
+            str(policy),
+            "-o",
+            str(tmp_path / "out"),
+            "--nexus-base-dir",
+            str(tmp_path),
+            "--no-judge",
+            "--no-grounding",
+            "--no-expand-siblings",
+        ],
+        env={
+            "POLICY_MAPPER_BASE_URL": "http://localhost:8000/v1",
+            "POLICY_MAPPER_MODEL": "test-model",
+            "POLICY_MAPPER_MAX_OUTPUT_TOKENS": "4096",
+            "POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER": "max_completion_tokens",
+            "POLICY_MAPPER_SERVICE_TIER": "default",
+        },
+    )
+
+    assert isinstance(result.exception, _StopAfterRiskLoad)
+    config = captured["config"]
+    assert config.service_tier == "default"
+    assert config.max_tokens == 4096
+    assert config.output_token_parameter == "max_completion_tokens"
+    assert config.base_url == "http://localhost:8000/v1"
+    assert config.model == "test-model"
 
 
 def test_extract_invalid_custom_taxonomy():
