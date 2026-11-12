@@ -471,6 +471,109 @@ def _build_chunk_risk_map(chunk_results, all_matches, no_grounding):
     return chunk_risk_ids
 
 
+def _build_found_risk_chunks(merged, chunk_results) -> dict[str, set[int]]:
+    """Map each found risk id to the chunks that show it.
+
+    Sources are the accepted retrieval candidates and the merged grounding
+    evidence; both tell the expansion grouper where a found risk lives.
+    """
+    found_risk_chunks: dict[str, set[int]] = {}
+    for cr in chunk_results:
+        for candidate in cr.accepted:
+            cid = candidate.risk_id.split(" ")[0].strip()
+            found_risk_chunks.setdefault(cid, set()).add(cr.chunk_index)
+    for m in merged:
+        for ev in m.evidence:
+            found_risk_chunks.setdefault(m.risk_id, set()).add(ev.chunk_index)
+    return found_risk_chunks
+
+
+def _ground_expansion_group(group, chunks, documents, client, config, call_collector):
+    """Ground one expansion group once against the group's chunk set."""
+    return ground_risk_group(
+        chunks=chunks,
+        chunk_indices=group.chunk_indices,
+        risks=list(group.risk_lookup.values()),
+        client=client,
+        model=config.model,
+        document=str(documents[0]) if documents else "",
+        call_collector=call_collector,
+    )
+
+
+def _ground_expansion_group_multi(group, chunks, documents, client, config, call_collector, passes):
+    """Ground one group across several passes; the first pass wins per risk id.
+
+    A risk grounded by an earlier pass keeps its evidence and confidence even
+    when a later pass grounds it differently.
+    """
+    merged_results: dict[str, tuple[list[EvidenceSpan], str]] = {}
+    for _ in range(passes):
+        grounded = _ground_expansion_group(group, chunks, documents, client, config, call_collector)
+        for rid, (evidence, confidence) in grounded.items():
+            if rid not in merged_results:
+                merged_results[rid] = (evidence, confidence)
+    return merged_results
+
+
+def _build_expansion_matches(grounded, index, risk_lookup) -> list[RiskMatch]:
+    """Convert one group's grounded risks into expansion matches."""
+    matches = []
+    for rid, (evidence, confidence) in grounded.items():
+        info = risk_lookup.get(rid, {})
+        stub = ScoredCandidate(
+            risk_id=rid,
+            risk_name=info.get("name", ""),
+            risk_description=info.get("description", ""),
+        )
+        matches.append(
+            build_risk_match(
+                stub,
+                taxonomy=index.get_taxonomy(rid),
+                accepted_by="expansion",
+                grounding_confidence=confidence,
+                evidence=evidence,
+                confidence_override=0.0,
+            )
+        )
+    return matches
+
+
+def _ground_expansion_groups(
+    groups, chunks, documents, index, client, config, max_workers, call_collector, expansion_passes, risk_lookup
+) -> tuple[list[RiskMatch], int]:
+    """Ground all expansion groups concurrently.
+
+    With one pass each group grounds directly; with several, the per-group
+    first-wins union runs inside the worker before any match is built.
+    Returns the expansion matches and the grounded-risk count.
+    """
+
+    def _submit(pool, group):
+        if expansion_passes > 1:
+            return pool.submit(
+                _ground_expansion_group_multi,
+                group,
+                chunks,
+                documents,
+                client,
+                config,
+                call_collector,
+                expansion_passes,
+            )
+        return pool.submit(_ground_expansion_group, group, chunks, documents, client, config, call_collector)
+
+    expansion_matches: list[RiskMatch] = []
+    expanded_grounded = 0
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {_submit(pool, g): g for g in groups}
+        for future in as_completed(futures):
+            grounded = future.result()
+            expanded_grounded += len(grounded)
+            expansion_matches.extend(_build_expansion_matches(grounded, index, risk_lookup))
+    return expansion_matches, expanded_grounded
+
+
 def _run_expansion(
     risks,
     merged,
@@ -508,18 +611,9 @@ def _run_expansion(
     if not expanded:
         return merged, stats
 
-    found_risk_chunks: dict[str, set[int]] = {}
-    for cr in chunk_results:
-        for candidate in cr.accepted:
-            cid = candidate.risk_id.split(" ")[0].strip()
-            found_risk_chunks.setdefault(cid, set()).add(cr.chunk_index)
-    for m in merged:
-        for ev in m.evidence:
-            found_risk_chunks.setdefault(m.risk_id, set()).add(ev.chunk_index)
-
     groups = group_for_grounding(
         expanded,
-        found_risk_chunks,
+        _build_found_risk_chunks(merged, chunk_results),
         risk_to_parent,
         len(chunks),
     )
@@ -531,52 +625,9 @@ def _run_expansion(
         expansion_passes,
     )
 
-    def _ground_group(group):
-        return ground_risk_group(
-            chunks=chunks,
-            chunk_indices=group.chunk_indices,
-            risks=list(group.risk_lookup.values()),
-            client=client,
-            model=config.model,
-            document=str(documents[0]) if documents else "",
-            call_collector=call_collector,
-        )
-
-    def _ground_group_multi(group, passes):
-        merged_results: dict[str, tuple[list[EvidenceSpan], str]] = {}
-        for _ in range(passes):
-            grounded = _ground_group(group)
-            for rid, (evidence, confidence) in grounded.items():
-                if rid not in merged_results:
-                    merged_results[rid] = (evidence, confidence)
-        return merged_results
-
-    expansion_matches: list[RiskMatch] = []
-    with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        if expansion_passes > 1:
-            futures = {pool.submit(_ground_group_multi, g, expansion_passes): g for g in groups}
-        else:
-            futures = {pool.submit(_ground_group, g): g for g in groups}
-        for future in as_completed(futures):
-            grounded = future.result()
-            stats["expanded_grounded"] += len(grounded)
-            for rid, (evidence, confidence) in grounded.items():
-                info = risk_lookup.get(rid, {})
-                stub = ScoredCandidate(
-                    risk_id=rid,
-                    risk_name=info.get("name", ""),
-                    risk_description=info.get("description", ""),
-                )
-                expansion_matches.append(
-                    build_risk_match(
-                        stub,
-                        taxonomy=index.get_taxonomy(rid),
-                        accepted_by="expansion",
-                        grounding_confidence=confidence,
-                        evidence=evidence,
-                        confidence_override=0.0,
-                    )
-                )
+    expansion_matches, stats["expanded_grounded"] = _ground_expansion_groups(
+        groups, chunks, documents, index, client, config, max_workers, call_collector, expansion_passes, risk_lookup
+    )
 
     if expansion_matches and variant_map:
         expansion_matches = _run_variant_grounding(
