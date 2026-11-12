@@ -895,6 +895,84 @@ def _build_result_metadata(config, retrieval, expansion_stats, query_results, fa
     return metadata
 
 
+_EMPTY_EXPANSION_STATS = {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}
+
+
+def _run_variant_grounding_stage(
+    all_matches, chunks, index, client, config, retrieval, call_collector, chunk_contexts, max_workers, timing
+):
+    """Variant-ground grounded matches when variants and a client are present."""
+    if index.variant_map and not retrieval.no_grounding and client is not None:
+        with timed(timing, "variant_grounding_ms"):
+            return _run_variant_grounding(
+                all_matches,
+                chunks,
+                index.variant_map,
+                client,
+                config,
+                call_collector,
+                chunk_contexts=chunk_contexts,
+                max_workers=max_workers,
+            )
+    return all_matches
+
+
+def _run_expansion_stage(
+    merged,
+    risks,
+    chunk_results,
+    chunks,
+    documents,
+    index,
+    client,
+    config,
+    retrieval,
+    call_collector,
+    chunk_contexts,
+    max_workers,
+    timing,
+) -> tuple[list, dict]:
+    """Expand to sibling risks and ground them; grounded runs only.
+
+    Returns the (possibly expanded) merged list and the expansion stats; the
+    counters stay at zero when the stage is skipped.
+    """
+    if retrieval.expand_siblings and not retrieval.no_grounding and client is not None:
+        with timed(timing, "expansion_ms"):
+            merged, expansion_stats = _run_expansion(
+                risks,
+                merged,
+                chunk_results,
+                chunks,
+                documents,
+                index,
+                client,
+                config,
+                max_workers,
+                call_collector,
+                expansion_passes=retrieval.expansion_passes,
+                variant_map=index.variant_map if index.variant_map else None,
+                chunk_contexts=chunk_contexts,
+            )
+            return merged, expansion_stats
+    return merged, _EMPTY_EXPANSION_STATS.copy()
+
+
+def _run_causal_synthesis_stage(merged, chunks, client, config, retrieval, call_collector, max_workers, timing):
+    """Synthesize causal chains for each merged risk when a client is present."""
+    if not retrieval.no_causal_synthesis and client is not None:
+        with timed(timing, "causal_synthesis_ms"):
+            return _run_causal_synthesis(
+                merged,
+                chunks,
+                client,
+                config,
+                max_workers,
+                call_collector,
+            )
+    return merged
+
+
 def run_extraction(
     documents: list[Path],
     client,
@@ -970,18 +1048,9 @@ def run_extraction(
         chunk_results, chunks, client, config, retrieval, index, call_collector, chunk_contexts, timing
     )
 
-    if index.variant_map and not retrieval.no_grounding and client is not None:
-        with timed(timing, "variant_grounding_ms"):
-            all_matches = _run_variant_grounding(
-                all_matches,
-                chunks,
-                index.variant_map,
-                client,
-                config,
-                call_collector,
-                chunk_contexts=chunk_contexts,
-                max_workers=max_workers,
-            )
+    all_matches = _run_variant_grounding_stage(
+        all_matches, chunks, index, client, config, retrieval, call_collector, chunk_contexts, max_workers, timing
+    )
 
     chunk_risk_ids = _build_chunk_risk_map(chunk_results, all_matches, retrieval.no_grounding)
     for cs in chunk_summaries:
@@ -990,35 +1059,23 @@ def run_extraction(
     with timed(timing, "merge_ms"):
         merged = merge_matches(all_matches)
 
-    expansion_stats = {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}
-    if retrieval.expand_siblings and not retrieval.no_grounding and client is not None:
-        with timed(timing, "expansion_ms"):
-            merged, expansion_stats = _run_expansion(
-                risks,
-                merged,
-                chunk_results,
-                chunks,
-                documents,
-                index,
-                client,
-                config,
-                max_workers,
-                call_collector,
-                expansion_passes=retrieval.expansion_passes,
-                variant_map=index.variant_map if index.variant_map else None,
-                chunk_contexts=chunk_contexts,
-            )
+    merged, expansion_stats = _run_expansion_stage(
+        merged,
+        risks,
+        chunk_results,
+        chunks,
+        documents,
+        index,
+        client,
+        config,
+        retrieval,
+        call_collector,
+        chunk_contexts,
+        max_workers,
+        timing,
+    )
 
-    if not retrieval.no_causal_synthesis and client is not None:
-        with timed(timing, "causal_synthesis_ms"):
-            merged = _run_causal_synthesis(
-                merged,
-                chunks,
-                client,
-                config,
-                max_workers,
-                call_collector,
-            )
+    merged = _run_causal_synthesis_stage(merged, chunks, client, config, retrieval, call_collector, max_workers, timing)
 
     total_stats = _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered)
 
