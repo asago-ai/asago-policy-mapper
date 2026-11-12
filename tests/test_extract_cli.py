@@ -393,7 +393,6 @@ def _validate_kwargs(tmp_path, **overrides):
         policy_files=[policy],
         base_url="http://localhost:8000/v1",
         model="test-model",
-        nexus_base_dir=str(tmp_path),
         no_judge=False,
         no_grounding=False,
         expand_siblings=True,
@@ -454,12 +453,12 @@ def test_validate_extract_options_query_gen_forces_llm(tmp_path):
     )
 
 
-def test_validate_extract_options_requires_nexus_base_dir(tmp_path):
+def test_validate_extract_options_ignores_nexus_base_dir(tmp_path):
+    """The nexus override is optional; the validator no longer requires it."""
     from asago_policy_mapper.cli import _validate_extract_options
 
-    with pytest.raises(typer.Exit) as excinfo:
-        _validate_extract_options(**_validate_kwargs(tmp_path, nexus_base_dir=None))
-    assert excinfo.value.exit_code == 1
+    # No nexus_base_dir parameter at all: validation passes for a valid run.
+    assert _validate_extract_options(**_validate_kwargs(tmp_path)) is True
 
 
 # --- _write_extraction_outputs unit tests ---

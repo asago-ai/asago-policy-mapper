@@ -998,6 +998,28 @@ def _expand_chunk_variants(chunk_results, index):
         cr.borderline = index.expand_variants(cr.borderline)
 
 
+def _parse_and_chunk(documents, ocr, retrieval, timing) -> tuple | None:
+    """Parse documents and chunk them; returns (parsed, chunks, contexts) or None.
+
+    None means the run short-circuits: every document parsed empty or the
+    documents produced no chunks. The parse and chunk stages are timed.
+    """
+    with timed(timing, "parse_ms"):
+        parsed = [parse_document(doc, ocr=ocr) for doc in documents]
+        parsed = [p for p in parsed if p.content.strip()]
+        if not parsed:
+            logger.warning("All documents are empty after parsing")
+            return None
+
+    with timed(timing, "chunk_ms"):
+        chunks = chunk_documents(parsed, max_tokens=retrieval.chunk_max_tokens)
+        if not chunks:
+            return None
+        chunk_contexts = build_chunk_contexts(chunks)
+    logger.info("Chunked %d document(s) into %d chunks", len(parsed), len(chunks))
+    return parsed, chunks, chunk_contexts
+
+
 def run_extraction(
     documents: list[Path],
     client,
@@ -1011,19 +1033,10 @@ def run_extraction(
     timing: dict[str, float] = {}
     max_workers = config.max_concurrent
 
-    with timed(timing, "parse_ms"):
-        parsed = [parse_document(doc, ocr=ocr) for doc in documents]
-        parsed = [p for p in parsed if p.content.strip()]
-        if not parsed:
-            logger.warning("All documents are empty after parsing")
-            return _empty_result(documents)
-
-    with timed(timing, "chunk_ms"):
-        chunks = chunk_documents(parsed, max_tokens=retrieval.chunk_max_tokens)
-        if not chunks:
-            return _empty_result(documents)
-        chunk_contexts = build_chunk_contexts(chunks)
-    logger.info("Chunked %d document(s) into %d chunks", len(parsed), len(chunks))
+    prepared = _parse_and_chunk(documents, ocr, retrieval, timing)
+    if prepared is None:
+        return _empty_result(documents)
+    parsed, chunks, chunk_contexts = prepared
 
     risks = _filter_agentic_risks(risks, parsed)
 
