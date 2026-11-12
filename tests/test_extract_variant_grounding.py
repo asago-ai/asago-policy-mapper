@@ -904,3 +904,97 @@ def test_ground_expansion_groups_multi_pass_uses_union_worker():
     assert multi_calls == [(("R-005",), 3)]
     assert grounded_count == 1
     assert [m.risk_id for m in matches] == ["R-005"]
+
+
+def test_run_expansion_variant_map_routes_through_variant_grounding():
+    """With a variant map, expansion matches are variant-grounded before merging."""
+    catalog = [
+        _catalog_risk("R-001", "Model bias", "Systematic errors.", "other-taxonomy", "grp"),
+        *[_catalog_risk(v["risk_id"], v["name"], v["description"], v["taxonomy"], "grp") for v in VARIANTS],
+    ]
+    found = RiskMatch(
+        risk_id="R-001",
+        risk_name="Model bias",
+        risk_description="Systematic errors.",
+        confidence=0.9,
+        grounding_confidence="high",
+        accepted_by="threshold",
+        evidence=[EvidenceSpan(text="quote", document="doc.md", chunk_index=0)],
+        scores=RetrievalScores(bm25_rank=1, embedding_distance=0.1, cross_encoder_score=0.9, rrf_score=0.03),
+    )
+
+    def _ground_all(**kwargs):
+        evidence = [EvidenceSpan(text="quote", document="doc.md", chunk_index=0)]
+        return {r["risk_id"]: (evidence, "medium") for r in kwargs["risks"]}
+
+    with (
+        patch("asago_policy_mapper.extract.index._load_bi_encoder", return_value=(None, None, None)),
+        patch("asago_policy_mapper.extract.index._load_cross_encoder", return_value=(None, None, False, False)),
+        patch("asago_policy_mapper.extract.pipeline.ground_risk_group", side_effect=_ground_all),
+        patch(
+            "asago_policy_mapper.extract.pipeline._run_variant_grounding",
+            side_effect=lambda matches, *a, **k: matches,
+        ) as variant_grounding,
+    ):
+        index = RiskIndex(catalog)
+        merged, stats = _run_expansion(
+            catalog,
+            [found],
+            [],
+            _make_chunks(["chunk about biometric and health data"]),
+            ["doc.md"],
+            index,
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            1,
+            None,
+            variant_map=index.variant_map,
+        )
+
+    # the expanded variant parents went through variant grounding
+    variant_grounding.assert_called_once()
+    assert stats["expanded_candidates"] == len(VARIANTS)
+    assert stats["expanded_grounded"] == len(VARIANTS)
+    expanded = {m.risk_id for m in merged if m.accepted_by == "expansion"}
+    assert expanded == {v["risk_id"] for v in VARIANTS}
+
+
+def test_run_expansion_without_candidates_returns_merged_unchanged():
+    """No expansion candidates means the merged list and zeroed stats come back as-is."""
+    catalog = [
+        _catalog_risk("R-001", "Model bias", "Systematic errors.", "other-taxonomy", "grp"),
+    ]
+    found = RiskMatch(
+        risk_id="R-001",
+        risk_name="Model bias",
+        risk_description="Systematic errors.",
+        confidence=0.9,
+        grounding_confidence="high",
+        accepted_by="threshold",
+        evidence=[EvidenceSpan(text="quote", document="doc.md", chunk_index=0)],
+        scores=RetrievalScores(bm25_rank=1, embedding_distance=0.1, cross_encoder_score=0.9, rrf_score=0.03),
+    )
+
+    with (
+        patch("asago_policy_mapper.extract.index._load_bi_encoder", return_value=(None, None, None)),
+        patch("asago_policy_mapper.extract.index._load_cross_encoder", return_value=(None, None, False, False)),
+        patch("asago_policy_mapper.extract.pipeline.ground_risk_group") as ground_group,
+    ):
+        index = RiskIndex(catalog)
+        merged, stats = _run_expansion(
+            catalog,
+            [found],
+            [],
+            _make_chunks(["chunk about model bias"]),
+            ["doc.md"],
+            index,
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            1,
+            None,
+        )
+
+    # R-001 has no siblings in the catalog: nothing to ground, merged unchanged
+    ground_group.assert_not_called()
+    assert merged == [found]
+    assert stats == {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}

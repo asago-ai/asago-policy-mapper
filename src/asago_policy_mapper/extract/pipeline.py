@@ -574,6 +574,44 @@ def _ground_expansion_groups(
     return expansion_matches, expanded_grounded
 
 
+def _expand_siblings(risks, merged, chunk_results, chunks, stats) -> tuple:
+    """Prepare sibling-expansion candidates and their grounding groups.
+
+    Returns (expanded, groups, risk_lookup): the sibling candidates not yet
+    found, their grounding groups (empty when there are no candidates), and
+    the catalog lookup the matches are built from. Records the candidate and
+    group counts in stats.
+    """
+    from asago_policy_mapper.extract.expand import (
+        build_expansion_graph,
+        expand_with_siblings,
+        group_for_grounding,
+    )
+
+    risk_lookup = {r.id: {"name": r.name or "", "description": r.description or ""} for r in risks}
+    risk_to_parent = {}
+    for r in risks:
+        parent = getattr(r, "isPartOf", "") or ""
+        if parent:
+            risk_to_parent[r.id] = parent
+
+    expansion_graph = build_expansion_graph(risks)
+    merged_ids = {m.risk_id for m in merged}
+    expanded = expand_with_siblings(merged_ids, expansion_graph, risk_lookup)
+    stats["expanded_candidates"] = len(expanded)
+    if not expanded:
+        return expanded, [], risk_lookup
+
+    groups = group_for_grounding(
+        expanded,
+        _build_found_risk_chunks(merged, chunk_results),
+        risk_to_parent,
+        len(chunks),
+    )
+    stats["expansion_groups"] = len(groups)
+    return expanded, groups, risk_lookup
+
+
 def _run_expansion(
     risks,
     merged,
@@ -589,35 +627,11 @@ def _run_expansion(
     variant_map: dict | None = None,
     chunk_contexts=None,
 ) -> tuple[list[RiskMatch], dict]:
-    from asago_policy_mapper.extract.expand import (
-        build_expansion_graph,
-        expand_with_siblings,
-        group_for_grounding,
-    )
-
     stats = {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}
-    expansion_graph = build_expansion_graph(risks)
-    risk_lookup = {r.id: {"name": r.name or "", "description": r.description or ""} for r in risks}
-    risk_to_parent = {}
-    for r in risks:
-        parent = getattr(r, "isPartOf", "") or ""
-        if parent:
-            risk_to_parent[r.id] = parent
-
-    merged_ids = {m.risk_id for m in merged}
-    expanded = expand_with_siblings(merged_ids, expansion_graph, risk_lookup)
-    stats["expanded_candidates"] = len(expanded)
-
+    expanded, groups, risk_lookup = _expand_siblings(risks, merged, chunk_results, chunks, stats)
     if not expanded:
         return merged, stats
 
-    groups = group_for_grounding(
-        expanded,
-        _build_found_risk_chunks(merged, chunk_results),
-        risk_to_parent,
-        len(chunks),
-    )
-    stats["expansion_groups"] = len(groups)
     logger.info(
         "Expansion: %d sibling candidates in %d groups (%d passes)",
         stats["expanded_candidates"],
@@ -973,6 +987,17 @@ def _run_causal_synthesis_stage(merged, chunks, client, config, retrieval, call_
     return merged
 
 
+def _expand_chunk_variants(chunk_results, index):
+    """Expand collapsed parent candidates back to their variants in place.
+
+    Ungrounded runs keep the variant granularity at match time, so the
+    accepted and borderline lists are re-expanded per chunk.
+    """
+    for cr in chunk_results:
+        cr.accepted = index.expand_variants(cr.accepted)
+        cr.borderline = index.expand_variants(cr.borderline)
+
+
 def run_extraction(
     documents: list[Path],
     client,
@@ -1018,18 +1043,14 @@ def run_extraction(
         )
 
     chunk_results = _run_retrieval(chunks, index, retrieval, query_results, fallback_chunk_indices, timing)
-
-    n_accepted = sum(len(cr.accepted) for cr in chunk_results if cr is not None)
     logger.info(
         "Retrieval complete: %d chunks, %d accepted candidates",
         len(chunks),
-        n_accepted,
+        sum(len(cr.accepted) for cr in chunk_results if cr is not None),
     )
 
     if index.variant_map and retrieval.no_grounding:
-        for cr in chunk_results:
-            cr.accepted = index.expand_variants(cr.accepted)
-            cr.borderline = index.expand_variants(cr.borderline)
+        _expand_chunk_variants(chunk_results, index)
 
     chunk_summaries = _build_chunk_summaries(chunk_results, chunks)
 

@@ -120,6 +120,66 @@ def test_run_extraction_no_risks(mock_config, tmp_path):
     assert result.retrieval_stats.total_chunks == 0
 
 
+def test_run_extraction_no_chunks_returns_empty_result(mock_config, tmp_path, monkeypatch):
+    """A parse that yields content but no chunks short-circuits to the empty result."""
+    from asago_policy_mapper.extract import pipeline
+
+    doc = tmp_path / "test.txt"
+    doc.write_text("Some policy text.")
+    monkeypatch.setattr(pipeline, "chunk_documents", lambda docs, max_tokens=512: [])
+
+    result = run_extraction(
+        documents=[doc],
+        client=MagicMock(),
+        config=mock_config,
+        risks=MOCK_RISKS,
+        ocr=False,
+    )
+
+    assert isinstance(result, ExtractionResult)
+    assert result.risks == []
+    assert result.retrieval_stats.total_chunks == 0
+
+
+@pytest.mark.slow
+def test_run_extraction_expands_variants_when_no_grounding(mock_config, tmp_path):
+    """Ungrounded runs with variant catalogs re-expand chunk candidates to variants."""
+    variant_risks = [
+        _make_risk("R-001", "Model Bias", "Systematic errors in AI outputs"),
+        _make_risk(
+            "unauthorized-processing---biometric-data",
+            "Unauthorized Processing - Biometric Data",
+            "Unauthorized processing of biometric data.",
+        ),
+        _make_risk(
+            "unauthorized-processing---location-data",
+            "Unauthorized Processing - Location Data",
+            "Unauthorized processing of location data.",
+        ),
+    ]
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "Policy covering unauthorized processing of biometric and location data. "
+        "This document establishes controls for personal data handling across "
+        "all processing activities undertaken by the organization."
+    )
+
+    result = run_extraction(
+        documents=[doc],
+        client=MagicMock(),
+        config=mock_config,
+        risks=variant_risks,
+        retrieval=RetrievalConfig(query_gen=False, no_judge=True, no_grounding=True),
+        ocr=False,
+    )
+
+    # the collapsed parent candidates are expanded back to their variants
+    variant_ids = {r.risk_id for r in result.risks}
+    assert "unauthorized-processing---biometric-data" in variant_ids
+    assert "unauthorized-processing---location-data" in variant_ids
+    assert all(r.grounding_confidence == "ungrounded" for r in result.risks)
+
+
 @pytest.mark.slow
 def test_run_extraction_multiple_documents(mock_config, tmp_path):
     docs = []
