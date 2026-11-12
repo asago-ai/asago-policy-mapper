@@ -1,9 +1,8 @@
 """Bounded checks for the API and inference backend of an LLM server."""
 
-import instructor
 from openai import APIConnectionError, OpenAI
 
-from asago_policy_mapper.llm import SlimModel
+from asago_policy_mapper.llm import SlimModel, StructuredOutputMode, _StructuredClient
 
 PROBE_TIMEOUT_SECONDS = 60.0
 
@@ -34,7 +33,7 @@ def probe_llm(base_url: str, model: str) -> None:
         if model not in available_ids:
             raise LLMHealthError(f"Model {model!r} not available on {base_url} (available: {sorted(available_ids)})")
 
-        client = instructor.from_openai(probe, mode=instructor.Mode.JSON_SCHEMA)
+        client = _StructuredClient(probe, mode=StructuredOutputMode.JSON_SCHEMA)
         try:
             result = client.chat.completions.create(
                 model=model,

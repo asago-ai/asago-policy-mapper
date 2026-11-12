@@ -1,22 +1,33 @@
 import copy
+import json
 import logging
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+import httpx
+import openai
 import pytest
-from instructor.core import IncompleteOutputException, InstructorRetryException
+from pydantic import ValidationError
 
 from asago_policy_mapper.llm import (
+    _MAX_TRUNCATION_RETRIES,
+    IncompleteOutputException,
     LLMConfig,
+    SlimModel,
+    StructuredOutputMode,
     TokenTracker,
+    ValidationRetryExhausted,
     _call_with_retry,
     _extract_response_content,
     _IncompleteOutput,
+    _parse_completion,
     _retry_with_validation,
     _strip_titles,
+    _StructuredClient,
     _track_completion,
     _truncate_messages,
     _wrap_with_tracking,
+    create_client,
 )
 
 # ---------------------------------------------------------------------------
@@ -356,7 +367,7 @@ class TestCallWithRetry:
 
     def test_incomplete_output_with_truncatable_messages_retries(self):
         long_content = "x" * 2000
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=[_IncompleteOutput(cause), ("ok", "comp")])
         kwargs = {"messages": [{"role": "user", "content": long_content}], "max_retries": 0}
         config = self._make_config()
@@ -366,7 +377,7 @@ class TestCallWithRetry:
         assert do_call.call_count == 2
 
     def test_incomplete_output_short_messages_raises(self):
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=_IncompleteOutput(cause))
         kwargs = {"messages": [{"role": "user", "content": "short"}], "max_retries": 0}
         config = self._make_config()
@@ -376,7 +387,7 @@ class TestCallWithRetry:
 
     def test_incomplete_output_records_incident_when_cannot_truncate(self):
         tracker = TokenTracker()
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=_IncompleteOutput(cause))
         kwargs = {"messages": [{"role": "user", "content": "short"}], "max_retries": 0}
         config = self._make_config()
@@ -388,7 +399,7 @@ class TestCallWithRetry:
     def test_incomplete_output_records_incident_on_retry(self):
         tracker = TokenTracker()
         long_content = "x" * 2000
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=[_IncompleteOutput(cause), ("ok", "comp")])
         kwargs = {"messages": [{"role": "user", "content": long_content}], "max_retries": 0}
         config = self._make_config()
@@ -398,7 +409,7 @@ class TestCallWithRetry:
 
     def test_messages_shortened_on_retry(self):
         long_content = "x" * 2000
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
 
         captured_kwargs = {}
 
@@ -425,12 +436,18 @@ class TestCallWithRetry:
 
 
 def _make_retry_exc(msg, failed_attempts=None):
-    """Create an InstructorRetryException with the given message and failed attempts."""
-    return InstructorRetryException(
-        msg,
-        n_attempts=1,
-        total_usage=0,
-        failed_attempts=failed_attempts,
+    """Create a ValidationRetryExhausted with the given message and failed attempts."""
+    return ValidationRetryExhausted(msg, failed_attempts=failed_attempts)
+
+
+def _context_overflow_error() -> openai.BadRequestError:
+    """A 400 in the shape endpoints report context-length overflow."""
+    request = httpx.Request("POST", "http://test/v1/chat/completions")
+    response = httpx.Response(400, request=request)
+    return openai.BadRequestError(
+        "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens",
+        response=response,
+        body=None,
     )
 
 
@@ -460,7 +477,7 @@ class TestRetryWithValidation:
         do_call.assert_called_once()
 
     def test_incomplete_output_wraps_in_incomplete_output(self):
-        cause = IncompleteOutputException(last_completion=None)
+        cause = IncompleteOutputException()
         do_call = MagicMock(side_effect=cause)
         messages = self._make_messages()
         kwargs = {"messages": messages, "max_tokens": 4096}
@@ -480,10 +497,7 @@ class TestRetryWithValidation:
 
     def test_context_overflow_reduces_max_tokens(self):
         """Context overflow with a valid reduction retries with lower max_tokens."""
-        overflow_msg = (
-            "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens"
-        )
-        exc = _make_retry_exc(overflow_msg)
+        exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
         original = copy.deepcopy(messages)
@@ -505,10 +519,7 @@ class TestRetryWithValidation:
         assert kwargs["max_tokens"] == 4160
 
     def test_context_overflow_records_incident(self):
-        overflow_msg = (
-            "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens"
-        )
-        exc = _make_retry_exc(overflow_msg)
+        exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
         original = copy.deepcopy(messages)
@@ -528,10 +539,7 @@ class TestRetryWithValidation:
         assert any(i["kind"] == "context_overflow" for i in tracker.incidents)
 
     def test_context_overflow_reduces_configured_completion_parameter(self):
-        overflow_msg = (
-            "maximum context length is 8192 tokens. However, you requested 4096 output tokens and 4000 input tokens"
-        )
-        exc = _make_retry_exc(overflow_msg)
+        exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
         original = copy.deepcopy(messages)
@@ -587,7 +595,7 @@ class TestRetryWithValidation:
         config = self._make_config()
         tracker = TokenTracker()
 
-        with pytest.raises(InstructorRetryException):
+        with pytest.raises(ValidationRetryExhausted):
             _retry_with_validation(
                 do_call,
                 kwargs,
@@ -715,22 +723,314 @@ class TestApplyBudget:
     def test_service_tier_is_added_to_chat_completion_request(self):
         client = MagicMock()
         completion = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=2))
-        client.chat.completions.create_with_completion.return_value = ("parsed", completion)
+        client.create_with_completion.return_value = ("parsed", completion)
         config = LLMConfig(base_url="http://test", model="test-model", service_tier="flex")
 
         _wrap_with_tracking(client, TokenTracker(), config)
         result = client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
 
         assert result == "parsed"
-        assert client.chat.completions.create_with_completion.call_args.kwargs["service_tier"] == "flex"
+        assert client.create_with_completion.call_args.kwargs["service_tier"] == "flex"
 
     def test_service_tier_is_omitted_when_not_configured(self):
         client = MagicMock()
         completion = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=2))
-        client.chat.completions.create_with_completion.return_value = ("parsed", completion)
+        client.create_with_completion.return_value = ("parsed", completion)
         config = LLMConfig(base_url="http://test", model="test-model")
 
         _wrap_with_tracking(client, TokenTracker(), config)
         client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
 
-        assert "service_tier" not in client.chat.completions.create_with_completion.call_args.kwargs
+        assert "service_tier" not in client.create_with_completion.call_args.kwargs
+
+
+# ---------------------------------------------------------------------------
+# _StructuredClient over a stubbed transport (production stack)
+# ---------------------------------------------------------------------------
+
+
+class _StructuredAnswer(SlimModel):
+    answer: str
+
+
+def _stubbed_client(handler, max_retries):
+    """Build the full production stack (create_client -> tracking wrapper) over a stubbed transport."""
+    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=max_retries)
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+    with patch(
+        "asago_policy_mapper.llm.OpenAI",
+        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+    ):
+        return create_client(config)
+
+
+def _completion_body(content):
+    return {
+        "id": "chatcmpl-1",
+        "object": "chat.completion",
+        "created": 0,
+        "model": "test-model",
+        "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": content}}],
+        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+    }
+
+
+class TestStructuredClientRetries:
+    def test_retries_come_from_the_outer_loop_with_a_warning_each(self, caplog):
+        """create_with_completion is a single attempt; the tracking wrapper retries.
+
+        With max_retries=3 and an endpoint that always returns invalid JSON,
+        exactly 4 calls hit the wire, each retry starts from a fresh copy of
+        the input messages carrying one failed-answer/error-hint pair, and a
+        WARNING fires per retry (attempt 1/4..3/4) but not for the terminal
+        failure.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=_completion_body('{"items": "not a list"}'))
+
+        client = _stubbed_client(handler, max_retries=3)
+        input_messages = [{"role": "user", "content": "hello"}]
+
+        with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.llm"):
+            with pytest.raises(ValidationRetryExhausted) as excinfo:
+                client.chat.completions.create(
+                    model="test-model",
+                    response_model=_StructuredAnswer,
+                    messages=input_messages,
+                    max_tokens=256,
+                )
+
+        assert len(requests) == 4
+        # First call: the input messages untouched.
+        assert requests[0]["messages"] == input_messages
+        # Each retry: a fresh copy of the input with exactly one failed-answer
+        # message followed by one error-hint user message.
+        for body in requests[1:]:
+            retry_messages = body["messages"]
+            assert retry_messages[:1] == input_messages
+            assistants = [m for m in retry_messages if m["role"] == "assistant"]
+            hints = [m for m in retry_messages if m["role"] == "user" and "Validation error:" in m["content"]]
+            assert len(assistants) == 1
+            assert len(hints) == 1
+        # The terminal exception carries the single failed attempt, numbered 1.
+        assert len(excinfo.value.failed_attempts) == 1
+        assert excinfo.value.failed_attempts[0].attempt_number == 1
+        # One WARNING per retry (3 of them), none for the terminal failure.
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) == 3
+        assert all("Structured output validation failed" in r.getMessage() for r in warnings)
+        assert [w.args[0] for w in warnings] == [1, 2, 3]
+        assert [w.args[1] for w in warnings] == [4, 4, 4]
+
+    def test_recovery_after_one_failed_attempt(self, caplog):
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            content = '{"items": "not a list"}' if len(requests) == 1 else '{"answer": "ok"}'
+            return httpx.Response(200, json=_completion_body(content))
+
+        client = _stubbed_client(handler, max_retries=2)
+
+        with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.llm"):
+            result = client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "hello"}],
+                max_tokens=256,
+            )
+
+        assert result.answer == "ok"
+        assert len(requests) == 2
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) == 1
+        assert "Structured output validation failed (attempt 1/3)" in warnings[0].getMessage()
+
+    def test_direct_create_with_completion_is_a_single_attempt(self):
+        """Direct calls (health-probe style) make one attempt regardless of max_retries."""
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=_completion_body('{"items": "not a list"}'))
+
+        api = openai.OpenAI(
+            base_url="http://localhost:8000/v1",
+            api_key="none",
+            http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+            max_retries=0,
+        )
+        client = _StructuredClient(api, mode=StructuredOutputMode.JSON_SCHEMA)
+
+        with pytest.raises(ValidationRetryExhausted) as excinfo:
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "hello"}],
+                max_tokens=256,
+                max_retries=3,
+            )
+
+        assert len(requests) == 1
+        # The kwarg never reaches the SDK's create().
+        assert "max_retries" not in requests[0]
+        assert len(excinfo.value.failed_attempts) == 1
+        assert excinfo.value.failed_attempts[0].attempt_number == 1
+        assert isinstance(excinfo.value.__cause__, ValidationError)
+
+
+class TestLengthTruncationRouting:
+    """A length-truncated completion takes the truncation path, not validation retries."""
+
+    def _length_response(self):
+        return {
+            "id": "chatcmpl-1",
+            "object": "chat.completion",
+            "created": 0,
+            "model": "test-model",
+            # vLLM-shaped truncation: no content at all when the token limit hits.
+            "choices": [{"index": 0, "finish_reason": "length", "message": {"role": "assistant", "content": None}}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+        }
+
+    def test_null_content_with_length_takes_truncation_path(self, caplog):
+        """content=null + finish_reason=length is a truncation problem, not a parse one.
+
+        The prompt is truncatable (a long user message), so the wrapper
+        retries with a shorter prompt instead of resending the same messages
+        with a validation error hint.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=self._length_response())
+
+        client = _stubbed_client(handler, max_retries=3)
+        long_message = [{"role": "user", "content": "x" * 2000}]
+
+        with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.llm"):
+            with pytest.raises(IncompleteOutputException):
+                client.chat.completions.create(
+                    model="test-model",
+                    response_model=_StructuredAnswer,
+                    messages=long_message,
+                    max_tokens=256,
+                )
+
+        # Retries shorten the prompt (truncation path), they do not append
+        # validation error hints (validation path).
+        first_len = len(requests[0]["messages"][0]["content"])
+        assert first_len == 2000
+        for body in requests[1:]:
+            hints = [m for m in body["messages"] if m.get("role") == "user" and "Validation error:" in m["content"]]
+            assert not hints
+            assert len(body["messages"][0]["content"]) < first_len
+        # The truncation budget allows _MAX_TRUNCATION_RETRIES + 1 calls; with
+        # max_retries=3 the validation budget would also allow 4, so the count
+        # alone does not distinguish the paths — the shorter prompts and the
+        # absent validation hints above do.
+        assert len(requests) == _MAX_TRUNCATION_RETRIES + 1
+        # No validation-retry warnings fire on this path.
+        assert not [r for r in caplog.records if "Structured output validation failed" in r.getMessage()]
+
+    def test_null_content_with_length_and_short_prompt_raises_incomplete(self):
+        """Without room to shorten, the truncation path raises IncompleteOutputException directly."""
+
+        def handler(request):
+            return httpx.Response(200, json=self._length_response())
+
+        client = _stubbed_client(handler, max_retries=3)
+
+        with pytest.raises(IncompleteOutputException):
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "short"}],
+                max_tokens=256,
+            )
+
+    def test_truncation_budget_exhaustion_raises_incomplete_output(self):
+        """A long prompt that stays shortenable past the retry budget raises the endpoint condition.
+
+        A 5000-char message shortens 5000 -> 3000 -> 1800 -> 1080 across the
+        truncation attempts; the budget runs out while the message is still
+        above the floor. The caller must see the IncompleteOutputException,
+        not an internal RuntimeError.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=self._length_response())
+
+        client = _stubbed_client(handler, max_retries=3)
+
+        with pytest.raises(IncompleteOutputException):
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "x" * 5000}],
+                max_tokens=256,
+            )
+
+        assert len(requests) == _MAX_TRUNCATION_RETRIES + 1
+        assert [len(body["messages"][0]["content"]) for body in requests] == [5000, 3000, 1800, 1080]
+
+    def test_parse_completion_checks_length_before_missing_content(self):
+        """_parse_completion raises IncompleteOutputException for null content + length."""
+        msg = SimpleNamespace(content=None)
+        choice = SimpleNamespace(message=msg, finish_reason="length")
+        completion = SimpleNamespace(choices=[choice])
+
+        with pytest.raises(IncompleteOutputException):
+            _parse_completion(completion, _StructuredAnswer)
+
+
+class TestStructuredClientResponseFormat:
+    def _capture(self, mode):
+        bodies = []
+
+        def handler(request):
+            bodies.append(json.loads(request.read()))
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_context=0)
+        http_client = httpx.Client(transport=httpx.MockTransport(handler))
+        with patch(
+            "asago_policy_mapper.llm.OpenAI",
+            lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+        ):
+            client = create_client(config, mode=mode)
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "system", "content": "SYSTEM"}, {"role": "user", "content": "hello"}],
+                max_tokens=256,
+            )
+        return bodies[0]
+
+    def test_json_schema_mode_sends_native_schema_without_strict(self):
+        body = self._capture(StructuredOutputMode.JSON_SCHEMA)
+        assert body["response_format"] == {
+            "type": "json_schema",
+            "json_schema": {"name": "_StructuredAnswer", "schema": _StructuredAnswer.model_json_schema()},
+        }
+        # The wire payload never mentions strict in any form.
+        assert "strict" not in json.dumps(body["response_format"])
+
+    def test_json_schema_with_prompt_mode_appends_schema_block(self):
+        body = self._capture(StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT)
+        assert body["response_format"]["type"] == "json_schema"
+        assert body["response_format"]["json_schema"]["name"] == "_StructuredAnswer"
+        assert "As a genius expert" in body["messages"][0]["content"]
+        assert body["messages"][0]["content"].startswith("SYSTEM")
+
+    def test_json_mode_sends_json_object_with_schema_in_prompt(self):
+        body = self._capture(StructuredOutputMode.JSON)
+        assert body["response_format"] == {"type": "json_object"}
+        assert "matches this JSON schema exactly" in body["messages"][0]["content"]
+        assert body["messages"][0]["content"].startswith("SYSTEM")

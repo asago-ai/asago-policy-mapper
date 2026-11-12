@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 from asago_policy_mapper.extract.models import RetrievalConfig
-from asago_policy_mapper.extract.parse import Chunk
+from asago_policy_mapper.extract.parse import Chunk, ParsedDocument, chunk_documents
 from asago_policy_mapper.extract.querygen import (
     ChunkGroup,
     GeneratedQueries,
@@ -125,7 +125,7 @@ def test_group_chunks_none_merges_respects_size_cap():
 
 
 def _make_mock_client(queries_per_call):
-    """Build a mock instructor client that returns GeneratedQueries."""
+    """Build a mock structured-output client that returns GeneratedQueries."""
     client = MagicMock()
 
     def fake_create(**kwargs):
@@ -230,3 +230,93 @@ def test_generate_queries_fallback_on_failure():
     assert len(results) == 1
     assert results[0].chunk_indices == [1]
     assert fallback_indices == [0]
+
+
+def _make_prompt_echo_client():
+    """Return a client whose query names the document markers found in the prompt."""
+    client = MagicMock()
+
+    def fake_create(**kwargs):
+        text = "".join(m.get("content", "") for m in kwargs["messages"] if isinstance(m, dict))
+        markers = sorted(m for m in ("ALPHA", "BETA") if m in text)
+        return GeneratedQueries(queries=["+".join(markers)])
+
+    client.chat.completions.create = MagicMock(side_effect=fake_create)
+    return client
+
+
+def _two_document_chunks():
+    # Per-document Chunk.index values restart at 0, as chunk_documents produces them.
+    return [
+        Chunk(text="ALPHA first passage", source="alpha.pdf", index=0, section="Governance"),
+        Chunk(text="ALPHA second passage", source="alpha.pdf", index=1, section="Governance"),
+        Chunk(text="BETA first passage", source="beta.pdf", index=0, section="Privacy"),
+        Chunk(text="BETA second passage", source="beta.pdf", index=1, section="Privacy"),
+    ]
+
+
+def test_generate_queries_multi_document_reads_each_groups_own_text():
+    chunks = _two_document_chunks()
+    client = _make_prompt_echo_client()
+
+    results = generate_queries(chunks, group_chunks(chunks), client, "test-model")
+
+    by_section = {r.section: r for r in results}
+    assert by_section["Governance"].query == "ALPHA"
+    assert by_section["Privacy"].query == "BETA"
+
+
+def test_multi_document_chunk_indices_are_merged_list_positions():
+    chunks = _two_document_chunks()
+    client = _make_prompt_echo_client()
+
+    results = generate_queries(chunks, group_chunks(chunks), client, "test-model")
+
+    by_section = {r.section: r for r in results}
+    assert by_section["Governance"].chunk_indices == [0, 1]
+    assert by_section["Privacy"].chunk_indices == [2, 3]
+    for r in results:
+        assert {chunks[i].section for i in r.chunk_indices} == {r.section}
+        assert len({chunks[i].source for i in r.chunk_indices}) == 1
+
+
+def test_group_chunks_does_not_span_documents_with_same_section_name():
+    chunks = [
+        Chunk(text="ALPHA intro", source="alpha.pdf", index=0, section="Overview"),
+        Chunk(text="BETA intro", source="beta.pdf", index=0, section="Overview"),
+        Chunk(text="BETA untitled continuation", source="beta.pdf", index=1, section=None),
+    ]
+
+    groups = group_chunks(chunks)
+
+    assert [g.chunk_indices for g in groups] == [[0], [1, 2]]
+
+
+def test_group_chunks_unsectioned_start_of_next_document_opens_new_group():
+    chunks = [
+        Chunk(text="ALPHA body", source="alpha.pdf", index=0, section="Governance"),
+        Chunk(text="BETA preamble", source="beta.pdf", index=0, section=None),
+    ]
+
+    groups = group_chunks(chunks)
+
+    assert [g.chunk_indices for g in groups] == [[0], [1]]
+    assert groups[1].section is None
+
+
+def test_multi_document_query_gen_from_chunk_documents_resolves_own_text():
+    docs = [
+        ParsedDocument(source="alpha.txt", content="ALPHA policy text about governance.", doc=None),
+        ParsedDocument(source="beta.txt", content="BETA policy text about privacy.", doc=None),
+    ]
+    chunks = chunk_documents(docs)
+    client = _make_prompt_echo_client()
+
+    results = generate_queries(chunks, group_chunks(chunks), client, "test-model")
+
+    assert len(results) == 2
+    for r in results:
+        sources = {chunks[i].source for i in r.chunk_indices}
+        assert len(sources) == 1
+        marker = "ALPHA" if sources == {"alpha.txt"} else "BETA"
+        assert r.query == marker

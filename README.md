@@ -108,7 +108,9 @@ LLM prompts are Jinja2 templates in `src/asago_policy_mapper/templates/prompts/`
 
 ## LLM Integration
 
-All LLM calls go through `llm.py`, which wraps the OpenAI client with [instructor](https://github.com/instructor-ai/instructor) for structured Pydantic outputs. `TokenTracker` accumulates token usage across pipeline stages; `LLMConfig` holds connection details.
+All LLM calls go through `llm.py`, which wraps the plain OpenAI SDK client with a structured-output layer: `response_model=SomePydanticModel` is sent as a `json_schema` `response_format` (or `json_object` with the schema in the prompt for endpoints without schema support) and the JSON content is validated locally against the Pydantic model. `TokenTracker` accumulates token usage across pipeline stages; `LLMConfig` holds connection details.
+
+The structured-output mode is selected by `create_client`'s `mode` argument, or by the `POLICY_MAPPER_STRUCTURED_OUTPUT_MODE` environment variable when no argument is passed (`json_schema`, the default; `json`, schema-in-prompt without server-side grammar; `json_schema_with_prompt`, both). On vLLM endpoints, `json_schema` enables server-side guided decoding, which measured −16.1% tokens but −0.016 micro-F1 on the 27-policy battery versus the instructor-era schema-in-prompt wire format (2026-11-05, `experiments/EXPERIMENT_LOG.md`; the `json_schema_with_prompt` arm reuses that wire format's instructor schema block while keeping guided decoding, at −0.014 micro-F1 and −1.1% tokens). The `json` mode sends a `json_object` `response_format` plus a "Respond with a single JSON object that matches this JSON schema exactly:" schema-in-prompt instruction; it keeps decoding unconstrained but has not been battery-measured against the instructor-era wire format.
 
 - Automatic retry on validation errors (appends error hint), context overflow detection (reduces the configured output-token parameter), and prompt truncation on incomplete output
 - `LLMConfig.max_tokens` (default 8192) is always sent on chat completions. Without this, vLLM treats omitted `max_tokens` as “fill the remaining context”, so grounding calls can generate for tens of minutes. Override the budget with `--max-tokens`, `POLICY_MAPPER_MAX_OUTPUT_TOKENS`, or `--max-context`.
@@ -163,8 +165,11 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 | `--bi-encoder-model` | `POLICY_MAPPER_BI_ENCODER_MODEL` | Bi-encoder endpoint URL or local model name |
 | `--bi-encoder-model-name` | `POLICY_MAPPER_BI_ENCODER_MODEL_NAME` | Explicit remote bi-encoder model name |
 | `--cross-encoder-model` | `POLICY_MAPPER_CROSS_ENCODER_MODEL` | Cross-encoder endpoint URL or local model name |
+| `--cross-encoder-model-name` | `POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME` | Explicit remote cross-encoder model name |
 
-If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` to set it explicitly.
+If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` and `--cross-encoder-model-name` to set it explicitly. A bare IP host derives a meaningless name (the first octet), so always set the name for those endpoints.
+
+`--cross-encoder-type` selects the remote reranker API: `score` (default, POSTs `{text_1, text_2}` to `/v1/score`), `rerank` (POSTs `{model, query, documents}` to `/v1/rerank`, as served by vLLM for Qwen3-Reranker), or `generative` (logprob scoring through `/v1/completions`). The `rerank` type raises on HTTP errors and on responses that omit a document, so a failing reranker never produces silent zero scores. Extraction metadata records `cross_encoder_type` and `cross_encoder_model_name`.
 
 Reusable, secret-free environment templates are provided for the recommended GPU configuration and the OpenAI cloud configuration:
 
@@ -260,6 +265,13 @@ uv sync
 
 You need a local clone of [ai-atlas-nexus](https://github.com/IBM/ai-atlas-nexus) — set its path via `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag.
 
+The clone **must be checked out at the `ai-atlas-nexus` commit pinned in `uv.lock`**. At startup the clone's data files are validated against the ontology models of the pinned library version, and a clone that is older *or* newer than the pin fails with pydantic validation errors. After cloning (and after any `uv lock --upgrade-package ai-atlas-nexus`), sync the clone to the pin from the repo root:
+
+```bash
+git -C /path/to/ai-atlas-nexus fetch origin
+git -C /path/to/ai-atlas-nexus checkout "$(grep -oE 'ai-atlas-nexus\.git\?rev=[^"]*#[0-9a-f]{40}' uv.lock | head -1 | sed 's/.*#//')"
+```
+
 ## Usage
 
 ### Extract risks from a policy document
@@ -271,7 +283,7 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus
 ```
 
-Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both.
+Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both. The JSON includes an `llm_calls` array with every LLM call (messages, response, timing) for analysis; it is written once when the run completes.
 
 ### Evaluate against ground truth
 
@@ -326,9 +338,40 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --nexus-base-dir /path/to/ai-atlas-nexus --no-query-gen \
   --base-url <url> --model <model>
 
+# Warn about loaded risks whose description lacks closing punctuation
+# (possible upstream truncation); off by default
+uv run asago-policy-mapper extract policy.pdf -o output/ \
+  --nexus-base-dir /path/to/ai-atlas-nexus --check-risk-text \
+  --base-url <url> --model <model>
+
 # Rebuild mitigation index (after data file changes)
 python scripts/build_mitigation_index.py
 ```
+
+### Known upstream text defects
+
+Some Nexus risk descriptions are cut mid-sentence upstream. In the CREDO UCF
+catalog (`ai_atlas_nexus/data/knowledge_graph/credo.yaml`), `credo-risk-018`
+("AI deception") and `credo-risk-045` ("Competitive dynamics") end mid-sentence.
+The description of `credo-risk-010` ("Stereotype perpetuation") ends with an
+incomplete copy of the `credo-risk-011` text. The source CSV the catalog was
+generated from has the same truncation.
+
+When `extract` loads the Nexus catalog, it restores these descriptions from the
+Credo AI Unified Control Framework paper (arXiv:2503.05937v1, Appendix A "Risk
+taxonomy" table, <https://arxiv.org/abs/2503.05937>). The overrides are in
+`taxonomy.py::_DESCRIPTION_OVERRIDES`, keyed by risk ID:
+
+- `credo-risk-018` gets the paper's full sentence (page 22).
+- `credo-risk-010` is trimmed to its own first sentence, which is the paper's
+  complete description (page 21).
+- `credo-risk-045` stays as shipped. The paper cuts this description at the same
+  point, so no complete wording is available.
+
+An override applies only while the loaded description still equals the known
+truncated text, so a fixed upstream catalog is never overwritten. Vendored Nexus
+data files are not modified. Pass `--check-risk-text` to list descriptions that
+still lack closing punctuation.
 
 ## Custom Taxonomies
 

@@ -36,17 +36,20 @@ def group_chunks(chunks: list[Chunk], max_group_size: int = 5) -> list[ChunkGrou
 
     groups: list[ChunkGroup] = []
 
-    for chunk in chunks:
+    # Chunk.index restarts at 0 for each document, so groups record positions in `chunks`,
+    # the list that generate_queries and the pipeline index into.
+    for pos, chunk in enumerate(chunks):
+        same_document = bool(groups) and chunks[groups[-1].chunk_indices[-1]].source == chunk.source
         if chunk.section is not None:
-            if groups and groups[-1].section == chunk.section:
-                groups[-1].chunk_indices.append(chunk.index)
+            if same_document and groups[-1].section == chunk.section:
+                groups[-1].chunk_indices.append(pos)
             else:
-                groups.append(ChunkGroup(chunk_indices=[chunk.index], section=chunk.section))
+                groups.append(ChunkGroup(chunk_indices=[pos], section=chunk.section))
         else:
-            if groups:
-                groups[-1].chunk_indices.append(chunk.index)
+            if same_document:
+                groups[-1].chunk_indices.append(pos)
             else:
-                groups.append(ChunkGroup(chunk_indices=[chunk.index], section=None))
+                groups.append(ChunkGroup(chunk_indices=[pos], section=None))
 
     split: list[ChunkGroup] = []
     for g in groups:

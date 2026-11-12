@@ -446,8 +446,11 @@ def main():
     parser.add_argument(
         "--cross-encoder-type",
         default="score",
-        choices=["score", "generative"],
-        help="Cross-encoder API type: 'score' for /v1/score, 'generative' for logprob rerankers (default: score)",
+        choices=["score", "rerank", "generative"],
+        help=(
+            "Cross-encoder API type: 'score' for /v1/score, 'rerank' for /v1/rerank, "
+            "'generative' for /v1/completions logprob rerankers (default: score)"
+        ),
     )
     parser.add_argument(
         "--bm25-rescue-rank",

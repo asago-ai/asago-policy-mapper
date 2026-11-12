@@ -1,10 +1,10 @@
 import json
+import logging
 from pathlib import Path
 
 import typer
 import yaml
 
-from asago_policy_mapper import debug
 from asago_policy_mapper.llm import LLMConfig, TokenTracker, create_client
 
 app = typer.Typer()
@@ -13,6 +13,13 @@ app = typer.Typer()
 @app.callback()
 def main():
     """Asago Policy Mapper — policy risk extraction using AI Atlas Nexus."""
+    # Attach a root handler so the pipeline's existing INFO stage logs are
+    # visible. basicConfig is a no-op when logging is already configured, so
+    # an embedding application (e.g. the battery runner) keeps its own setup.
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] %(levelname)s %(name)s: %(message)s",
+    )
 
 
 EXCLUDED_TAXONOMIES = {
@@ -39,7 +46,11 @@ def extract(
     custom_taxonomy: list[Path] = typer.Option(
         [], "--custom-taxonomy", "-t", help="Custom taxonomy YAML file(s) to load alongside Nexus risks"
     ),
-    debug_dir: Path = typer.Option(None, "--debug", help="Directory for per-call debug logs"),
+    check_risk_text: bool = typer.Option(
+        False,
+        "--check-risk-text",
+        help="Warn about loaded risks whose description lacks closing punctuation (possible truncation)",
+    ),
     max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
     max_tokens: int = typer.Option(
         8192,
@@ -104,7 +115,16 @@ def extract(
     cross_encoder_type: str = typer.Option(
         "score",
         "--cross-encoder-type",
-        help="Cross-encoder API type: 'score' for /v1/score, 'generative' for /v1/chat/completions logprob rerankers",
+        help=(
+            "Cross-encoder API type: 'score' for /v1/score, 'rerank' for /v1/rerank, "
+            "'generative' for /v1/completions logprob rerankers"
+        ),
+    ),
+    cross_encoder_model_name: str = typer.Option(
+        None,
+        "--cross-encoder-model-name",
+        envvar="POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME",
+        help="Cross-encoder model name (overrides name derived from endpoint URL)",
     ),
     bm25_rescue_rank: int = typer.Option(
         0, "--bm25-rescue-rank", help="BM25 rank cutoff for rescuing candidates past cross-encoder (0=disabled)"
@@ -223,7 +243,6 @@ def extract(
         )
         tracker = TokenTracker()
         client = create_client(config, tracker=tracker)
-    debug.configure(debug_dir)
 
     output.mkdir(parents=True, exist_ok=True)
 
@@ -242,8 +261,12 @@ def extract(
 
     from ai_atlas_nexus import AIAtlasNexus
 
+    from asago_policy_mapper.taxonomy import apply_description_overrides
+
     nexus = AIAtlasNexus(base_dir=nexus_base_dir)
-    all_risks = [r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES]
+    all_risks = apply_description_overrides(
+        r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
+    )
 
     custom_risk_count = 0
     if loaded_custom_risks:
@@ -256,6 +279,16 @@ def extract(
                 seen_ids.add(cr.id)
                 custom_risk_count += 1
 
+    if check_risk_text:
+        from asago_policy_mapper.taxonomy import warn_unterminated_descriptions
+
+        flagged = warn_unterminated_descriptions(all_risks)
+        typer.echo(
+            f"Risk text check: {len(flagged)} of {len(all_risks)} risk descriptions lack closing punctuation"
+            + (f": {', '.join(flagged)}" if flagged else ""),
+            err=True,
+        )
+
     from asago_policy_mapper.extract.models import RetrievalConfig
     from asago_policy_mapper.extract.pipeline import run_extraction
 
@@ -266,6 +299,7 @@ def extract(
         query_instruction=query_instruction if query_instruction is not None else RetrievalConfig.query_instruction,
         cross_encoder_model=cross_encoder_model,
         cross_encoder_type=cross_encoder_type,
+        cross_encoder_model_name=cross_encoder_model_name or None,
         colbert_model=colbert_model or None,
         chunk_max_tokens=chunk_max_tokens,
         top_n_accept=top_n_accept,

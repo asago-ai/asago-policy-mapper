@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 import numpy as np
 from rank_bm25 import BM25Okapi
@@ -115,34 +116,57 @@ class _RemoteBiEncoder:
 
 
 class _RemoteCrossEncoder:
-    """Wraps a vLLM /v1/score endpoint via httpx."""
+    """Wraps a vLLM /v1/score or /v1/rerank endpoint via httpx.
 
-    def __init__(self, url: str):
+    api_type "score" posts {text_1, text_2} to {base}/score; "rerank" posts
+    {query, documents} to {base}/rerank. An explicit model_name overrides the
+    name derived from the URL hostname, which is wrong for bare IP hosts.
+    """
+
+    _API_TYPES = ("score", "rerank")
+
+    def __init__(self, url: str, api_type: str = "score", model_name: str | None = None):
         import httpx
 
-        base_url, self._model = _parse_remote_url(url)
-        self._score_url = base_url + "/score"
+        if api_type not in self._API_TYPES:
+            raise ValueError(f"Unknown cross-encoder api_type {api_type!r}; expected one of {self._API_TYPES}")
+        base_url, derived_model = _parse_remote_url(url)
+        self._api_type = api_type
+        self._model = model_name if model_name else derived_model
+        self._endpoint_url = f"{base_url}/{api_type}"
         self._client = httpx.Client(timeout=120.0)
 
     def predict(self, pairs: list[tuple[str, str]]) -> np.ndarray:
         if not pairs:
             return np.array([])
         # pairs are (risk_desc, chunk_text) — all share the same chunk_text
-        # vLLM /v1/score: text_1=query (chunk), text_2=documents (risks)
-        text_1 = pairs[0][1]
-        text_2_list = [p[0] for p in pairs]
-        response = self._client.post(
-            self._score_url,
-            json={
-                "model": self._model,
-                "text_1": text_1,
-                "text_2": text_2_list,
-            },
-        )
+        # which acts as the query; the risk descriptions are the documents.
+        query = pairs[0][1]
+        documents = [p[0] for p in pairs]
+        if self._api_type == "rerank":
+            payload: dict = {"model": self._model, "query": query, "documents": documents}
+        else:
+            payload = {"model": self._model, "text_1": query, "text_2": documents}
+        response = self._client.post(self._endpoint_url, json=payload)
         response.raise_for_status()
         data = response.json()
+        if self._api_type == "rerank":
+            return self._scores_from_rerank(data, len(documents))
         scores_data = sorted(data["data"], key=lambda d: d["index"])
         return np.array([d["score"] for d in scores_data], dtype=np.float64)
+
+    @staticmethod
+    def _scores_from_rerank(data: dict, expected: int) -> np.ndarray:
+        # /rerank returns results sorted by score, so index is the only link to input order.
+        scores = np.full(expected, np.nan, dtype=np.float64)
+        for item in data["results"]:
+            scores[item["index"]] = item["relevance_score"]
+        if np.isnan(scores).any():
+            raise ValueError(
+                f"rerank response covers {int(np.isfinite(scores).sum())} of {expected} documents; "
+                "refusing to fill missing scores"
+            )
+        return scores
 
 
 _GENERATIVE_RERANKER_INSTRUCTION = (
@@ -163,10 +187,11 @@ class _RemoteGenerativeReranker:
     chat template issues with the Qwen3 reranker's enable_thinking parameter.
     """
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, model_name: str | None = None):
         import httpx
 
-        base_url, self._model = _parse_remote_url(url)
+        base_url, derived_model = _parse_remote_url(url)
+        self._model = model_name if model_name else derived_model
         self._completions_url = base_url + "/completions"
         self._client = httpx.Client(timeout=120.0)
 
@@ -290,7 +315,13 @@ def _load_colbert(model_name, descriptions):
 
 
 def _load_bi_encoder(model_name, descriptions, query_instruction="", api_key="none", remote_model_name=None):
+    t0 = time.monotonic()
     if _is_remote(model_name):
+        logger.info(
+            "Embedding %d risk descriptions via remote bi-encoder %s",
+            len(descriptions),
+            remote_model_name or model_name,
+        )
         remote = _RemoteBiEncoder(
             model_name, query_instruction=query_instruction, api_key=api_key, model_name=remote_model_name
         )
@@ -298,20 +329,37 @@ def _load_bi_encoder(model_name, descriptions, query_instruction="", api_key="no
             embeddings = remote.encode(descriptions, normalize=True)
         except Exception as e:
             raise RuntimeError(f"Failed to encode corpus via remote bi-encoder at {model_name}: {e}") from e
-        logger.info("Remote bi-encoder index built: %d risks, %s", len(descriptions), model_name)
+        logger.info(
+            "Remote bi-encoder index built: %d risks, %s (%.1fs)",
+            len(descriptions),
+            model_name,
+            time.monotonic() - t0,
+        )
         return None, remote, embeddings
+    logger.info("Loading local bi-encoder %s", model_name)
     local = SentenceTransformer(model_name)
     embeddings = local.encode(descriptions, normalize_embeddings=True, show_progress_bar=False)
+    logger.info(
+        "Local bi-encoder index built: %d risks, %s (%.1fs)",
+        len(descriptions),
+        model_name,
+        time.monotonic() - t0,
+    )
     return local, None, embeddings
 
 
-def _load_cross_encoder(model_name, cross_encoder_type="score"):
+def _load_cross_encoder(model_name, cross_encoder_type="score", cross_encoder_model_name=None):
     if _is_remote(model_name):
         if cross_encoder_type == "generative":
             logger.info("Remote generative reranker: %s", model_name)
-            return None, _RemoteGenerativeReranker(model_name), False, False
-        logger.info("Remote cross-encoder: %s", model_name)
-        return None, _RemoteCrossEncoder(model_name), False, False
+            return None, _RemoteGenerativeReranker(model_name, model_name=cross_encoder_model_name), False, False
+        logger.info("Remote cross-encoder (%s): %s", cross_encoder_type, model_name)
+        return (
+            None,
+            _RemoteCrossEncoder(model_name, api_type=cross_encoder_type, model_name=cross_encoder_model_name),
+            False,
+            False,
+        )
     local = CrossEncoder(model_name)
     logger.info("Local cross-encoder: %s", model_name)
     return local, None, model_name in _SIGMOID_MODELS, model_name in _NLI_MODELS
@@ -432,6 +480,7 @@ class RiskIndex:
         cross_encoder_type: str = "score",
         bi_encoder_api_key: str = "none",
         bi_encoder_model_name: str | None = None,
+        cross_encoder_model_name: str | None = None,
     ):
         self._risk_ids: list[str] = []
         self._risk_meta: dict[str, dict] = {}
@@ -439,6 +488,7 @@ class RiskIndex:
         self._embeddings: np.ndarray | None = None
         self._colbert_doc_embeddings: list[np.ndarray] | None = None
         self._variant_map: dict[str, list[dict]] = {}
+        self._variant_taxonomy: dict[str, str] = {}
 
         self._remote_bi_encoder: _RemoteBiEncoder | None = None
         self._remote_cross_encoder: _RemoteCrossEncoder | None = None
@@ -450,6 +500,9 @@ class RiskIndex:
             return
 
         index_risks, self._variant_map = _collapse_variants(risks)
+        self._variant_taxonomy = {
+            v["risk_id"]: v["taxonomy"] for variants in self._variant_map.values() for v in variants
+        }
 
         for r in index_risks:
             rid = r.id
@@ -487,7 +540,7 @@ class RiskIndex:
 
             if cross_encoder_model:
                 self._cross_encoder, self._remote_cross_encoder, self._apply_sigmoid, self._is_nli = (
-                    _load_cross_encoder(cross_encoder_model, cross_encoder_type)
+                    _load_cross_encoder(cross_encoder_model, cross_encoder_type, cross_encoder_model_name)
                 )
             else:
                 self._cross_encoder = None
@@ -536,6 +589,9 @@ class RiskIndex:
         return self._colbert is not None
 
     def get_taxonomy(self, risk_id: str) -> str:
+        # Variants are collapsed out of ``_risk_meta``; their taxonomy lives only in the variant map.
+        if risk_id in self._variant_taxonomy:
+            return self._variant_taxonomy[risk_id]
         return str(self._risk_meta.get(risk_id, {}).get("taxonomy", ""))
 
     def set_query_instruction(self, instruction: str) -> None:

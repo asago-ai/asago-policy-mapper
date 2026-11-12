@@ -1,6 +1,9 @@
+import logging
 import re
 import tempfile
 
+import pytest
+from ai_atlas_nexus.ai_risk_ontology.datamodel.ai_risk_ontology import Risk
 from typer.testing import CliRunner
 
 from asago_policy_mapper.cli import app
@@ -77,6 +80,201 @@ def test_extract_service_tier_flag_in_help():
     assert result.exit_code == 0
     output = _strip_ansi(result.stdout)
     assert "--service-tier" in output
+
+
+def test_extract_check_risk_text_flag_in_help():
+    result = runner.invoke(app, ["extract", "--help"])
+    assert result.exit_code == 0
+    assert "--check-risk-text" in _strip_ansi(result.stdout)
+
+
+# (option name, envvar) pairs documented in README/.env usage. A rename or an
+# accidentally dropped envvar silently severs .env-based configuration: the
+# option falls back to its default with no error, which is hard to notice.
+_ENVVAR_OPTIONS = [
+    ("base_url", "POLICY_MAPPER_BASE_URL"),
+    ("nexus_base_dir", "NEXUS_BASE_DIR"),
+    ("model", "POLICY_MAPPER_MODEL"),
+    ("api_key", "POLICY_MAPPER_API_KEY"),
+    ("max_tokens", "POLICY_MAPPER_MAX_OUTPUT_TOKENS"),
+    ("output_token_parameter", "POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER"),
+    ("service_tier", "POLICY_MAPPER_SERVICE_TIER"),
+    ("bi_encoder_model", "POLICY_MAPPER_BI_ENCODER_MODEL"),
+    ("bi_encoder_api_key", "POLICY_MAPPER_BI_ENCODER_API_KEY"),
+    ("bi_encoder_model_name", "POLICY_MAPPER_BI_ENCODER_MODEL_NAME"),
+    ("cross_encoder_model", "POLICY_MAPPER_CROSS_ENCODER_MODEL"),
+    ("cross_encoder_model_name", "POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME"),
+]
+
+
+@pytest.mark.parametrize("option_name,envvar", _ENVVAR_OPTIONS)
+def test_extract_envvar_attached_to_option(option_name, envvar):
+    from typer.main import get_command
+
+    command = get_command(app).commands["extract"]
+    params = {p.name: p for p in command.params}
+    assert option_name in params, f"option --{option_name} no longer exists"
+    registered = params[option_name].envvar
+    if isinstance(registered, str):
+        registered = [registered]
+    assert envvar in (registered or []), f"--{option_name} lost its envvar (expected {envvar})"
+
+
+def test_cli_configures_logging():
+    """The CLI attaches a root handler at INFO so stage logs are visible.
+
+    Without this, the pipeline's logger.info calls are swallowed (Python's
+    last-resort handler only prints WARNING+). basicConfig is a no-op when
+    logging is already configured, so the test resets the root logger first
+    and restores it afterwards.
+    """
+    root = logging.getLogger()
+    saved_handlers = root.handlers[:]
+    saved_level = root.level
+    root.handlers = []
+    root.setLevel(logging.WARNING)
+    try:
+        result = runner.invoke(
+            app,
+            [
+                "extract",
+                "/nonexistent/policy.pdf",
+                "-o",
+                "/tmp/test-output",
+                "--base-url",
+                "http://localhost:8000/v1",
+                "--model",
+                "test",
+                "--nexus-base-dir",
+                "/tmp/nexus",
+            ],
+        )
+        assert result.exit_code != 0
+        assert root.level == logging.INFO
+        assert root.handlers, "CLI should have attached a root logging handler"
+    finally:
+        root.handlers = saved_handlers
+        root.setLevel(saved_level)
+
+
+class _StopAfterRiskLoad(Exception):
+    pass
+
+
+@pytest.mark.parametrize("check_risk_text", [True, False])
+def test_extract_check_risk_text_warnings_only_when_enabled(monkeypatch, tmp_path, caplog, check_risk_text):
+    risks = [
+        Risk(id="ok", name="ok", description="Complete sentence.", isDefinedByTaxonomy="test", type="Risk"),
+        Risk(id="cut", name="cut", description="This sentence stops in the", isDefinedByTaxonomy="test", type="Risk"),
+        # Truncated upstream text as shipped in the Nexus CREDO UCF catalog.
+        Risk(
+            id="credo-risk-018",
+            name="AI deception",
+            description="The AI system may misrepresent its own capabilities or limitations, "
+            "potentially leading to misplaced trust or inappropriate",
+            isDefinedByTaxonomy="credo-ucf",
+            type="Risk",
+        ),
+    ]
+    pipeline_risks: list[Risk] = []
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            pass
+
+        def get_all_risks(self):
+            return risks
+
+    def stop(**kwargs):
+        pipeline_risks.extend(kwargs["risks"])
+        raise _StopAfterRiskLoad
+
+    monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
+    monkeypatch.setattr("asago_policy_mapper.extract.pipeline.run_extraction", stop)
+    policy = tmp_path / "policy.txt"
+    policy.write_text("test policy")
+    args = ["extract", str(policy), "-o", str(tmp_path / "out"), "--nexus-base-dir", str(tmp_path)]
+    args += ["--no-judge", "--no-grounding", "--no-query-gen", "--no-expand-siblings"]
+    if check_risk_text:
+        args.append("--check-risk-text")
+
+    with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.taxonomy"):
+        result = runner.invoke(app, args)
+
+    assert isinstance(result.exception, _StopAfterRiskLoad)
+    # The restored CREDO text, not the truncated upstream one, reaches the pipeline.
+    descriptions = {r.id: r.description for r in pipeline_risks}
+    assert descriptions["credo-risk-018"] == (
+        "The AI system may misrepresent its own capabilities or limitations, "
+        "potentially leading to misplaced trust or inappropriate use."
+    )
+    if check_risk_text:
+        assert "Risk 'cut' description lacks closing punctuation" in caplog.text
+        assert "'ok'" not in caplog.text
+        assert "credo-risk-018" not in caplog.text
+        assert "Risk text check: 1 of 3 risk descriptions lack closing punctuation: cut" in result.output
+    else:
+        assert "lacks closing punctuation" not in caplog.text
+        assert "Risk text check" not in result.output
+
+
+def test_extract_env_values_reach_llm_config(monkeypatch, tmp_path):
+    """Env-provided service tier, output budget and parameter name reach LLMConfig.
+
+    Regression test for the 2026-11-11 incident: the service tier was believed
+    configured through the environment but the wiring was never verified
+    end-to-end, so a silent override went unnoticed across several runs. This
+    exercises the real CLI path: envvar resolution -> option -> LLMConfig ->
+    the config object the pipeline receives.
+    """
+    captured = {}
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            pass
+
+        def get_all_risks(self):
+            return [
+                Risk(id="r1", name="r1", description="A risk.", isDefinedByTaxonomy="test", type="Risk"),
+            ]
+
+    def stop(**kwargs):
+        captured["config"] = kwargs["config"]
+        raise _StopAfterRiskLoad
+
+    monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
+    monkeypatch.setattr("asago_policy_mapper.extract.pipeline.run_extraction", stop)
+    policy = tmp_path / "policy.txt"
+    policy.write_text("test policy")
+    result = runner.invoke(
+        app,
+        [
+            "extract",
+            str(policy),
+            "-o",
+            str(tmp_path / "out"),
+            "--nexus-base-dir",
+            str(tmp_path),
+            "--no-judge",
+            "--no-grounding",
+            "--no-expand-siblings",
+        ],
+        env={
+            "POLICY_MAPPER_BASE_URL": "http://localhost:8000/v1",
+            "POLICY_MAPPER_MODEL": "test-model",
+            "POLICY_MAPPER_MAX_OUTPUT_TOKENS": "4096",
+            "POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER": "max_completion_tokens",
+            "POLICY_MAPPER_SERVICE_TIER": "default",
+        },
+    )
+
+    assert isinstance(result.exception, _StopAfterRiskLoad)
+    config = captured["config"]
+    assert config.service_tier == "default"
+    assert config.max_tokens == 4096
+    assert config.output_token_parameter == "max_completion_tokens"
+    assert config.base_url == "http://localhost:8000/v1"
+    assert config.model == "test-model"
 
 
 def test_extract_invalid_custom_taxonomy():

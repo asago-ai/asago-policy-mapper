@@ -1,18 +1,22 @@
 import copy
+import json
 import logging
+import os
 import re
 import threading
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
 
-import instructor
-from instructor.core import IncompleteOutputException, InstructorRetryException
+import openai
 from openai import OpenAI
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
 
-_INSTRUCTOR_SCHEMA_OVERHEAD = 500
+# Safety margin in token estimates for the JSON schema the structured-output
+# layer adds to every request (see _response_format).
+_SCHEMA_OVERHEAD_TOKENS = 500
 
 
 def _strip_titles(obj: Any) -> Any:
@@ -32,6 +36,96 @@ class SlimModel(BaseModel):
         schema = super().model_json_schema(*args, **kwargs)
         _strip_titles(schema)  # mutates in-place, and avoids no-any-return
         return schema
+
+
+class StructuredOutputError(Exception):
+    """Base class for the structured-output client's errors."""
+
+
+class IncompleteOutputException(StructuredOutputError):
+    """The completion stopped at the token limit before producing valid JSON."""
+
+    def __init__(self, last_completion: Any = None):
+        super().__init__("The output is incomplete due to a max_tokens length limit.")
+        self.last_completion = last_completion
+
+
+class ResponseParsingError(ValueError, StructuredOutputError):
+    """The completion content is not JSON."""
+
+
+class FailedAttempt:
+    """One structured-output attempt that failed to parse or validate."""
+
+    def __init__(self, attempt_number: int, exception: Exception, completion: Any = None):
+        self.attempt_number = attempt_number
+        self.exception = exception
+        self.completion = completion
+
+
+class ValidationRetryExhausted(StructuredOutputError):
+    """Retries ran out because the completion kept failing to parse or validate.
+
+    ``failed_attempts`` records the failed attempt: the structured client
+    makes a single attempt per call, so the exception a caller sees carries
+    one entry for the attempt that failed last. A transport or API error
+    raises the underlying ``openai`` exception directly instead, so a
+    non-empty ``failed_attempts`` always means the model output, not the
+    endpoint, was at fault.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        failed_attempts: list[FailedAttempt] | None = None,
+    ):
+        super().__init__(message)
+        self.failed_attempts = failed_attempts or []
+
+
+# The exceptions a structured-output attempt can fail with. pydantic v2
+# reports malformed JSON from ``model_validate_json`` as ``ValidationError``,
+# and ``_extract_json_span`` never lets ``json.JSONDecodeError`` escape, so a
+# raw decoder error is not part of this tuple.
+_OUTPUT_VALIDATION_ERRORS = (ValidationError, ResponseParsingError)
+
+
+class StructuredOutputMode(Enum):
+    """How the completion is constrained to the response model's JSON schema.
+
+    JSON_SCHEMA sends the schema in the ``response_format`` parameter for
+    server-side constrained decoding. JSON falls back to ``json_object`` and
+    injects the schema into the system prompt for endpoints without schema
+    support. JSON_SCHEMA_WITH_PROMPT also uses server-side constrained
+    decoding, but additionally injects the schema into the system prompt in
+    the block wording the instructor-wrapped client used, preserving the task
+    framing the model saw before the instructor removal.
+    """
+
+    JSON_SCHEMA = "json_schema"
+    JSON = "json"
+    JSON_SCHEMA_WITH_PROMPT = "json_schema_with_prompt"
+
+
+_INSTRUCTOR_SCHEMA_BLOCK = (
+    "\n            As a genius expert, your task is to understand the content and provide\n"
+    "            the parsed objects in json that match the following json_schema:\n"
+    "\n"
+    "\n"
+    "            {schema}\n"
+    "\n"
+    "            Make sure to return an instance of the JSON, not the schema itself\n"
+)
+
+
+def _schema_block(schema: dict[str, Any]) -> str:
+    """Render the schema-in-prompt block exactly as instructor Mode.JSON did.
+
+    The odd 12-space indentation is verbatim from instructor's dedented
+    template: the interpolated schema lines at column 0 break ``dedent``'s
+    common-prefix removal, so the template lines keep their indentation.
+    """
+    return _INSTRUCTOR_SCHEMA_BLOCK.format(schema=json.dumps(schema, indent=2, ensure_ascii=False))
 
 
 _SAFETY_MARGIN = 64
@@ -61,7 +155,7 @@ class LLMConfig:
         if self.service_tier is not None:
             self.service_tier = self.service_tier.strip() or None
         if self.max_context > 0 and self.max_tokens >= self.max_context:
-            self.max_tokens = self.max_context - _SAFETY_MARGIN - _INSTRUCTOR_SCHEMA_OVERHEAD
+            self.max_tokens = self.max_context - _SAFETY_MARGIN - _SCHEMA_OVERHEAD_TOKENS
 
 
 @dataclass
@@ -149,7 +243,7 @@ def budget_max_tokens(
     if max_context <= 0:
         return requested_max_tokens
 
-    estimated_input = estimate_message_tokens(messages) + _INSTRUCTOR_SCHEMA_OVERHEAD
+    estimated_input = estimate_message_tokens(messages) + _SCHEMA_OVERHEAD_TOKENS
     available = max_context - estimated_input - _SAFETY_MARGIN
 
     if available < _MIN_OUTPUT_TOKENS:
@@ -177,9 +271,18 @@ def budget_max_tokens(
 def create_client(
     config: LLMConfig,
     tracker: TokenTracker | None = None,
-    mode: instructor.Mode = instructor.Mode.JSON,
-) -> instructor.Instructor:
-    client = instructor.from_openai(
+    mode: StructuredOutputMode | None = None,
+) -> "_StructuredClient":
+    """Build the tracked structured-output chat client used across the mapper.
+
+    ``mode`` defaults to ``JSON_SCHEMA``; the ``POLICY_MAPPER_STRUCTURED_OUTPUT_MODE``
+    environment variable overrides it (one of the ``StructuredOutputMode`` values,
+    e.g. ``json_schema_with_prompt`` for battery comparisons).
+    """
+    if mode is None:
+        env = os.environ.get("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE")
+        mode = StructuredOutputMode(env) if env else StructuredOutputMode.JSON_SCHEMA
+    client = _StructuredClient(
         OpenAI(base_url=config.base_url, api_key=config.api_key),
         mode=mode,
     )
@@ -276,25 +379,35 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
             return do_call(kwargs)
         except IncompleteOutputException as e:
             raise _IncompleteOutput(e) from e
-        except InstructorRetryException as e:
+        except openai.APIError as e:
+            # Endpoints report context overflow as a 400; reduce the output
+            # budget and retry. Every other API error propagates untouched.
             new_max = _extract_reduced_max_tokens(e)
-            if new_max is not None:
-                old_max = _get_output_token_budget(kwargs, config)
-                parameter = config.output_token_parameter
-                logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
-                if tracker:
-                    tracker.record_incident(
-                        "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}"
-                    )
-                kwargs["messages"] = copy.deepcopy(original_messages)
-                _set_output_token_budget(kwargs, config, new_max)
-                _apply_budget(kwargs, config)
-                continue
+            if new_max is None or val_attempt >= max_retries:
+                raise
+            old_max = _get_output_token_budget(kwargs, config)
+            parameter = config.output_token_parameter
+            logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
+            if tracker:
+                tracker.record_incident(
+                    "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}"
+                )
+            kwargs["messages"] = copy.deepcopy(original_messages)
+            _set_output_token_budget(kwargs, config, new_max)
+            _apply_budget(kwargs, config)
+            continue
+        except ValidationRetryExhausted as e:
             if val_attempt < max_retries:
-                logger.info(
-                    "Validation error (attempt %d/%d), retrying with fresh messages + error hint",
+                # A WARNING per structured-output validation retry (with a
+                # truncated error summary) makes retry frequency per endpoint
+                # observable; silence means first-try validation.
+                summary = str(e).splitlines()[0] if str(e) else type(e).__name__
+                logger.warning(
+                    "Structured output validation failed (attempt %d/%d), "
+                    "retrying with fresh messages + error hint: %s",
                     val_attempt + 1,
-                    max_retries,
+                    max_retries + 1,
+                    summary[:200],
                 )
                 retry_messages = copy.deepcopy(current_messages)
                 last_attempt = e.failed_attempts[-1] if e.failed_attempts else None
@@ -327,8 +440,8 @@ def _call_with_retry(
     original_messages = copy.deepcopy(kwargs.get("messages", []))
     current_messages = kwargs.get("messages", [])
     max_validation_retries = kwargs.pop("max_retries", config.max_retries)
-    kwargs["max_retries"] = 0
 
+    incomplete: _IncompleteOutput | None = None
     for attempt in range(_MAX_TRUNCATION_RETRIES + 1):
         try:
             return _retry_with_validation(  # type: ignore[no-any-return]
@@ -341,6 +454,7 @@ def _call_with_retry(
                 max_validation_retries,
             )
         except _IncompleteOutput as e:
+            incomplete = e
             shorter = _truncate_messages(current_messages)
             if shorter is None:
                 if tracker:
@@ -359,7 +473,16 @@ def _call_with_retry(
             current_messages = shorter
             kwargs["messages"] = shorter
             _apply_budget(kwargs, config)
-    raise RuntimeError("_call_with_retry exhausted truncation retries without returning")
+    # The truncation budget ran out while the prompt was still shortenable.
+    # Raise the incomplete-output cause, not an internal RuntimeError, so
+    # callers see the endpoint condition that ended the run.
+    if tracker:
+        tracker.record_incident(
+            "output_truncated",
+            f"Output truncated after {_MAX_TRUNCATION_RETRIES + 1} attempts with progressively shorter prompts",
+        )
+    assert incomplete is not None
+    raise incomplete.cause
 
 
 def _track_completion(tracker: TokenTracker, completion) -> None:
@@ -371,9 +494,147 @@ def _track_completion(tracker: TokenTracker, completion) -> None:
     tracker.add(usage)
 
 
-def _wrap_with_tracking(client: instructor.Instructor, tracker: TokenTracker, config: LLMConfig) -> None:
+def _extract_json_span(content: str) -> str:
+    """Return the last complete JSON object or array in ``content``.
+
+    Models sometimes wrap their output in markdown fences or prepend prose.
+    The model's own answer appears last, so the last complete span wins; an
+    earlier span quoted from the prompt must not hijack the parse.
+    """
+    decoder = json.JSONDecoder()
+    last_valid: str | None = None
+    consumed = 0
+    for index, char in enumerate(content):
+        if index < consumed or char not in "{[":
+            continue
+        try:
+            _, end = decoder.raw_decode(content, index)
+        except json.JSONDecodeError:
+            continue
+        last_valid = content[index:end]
+        consumed = end
+    return last_valid if last_valid is not None else content
+
+
+class _Completions:
+    """``chat.completions`` facade over the plain OpenAI SDK."""
+
+    def __init__(self, client: "_StructuredClient"):
+        self._client = client
+
+    def create(self, **kwargs: Any):
+        """Return the validated response model for a structured completion."""
+        result, _ = self._client.create_with_completion(**kwargs)
+        return result
+
+
+class _Chat:
+    def __init__(self, client: "_StructuredClient"):
+        self.completions = _Completions(client)
+
+
+class _StructuredClient:
+    """Structured-output chat client over a plain ``OpenAI`` instance.
+
+    Call sites pass ``response_model=SomePydanticModel`` and receive the
+    validated pydantic object from ``chat.completions.create``. The completion
+    is constrained with the native ``json_schema`` ``response_format`` (or a
+    ``json_object`` plus schema-in-prompt fallback via
+    ``StructuredOutputMode.JSON``) and parsed locally. Each call is a single
+    attempt; the retry loop with error hints lives in the tracking wrapper
+    (``_retry_with_validation``), which finally raises
+    ``ValidationRetryExhausted`` when ``max_retries`` runs out. API and
+    transport errors from the OpenAI SDK propagate untouched. Streaming is
+    not supported.
+    """
+
+    def __init__(self, openai_client: OpenAI, mode: StructuredOutputMode = StructuredOutputMode.JSON):
+        self._openai = openai_client
+        self.mode = mode
+        self.chat = _Chat(self)
+
+    def create_with_completion(self, **kwargs: Any) -> tuple[Any, Any]:
+        """Return ``(validated_model, raw_completion)`` for a single attempt.
+
+        Without ``response_model`` the raw completion passes through for both
+        elements, mirroring the previous client stack's seam. A parse or
+        validation failure raises ``ValidationRetryExhausted`` with the failed
+        attempt; the tracking wrapper owns retrying it with an error hint.
+        """
+        response_model = kwargs.pop("response_model", None)
+        # Retrying is the tracking wrapper's job. Accept and drop the kwarg
+        # so direct callers (e.g. the health probe) can pass it and the SDK's
+        # create(), which rejects it, never sees it.
+        kwargs.pop("max_retries", None)
+        if response_model is None:
+            completion = self._openai.chat.completions.create(**kwargs)
+            return completion, completion
+
+        request = dict(kwargs)
+        messages = list(request.get("messages", []))
+        request["messages"] = messages
+        request["response_format"] = self._response_format(response_model, messages)
+
+        completion = self._openai.chat.completions.create(**request)
+        try:
+            return _parse_completion(completion, response_model), completion
+        except _OUTPUT_VALIDATION_ERRORS as e:
+            raise ValidationRetryExhausted(str(e), failed_attempts=[FailedAttempt(1, e, completion)]) from e
+
+    def _response_format(self, response_model: type[BaseModel], messages: list[dict[str, Any]]) -> dict[str, Any]:
+        schema = response_model.model_json_schema()
+        if self.mode is StructuredOutputMode.JSON:
+            # JSON fallback: json_object plus the schema appended to the system prompt.
+            schema_text = (
+                "Respond with a single JSON object that matches this JSON schema exactly:\n"
+                f"{json.dumps(schema, indent=2, ensure_ascii=False)}"
+            )
+            if messages and messages[0].get("role") == "system":
+                messages[0] = {**messages[0], "content": f"{messages[0].get('content', '')}\n\n{schema_text}"}
+            else:
+                messages.insert(0, {"role": "system", "content": schema_text})
+            return {"type": "json_object"}
+        if self.mode is StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT:
+            _append_schema_block(messages, schema)
+        return {
+            "type": "json_schema",
+            "json_schema": {"name": response_model.__name__, "schema": schema},
+        }
+
+
+def _append_schema_block(messages: list[dict[str, Any]], schema: dict[str, Any]) -> None:
+    """Append the instructor-worded schema block to the first system message."""
+    block = _schema_block(schema)
+    if messages and messages[0].get("role") == "system":
+        messages[0] = {**messages[0], "content": f"{messages[0].get('content', '')}{block}"}
+    else:
+        messages.insert(0, {"role": "system", "content": block.strip("\n")})
+
+
+def _parse_completion(completion: Any, response_model: type[BaseModel]) -> Any:
+    # Check the length limit first: a length-truncated completion can carry
+    # null content, and that is a truncation problem, not a parsing one —
+    # routing it to the prompt-truncation path instead of burning validation
+    # retries on unparseable output.
+    if _finish_reason(completion) == "length":
+        raise IncompleteOutputException(last_completion=completion)
+    content = _extract_response_content(completion)
+    if content is None:
+        raise ResponseParsingError("The completion contains no text content.")
+    return response_model.model_validate_json(_extract_json_span(content))
+
+
+def _finish_reason(completion: Any) -> str | None:
+    try:
+        reason = completion.choices[0].finish_reason
+        return reason if isinstance(reason, str) else None  # narrow from Any
+    except (AttributeError, IndexError):
+        return None
+
+
+def _wrap_with_tracking(client: _StructuredClient, tracker: TokenTracker, config: LLMConfig) -> None:
     def _do_call(kwargs):
-        return client.chat.completions.create_with_completion(**kwargs)
+        return client.create_with_completion(**kwargs)
 
     def tracked_create(**kwargs):
         kwargs.setdefault("temperature", config.temperature)
