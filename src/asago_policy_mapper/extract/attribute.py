@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import json
 import logging
 import time
-
-from pydantic import ValidationError
 
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
@@ -15,7 +12,7 @@ from asago_policy_mapper.extract.models import (
     _CausalChains,
     _RiskEvidenceList,
 )
-from asago_policy_mapper.llm import ResponseParsingError, ValidationRetryExhausted
+from asago_policy_mapper.llm import _OUTPUT_VALIDATION_ERRORS, ValidationRetryExhausted
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
@@ -267,17 +264,13 @@ def ground_risk_group(
     return result
 
 
-_OUTPUT_VALIDATION_ERRORS = (ValidationError, json.JSONDecodeError, ResponseParsingError)
-
-
 def _is_output_validation_exhaustion(exc: ValidationRetryExhausted) -> bool:
     """Tell whether the model output, not the endpoint, caused the exhaustion.
 
-    The structured-output client records one entry per parse or validation
-    failure in ``failed_attempts`` and chains the last error as
-    ``__cause__``, so a non-empty list with a parse/validation cause means the
-    retries ran out on unfixable model output. Anything else is not a
-    validation exhaustion.
+    The structured-output client records the failed attempt in
+    ``failed_attempts`` and chains its error as ``__cause__``, so a non-empty
+    list with a parse/validation cause means the retries ran out on
+    unfixable model output. Anything else is not a validation exhaustion.
     """
     return bool(exc.failed_attempts) and isinstance(exc.__cause__, _OUTPUT_VALIDATION_ERRORS)
 

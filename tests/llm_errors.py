@@ -5,6 +5,11 @@ chained ``from`` the original error when the model output fails parsing or
 validation until retries run out. A transport or API error propagates as the
 original ``openai`` exception, unwrapped, so it is not masked as a validation
 exhaustion.
+
+Malformed JSON content surfaces as a pydantic ``ValidationError`` from
+``model_validate_json``; the client's JSON-span extraction never lets a raw
+``json.JSONDecodeError`` escape, so that shape exists here only as a negative
+classification case.
 """
 
 import json
@@ -32,7 +37,17 @@ def pydantic_validation_error() -> Exception:
     raise AssertionError("expected a validation error")
 
 
+def malformed_json_validation_error() -> Exception:
+    """The error shape a truncated or prose completion produces in production."""
+    try:
+        _CausalChains.model_validate_json('{"items": [')
+    except Exception as exc:
+        return exc
+    raise AssertionError("expected a validation error")
+
+
 def json_decode_error() -> Exception:
+    """A raw decoder error: a shape the structured client cannot produce."""
     try:
         json.loads('{"items": [')
     except json.JSONDecodeError as exc:

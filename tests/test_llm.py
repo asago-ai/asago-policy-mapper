@@ -1,15 +1,19 @@
 import copy
+import json
 import logging
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import httpx
 import openai
 import pytest
+from pydantic import ValidationError
 
 from asago_policy_mapper.llm import (
     IncompleteOutputException,
     LLMConfig,
+    SlimModel,
+    StructuredOutputMode,
     TokenTracker,
     ValidationRetryExhausted,
     _call_with_retry,
@@ -17,9 +21,11 @@ from asago_policy_mapper.llm import (
     _IncompleteOutput,
     _retry_with_validation,
     _strip_titles,
+    _StructuredClient,
     _track_completion,
     _truncate_messages,
     _wrap_with_tracking,
+    create_client,
 )
 
 # ---------------------------------------------------------------------------
@@ -734,3 +740,187 @@ class TestApplyBudget:
         client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
 
         assert "service_tier" not in client.create_with_completion.call_args.kwargs
+
+
+# ---------------------------------------------------------------------------
+# _StructuredClient over a stubbed transport (production stack)
+# ---------------------------------------------------------------------------
+
+
+class _StructuredAnswer(SlimModel):
+    answer: str
+
+
+def _stubbed_client(handler, max_retries):
+    """Build the full production stack (create_client -> tracking wrapper) over a stubbed transport."""
+    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=max_retries)
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+    with patch(
+        "asago_policy_mapper.llm.OpenAI",
+        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+    ):
+        return create_client(config)
+
+
+def _completion_body(content):
+    return {
+        "id": "chatcmpl-1",
+        "object": "chat.completion",
+        "created": 0,
+        "model": "test-model",
+        "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": content}}],
+        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+    }
+
+
+class TestStructuredClientRetries:
+    def test_retries_come_from_the_outer_loop_with_a_warning_each(self, caplog):
+        """create_with_completion is a single attempt; the tracking wrapper retries.
+
+        With max_retries=3 and an endpoint that always returns invalid JSON,
+        exactly 4 calls hit the wire, each retry starts from a fresh copy of
+        the input messages carrying one failed-answer/error-hint pair, and a
+        WARNING fires per retry (attempt 1/4..3/4) but not for the terminal
+        failure.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=_completion_body('{"items": "not a list"}'))
+
+        client = _stubbed_client(handler, max_retries=3)
+        input_messages = [{"role": "user", "content": "hello"}]
+
+        with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.llm"):
+            with pytest.raises(ValidationRetryExhausted) as excinfo:
+                client.chat.completions.create(
+                    model="test-model",
+                    response_model=_StructuredAnswer,
+                    messages=input_messages,
+                    max_tokens=256,
+                )
+
+        assert len(requests) == 4
+        # First call: the input messages untouched.
+        assert requests[0]["messages"] == input_messages
+        # Each retry: a fresh copy of the input with exactly one failed-answer
+        # message followed by one error-hint user message.
+        for body in requests[1:]:
+            retry_messages = body["messages"]
+            assert retry_messages[:1] == input_messages
+            assistants = [m for m in retry_messages if m["role"] == "assistant"]
+            hints = [m for m in retry_messages if m["role"] == "user" and "Validation error:" in m["content"]]
+            assert len(assistants) == 1
+            assert len(hints) == 1
+        # The terminal exception carries the single failed attempt, numbered 1.
+        assert len(excinfo.value.failed_attempts) == 1
+        assert excinfo.value.failed_attempts[0].attempt_number == 1
+        # One WARNING per retry (3 of them), none for the terminal failure.
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) == 3
+        assert all("Structured output validation failed" in r.getMessage() for r in warnings)
+        assert [w.args[0] for w in warnings] == [1, 2, 3]
+        assert [w.args[1] for w in warnings] == [4, 4, 4]
+
+    def test_recovery_after_one_failed_attempt(self, caplog):
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            content = '{"items": "not a list"}' if len(requests) == 1 else '{"answer": "ok"}'
+            return httpx.Response(200, json=_completion_body(content))
+
+        client = _stubbed_client(handler, max_retries=2)
+
+        with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.llm"):
+            result = client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "hello"}],
+                max_tokens=256,
+            )
+
+        assert result.answer == "ok"
+        assert len(requests) == 2
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) == 1
+        assert "Structured output validation failed (attempt 1/3)" in warnings[0].getMessage()
+
+    def test_direct_create_with_completion_is_a_single_attempt(self):
+        """Direct calls (health-probe style) make one attempt regardless of max_retries."""
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=_completion_body('{"items": "not a list"}'))
+
+        api = openai.OpenAI(
+            base_url="http://localhost:8000/v1",
+            api_key="none",
+            http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+            max_retries=0,
+        )
+        client = _StructuredClient(api, mode=StructuredOutputMode.JSON_SCHEMA)
+
+        with pytest.raises(ValidationRetryExhausted) as excinfo:
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "hello"}],
+                max_tokens=256,
+                max_retries=3,
+            )
+
+        assert len(requests) == 1
+        # The kwarg never reaches the SDK's create().
+        assert "max_retries" not in requests[0]
+        assert len(excinfo.value.failed_attempts) == 1
+        assert excinfo.value.failed_attempts[0].attempt_number == 1
+        assert isinstance(excinfo.value.__cause__, ValidationError)
+
+
+class TestStructuredClientResponseFormat:
+    def _capture(self, mode):
+        bodies = []
+
+        def handler(request):
+            bodies.append(json.loads(request.read()))
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_context=0)
+        http_client = httpx.Client(transport=httpx.MockTransport(handler))
+        with patch(
+            "asago_policy_mapper.llm.OpenAI",
+            lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+        ):
+            client = create_client(config, mode=mode)
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "system", "content": "SYSTEM"}, {"role": "user", "content": "hello"}],
+                max_tokens=256,
+            )
+        return bodies[0]
+
+    def test_json_schema_mode_sends_native_schema_without_strict(self):
+        body = self._capture(StructuredOutputMode.JSON_SCHEMA)
+        assert body["response_format"] == {
+            "type": "json_schema",
+            "json_schema": {"name": "_StructuredAnswer", "schema": _StructuredAnswer.model_json_schema()},
+        }
+        # The wire payload never mentions strict in any form.
+        assert "strict" not in json.dumps(body["response_format"])
+
+    def test_json_schema_with_prompt_mode_appends_schema_block(self):
+        body = self._capture(StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT)
+        assert body["response_format"]["type"] == "json_schema"
+        assert body["response_format"]["json_schema"]["name"] == "_StructuredAnswer"
+        assert "As a genius expert" in body["messages"][0]["content"]
+        assert body["messages"][0]["content"].startswith("SYSTEM")
+
+    def test_json_mode_sends_json_object_with_schema_in_prompt(self):
+        body = self._capture(StructuredOutputMode.JSON)
+        assert body["response_format"] == {"type": "json_object"}
+        assert "matches this JSON schema exactly" in body["messages"][0]["content"]
+        assert body["messages"][0]["content"].startswith("SYSTEM")

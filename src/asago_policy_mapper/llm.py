@@ -66,10 +66,12 @@ class FailedAttempt:
 class ValidationRetryExhausted(StructuredOutputError):
     """Retries ran out because the completion kept failing to parse or validate.
 
-    ``failed_attempts`` records one entry per parse or validation failure; a
-    transport or API error raises the underlying ``openai`` exception directly
-    instead, so a non-empty ``failed_attempts`` always means the model output,
-    not the endpoint, was at fault.
+    ``failed_attempts`` records the failed attempt: the structured client
+    makes a single attempt per call, so the exception a caller sees carries
+    one entry for the attempt that failed last. A transport or API error
+    raises the underlying ``openai`` exception directly instead, so a
+    non-empty ``failed_attempts`` always means the model output, not the
+    endpoint, was at fault.
     """
 
     def __init__(
@@ -79,6 +81,13 @@ class ValidationRetryExhausted(StructuredOutputError):
     ):
         super().__init__(message)
         self.failed_attempts = failed_attempts or []
+
+
+# The exceptions a structured-output attempt can fail with. pydantic v2
+# reports malformed JSON from ``model_validate_json`` as ``ValidationError``,
+# and ``_extract_json_span`` never lets ``json.JSONDecodeError`` escape, so a
+# raw decoder error is not part of this tuple.
+_OUTPUT_VALIDATION_ERRORS = (ValidationError, ResponseParsingError)
 
 
 class StructuredOutputMode(Enum):
@@ -389,10 +398,16 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
             continue
         except ValidationRetryExhausted as e:
             if val_attempt < max_retries:
-                logger.info(
-                    "Validation error (attempt %d/%d), retrying with fresh messages + error hint",
+                # A WARNING per structured-output validation retry (with a
+                # truncated error summary) makes retry frequency per endpoint
+                # observable; silence means first-try validation.
+                summary = str(e).splitlines()[0] if str(e) else type(e).__name__
+                logger.warning(
+                    "Structured output validation failed (attempt %d/%d), "
+                    "retrying with fresh messages + error hint: %s",
                     val_attempt + 1,
-                    max_retries,
+                    max_retries + 1,
+                    summary[:200],
                 )
                 retry_messages = copy.deepcopy(current_messages)
                 last_attempt = e.failed_attempts[-1] if e.failed_attempts else None
@@ -514,10 +529,12 @@ class _StructuredClient:
     validated pydantic object from ``chat.completions.create``. The completion
     is constrained with the native ``json_schema`` ``response_format`` (or a
     ``json_object`` plus schema-in-prompt fallback via
-    ``StructuredOutputMode.JSON``) and parsed locally. Parse and validation
-    failures retry with error hints until ``max_retries`` is exhausted, then
-    raise ``ValidationRetryExhausted``. API and transport errors from the
-    OpenAI SDK propagate untouched. Streaming is not supported.
+    ``StructuredOutputMode.JSON``) and parsed locally. Each call is a single
+    attempt; the retry loop with error hints lives in the tracking wrapper
+    (``_retry_with_validation``), which finally raises
+    ``ValidationRetryExhausted`` when ``max_retries`` runs out. API and
+    transport errors from the OpenAI SDK propagate untouched. Streaming is
+    not supported.
     """
 
     def __init__(self, openai_client: OpenAI, mode: StructuredOutputMode = StructuredOutputMode.JSON):
@@ -526,14 +543,18 @@ class _StructuredClient:
         self.chat = _Chat(self)
 
     def create_with_completion(self, **kwargs: Any) -> tuple[Any, Any]:
-        """Return ``(validated_model, raw_completion)`` for a structured call.
+        """Return ``(validated_model, raw_completion)`` for a single attempt.
 
         Without ``response_model`` the raw completion passes through for both
-        elements, mirroring the previous client stack's seam.
+        elements, mirroring the previous client stack's seam. A parse or
+        validation failure raises ``ValidationRetryExhausted`` with the failed
+        attempt; the tracking wrapper owns retrying it with an error hint.
         """
         response_model = kwargs.pop("response_model", None)
-        # max_retries bounds this loop; the SDK's create() rejects the kwarg.
-        max_attempts = max(int(kwargs.pop("max_retries", 0)), 0) + 1
+        # Retrying is the tracking wrapper's job. Accept and drop the kwarg
+        # so direct callers (e.g. the health probe) can pass it and the SDK's
+        # create(), which rejects it, never sees it.
+        kwargs.pop("max_retries", None)
         if response_model is None:
             completion = self._openai.chat.completions.create(**kwargs)
             return completion, completion
@@ -543,54 +564,31 @@ class _StructuredClient:
         request["messages"] = messages
         request["response_format"] = self._response_format(response_model, messages)
 
-        failed_attempts: list[FailedAttempt] = []
-        for attempt_number in range(1, max_attempts + 1):
-            completion = self._openai.chat.completions.create(**request)
-            try:
-                return _parse_completion(completion, response_model), completion
-            except (ValidationError, json.JSONDecodeError, ResponseParsingError) as e:
-                failed_attempts.append(FailedAttempt(attempt_number, e, completion))
-                if attempt_number >= max_attempts:
-                    raise ValidationRetryExhausted(str(e), failed_attempts=failed_attempts) from e
-                summary = str(e).splitlines()[0] if str(e) else type(e).__name__
-                logger.warning(
-                    "Structured output validation failed (attempt %d/%d), retrying with error hint: %s",
-                    attempt_number,
-                    max_attempts,
-                    summary[:200],
-                )
-                _append_correction_messages(messages, completion, e)
-        raise ValidationRetryExhausted("Structured output retries exhausted", failed_attempts=failed_attempts)
+        completion = self._openai.chat.completions.create(**request)
+        try:
+            return _parse_completion(completion, response_model), completion
+        except _OUTPUT_VALIDATION_ERRORS as e:
+            raise ValidationRetryExhausted(str(e), failed_attempts=[FailedAttempt(1, e, completion)]) from e
 
     def _response_format(self, response_model: type[BaseModel], messages: list[dict[str, Any]]) -> dict[str, Any]:
         schema = response_model.model_json_schema()
-        if self.mode is StructuredOutputMode.JSON_SCHEMA:
-            response_format: dict[str, Any] = {
-                "type": "json_schema",
-                "json_schema": {"name": response_model.__name__, "schema": schema},
-            }
-            if getattr(response_model, "__structured_strict__", False):
-                response_format["json_schema"]["strict"] = True
-            return response_format
+        if self.mode is StructuredOutputMode.JSON:
+            # JSON fallback: json_object plus the schema appended to the system prompt.
+            schema_text = (
+                "Respond with a single JSON object that matches this JSON schema exactly:\n"
+                f"{json.dumps(schema, indent=2, ensure_ascii=False)}"
+            )
+            if messages and messages[0].get("role") == "system":
+                messages[0] = {**messages[0], "content": f"{messages[0].get('content', '')}\n\n{schema_text}"}
+            else:
+                messages.insert(0, {"role": "system", "content": schema_text})
+            return {"type": "json_object"}
         if self.mode is StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT:
             _append_schema_block(messages, schema)
-            response_format = {
-                "type": "json_schema",
-                "json_schema": {"name": response_model.__name__, "schema": schema},
-            }
-            if getattr(response_model, "__structured_strict__", False):
-                response_format["json_schema"]["strict"] = True
-            return response_format
-        # JSON fallback: json_object plus the schema appended to the system prompt.
-        schema_text = (
-            "Respond with a single JSON object that matches this JSON schema exactly:\n"
-            f"{json.dumps(schema, indent=2, ensure_ascii=False)}"
-        )
-        if messages and messages[0].get("role") == "system":
-            messages[0] = {**messages[0], "content": f"{messages[0].get('content', '')}\n\n{schema_text}"}
-        else:
-            messages.insert(0, {"role": "system", "content": schema_text})
-        return {"type": "json_object"}
+        return {
+            "type": "json_schema",
+            "json_schema": {"name": response_model.__name__, "schema": schema},
+        }
 
 
 def _append_schema_block(messages: list[dict[str, Any]], schema: dict[str, Any]) -> None:
@@ -600,16 +598,6 @@ def _append_schema_block(messages: list[dict[str, Any]], schema: dict[str, Any])
         messages[0] = {**messages[0], "content": f"{messages[0].get('content', '')}{block}"}
     else:
         messages.insert(0, {"role": "system", "content": block.strip("\n")})
-
-
-def _append_correction_messages(messages: list[dict[str, Any]], completion: Any, error: Exception) -> None:
-    """Append the failed answer and an error hint so the model can correct itself."""
-    failed_content = _extract_response_content(completion)
-    if failed_content:
-        messages.append({"role": "assistant", "content": failed_content})
-    messages.append(
-        {"role": "user", "content": f"Validation error: {error}\nCorrect your JSON response, fix the errors."}
-    )
 
 
 def _parse_completion(completion: Any, response_model: type[BaseModel]) -> Any:

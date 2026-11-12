@@ -9,6 +9,7 @@ from llm_errors import (
     authentication_failure,
     connection_failure,
     json_decode_error,
+    malformed_json_validation_error,
     pydantic_validation_error,
     server_error,
     validation_exhaustion,
@@ -565,8 +566,8 @@ def test_synthesize_causal_chain_empty_strings_return_none(mock_client):
 
 @pytest.mark.parametrize(
     "make_cause",
-    [pydantic_validation_error, json_decode_error],
-    ids=["pydantic-validation-error", "json-decode-error"],
+    [pydantic_validation_error, malformed_json_validation_error],
+    ids=["pydantic-validation-error", "malformed-json-validation-error"],
 )
 def test_synthesize_causal_chain_validation_exhaustion_returns_none(mock_client, caplog, make_cause):
     mock_client.chat.completions.create.side_effect = validation_exhaustion(make_cause())
@@ -587,6 +588,21 @@ def test_synthesize_causal_chain_validation_exhaustion_returns_none(mock_client,
     assert len(collector) == 1
     assert collector[0].result_summary == "retry_exhausted"
     assert collector[0].response == {}
+
+
+def test_synthesize_causal_chain_raw_json_decode_error_is_not_validation_exhaustion(mock_client):
+    # A raw json.JSONDecodeError cause is not a shape the structured client
+    # can produce (the span extractor swallows it; pydantic wraps malformed
+    # JSON as ValidationError), so it must not be classified as one.
+    mock_client.chat.completions.create.side_effect = validation_exhaustion(json_decode_error())
+
+    with pytest.raises(ValidationRetryExhausted):
+        synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Some text.", 2: "More text."},
+            client=mock_client,
+            model="test-model",
+        )
 
 
 @pytest.mark.parametrize(
