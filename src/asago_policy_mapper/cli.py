@@ -33,6 +33,313 @@ EXCLUDED_TAXONOMIES = {
 }
 
 
+def _validate_extract_options(
+    *,
+    output_format,
+    policy_files,
+    base_url,
+    model,
+    nexus_base_dir,
+    no_judge,
+    no_grounding,
+    expand_siblings,
+    query_gen,
+) -> bool:
+    """Validate extract options; exit on error. Returns whether the run needs an LLM."""
+    valid_formats = {"json", "yaml", "both"}
+    if output_format not in valid_formats:
+        typer.echo(f"Error: --output-format must be one of: {', '.join(sorted(valid_formats))}", err=True)
+        raise typer.Exit(1)
+
+    for pf in policy_files:
+        if not pf.exists():
+            typer.echo(f"Error: {pf} does not exist", err=True)
+            raise typer.Exit(1)
+
+    needs_llm = not (no_judge and no_grounding and not expand_siblings) or query_gen
+    if needs_llm and (not base_url or not model):
+        typer.echo(
+            "Error: --base-url and --model are required (unless both --no-judge and --no-grounding are set)", err=True
+        )
+        raise typer.Exit(1)
+
+    if not nexus_base_dir:
+        typer.echo("Error: --nexus-base-dir is required", err=True)
+        raise typer.Exit(1)
+    return needs_llm
+
+
+def _setup_llm(
+    *,
+    needs_llm,
+    base_url,
+    model,
+    api_key,
+    max_concurrent,
+    max_tokens,
+    output_token_parameter,
+    service_tier,
+    max_context,
+    temperature,
+    top_p,
+    top_k,
+):
+    """Build the LLM config, token tracker and client for the run.
+
+    LLM-free runs (pure IR evaluation) substitute "unused" endpoint values
+    and skip client creation.
+    """
+    if not needs_llm:
+        base_url = base_url or "unused"
+        model = model or "unused"
+    config = LLMConfig(
+        base_url=base_url,
+        model=model,
+        api_key=api_key,
+        max_concurrent=max_concurrent,
+        max_tokens=max_tokens,
+        output_token_parameter=output_token_parameter,
+        service_tier=service_tier,
+        max_context=max_context,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+    )
+    tracker = TokenTracker()
+    client = None if not needs_llm else create_client(config, tracker=tracker)
+    return config, tracker, client
+
+
+def _load_custom_risks(custom_taxonomy) -> list:
+    """Load custom taxonomy YAML files, exiting on invalid input."""
+    loaded_custom_risks: list = []
+    if custom_taxonomy:
+        from asago_policy_mapper.taxonomy import load_custom_taxonomy
+
+        for tax_path in custom_taxonomy:
+            try:
+                custom_risks = load_custom_taxonomy(tax_path)
+            except ValueError as e:
+                typer.echo(f"Error: {e}", err=True)
+                raise typer.Exit(1) from e
+            loaded_custom_risks.extend(custom_risks)
+            typer.echo(f"Loaded {len(custom_risks)} custom risks from {tax_path}")
+    return loaded_custom_risks
+
+
+def _load_risk_catalog(nexus_base_dir, loaded_custom_risks) -> tuple[list, int]:
+    """Load Nexus risks (minus excluded taxonomies, with description overrides) and merge custom risks.
+
+    Returns (all_risks, custom_risk_count); colliding custom risk ids are skipped with a warning.
+    """
+    from ai_atlas_nexus import AIAtlasNexus
+
+    from asago_policy_mapper.taxonomy import apply_description_overrides
+
+    nexus = AIAtlasNexus(base_dir=nexus_base_dir)
+    all_risks = apply_description_overrides(
+        r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
+    )
+
+    custom_risk_count = 0
+    if loaded_custom_risks:
+        seen_ids = {r.id for r in all_risks}
+        for cr in loaded_custom_risks:
+            if cr.id in seen_ids:
+                typer.echo(f"Warning: custom risk '{cr.id}' collides with an existing risk - skipping", err=True)
+            else:
+                all_risks.append(cr)
+                seen_ids.add(cr.id)
+                custom_risk_count += 1
+    return all_risks, custom_risk_count
+
+
+def _warn_risk_text(all_risks, check_risk_text) -> None:
+    """Echo the unterminated-description warning when --check-risk-text is set."""
+    if check_risk_text:
+        from asago_policy_mapper.taxonomy import warn_unterminated_descriptions
+
+        flagged = warn_unterminated_descriptions(all_risks)
+        typer.echo(
+            f"Risk text check: {len(flagged)} of {len(all_risks)} risk descriptions lack closing punctuation"
+            + (f": {', '.join(flagged)}" if flagged else ""),
+            err=True,
+        )
+
+
+def _build_retrieval_config(
+    *,
+    bi_encoder_model,
+    bi_encoder_api_key,
+    bi_encoder_model_name,
+    query_instruction,
+    cross_encoder_model,
+    cross_encoder_type,
+    cross_encoder_model_name,
+    colbert_model,
+    chunk_max_tokens,
+    top_n_accept,
+    top_n_judge,
+    min_score_floor,
+    threshold_high,
+    threshold_low,
+    bm25_rescue_rank,
+    rrf_min_score,
+    no_cross_encoder,
+    no_judge,
+    no_grounding,
+    judge_prompt,
+    judge_context_tokens,
+    expand_siblings,
+    grounding_passes,
+    grounding_batch_size,
+    expansion_passes,
+    no_causal_synthesis,
+    query_gen,
+):
+    """Map the extract command's retrieval options onto RetrievalConfig."""
+    from asago_policy_mapper.extract.models import RetrievalConfig
+
+    return RetrievalConfig(
+        bi_encoder_model=bi_encoder_model,
+        bi_encoder_api_key=bi_encoder_api_key,
+        bi_encoder_model_name=bi_encoder_model_name or None,
+        query_instruction=query_instruction if query_instruction is not None else RetrievalConfig.query_instruction,
+        cross_encoder_model=cross_encoder_model,
+        cross_encoder_type=cross_encoder_type,
+        cross_encoder_model_name=cross_encoder_model_name or None,
+        colbert_model=colbert_model or None,
+        chunk_max_tokens=chunk_max_tokens,
+        top_n_accept=top_n_accept,
+        top_n_judge=top_n_judge,
+        min_score_floor=min_score_floor,
+        threshold_high=threshold_high,
+        threshold_low=threshold_low,
+        bm25_rescue_rank=bm25_rescue_rank,
+        rrf_min_score=rrf_min_score,
+        use_cross_encoder=not no_cross_encoder,
+        no_judge=no_judge,
+        no_grounding=no_grounding,
+        judge_prompt=judge_prompt,
+        judge_context_tokens=judge_context_tokens,
+        expand_siblings=expand_siblings,
+        grounding_passes=grounding_passes,
+        grounding_batch_size=grounding_batch_size,
+        expansion_passes=expansion_passes,
+        no_causal_synthesis=no_causal_synthesis,
+        query_gen=query_gen,
+    )
+
+
+def _echo_extraction_banner(policy_files, all_risks, custom_risk_count) -> None:
+    if custom_risk_count:
+        typer.echo(
+            f"Extracting risks from {len(policy_files)} document(s) "
+            f"({len(all_risks) - custom_risk_count} Nexus + {custom_risk_count} custom risks loaded)..."
+        )
+    else:
+        typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
+
+
+def _run_pipeline(policy_files, client, config, all_risks, retrieval, ocr, run_extraction):
+    """Run the extraction pipeline over the loaded risk catalog.
+
+    The caller resolves run_extraction so its import happens at the same
+    point as before the refactor, before the extraction banner echoes.
+    """
+    return run_extraction(
+        documents=policy_files,
+        client=client,
+        config=config,
+        risks=all_risks,
+        retrieval=retrieval,
+        ocr=ocr,
+    )
+
+
+def _attach_mitigations(result, nexus_base_dir) -> None:
+    """Enrich matched risks with mitigations, threats and consequences from the Nexus data."""
+    from asago_policy_mapper.extract.mitigations import (
+        build_action_descriptions,
+        build_risk_crossmap,
+        enrich_with_mitigations,
+        load_mitigation_index,
+        load_risk_consequences,
+        load_risk_threats,
+    )
+
+    mitigation_index = load_mitigation_index()
+    if mitigation_index:
+        action_descs = build_action_descriptions(nexus_base_dir)
+        risk_crossmap = build_risk_crossmap(nexus_base_dir)
+        risk_threats = load_risk_threats()
+        risk_consequences = load_risk_consequences()
+        enrich_with_mitigations(
+            result.risks, mitigation_index, action_descs, risk_crossmap, risk_threats, risk_consequences
+        )
+        typer.echo(f"  Mitigations attached from {len(mitigation_index)} risk entries")
+
+
+def _write_extraction_outputs(
+    result,
+    result_data,
+    output,
+    output_format,
+    needs_llm,
+    tracker,
+    no_judge,
+    no_grounding,
+    no_cross_encoder,
+) -> None:
+    """Write the extraction result as JSON/YAML and echo the run summary."""
+    write_json = output_format in ("json", "both")
+    write_yaml = output_format in ("yaml", "both")
+
+    if write_json:
+        json_path = output / "risk-extraction.json"
+        json_path.write_text(json.dumps(result_data, indent=2))
+        typer.echo(f"Risk extraction written to {json_path}")
+    if write_yaml:
+        yaml_path = output / "risk-extraction.yaml"
+        yaml_path.write_text(yaml.dump(result_data, default_flow_style=False, sort_keys=False, allow_unicode=True))
+        typer.echo(f"Risk extraction written to {yaml_path}")
+    typer.echo(f"  {len(result.risks)} risks matched")
+    stats = result.retrieval_stats
+    if no_judge and no_grounding:
+        typer.echo(f"  {stats.auto_accepted} auto-accepted (IR-only, no LLM stages)")
+    elif no_grounding:
+        typer.echo(f"  {stats.auto_accepted} auto-accepted, {stats.llm_judged} LLM-judged (no grounding)")
+    elif no_cross_encoder:
+        typer.echo(
+            f"  {stats.auto_accepted} RRF-accepted, {stats.grounding_filtered} grounding-filtered (no cross-encoder)"
+        )
+    else:
+        typer.echo(
+            f"  {stats.auto_accepted} auto-accepted, {stats.llm_judged} LLM-judged,"
+            f" {stats.grounding_filtered} grounding-filtered"
+        )
+    if needs_llm:
+        typer.echo(
+            f"Token usage: {tracker.prompt_tokens:,} prompt + {tracker.completion_tokens:,} completion"
+            f" = {tracker.total_tokens:,} total ({tracker.calls} calls)"
+        )
+
+
+def _write_extraction_reports(result_data, policy_files, output, ocr, chunk_max_tokens) -> None:
+    """Write the HTML extraction report, then the document-centric annotation view."""
+    from asago_policy_mapper.extract.report import build_risk_extraction_report
+
+    report_path = build_risk_extraction_report(result_data, output / "risk-extraction.html")
+    typer.echo(f"Report written to {report_path}")
+
+    from asago_policy_mapper.extract.annotate import prepare_annotation_data
+    from asago_policy_mapper.extract.report import build_annotation_report
+
+    annotation_data = prepare_annotation_data(result_data, policy_files[0], ocr=ocr, chunk_max_tokens=chunk_max_tokens)
+    ann_path = build_annotation_report(annotation_data, output / "risk-annotation.html")
+    typer.echo(f"Annotation view written to {ann_path}")
+
+
 @app.command()
 def extract(
     policy_files: list[Path] = typer.Argument(..., help="Policy document(s) to extract risks from"),
@@ -193,116 +500,53 @@ def extract(
     ),
 ):
     """Extract risks from policy documents using hybrid retrieval."""
-    valid_formats = {"json", "yaml", "both"}
-    if output_format not in valid_formats:
-        typer.echo(f"Error: --output-format must be one of: {', '.join(sorted(valid_formats))}", err=True)
-        raise typer.Exit(1)
+    needs_llm = _validate_extract_options(
+        output_format=output_format,
+        policy_files=policy_files,
+        base_url=base_url,
+        model=model,
+        nexus_base_dir=nexus_base_dir,
+        no_judge=no_judge,
+        no_grounding=no_grounding,
+        expand_siblings=expand_siblings,
+        query_gen=query_gen,
+    )
 
-    for pf in policy_files:
-        if not pf.exists():
-            typer.echo(f"Error: {pf} does not exist", err=True)
-            raise typer.Exit(1)
-
-    needs_llm = not (no_judge and no_grounding and not expand_siblings) or query_gen
-    if needs_llm and (not base_url or not model):
-        typer.echo(
-            "Error: --base-url and --model are required (unless both --no-judge and --no-grounding are set)", err=True
-        )
-        raise typer.Exit(1)
-
-    if not needs_llm:
-        config = LLMConfig(
-            base_url=base_url or "unused",
-            model=model or "unused",
-            api_key=api_key,
-            max_concurrent=max_concurrent,
-            max_tokens=max_tokens,
-            output_token_parameter=output_token_parameter,
-            service_tier=service_tier,
-            max_context=max_context,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-        )
-        tracker = TokenTracker()
-        client = None
-    else:
-        config = LLMConfig(
-            base_url=base_url,
-            model=model,
-            api_key=api_key,
-            max_concurrent=max_concurrent,
-            max_tokens=max_tokens,
-            output_token_parameter=output_token_parameter,
-            service_tier=service_tier,
-            max_context=max_context,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-        )
-        tracker = TokenTracker()
-        client = create_client(config, tracker=tracker)
+    config, tracker, client = _setup_llm(
+        needs_llm=needs_llm,
+        base_url=base_url,
+        model=model,
+        api_key=api_key,
+        max_concurrent=max_concurrent,
+        max_tokens=max_tokens,
+        output_token_parameter=output_token_parameter,
+        service_tier=service_tier,
+        max_context=max_context,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+    )
 
     output.mkdir(parents=True, exist_ok=True)
 
-    loaded_custom_risks: list = []
-    if custom_taxonomy:
-        from asago_policy_mapper.taxonomy import load_custom_taxonomy
+    loaded_custom_risks = _load_custom_risks(custom_taxonomy)
+    # Normalize once for every consumer (catalog + mitigation loaders): a blank
+    # --nexus-base-dir / NEXUS_BASE_DIR behaves exactly like unset.
+    nexus_base_dir = nexus_base_dir or None
+    all_risks, custom_risk_count = _load_risk_catalog(nexus_base_dir, loaded_custom_risks)
+    _warn_risk_text(all_risks, check_risk_text)
 
-        for tax_path in custom_taxonomy:
-            try:
-                custom_risks = load_custom_taxonomy(tax_path)
-            except ValueError as e:
-                typer.echo(f"Error: {e}", err=True)
-                raise typer.Exit(1) from e
-            loaded_custom_risks.extend(custom_risks)
-            typer.echo(f"Loaded {len(custom_risks)} custom risks from {tax_path}")
-
-    from ai_atlas_nexus import AIAtlasNexus
-
-    from asago_policy_mapper.taxonomy import apply_description_overrides
-
-    # Normalize once for every consumer below (catalog + mitigation loaders):
-    # a blank --nexus-base-dir / NEXUS_BASE_DIR behaves exactly like unset.
-    nexus_base_dir_override = nexus_base_dir or None
-    nexus = AIAtlasNexus(base_dir=nexus_base_dir_override)
-    all_risks = apply_description_overrides(
-        r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
-    )
-
-    custom_risk_count = 0
-    if loaded_custom_risks:
-        seen_ids = {r.id for r in all_risks}
-        for cr in loaded_custom_risks:
-            if cr.id in seen_ids:
-                typer.echo(f"Warning: custom risk '{cr.id}' collides with an existing risk - skipping", err=True)
-            else:
-                all_risks.append(cr)
-                seen_ids.add(cr.id)
-                custom_risk_count += 1
-
-    if check_risk_text:
-        from asago_policy_mapper.taxonomy import warn_unterminated_descriptions
-
-        flagged = warn_unterminated_descriptions(all_risks)
-        typer.echo(
-            f"Risk text check: {len(flagged)} of {len(all_risks)} risk descriptions lack closing punctuation"
-            + (f": {', '.join(flagged)}" if flagged else ""),
-            err=True,
-        )
-
-    from asago_policy_mapper.extract.models import RetrievalConfig
     from asago_policy_mapper.extract.pipeline import run_extraction
 
-    retrieval = RetrievalConfig(
+    retrieval = _build_retrieval_config(
         bi_encoder_model=bi_encoder_model,
         bi_encoder_api_key=bi_encoder_api_key,
-        bi_encoder_model_name=bi_encoder_model_name or None,
-        query_instruction=query_instruction if query_instruction is not None else RetrievalConfig.query_instruction,
+        bi_encoder_model_name=bi_encoder_model_name,
+        query_instruction=query_instruction,
         cross_encoder_model=cross_encoder_model,
         cross_encoder_type=cross_encoder_type,
-        cross_encoder_model_name=cross_encoder_model_name or None,
-        colbert_model=colbert_model or None,
+        cross_encoder_model_name=cross_encoder_model_name,
+        colbert_model=colbert_model,
         chunk_max_tokens=chunk_max_tokens,
         top_n_accept=top_n_accept,
         top_n_judge=top_n_judge,
@@ -311,7 +555,7 @@ def extract(
         threshold_low=threshold_low,
         bm25_rescue_rank=bm25_rescue_rank,
         rrf_min_score=rrf_min_score,
-        use_cross_encoder=not no_cross_encoder,
+        no_cross_encoder=no_cross_encoder,
         no_judge=no_judge,
         no_grounding=no_grounding,
         judge_prompt=judge_prompt,
@@ -324,90 +568,29 @@ def extract(
         query_gen=query_gen,
     )
 
-    if custom_risk_count:
-        typer.echo(
-            f"Extracting risks from {len(policy_files)} document(s) "
-            f"({len(all_risks) - custom_risk_count} Nexus + {custom_risk_count} custom risks loaded)..."
-        )
-    else:
-        typer.echo(f"Extracting risks from {len(policy_files)} document(s) ({len(all_risks)} Nexus risks loaded)...")
+    _echo_extraction_banner(policy_files, all_risks, custom_risk_count)
 
-    result = run_extraction(
-        documents=policy_files,
-        client=client,
-        config=config,
-        risks=all_risks,
-        retrieval=retrieval,
-        ocr=ocr,
-    )
+    result = _run_pipeline(policy_files, client, config, all_risks, retrieval, ocr, run_extraction)
 
     result.token_usage = tracker.to_dict()
 
-    from asago_policy_mapper.extract.mitigations import (
-        build_action_descriptions,
-        build_risk_crossmap,
-        enrich_with_mitigations,
-        load_mitigation_index,
-        load_risk_consequences,
-        load_risk_threats,
-    )
-
-    mitigation_index = load_mitigation_index()
-    if mitigation_index:
-        action_descs = build_action_descriptions(nexus_base_dir_override)
-        risk_crossmap = build_risk_crossmap(nexus_base_dir_override)
-        risk_threats = load_risk_threats()
-        risk_consequences = load_risk_consequences()
-        enrich_with_mitigations(
-            result.risks, mitigation_index, action_descs, risk_crossmap, risk_threats, risk_consequences
-        )
-        typer.echo(f"  Mitigations attached from {len(mitigation_index)} risk entries")
+    _attach_mitigations(result, nexus_base_dir)
 
     result_data = result.model_dump()
 
-    write_json = output_format in ("json", "both")
-    write_yaml = output_format in ("yaml", "both")
+    _write_extraction_outputs(
+        result,
+        result_data,
+        output,
+        output_format,
+        needs_llm,
+        tracker,
+        no_judge,
+        no_grounding,
+        no_cross_encoder,
+    )
 
-    if write_json:
-        json_path = output / "risk-extraction.json"
-        json_path.write_text(json.dumps(result_data, indent=2))
-        typer.echo(f"Risk extraction written to {json_path}")
-    if write_yaml:
-        yaml_path = output / "risk-extraction.yaml"
-        yaml_path.write_text(yaml.dump(result_data, default_flow_style=False, sort_keys=False, allow_unicode=True))
-        typer.echo(f"Risk extraction written to {yaml_path}")
-    typer.echo(f"  {len(result.risks)} risks matched")
-    stats = result.retrieval_stats
-    if no_judge and no_grounding:
-        typer.echo(f"  {stats.auto_accepted} auto-accepted (IR-only, no LLM stages)")
-    elif no_grounding:
-        typer.echo(f"  {stats.auto_accepted} auto-accepted, {stats.llm_judged} LLM-judged (no grounding)")
-    elif no_cross_encoder:
-        typer.echo(
-            f"  {stats.auto_accepted} RRF-accepted, {stats.grounding_filtered} grounding-filtered (no cross-encoder)"
-        )
-    else:
-        typer.echo(
-            f"  {stats.auto_accepted} auto-accepted, {stats.llm_judged} LLM-judged,"
-            f" {stats.grounding_filtered} grounding-filtered"
-        )
-    if needs_llm:
-        typer.echo(
-            f"Token usage: {tracker.prompt_tokens:,} prompt + {tracker.completion_tokens:,} completion"
-            f" = {tracker.total_tokens:,} total ({tracker.calls} calls)"
-        )
-
-    from asago_policy_mapper.extract.report import build_risk_extraction_report
-
-    report_path = build_risk_extraction_report(result_data, output / "risk-extraction.html")
-    typer.echo(f"Report written to {report_path}")
-
-    from asago_policy_mapper.extract.annotate import prepare_annotation_data
-    from asago_policy_mapper.extract.report import build_annotation_report
-
-    annotation_data = prepare_annotation_data(result_data, policy_files[0], ocr=ocr, chunk_max_tokens=chunk_max_tokens)
-    ann_path = build_annotation_report(annotation_data, output / "risk-annotation.html")
-    typer.echo(f"Annotation view written to {ann_path}")
+    _write_extraction_reports(result_data, policy_files, output, ocr, chunk_max_tokens)
 
 
 @app.command(name="annotate")
