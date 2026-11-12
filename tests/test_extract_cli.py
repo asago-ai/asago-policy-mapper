@@ -1,8 +1,11 @@
+import json
 import logging
 import re
 import tempfile
 
 import pytest
+import typer
+import yaml
 from ai_atlas_nexus.ai_risk_ontology.datamodel.ai_risk_ontology import Risk
 from typer.testing import CliRunner
 
@@ -377,3 +380,228 @@ def test_eval_command_exists():
     result = runner.invoke(app, ["eval", "--help"])
     assert result.exit_code == 0
     assert "Evaluate" in result.stdout or "eval" in result.stdout.lower()
+
+
+# --- _validate_extract_options unit tests ---
+
+
+def _validate_kwargs(tmp_path, **overrides):
+    policy = tmp_path / "policy.txt"
+    policy.write_text("test policy")
+    kwargs = dict(
+        output_format="json",
+        policy_files=[policy],
+        base_url="http://localhost:8000/v1",
+        model="test-model",
+        nexus_base_dir=str(tmp_path),
+        no_judge=False,
+        no_grounding=False,
+        expand_siblings=True,
+        query_gen=False,
+    )
+    kwargs.update(overrides)
+    return kwargs
+
+
+def test_validate_extract_options_rejects_bad_output_format(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    with pytest.raises(typer.Exit) as excinfo:
+        _validate_extract_options(**_validate_kwargs(tmp_path, output_format="xml"))
+    assert excinfo.value.exit_code == 1
+
+
+def test_validate_extract_options_rejects_missing_policy_file(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    with pytest.raises(typer.Exit) as excinfo:
+        _validate_extract_options(**_validate_kwargs(tmp_path, policy_files=[tmp_path / "nonexistent.pdf"]))
+    assert excinfo.value.exit_code == 1
+
+
+def test_validate_extract_options_requires_llm_endpoint_when_needed(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    # Grounding on, so the run needs an LLM: missing base_url/model is fatal.
+    with pytest.raises(typer.Exit) as excinfo:
+        _validate_extract_options(**_validate_kwargs(tmp_path, base_url=None, model=None))
+    assert excinfo.value.exit_code == 1
+
+
+def test_validate_extract_options_allows_missing_endpoint_for_ir_only(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    # Pure IR run: no endpoint needed, needs_llm is False.
+    assert (
+        _validate_extract_options(
+            **_validate_kwargs(
+                tmp_path, base_url=None, model=None, no_judge=True, no_grounding=True, expand_siblings=False
+            )
+        )
+        is False
+    )
+
+
+def test_validate_extract_options_query_gen_forces_llm(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    # The options alone would make an IR-only run; query generation forces an LLM.
+    assert (
+        _validate_extract_options(
+            **_validate_kwargs(tmp_path, query_gen=True, no_judge=True, no_grounding=True, expand_siblings=False)
+        )
+        is True
+    )
+
+
+def test_validate_extract_options_requires_nexus_base_dir(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    with pytest.raises(typer.Exit) as excinfo:
+        _validate_extract_options(**_validate_kwargs(tmp_path, nexus_base_dir=None))
+    assert excinfo.value.exit_code == 1
+
+
+# --- _write_extraction_outputs unit tests ---
+
+
+def _extraction_result_with_stats(auto_accepted, llm_judged, grounding_filtered):
+    from asago_policy_mapper.extract.models import ExtractionResult, RetrievalStats
+
+    return ExtractionResult(
+        risks=[],
+        source_documents=["policy.txt"],
+        retrieval_stats=RetrievalStats(
+            total_chunks=2,
+            total_candidates_retrieved=10,
+            auto_accepted=auto_accepted,
+            llm_judged=llm_judged,
+            grounding_filtered=grounding_filtered,
+        ),
+    )
+
+
+class _RecordingTracker:
+    """TokenTracker stand-in with fixed counters."""
+
+    prompt_tokens = 100
+    completion_tokens = 50
+    total_tokens = 150
+    calls = 3
+
+
+@pytest.mark.parametrize(
+    "no_judge,no_grounding,no_cross_encoder,expected_summary",
+    [
+        (True, True, False, "  3 auto-accepted (IR-only, no LLM stages)"),
+        (False, True, False, "  3 auto-accepted, 1 LLM-judged (no grounding)"),
+        (False, False, True, "  3 RRF-accepted, 2 grounding-filtered (no cross-encoder)"),
+        (False, False, False, "  3 auto-accepted, 1 LLM-judged, 2 grounding-filtered"),
+    ],
+)
+def test_write_extraction_outputs_summary_lines(
+    tmp_path, capsys, no_judge, no_grounding, no_cross_encoder, expected_summary
+):
+    from asago_policy_mapper.cli import _write_extraction_outputs
+
+    result = _extraction_result_with_stats(auto_accepted=3, llm_judged=1, grounding_filtered=2)
+    result_data = result.model_dump()
+
+    _write_extraction_outputs(
+        result,
+        result_data,
+        tmp_path,
+        output_format="json",
+        needs_llm=False,
+        tracker=_RecordingTracker(),
+        no_judge=no_judge,
+        no_grounding=no_grounding,
+        no_cross_encoder=no_cross_encoder,
+    )
+
+    written = json.loads((tmp_path / "risk-extraction.json").read_text())
+    assert written == result_data
+    assert not (tmp_path / "risk-extraction.yaml").exists()
+    assert expected_summary in capsys.readouterr().out
+
+
+def test_write_extraction_outputs_yaml_format(tmp_path):
+    from asago_policy_mapper.cli import _write_extraction_outputs
+
+    result = _extraction_result_with_stats(auto_accepted=1, llm_judged=0, grounding_filtered=0)
+    result_data = result.model_dump()
+
+    _write_extraction_outputs(
+        result,
+        result_data,
+        tmp_path,
+        output_format="yaml",
+        needs_llm=False,
+        tracker=_RecordingTracker(),
+        no_judge=True,
+        no_grounding=True,
+        no_cross_encoder=False,
+    )
+
+    assert (tmp_path / "risk-extraction.yaml").exists()
+    assert yaml.safe_load((tmp_path / "risk-extraction.yaml").read_text()) == result_data
+    assert not (tmp_path / "risk-extraction.json").exists()
+
+
+def test_write_extraction_outputs_both_formats(tmp_path):
+    from asago_policy_mapper.cli import _write_extraction_outputs
+
+    result = _extraction_result_with_stats(auto_accepted=1, llm_judged=0, grounding_filtered=0)
+    result_data = result.model_dump()
+
+    _write_extraction_outputs(
+        result,
+        result_data,
+        tmp_path,
+        output_format="both",
+        needs_llm=False,
+        tracker=_RecordingTracker(),
+        no_judge=True,
+        no_grounding=True,
+        no_cross_encoder=False,
+    )
+
+    assert json.loads((tmp_path / "risk-extraction.json").read_text()) == result_data
+    assert yaml.safe_load((tmp_path / "risk-extraction.yaml").read_text()) == result_data
+
+
+def test_write_extraction_outputs_token_usage_only_when_llm_needed(tmp_path, capsys):
+    from asago_policy_mapper.cli import _write_extraction_outputs
+
+    result = _extraction_result_with_stats(auto_accepted=1, llm_judged=0, grounding_filtered=0)
+    result_data = result.model_dump()
+
+    _write_extraction_outputs(
+        result,
+        result_data,
+        tmp_path,
+        output_format="json",
+        needs_llm=True,
+        tracker=_RecordingTracker(),
+        no_judge=False,
+        no_grounding=True,
+        no_cross_encoder=False,
+    )
+
+    out = capsys.readouterr().out
+    assert "Token usage: 100 prompt + 50 completion = 150 total (3 calls)" in out
+
+    _write_extraction_outputs(
+        result,
+        result_data,
+        tmp_path,
+        output_format="json",
+        needs_llm=False,
+        tracker=_RecordingTracker(),
+        no_judge=True,
+        no_grounding=True,
+        no_cross_encoder=False,
+    )
+
+    out = capsys.readouterr().out
+    assert "Token usage" not in out
