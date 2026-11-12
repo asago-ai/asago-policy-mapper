@@ -32,8 +32,6 @@ def test_extract_missing_base_url():
                 f.name,
                 "-o",
                 "/tmp/test-output",
-                "--nexus-base-dir",
-                "/tmp/nexus",
             ],
             env={"POLICY_MAPPER_BASE_URL": "", "POLICY_MAPPER_MODEL": ""},
         )
@@ -52,8 +50,6 @@ def test_extract_nonexistent_file():
             "http://localhost:8000/v1",
             "--model",
             "test",
-            "--nexus-base-dir",
-            "/tmp/nexus",
         ],
     )
     assert result.exit_code != 0
@@ -145,8 +141,6 @@ def test_cli_configures_logging():
                 "http://localhost:8000/v1",
                 "--model",
                 "test",
-                "--nexus-base-dir",
-                "/tmp/nexus",
             ],
         )
         assert result.exit_code != 0
@@ -193,7 +187,7 @@ def test_extract_check_risk_text_warnings_only_when_enabled(monkeypatch, tmp_pat
     monkeypatch.setattr("asago_policy_mapper.extract.pipeline.run_extraction", stop)
     policy = tmp_path / "policy.txt"
     policy.write_text("test policy")
-    args = ["extract", str(policy), "-o", str(tmp_path / "out"), "--nexus-base-dir", str(tmp_path)]
+    args = ["extract", str(policy), "-o", str(tmp_path / "out")]
     args += ["--no-judge", "--no-grounding", "--no-query-gen", "--no-expand-siblings"]
     if check_risk_text:
         args.append("--check-risk-text")
@@ -253,8 +247,6 @@ def test_extract_env_values_reach_llm_config(monkeypatch, tmp_path):
             str(policy),
             "-o",
             str(tmp_path / "out"),
-            "--nexus-base-dir",
-            str(tmp_path),
             "--no-judge",
             "--no-grounding",
             "--no-expand-siblings",
@@ -295,8 +287,6 @@ def test_extract_invalid_custom_taxonomy():
                     "http://localhost:8000/v1",
                     "--model",
                     "test",
-                    "--nexus-base-dir",
-                    "/tmp/nexus",
                     "--custom-taxonomy",
                     bad_yaml.name,
                     "--no-judge",

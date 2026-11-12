@@ -41,7 +41,10 @@ def extract(
     model: str = typer.Option(None, "--model", envvar="POLICY_MAPPER_MODEL", help="LLM model name"),
     api_key: str = typer.Option("none", "--api-key", envvar="POLICY_MAPPER_API_KEY", help="LLM API key"),
     nexus_base_dir: str = typer.Option(
-        None, "--nexus-base-dir", envvar="NEXUS_BASE_DIR", help="Path to ai-atlas-nexus repo"
+        None,
+        "--nexus-base-dir",
+        envvar="NEXUS_BASE_DIR",
+        help="Optional override: path to an ai-atlas-nexus clone (defaults to the installed package data)",
     ),
     custom_taxonomy: list[Path] = typer.Option(
         [], "--custom-taxonomy", "-t", help="Custom taxonomy YAML file(s) to load alongside Nexus risks"
@@ -207,10 +210,6 @@ def extract(
         )
         raise typer.Exit(1)
 
-    if not nexus_base_dir:
-        typer.echo("Error: --nexus-base-dir is required", err=True)
-        raise typer.Exit(1)
-
     if not needs_llm:
         config = LLMConfig(
             base_url=base_url or "unused",
@@ -263,7 +262,7 @@ def extract(
 
     from asago_policy_mapper.taxonomy import apply_description_overrides
 
-    nexus = AIAtlasNexus(base_dir=nexus_base_dir)
+    nexus = AIAtlasNexus(base_dir=nexus_base_dir or None)
     all_risks = apply_description_overrides(
         r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
     )
