@@ -14,7 +14,7 @@
 
 Run-to-run noise on the same arm measured ±0.08 F1 per policy (ars: 0.697/0.735/0.776 on identical code), so per-policy deltas are mostly within noise; the systematic direction (sign test, p≈0.001) is real.
 
-**Conclusion:** The F1 shift is caused by vLLM guided decoding itself changing the output distribution; restoring the schema block in the prompt recovers only +0.002 and forfeits the token savings. Prompt wording is not the operative variable (the combined arm tested it directly). `json_schema` is therefore the default: −16% tokens for −0.014 micro-F1. The `json` mode stays available for distribution parity with the instructor stack when quality outweighs tokens. No MLflow run (tracking disabled).
+**Conclusion:** The F1 shift is caused by vLLM guided decoding itself changing the output distribution; restoring the schema block in the prompt recovers only +0.002 and forfeits the token savings. Prompt wording is not the operative variable (the combined arm tested it directly). `json_schema` is therefore the default: −16% tokens for −0.016 micro-F1. Correction (2026-11-12): the sentence "the `json` mode stays available for distribution parity with the instructor stack" described the intended purpose of the mode, but the `json` mode implemented after this experiment sends a different schema-in-prompt wording than instructor Mode.JSON did, and was never battery-measured against it; the parity claim does not hold for the current wire format. No MLflow run (tracking disabled).
 
 ## 2026-05-28: Cross-Encoder Baseline Evaluation
 
