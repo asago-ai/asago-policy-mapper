@@ -73,3 +73,20 @@ select = ["E", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
 "run_extract_battery.py" = ["E501"]
+
+# Mutation testing (mutmut 3.x). mutmut is NOT a project dependency: install it
+# ad hoc into the venv with `UV_NO_CONFIG=1 uv pip install mutmut` so uv.lock
+# stays untouched. See "Mutation testing" in CLAUDE.md for the per-PR workflow
+# and the sandbox-isolation caveats; tests/test_mutmut_canary.py guards the
+# sandbox against silently importing the original tree instead of mutants/.
+[tool.mutmut]
+source_paths = ["src/asago_policy_mapper/"]
+pytest_add_cli_args_test_selection = [
+    "-m",
+    "not slow and not llm",
+    "tests/",
+    # dspy-experiment tests import `experiments`, which breaks under the
+    # mutants/ sandbox cwd (see CLAUDE.md "Mutation testing").
+    "--ignore=tests/test_dspy_embedding_metric.py",
+    "--ignore=tests/test_dspy_embedding_dataset.py",
+]
