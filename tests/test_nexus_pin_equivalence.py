@@ -4,8 +4,10 @@ The migration from the git pin (commit c7a53040, declared as @main) to
 ai-atlas-nexus==1.2.5 must not change the risk catalog the pipeline
 consumes. These tests load the installed package's catalog with the
 production EXCLUDED_TAXONOMIES filter and assert the known post-filter
-population, so a future dependency bump that changes the catalog fails
-loudly here instead of shifting retrieval results silently.
+population, its per-taxonomy histogram and a per-risk content fingerprint
+(id, taxonomy, name, description), so a future dependency bump that changes
+the catalog fails loudly here instead of shifting retrieval results
+silently.
 """
 
 import pytest
@@ -26,6 +28,27 @@ _TAXONOMY_HISTOGRAM = {
     "mit-ai-risk-repository": 24,
     "owasp-ast10": 10,
 }
+
+# sha256 over the sorted "id|taxonomy|name|description" triples of the
+# filtered catalog (joined with newlines, UTF-8). This pins the per-risk
+# content — IDs, taxonomy assignments, names and descriptions — not just the
+# counts: a bump that changes any of them while keeping the population fails
+# here instead of shifting retrieval results silently. The value below
+# matches both the 1.2.5 wheel and the pre-migration git pin (commit
+# c7a53040), each loaded with its own library version.
+#
+# To update after a deliberate ai-atlas-nexus upgrade:
+#   1. Review the catalog diff (the slow test with NEXUS_PIN_EQUIVALENCE_DIR
+#      set compares old vs new content).
+#   2. Re-measure: uv run python -c "from asago_policy_mapper.cli import \
+#      EXCLUDED_TAXONOMIES; from ai_atlas_nexus import AIAtlasNexus; \
+#      import hashlib; risks=[r for r in AIAtlasNexus().get_all_risks() \
+#      if getattr(r,'isDefinedByTaxonomy','') not in EXCLUDED_TAXONOMIES]; \
+#      print(hashlib.sha256('\n'.join(sorted(f'{r.id}|{r.isDefinedByTaxonomy}|{r.name}|{r.description}' \
+#      for r in risks)).encode()).hexdigest())"
+#   3. Update EXPECTED_FILTERED_RISKS, _TAXONOMY_HISTOGRAM and this
+#      fingerprint together in one reviewed commit.
+EXPECTED_CATALOG_FINGERPRINT = "9c091edf84586c36096cb1b1041c40c9ac9401ab2491b729229537d524fc2483"
 
 
 def _filtered_risks(nexus):
@@ -51,6 +74,27 @@ def test_installed_package_catalog_taxonomy_histogram():
 
     histogram = Counter(r.isDefinedByTaxonomy for r in risks)
     assert dict(histogram) == _TAXONOMY_HISTOGRAM
+
+
+def test_installed_package_catalog_content_fingerprint():
+    """The filtered catalog's per-risk content matches the pinned fingerprint.
+
+    Counts and the histogram cannot detect changed names, descriptions or
+    taxonomy assignments; this fingerprint covers all four per-risk fields
+    (id, taxonomy, name, description). It runs in the fast suite, so content
+    drift fails CI without needing the old pinned tree (see the slow test
+    below for the old-vs-new comparison to run when the pin moves).
+    """
+    import hashlib
+
+    from ai_atlas_nexus import AIAtlasNexus
+
+    risks = _filtered_risks(AIAtlasNexus())
+
+    payload = "\n".join(sorted(f"{r.id}|{r.isDefinedByTaxonomy}|{r.name}|{r.description}" for r in risks))
+    fingerprint = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    assert fingerprint == EXPECTED_CATALOG_FINGERPRINT
 
 
 def test_installed_package_catalog_excludes_no_excluded_taxonomy():

@@ -258,7 +258,9 @@ uv sync
 
 The risk catalog ships with the [`ai-atlas-nexus`](https://pypi.org/project/ai-atlas-nexus/) PyPI package, pinned in `pyproject.toml` — no local clone is needed. `uv sync` installs the pinned version and its data together, so the catalog and the ontology models always match.
 
-Optional override: `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points the pipeline at a local [ai-atlas-nexus](https://github.com/IBM/ai-atlas-nexus) clone checkout instead (an escape hatch for experimenting with unreleased data). The clone must be laid out like a checkout (`<clone>/src/ai_atlas_nexus/data`), and its data files are validated at startup against the ontology models of the installed library version — a mismatch fails with pydantic validation errors.
+The catalog content is pinned by tests: `tests/test_nexus_pin_equivalence.py` asserts the filtered population (560 risks), the per-taxonomy histogram and a sha256 fingerprint over the sorted per-risk `id`, `taxonomy`, `name` and `description` triples, so an upgrade that changes any of them fails the suite instead of shifting retrieval results silently. When you upgrade the pin deliberately, review the catalog diff (the slow test in that file compares old vs new content when `NEXUS_PIN_EQUIVALENCE_DIR` points at the old tree), then update the expected counts and fingerprint together — the re-measure command is in the file's comments.
+
+Optional override: `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points the pipeline at a local [ai-atlas-nexus](https://github.com/IBM/ai-atlas-nexus) clone checkout instead (an escape hatch for experimenting with unreleased data). The clone must be laid out like a checkout (`<clone>/src/ai_atlas_nexus/data`), and its data files are validated at startup against the ontology models of the installed library version — a mismatch fails with pydantic validation errors. An empty value behaves exactly like unset.
 
 ## Usage
 
