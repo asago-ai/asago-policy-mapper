@@ -3,12 +3,14 @@
 Generates a cross-mapping YAML file for the mitigation bridge."""
 from __future__ import annotations
 
-import yaml
 from pathlib import Path
+
+import yaml
+from ai_atlas_nexus.data import get_data_path
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-KG = Path(".venv/lib/python3.12/site-packages/ai_atlas_nexus/data/knowledge_graph")
+KG = Path(get_data_path())
 DATA_DIR = Path(__file__).resolve().parents[1] / "src" / "asago_policy_mapper" / "data"
 
 # Group mapping: AIR group ID → list of Atlas group IDs

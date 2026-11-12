@@ -182,7 +182,6 @@ Each file is a tracked template, not a runtime configuration. Copy the one you w
 
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --base-url https://llm-serving.example.com/v1 --model my-model \
   --api-key $LLM_API_KEY \
   --bi-encoder-model https://qwen3-embedding-serving.example.com/v1 \
@@ -197,7 +196,6 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --base-url https://llm-serving.example.com/v1 --model my-model \
   --api-key $LLM_API_KEY \
   --bi-encoder-model https://embeddinggemma-serving.example.com/v1 \
@@ -209,7 +207,6 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --base-url http://localhost:8000/v1 --model my-model \
   --cross-encoder-model Alibaba-NLP/gte-reranker-modernbert-base
 ```
@@ -218,7 +215,6 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --base-url http://localhost:8000/v1 --model my-model
 ```
 
@@ -226,7 +222,6 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --no-judge --no-grounding
 ```
 
@@ -234,14 +229,12 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
 
 ```bash
 export OPENAI_API_KEY="..."
-export NEXUS_BASE_DIR="/path/to/ai-atlas-nexus"
 export POLICY_MAPPER_MAX_OUTPUT_TOKENS=8192
 export POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens
 # Optional: default, flex, fast, or priority. Omit to use the project setting.
 export POLICY_MAPPER_SERVICE_TIER=default
 
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir "$NEXUS_BASE_DIR" \
   --base-url https://api.openai.com/v1 \
   --model gpt-6-luna \
   --api-key "$OPENAI_API_KEY" \
@@ -263,14 +256,11 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 uv sync
 ```
 
-You need a local clone of [ai-atlas-nexus](https://github.com/IBM/ai-atlas-nexus) — set its path via `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag.
+The risk catalog ships with the [`ai-atlas-nexus`](https://pypi.org/project/ai-atlas-nexus/) PyPI package, pinned in `pyproject.toml` — no local clone is needed. `uv sync` installs the pinned version and its data together, so the catalog and the ontology models always match.
 
-The clone **must be checked out at the `ai-atlas-nexus` commit pinned in `uv.lock`**. At startup the clone's data files are validated against the ontology models of the pinned library version, and a clone that is older *or* newer than the pin fails with pydantic validation errors. After cloning (and after any `uv lock --upgrade-package ai-atlas-nexus`), sync the clone to the pin from the repo root:
+The catalog content is pinned by tests: `tests/test_nexus_pin_equivalence.py` asserts the filtered population (560 risks), the per-taxonomy histogram and a sha256 fingerprint over the sorted per-risk `id`, `taxonomy`, `name` and `description` triples, so an upgrade that changes any of them fails the suite instead of shifting retrieval results silently. When you upgrade the pin deliberately, review the catalog diff (the slow test in that file compares old vs new content when `NEXUS_PIN_EQUIVALENCE_DIR` points at the old tree), then update the expected counts and fingerprint together — the re-measure command is in the file's comments.
 
-```bash
-git -C /path/to/ai-atlas-nexus fetch origin
-git -C /path/to/ai-atlas-nexus checkout "$(grep -oE 'ai-atlas-nexus\.git\?rev=[^"]*#[0-9a-f]{40}' uv.lock | head -1 | sed 's/.*#//')"
-```
+Optional override: `NEXUS_BASE_DIR` env var or `--nexus-base-dir` flag points the pipeline at a local [ai-atlas-nexus](https://github.com/IBM/ai-atlas-nexus) clone checkout instead (an escape hatch for experimenting with unreleased data). The clone must be laid out like a checkout (`<clone>/src/ai_atlas_nexus/data`), and its data files are validated at startup against the ontology models of the installed library version — a mismatch fails with pydantic validation errors. An empty value behaves exactly like unset.
 
 ## Usage
 
@@ -279,8 +269,7 @@ git -C /path/to/ai-atlas-nexus checkout "$(grep -oE 'ai-atlas-nexus\.git\?rev=[^
 ```bash
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --base-url http://localhost:8000/v1 \
-  --model my-model \
-  --nexus-base-dir /path/to/ai-atlas-nexus
+  --model my-model
 ```
 
 Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both. The JSON includes an `llm_calls` array with every LLM call (messages, response, timing) for analysis; it is written once when the run completes.
@@ -313,35 +302,34 @@ uv run python run_extract_battery.py batteries/risk-selected.yaml \
 
 # IR-only mode (no LLM judge/grounding, no --base-url/--model needed)
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus --no-judge --no-grounding
+  --no-judge --no-grounding
 uv run python run_extract_battery.py batteries/risk-selected.yaml \
   --no-judge --no-grounding
 
 # Judge only, no grounding (test judge contribution in isolation)
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus --no-grounding \
+  --no-grounding \
   --base-url <url> --model <model>
 
 # Skip causal synthesis (use static YAML chains)
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus --no-causal-synthesis \
+  --no-causal-synthesis \
   --base-url <url> --model <model>
 
 # Smaller chunks with larger judge context window
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --chunk-max-tokens 256 --judge-context-tokens 512 \
   --base-url <url> --model <model>
 
 # Disable LLM query generation (use raw chunk text for retrieval)
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus --no-query-gen \
+  --no-query-gen \
   --base-url <url> --model <model>
 
 # Warn about loaded risks whose description lacks closing punctuation
 # (possible upstream truncation); off by default
 uv run asago-policy-mapper extract policy.pdf -o output/ \
-  --nexus-base-dir /path/to/ai-atlas-nexus --check-risk-text \
+  --check-risk-text \
   --base-url <url> --model <model>
 
 # Rebuild mitigation index (after data file changes)
@@ -409,14 +397,12 @@ See `examples/custom-taxonomy-example.yaml` for a complete example with 5 risks.
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --base-url http://localhost:8000/v1 \
   --model my-model \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --custom-taxonomy my-risks.yaml
 
 # Multiple custom taxonomies
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --base-url http://localhost:8000/v1 \
   --model my-model \
-  --nexus-base-dir /path/to/ai-atlas-nexus \
   --custom-taxonomy risks-a.yaml \
   --custom-taxonomy risks-b.yaml
 ```
