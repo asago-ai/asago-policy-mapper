@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from asago_policy_mapper.llm import (
+    _MAX_TRUNCATION_RETRIES,
     IncompleteOutputException,
     LLMConfig,
     SlimModel,
@@ -19,6 +20,7 @@ from asago_policy_mapper.llm import (
     _call_with_retry,
     _extract_response_content,
     _IncompleteOutput,
+    _parse_completion,
     _retry_with_validation,
     _strip_titles,
     _StructuredClient,
@@ -878,6 +880,114 @@ class TestStructuredClientRetries:
         assert len(excinfo.value.failed_attempts) == 1
         assert excinfo.value.failed_attempts[0].attempt_number == 1
         assert isinstance(excinfo.value.__cause__, ValidationError)
+
+
+class TestLengthTruncationRouting:
+    """A length-truncated completion takes the truncation path, not validation retries."""
+
+    def _length_response(self):
+        return {
+            "id": "chatcmpl-1",
+            "object": "chat.completion",
+            "created": 0,
+            "model": "test-model",
+            # vLLM-shaped truncation: no content at all when the token limit hits.
+            "choices": [{"index": 0, "finish_reason": "length", "message": {"role": "assistant", "content": None}}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+        }
+
+    def test_null_content_with_length_takes_truncation_path(self, caplog):
+        """content=null + finish_reason=length is a truncation problem, not a parse one.
+
+        The prompt is truncatable (a long user message), so the wrapper
+        retries with a shorter prompt instead of resending the same messages
+        with a validation error hint.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=self._length_response())
+
+        client = _stubbed_client(handler, max_retries=3)
+        long_message = [{"role": "user", "content": "x" * 2000}]
+
+        with caplog.at_level(logging.WARNING, logger="asago_policy_mapper.llm"):
+            with pytest.raises(IncompleteOutputException):
+                client.chat.completions.create(
+                    model="test-model",
+                    response_model=_StructuredAnswer,
+                    messages=long_message,
+                    max_tokens=256,
+                )
+
+        # Retries shorten the prompt (truncation path), they do not append
+        # validation error hints (validation path).
+        first_len = len(requests[0]["messages"][0]["content"])
+        assert first_len == 2000
+        for body in requests[1:]:
+            hints = [m for m in body["messages"] if m.get("role") == "user" and "Validation error:" in m["content"]]
+            assert not hints
+            assert len(body["messages"][0]["content"]) < first_len
+        # The truncation budget allows _MAX_TRUNCATION_RETRIES + 1 calls; with
+        # max_retries=3 the validation budget would also allow 4, so the count
+        # alone does not distinguish the paths — the shorter prompts and the
+        # absent validation hints above do.
+        assert len(requests) == _MAX_TRUNCATION_RETRIES + 1
+        # No validation-retry warnings fire on this path.
+        assert not [r for r in caplog.records if "Structured output validation failed" in r.getMessage()]
+
+    def test_null_content_with_length_and_short_prompt_raises_incomplete(self):
+        """Without room to shorten, the truncation path raises IncompleteOutputException directly."""
+
+        def handler(request):
+            return httpx.Response(200, json=self._length_response())
+
+        client = _stubbed_client(handler, max_retries=3)
+
+        with pytest.raises(IncompleteOutputException):
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "short"}],
+                max_tokens=256,
+            )
+
+    def test_truncation_budget_exhaustion_raises_incomplete_output(self):
+        """A long prompt that stays shortenable past the retry budget raises the endpoint condition.
+
+        A 5000-char message shortens 5000 -> 3000 -> 1800 -> 1080 across the
+        truncation attempts; the budget runs out while the message is still
+        above the floor. The caller must see the IncompleteOutputException,
+        not an internal RuntimeError.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(200, json=self._length_response())
+
+        client = _stubbed_client(handler, max_retries=3)
+
+        with pytest.raises(IncompleteOutputException):
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_StructuredAnswer,
+                messages=[{"role": "user", "content": "x" * 5000}],
+                max_tokens=256,
+            )
+
+        assert len(requests) == _MAX_TRUNCATION_RETRIES + 1
+        assert [len(body["messages"][0]["content"]) for body in requests] == [5000, 3000, 1800, 1080]
+
+    def test_parse_completion_checks_length_before_missing_content(self):
+        """_parse_completion raises IncompleteOutputException for null content + length."""
+        msg = SimpleNamespace(content=None)
+        choice = SimpleNamespace(message=msg, finish_reason="length")
+        completion = SimpleNamespace(choices=[choice])
+
+        with pytest.raises(IncompleteOutputException):
+            _parse_completion(completion, _StructuredAnswer)
 
 
 class TestStructuredClientResponseFormat:

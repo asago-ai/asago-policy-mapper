@@ -441,6 +441,7 @@ def _call_with_retry(
     current_messages = kwargs.get("messages", [])
     max_validation_retries = kwargs.pop("max_retries", config.max_retries)
 
+    incomplete: _IncompleteOutput | None = None
     for attempt in range(_MAX_TRUNCATION_RETRIES + 1):
         try:
             return _retry_with_validation(  # type: ignore[no-any-return]
@@ -453,6 +454,7 @@ def _call_with_retry(
                 max_validation_retries,
             )
         except _IncompleteOutput as e:
+            incomplete = e
             shorter = _truncate_messages(current_messages)
             if shorter is None:
                 if tracker:
@@ -471,7 +473,16 @@ def _call_with_retry(
             current_messages = shorter
             kwargs["messages"] = shorter
             _apply_budget(kwargs, config)
-    raise RuntimeError("_call_with_retry exhausted truncation retries without returning")
+    # The truncation budget ran out while the prompt was still shortenable.
+    # Raise the incomplete-output cause, not an internal RuntimeError, so
+    # callers see the endpoint condition that ended the run.
+    if tracker:
+        tracker.record_incident(
+            "output_truncated",
+            f"Output truncated after {_MAX_TRUNCATION_RETRIES + 1} attempts with progressively shorter prompts",
+        )
+    assert incomplete is not None
+    raise incomplete.cause
 
 
 def _track_completion(tracker: TokenTracker, completion) -> None:
@@ -601,11 +612,15 @@ def _append_schema_block(messages: list[dict[str, Any]], schema: dict[str, Any])
 
 
 def _parse_completion(completion: Any, response_model: type[BaseModel]) -> Any:
+    # Check the length limit first: a length-truncated completion can carry
+    # null content, and that is a truncation problem, not a parsing one —
+    # routing it to the prompt-truncation path instead of burning validation
+    # retries on unparseable output.
+    if _finish_reason(completion) == "length":
+        raise IncompleteOutputException(last_completion=completion)
     content = _extract_response_content(completion)
     if content is None:
         raise ResponseParsingError("The completion contains no text content.")
-    if _finish_reason(completion) == "length":
-        raise IncompleteOutputException(last_completion=completion)
     return response_model.model_validate_json(_extract_json_span(content))
 
 
