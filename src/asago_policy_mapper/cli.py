@@ -262,7 +262,10 @@ def extract(
 
     from asago_policy_mapper.taxonomy import apply_description_overrides
 
-    nexus = AIAtlasNexus(base_dir=nexus_base_dir or None)
+    # Normalize once for every consumer below (catalog + mitigation loaders):
+    # a blank --nexus-base-dir / NEXUS_BASE_DIR behaves exactly like unset.
+    nexus_base_dir_override = nexus_base_dir or None
+    nexus = AIAtlasNexus(base_dir=nexus_base_dir_override)
     all_risks = apply_description_overrides(
         r for r in nexus.get_all_risks() if getattr(r, "isDefinedByTaxonomy", "") not in EXCLUDED_TAXONOMIES
     )
@@ -351,8 +354,8 @@ def extract(
 
     mitigation_index = load_mitigation_index()
     if mitigation_index:
-        action_descs = build_action_descriptions(nexus_base_dir)
-        risk_crossmap = build_risk_crossmap(nexus_base_dir)
+        action_descs = build_action_descriptions(nexus_base_dir_override)
+        risk_crossmap = build_risk_crossmap(nexus_base_dir_override)
         risk_threats = load_risk_threats()
         risk_consequences = load_risk_consequences()
         enrich_with_mitigations(
