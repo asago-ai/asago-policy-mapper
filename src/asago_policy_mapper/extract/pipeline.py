@@ -628,6 +628,222 @@ def _run_causal_synthesis(merged, chunks, client, config, max_workers, call_coll
     return merged
 
 
+def _filter_agentic_risks(risks, parsed):
+    """Drop agentic risks when no document mentions agent terminology."""
+    if _document_discusses_agents([p.content for p in parsed]):
+        return risks
+    original_count = len(risks)
+    risks = [r for r in risks if getattr(r, "risk_type", None) != "agentic"]
+    filtered = original_count - len(risks)
+    if filtered:
+        logger.info(
+            "Filtered %d agentic risks (no agent terminology in documents)",
+            filtered,
+        )
+    return risks
+
+
+def _build_risk_index(risks, retrieval) -> RiskIndex:
+    """Build the retrieval index over the risk catalog with the configured encoders."""
+    return RiskIndex(
+        risks,
+        bi_encoder_model=retrieval.bi_encoder_model,
+        cross_encoder_model=retrieval.effective_cross_encoder_model,
+        colbert_model=retrieval.colbert_model,
+        query_instruction=retrieval.query_instruction,
+        cross_encoder_type=retrieval.cross_encoder_type,
+        bi_encoder_api_key=retrieval.bi_encoder_api_key,
+        bi_encoder_model_name=retrieval.bi_encoder_model_name,
+        cross_encoder_model_name=retrieval.cross_encoder_model_name,
+    )
+
+
+def _run_query_gen(chunks, client, config, call_collector, max_workers, timing) -> tuple[list, set[int]]:
+    """Generate search queries per section group for query-gen retrieval.
+
+    Returns the generated queries and the chunk indices that got no query
+    and fall back to per-chunk retrieval.
+    """
+    with timed(timing, "query_gen_ms"):
+        groups = group_chunks(chunks)
+        qg_result = generate_queries(
+            chunks,
+            groups,
+            client,
+            config.model,
+            call_collector=call_collector,
+            max_workers=max_workers,
+            return_fallbacks=True,
+        )
+        assert isinstance(qg_result, tuple)
+        query_results, fallback_list = qg_result
+        fallback_chunk_indices = set(fallback_list)
+        logger.info(
+            "Query generation: %d queries from %d groups, %d fallback chunks",
+            len(query_results),
+            len(groups),
+            len(fallback_chunk_indices),
+        )
+    return query_results, fallback_chunk_indices
+
+
+def _merge_query_candidates(chunk_results, chunks, qr, candidates):
+    """Add a query's candidates to every chunk the query covers.
+
+    The first occurrence of a risk id wins; later queries only append risks
+    the chunk has not seen yet.
+    """
+    for ci in qr.chunk_indices:
+        chunk = chunks[ci]
+        if chunk_results[ci] is not None:
+            existing_ids = {c.risk_id for c in chunk_results[ci].accepted}
+            for c in candidates:
+                if c.risk_id not in existing_ids:
+                    chunk_results[ci].accepted.append(c)
+                    existing_ids.add(c.risk_id)
+        else:
+            chunk_results[ci] = ChunkResult(
+                chunk_index=ci,
+                source=chunk.source,
+                page=chunk.page,
+                section=chunk.section,
+                accepted=list(candidates),
+                borderline=[],
+                borderline_judged=[],
+                stats={
+                    "candidates_retrieved": len(candidates),
+                    "auto_accepted": len(candidates),
+                    "borderline": 0,
+                    "discarded": 0,
+                    "bm25_rescued": 0,
+                },
+            )
+
+
+def _retrieve_chunk_result(chunks, i, index, retrieval) -> ChunkResult:
+    """Run per-chunk hybrid retrieval with the pipeline's retrieval settings."""
+    return retrieve_chunk(
+        chunks,
+        i,
+        index,
+        top_n_accept=retrieval.top_n_accept,
+        top_n_judge=retrieval.top_n_judge,
+        min_score_floor=retrieval.min_score_floor,
+        bm25_rescue_rank=retrieval.bm25_rescue_rank,
+        use_cross_encoder=retrieval.use_cross_encoder,
+        rrf_min_score=retrieval.effective_rrf_min_score,
+        threshold_high=retrieval.threshold_high,
+        threshold_low=retrieval.threshold_low,
+    )
+
+
+def _run_retrieval(chunks, index, retrieval, query_results, fallback_chunk_indices, timing) -> list[ChunkResult]:
+    """Retrieve candidates per chunk: query-gen queries first, then per-chunk fallback.
+
+    With query generation on, each query's candidates are unioned into every
+    chunk the query covers (capped per chunk), and chunks without a query —
+    plus fallback chunks — go through per-chunk retrieval. With query
+    generation off, every chunk goes through per-chunk retrieval.
+    """
+    with timed(timing, "retrieve_ms"):
+        chunk_results: list[ChunkResult] = [None] * len(chunks)  # type: ignore[list-item]
+
+        if retrieval.query_gen:
+            for qr in query_results:
+                candidates = index.hybrid_search(
+                    qr.query,
+                    top_k=50,
+                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
+                    rrf_min_score=retrieval.rrf_min_score or 0.015,
+                )
+                _merge_query_candidates(chunk_results, chunks, qr, candidates)
+
+            _cap_accepted_candidates(chunk_results, _QUERY_GEN_MAX_CANDIDATES)
+
+            retrieval_indices = fallback_chunk_indices | {i for i in range(len(chunks)) if chunk_results[i] is None}
+            for i in sorted(retrieval_indices):
+                chunk_results[i] = _retrieve_chunk_result(chunks, i, index, retrieval)
+        else:
+            for i in range(len(chunks)):
+                chunk_results[i] = _retrieve_chunk_result(chunks, i, index, retrieval)
+
+    return chunk_results
+
+
+def _build_chunk_summaries(chunk_results, chunks) -> list[ChunkSummary]:
+    """Summarize per-chunk retrieval counters for the ExtractionResult."""
+    return [
+        ChunkSummary(
+            index=cr.chunk_index,
+            source=cr.source,
+            page=cr.page,
+            section=cr.section,
+            text_preview=chunks[cr.chunk_index].text[:200],
+            candidates_retrieved=cr.stats.get("candidates_retrieved", 0),
+            auto_accepted=cr.stats.get("auto_accepted", 0),
+            borderline=cr.stats.get("borderline", 0),
+            discarded=cr.stats.get("discarded", 0),
+            bm25_rescued=cr.stats.get("bm25_rescued", 0),
+        )
+        for cr in chunk_results
+    ]
+
+
+def _run_matches_stage(
+    chunk_results, chunks, client, config, retrieval, index, call_collector, chunk_contexts, timing
+) -> tuple[list[RiskMatch], list[FilteredCandidate], int]:
+    """Ground accepted candidates, or collect them ungrounded when grounding is disabled."""
+    if retrieval.no_grounding:
+        all_matches = _collect_ungrounded(chunk_results, index, retrieval)
+        all_filtered: list[FilteredCandidate] = []
+        timing["grounding_ms"] = 0.0
+        grounding_filtered = 0
+    else:
+        with timed(timing, "grounding_ms"):
+            all_matches, all_filtered, grounding_filtered = _run_grounding(
+                chunk_results,
+                chunks,
+                client,
+                config,
+                retrieval,
+                index,
+                call_collector,
+                grounding_passes=retrieval.grounding_passes,
+                grounding_batch_size=retrieval.grounding_batch_size,
+                chunk_contexts=chunk_contexts,
+            )
+    return all_matches, all_filtered, grounding_filtered
+
+
+def _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered) -> RetrievalStats:
+    """Aggregate per-chunk counters into the run's retrieval stats."""
+    return RetrievalStats(
+        total_chunks=len(chunks),
+        total_candidates_retrieved=sum(cr.stats.get("candidates_retrieved", 0) for cr in chunk_results),
+        auto_accepted=sum(cr.stats.get("auto_accepted", 0) for cr in chunk_results),
+        llm_judged=sum(len(cr.borderline_judged) for cr in chunk_results),
+        grounding_filtered=grounding_filtered,
+        timing_ms=timing,
+    )
+
+
+def _build_result_metadata(config, retrieval, expansion_stats, query_results, fallback_chunk_indices) -> dict:
+    """Assemble the run metadata recorded alongside the extraction result."""
+    metadata = {
+        "model": config.model,
+        **({"service_tier": config.service_tier} if config.service_tier is not None else {}),
+        **retrieval.to_metadata(),
+        "expansion_stats": expansion_stats,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    if retrieval.query_gen:
+        metadata["query_gen_queries"] = [
+            {"query": qr.query, "chunk_indices": qr.chunk_indices, "section": qr.section} for qr in query_results
+        ]
+        metadata["query_gen_fallback_chunks"] = sorted(fallback_chunk_indices)
+    return metadata
+
+
 def run_extraction(
     documents: list[Path],
     client,
@@ -655,129 +871,24 @@ def run_extraction(
         chunk_contexts = build_chunk_contexts(chunks)
     logger.info("Chunked %d document(s) into %d chunks", len(parsed), len(chunks))
 
-    if not _document_discusses_agents([p.content for p in parsed]):
-        original_count = len(risks)
-        risks = [r for r in risks if getattr(r, "risk_type", None) != "agentic"]
-        filtered = original_count - len(risks)
-        if filtered:
-            logger.info(
-                "Filtered %d agentic risks (no agent terminology in documents)",
-                filtered,
-            )
+    risks = _filter_agentic_risks(risks, parsed)
 
     with timed(timing, "index_ms"):
         if not risks:
             logger.error("No risks loaded from Nexus")
             return _empty_result(documents)
-        index = RiskIndex(
-            risks,
-            bi_encoder_model=retrieval.bi_encoder_model,
-            cross_encoder_model=retrieval.effective_cross_encoder_model,
-            colbert_model=retrieval.colbert_model,
-            query_instruction=retrieval.query_instruction,
-            cross_encoder_type=retrieval.cross_encoder_type,
-            bi_encoder_api_key=retrieval.bi_encoder_api_key,
-            bi_encoder_model_name=retrieval.bi_encoder_model_name,
-            cross_encoder_model_name=retrieval.cross_encoder_model_name,
-        )
+        index = _build_risk_index(risks, retrieval)
 
     call_collector: list[LLMCallRecord] = []
     fallback_chunk_indices: set[int] = set()
     query_results: list = []
 
     if retrieval.query_gen:
-        with timed(timing, "query_gen_ms"):
-            groups = group_chunks(chunks)
-            qg_result = generate_queries(
-                chunks,
-                groups,
-                client,
-                config.model,
-                call_collector=call_collector,
-                max_workers=max_workers,
-                return_fallbacks=True,
-            )
-            assert isinstance(qg_result, tuple)
-            query_results, fallback_list = qg_result
-            fallback_chunk_indices = set(fallback_list)
-            logger.info(
-                "Query generation: %d queries from %d groups, %d fallback chunks",
-                len(query_results),
-                len(groups),
-                len(fallback_chunk_indices),
-            )
+        query_results, fallback_chunk_indices = _run_query_gen(
+            chunks, client, config, call_collector, max_workers, timing
+        )
 
-    with timed(timing, "retrieve_ms"):
-        chunk_results: list[ChunkResult] = [None] * len(chunks)  # type: ignore[list-item]
-
-        if retrieval.query_gen:
-            for qr in query_results:
-                candidates = index.hybrid_search(
-                    qr.query,
-                    top_k=50,
-                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
-                    rrf_min_score=retrieval.rrf_min_score or 0.015,
-                )
-                for ci in qr.chunk_indices:
-                    chunk = chunks[ci]
-                    if chunk_results[ci] is not None:
-                        existing_ids = {c.risk_id for c in chunk_results[ci].accepted}
-                        for c in candidates:
-                            if c.risk_id not in existing_ids:
-                                chunk_results[ci].accepted.append(c)
-                                existing_ids.add(c.risk_id)
-                    else:
-                        chunk_results[ci] = ChunkResult(
-                            chunk_index=ci,
-                            source=chunk.source,
-                            page=chunk.page,
-                            section=chunk.section,
-                            accepted=list(candidates),
-                            borderline=[],
-                            borderline_judged=[],
-                            stats={
-                                "candidates_retrieved": len(candidates),
-                                "auto_accepted": len(candidates),
-                                "borderline": 0,
-                                "discarded": 0,
-                                "bm25_rescued": 0,
-                            },
-                        )
-
-            _cap_accepted_candidates(chunk_results, _QUERY_GEN_MAX_CANDIDATES)
-
-            retrieval_indices = fallback_chunk_indices | {i for i in range(len(chunks)) if chunk_results[i] is None}
-            for i in sorted(retrieval_indices):
-                cr = retrieve_chunk(
-                    chunks,
-                    i,
-                    index,
-                    top_n_accept=retrieval.top_n_accept,
-                    top_n_judge=retrieval.top_n_judge,
-                    min_score_floor=retrieval.min_score_floor,
-                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
-                    use_cross_encoder=retrieval.use_cross_encoder,
-                    rrf_min_score=retrieval.effective_rrf_min_score,
-                    threshold_high=retrieval.threshold_high,
-                    threshold_low=retrieval.threshold_low,
-                )
-                chunk_results[i] = cr
-        else:
-            for i in range(len(chunks)):
-                cr = retrieve_chunk(
-                    chunks,
-                    i,
-                    index,
-                    top_n_accept=retrieval.top_n_accept,
-                    top_n_judge=retrieval.top_n_judge,
-                    min_score_floor=retrieval.min_score_floor,
-                    bm25_rescue_rank=retrieval.bm25_rescue_rank,
-                    use_cross_encoder=retrieval.use_cross_encoder,
-                    rrf_min_score=retrieval.effective_rrf_min_score,
-                    threshold_high=retrieval.threshold_high,
-                    threshold_low=retrieval.threshold_low,
-                )
-                chunk_results[i] = cr
+    chunk_results = _run_retrieval(chunks, index, retrieval, query_results, fallback_chunk_indices, timing)
 
     n_accepted = sum(len(cr.accepted) for cr in chunk_results if cr is not None)
     logger.info(
@@ -791,21 +902,7 @@ def run_extraction(
             cr.accepted = index.expand_variants(cr.accepted)
             cr.borderline = index.expand_variants(cr.borderline)
 
-    chunk_summaries = [
-        ChunkSummary(
-            index=cr.chunk_index,
-            source=cr.source,
-            page=cr.page,
-            section=cr.section,
-            text_preview=chunks[cr.chunk_index].text[:200],
-            candidates_retrieved=cr.stats.get("candidates_retrieved", 0),
-            auto_accepted=cr.stats.get("auto_accepted", 0),
-            borderline=cr.stats.get("borderline", 0),
-            discarded=cr.stats.get("discarded", 0),
-            bm25_rescued=cr.stats.get("bm25_rescued", 0),
-        )
-        for cr in chunk_results
-    ]
+    chunk_summaries = _build_chunk_summaries(chunk_results, chunks)
 
     with timed(timing, "judge_ms"):
         _run_judge(
@@ -818,25 +915,9 @@ def run_extraction(
             chunk_contexts=chunk_contexts,
         )
 
-    if retrieval.no_grounding:
-        all_matches = _collect_ungrounded(chunk_results, index, retrieval)
-        all_filtered: list[FilteredCandidate] = []
-        timing["grounding_ms"] = 0.0
-        grounding_filtered = 0
-    else:
-        with timed(timing, "grounding_ms"):
-            all_matches, all_filtered, grounding_filtered = _run_grounding(
-                chunk_results,
-                chunks,
-                client,
-                config,
-                retrieval,
-                index,
-                call_collector,
-                grounding_passes=retrieval.grounding_passes,
-                grounding_batch_size=retrieval.grounding_batch_size,
-                chunk_contexts=chunk_contexts,
-            )
+    all_matches, all_filtered, grounding_filtered = _run_matches_stage(
+        chunk_results, chunks, client, config, retrieval, index, call_collector, chunk_contexts, timing
+    )
 
     if index.variant_map and not retrieval.no_grounding and client is not None:
         with timed(timing, "variant_grounding_ms"):
@@ -888,37 +969,13 @@ def run_extraction(
                 call_collector,
             )
 
-    total_stats = RetrievalStats(
-        total_chunks=len(chunks),
-        total_candidates_retrieved=sum(cr.stats.get("candidates_retrieved", 0) for cr in chunk_results),
-        auto_accepted=sum(cr.stats.get("auto_accepted", 0) for cr in chunk_results),
-        llm_judged=sum(len(cr.borderline_judged) for cr in chunk_results),
-        grounding_filtered=grounding_filtered,
-        timing_ms=timing,
-    )
+    total_stats = _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered)
 
     return ExtractionResult(
         risks=merged,
         source_documents=[str(d) for d in documents],
         retrieval_stats=total_stats,
-        metadata={
-            "model": config.model,
-            **({"service_tier": config.service_tier} if config.service_tier is not None else {}),
-            **retrieval.to_metadata(),
-            "expansion_stats": expansion_stats,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **(
-                {
-                    "query_gen_queries": [
-                        {"query": qr.query, "chunk_indices": qr.chunk_indices, "section": qr.section}
-                        for qr in query_results
-                    ],
-                    "query_gen_fallback_chunks": sorted(fallback_chunk_indices),
-                }
-                if retrieval.query_gen
-                else {}
-            ),
-        },
+        metadata=_build_result_metadata(config, retrieval, expansion_stats, query_results, fallback_chunk_indices),
         chunks=chunk_summaries,
         llm_calls=call_collector,
         grounding_filtered_candidates=all_filtered,
