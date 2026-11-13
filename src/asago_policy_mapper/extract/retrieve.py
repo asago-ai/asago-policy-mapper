@@ -22,6 +22,68 @@ def _sent_tokenize(text: str) -> list[str]:
     return [sent.text for sent in _nlp(text).sents]
 
 
+def _expand_neighbor_indices(
+    chunks: list[Chunk],
+    i: int,
+    budget: int,
+) -> tuple[list[int], list[int], int]:
+    """Collect same-source neighbor indices around chunk i within the budget.
+
+    Expands symmetrically (alternating before/after) until the token budget is
+    spent or both sides hit a boundary (document edge, source change, or an
+    over-budget neighbor). Returns (before_indices, after_indices, remaining
+    budget); indices are ordered outward from i.
+    """
+    chunk = chunks[i]
+    before_indices: list[int] = []
+    after_indices: list[int] = []
+    before_idx = i - 1
+    after_idx = i + 1
+    expand_before = True
+
+    while budget > 0 and (before_idx >= 0 or after_idx < len(chunks)):
+        if expand_before and before_idx >= 0:
+            prev = chunks[before_idx]
+            if prev.source != chunk.source:
+                before_idx = -1
+            else:
+                t = len(prev.text.split())
+                if t <= budget:
+                    before_indices.insert(0, before_idx)
+                    budget -= t
+                    before_idx -= 1
+                else:
+                    before_idx = -1
+        elif not expand_before and after_idx < len(chunks):
+            nxt = chunks[after_idx]
+            if nxt.source != chunk.source:
+                after_idx = len(chunks)
+            else:
+                t = len(nxt.text.split())
+                if t <= budget:
+                    after_indices.append(after_idx)
+                    budget -= t
+                    after_idx += 1
+                else:
+                    after_idx = len(chunks)
+        expand_before = not expand_before
+
+    return before_indices, after_indices, budget
+
+
+def _join_context(chunks: list[Chunk], ordered: list[int]) -> str:
+    """Join the chunk texts in order, inserting section headings at transitions."""
+    parts: list[str] = []
+    for pos, idx in enumerate(ordered):
+        c = chunks[idx]
+        if pos > 0:
+            prev_c = chunks[ordered[pos - 1]]
+            if c.section and c.section != prev_c.section:
+                parts.append(f"## {c.section}")
+        parts.append(c.text)
+    return "\n\n".join(parts)
+
+
 def build_chunk_contexts(
     chunks: list[Chunk],
     max_context_tokens: int = 1024,
@@ -39,50 +101,9 @@ def build_chunk_contexts(
         core_tokens = len(chunk.text.split())
         budget = max_context_tokens - core_tokens
 
-        before_indices: list[int] = []
-        after_indices: list[int] = []
-        before_idx = i - 1
-        after_idx = i + 1
-        expand_before = True
-
-        while budget > 0 and (before_idx >= 0 or after_idx < len(chunks)):
-            if expand_before and before_idx >= 0:
-                prev = chunks[before_idx]
-                if prev.source != chunk.source:
-                    before_idx = -1
-                else:
-                    t = len(prev.text.split())
-                    if t <= budget:
-                        before_indices.insert(0, before_idx)
-                        budget -= t
-                        before_idx -= 1
-                    else:
-                        before_idx = -1
-            elif not expand_before and after_idx < len(chunks):
-                nxt = chunks[after_idx]
-                if nxt.source != chunk.source:
-                    after_idx = len(chunks)
-                else:
-                    t = len(nxt.text.split())
-                    if t <= budget:
-                        after_indices.append(after_idx)
-                        budget -= t
-                        after_idx += 1
-                    else:
-                        after_idx = len(chunks)
-            expand_before = not expand_before
-
+        before_indices, after_indices, _ = _expand_neighbor_indices(chunks, i, budget)
         ordered = before_indices + [i] + after_indices
-        parts: list[str] = []
-        for pos, idx in enumerate(ordered):
-            c = chunks[idx]
-            if pos > 0:
-                prev_c = chunks[ordered[pos - 1]]
-                if c.section and c.section != prev_c.section:
-                    parts.append(f"## {c.section}")
-            parts.append(c.text)
-
-        contexts.append("\n\n".join(parts))
+        contexts.append(_join_context(chunks, ordered))
 
     return contexts
 
