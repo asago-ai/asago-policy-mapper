@@ -488,6 +488,19 @@ def test_validate_extract_options_valid_formats_accepted(tmp_path):
         assert _validate_extract_options(**_validate_kwargs(tmp_path, output_format=fmt)) is True
 
 
+def test_run_needs_llm_matrix():
+    from asago_policy_mapper.cli import _run_needs_llm
+
+    # Pure IR run: the only combination with no LLM.
+    assert _run_needs_llm(no_judge=True, no_grounding=True, expand_siblings=False, query_gen=False) is False
+    # Judge or grounding or expansion each force an LLM.
+    assert _run_needs_llm(no_judge=False, no_grounding=True, expand_siblings=False, query_gen=False) is True
+    assert _run_needs_llm(no_judge=True, no_grounding=False, expand_siblings=False, query_gen=False) is True
+    assert _run_needs_llm(no_judge=True, no_grounding=True, expand_siblings=True, query_gen=False) is True
+    # Query generation forces an LLM even on an otherwise pure IR run.
+    assert _run_needs_llm(no_judge=True, no_grounding=True, expand_siblings=False, query_gen=True) is True
+
+
 # --- _load_risk_catalog unit tests ---
 
 

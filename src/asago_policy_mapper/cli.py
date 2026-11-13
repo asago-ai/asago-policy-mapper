@@ -33,12 +33,28 @@ EXCLUDED_TAXONOMIES = {
 }
 
 
+def _fail_validation(message: str) -> None:
+    """Echo a validation error and exit with code 1."""
+    typer.echo(f"Error: {message}", err=True)
+    raise typer.Exit(1)
+
+
+def _run_needs_llm(no_judge, no_grounding, expand_siblings, query_gen) -> bool:
+    """Tell whether the run makes LLM calls.
+
+    Pure IR runs (no judge, no grounding, no sibling expansion) skip the LLM
+    entirely; query generation always needs one.
+    """
+    return not (no_judge and no_grounding and not expand_siblings) or query_gen
+
+
 def _validate_extract_options(
     *,
     output_format,
     policy_files,
     base_url,
     model,
+    nexus_base_dir,
     no_judge,
     no_grounding,
     expand_siblings,
@@ -47,21 +63,18 @@ def _validate_extract_options(
     """Validate extract options; exit on error. Returns whether the run needs an LLM."""
     valid_formats = {"json", "yaml", "both"}
     if output_format not in valid_formats:
-        typer.echo(f"Error: --output-format must be one of: {', '.join(sorted(valid_formats))}", err=True)
-        raise typer.Exit(1)
+        _fail_validation(f"--output-format must be one of: {', '.join(sorted(valid_formats))}")
 
     for pf in policy_files:
         if not pf.exists():
-            typer.echo(f"Error: {pf} does not exist", err=True)
-            raise typer.Exit(1)
+            _fail_validation(f"{pf} does not exist")
 
-    needs_llm = not (no_judge and no_grounding and not expand_siblings) or query_gen
+    needs_llm = _run_needs_llm(no_judge, no_grounding, expand_siblings, query_gen)
     if needs_llm and (not base_url or not model):
-        typer.echo(
-            "Error: --base-url and --model are required (unless both --no-judge and --no-grounding are set)", err=True
-        )
-        raise typer.Exit(1)
+        _fail_validation("--base-url and --model are required (unless both --no-judge and --no-grounding are set)")
 
+    if not nexus_base_dir:
+        _fail_validation("--nexus-base-dir is required")
     return needs_llm
 
 
@@ -344,10 +357,7 @@ def extract(
     model: str = typer.Option(None, "--model", envvar="POLICY_MAPPER_MODEL", help="LLM model name"),
     api_key: str = typer.Option("none", "--api-key", envvar="POLICY_MAPPER_API_KEY", help="LLM API key"),
     nexus_base_dir: str = typer.Option(
-        None,
-        "--nexus-base-dir",
-        envvar="NEXUS_BASE_DIR",
-        help="Optional override: path to an ai-atlas-nexus clone (defaults to the installed package data)",
+        None, "--nexus-base-dir", envvar="NEXUS_BASE_DIR", help="Path to ai-atlas-nexus repo"
     ),
     custom_taxonomy: list[Path] = typer.Option(
         [], "--custom-taxonomy", "-t", help="Custom taxonomy YAML file(s) to load alongside Nexus risks"
@@ -501,6 +511,7 @@ def extract(
         policy_files=policy_files,
         base_url=base_url,
         model=model,
+        nexus_base_dir=nexus_base_dir,
         no_judge=no_judge,
         no_grounding=no_grounding,
         expand_siblings=expand_siblings,
@@ -525,10 +536,7 @@ def extract(
     output.mkdir(parents=True, exist_ok=True)
 
     loaded_custom_risks = _load_custom_risks(custom_taxonomy)
-    # Normalize once for every consumer (catalog + mitigation loaders): a blank
-    # --nexus-base-dir / NEXUS_BASE_DIR behaves exactly like unset.
-    nexus_base_dir_override = nexus_base_dir or None
-    all_risks, custom_risk_count = _load_risk_catalog(nexus_base_dir_override, loaded_custom_risks)
+    all_risks, custom_risk_count = _load_risk_catalog(nexus_base_dir, loaded_custom_risks)
     _warn_risk_text(all_risks, check_risk_text)
 
     from asago_policy_mapper.extract.pipeline import run_extraction
@@ -569,7 +577,7 @@ def extract(
 
     result.token_usage = tracker.to_dict()
 
-    _attach_mitigations(result, nexus_base_dir_override)
+    _attach_mitigations(result, nexus_base_dir)
 
     result_data = result.model_dump()
 
