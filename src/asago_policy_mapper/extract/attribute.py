@@ -179,24 +179,7 @@ def ground_variants(
     duration_ms = (time.time() - t0) * 1000
 
     variant_ids = {v["risk_id"] for v in variants}
-    result: dict[str, tuple[list[EvidenceSpan], str]] = {}
-
-    for v in verdicts:
-        if not v.grounded or v.risk_id not in variant_ids:
-            continue
-        spans = [
-            EvidenceSpan(
-                text=quote,
-                document=document,
-                page=page,
-                section=section,
-                chunk_index=chunk_index,
-            )
-            for quote in v.quotes
-            if quote.strip()
-        ]
-        if spans:
-            result[v.risk_id] = (spans, v.confidence)
+    result = _verdicts_to_result(verdicts, variant_ids, document, chunk_index, page, section)
 
     if call_collector is not None:
         call_id = f"ground-variant-{len([c for c in call_collector if c.stage == 'variant_grounding']) + 1:03d}"

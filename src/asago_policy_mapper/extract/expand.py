@@ -31,11 +31,16 @@ class GroundingGroup:
     chunk_indices: list[int]
 
 
-def build_expansion_graph(risks: list) -> dict[str, set[str]]:
-    """Build a mapping from each risk_id to its expansion set.
+_MAPPING_FIELDS = ("exact_mappings", "close_mappings", "broad_mappings", "narrow_mappings", "related_mappings")
 
-    Expansion set = parent siblings + cross-taxonomy mapping targets.
-    Only includes risks present in the active catalog.
+
+def _collect_catalog_links(
+    risks: list,
+) -> tuple[set[str], dict[str, set[str]], dict[str, str], dict[str, set[str]]]:
+    """Scan the catalog for ids, parent groups and cross-mapping links.
+
+    Returns (catalog_ids, parent_to_children, risk_to_parent, risk_graph)
+    where risk_graph is symmetric: each mapping target links both ways.
     """
     catalog_ids = set()
     parent_to_children: dict[str, set[str]] = defaultdict(set)
@@ -50,13 +55,24 @@ def build_expansion_graph(risks: list) -> dict[str, set[str]]:
             parent_to_children[parent].add(rid)
             risk_to_parent[rid] = parent
 
-        for mtype in ("exact_mappings", "close_mappings", "broad_mappings", "narrow_mappings", "related_mappings"):
+        for mtype in _MAPPING_FIELDS:
             mappings = getattr(r, mtype, None) or []
             if isinstance(mappings, str):
                 mappings = [mappings]
             for target in mappings:
                 risk_graph[rid].add(target)
                 risk_graph[target].add(rid)
+
+    return catalog_ids, parent_to_children, risk_to_parent, risk_graph
+
+
+def build_expansion_graph(risks: list) -> dict[str, set[str]]:
+    """Build a mapping from each risk_id to its expansion set.
+
+    Expansion set = parent siblings + cross-taxonomy mapping targets.
+    Only includes risks present in the active catalog.
+    """
+    catalog_ids, parent_to_children, risk_to_parent, risk_graph = _collect_catalog_links(risks)
 
     graph: dict[str, set[str]] = {}
     for rid in catalog_ids:
