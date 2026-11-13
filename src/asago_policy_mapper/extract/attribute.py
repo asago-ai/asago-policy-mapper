@@ -18,6 +18,61 @@ from asago_policy_mapper.prompts import render_prompt
 logger = logging.getLogger(__name__)
 
 
+def _verdicts_to_result(
+    verdicts,
+    batch_ids: set[str],
+    document: str,
+    chunk_index: int,
+    page: int | None,
+    section: str | None,
+) -> dict[str, tuple[list[EvidenceSpan], str]]:
+    """Filter grounded verdicts to their risk ids and quote evidence spans."""
+    result: dict[str, tuple[list[EvidenceSpan], str]] = {}
+    for v in verdicts:
+        if not v.grounded or v.risk_id not in batch_ids:
+            continue
+        spans = [
+            EvidenceSpan(
+                text=quote,
+                document=document,
+                page=page,
+                section=section,
+                chunk_index=chunk_index,
+            )
+            for quote in v.quotes
+            if quote.strip()
+        ]
+        if spans:
+            result[v.risk_id] = (spans, v.confidence)
+    return result
+
+
+def _record_grounding_call(
+    call_collector: list[LLMCallRecord],
+    *,
+    chunk_index: int,
+    risk_ids: list[str],
+    messages,
+    verdicts,
+    duration_ms: float,
+    grounded_count: int,
+    batch_size: int,
+) -> None:
+    call_id = f"ground-{len([c for c in call_collector if c.stage == 'grounding']) + 1:03d}"
+    call_collector.append(
+        LLMCallRecord(
+            call_id=call_id,
+            stage="grounding",
+            chunk_index=chunk_index,
+            risk_ids=risk_ids,
+            messages=messages,
+            response=[v.model_dump() for v in verdicts],
+            duration_ms=duration_ms,
+            result_summary=f"{grounded_count}/{batch_size} grounded",
+        )
+    )
+
+
 def ground_and_extract_evidence(
     chunk_text: str,
     candidates: list[ScoredCandidate],
@@ -67,38 +122,18 @@ def ground_and_extract_evidence(
         duration_ms = (time.time() - t0) * 1000
 
         batch_ids = {c.risk_id for c in batch}
-        for v in verdicts:
-            if not v.grounded or v.risk_id not in batch_ids:
-                continue
-            spans = [
-                EvidenceSpan(
-                    text=quote,
-                    document=document,
-                    page=page,
-                    section=section,
-                    chunk_index=chunk_index,
-                )
-                for quote in v.quotes
-                if quote.strip()
-            ]
-            if spans:
-                result[v.risk_id] = (spans, v.confidence)
+        result.update(_verdicts_to_result(verdicts, batch_ids, document, chunk_index, page, section))
 
         if call_collector is not None:
-            call_id = f"ground-{len([c for c in call_collector if c.stage == 'grounding']) + 1:03d}"
-            call_collector.append(
-                LLMCallRecord(
-                    call_id=call_id,
-                    stage="grounding",
-                    chunk_index=chunk_index,
-                    risk_ids=[c.risk_id for c in batch],
-                    messages=messages,
-                    response=[v.model_dump() for v in verdicts],
-                    duration_ms=duration_ms,
-                    result_summary=(
-                        f"{sum(v.grounded and v.risk_id in batch_ids for v in verdicts)}/{len(batch)} grounded"
-                    ),
-                )
+            _record_grounding_call(
+                call_collector,
+                chunk_index=chunk_index,
+                risk_ids=[c.risk_id for c in batch],
+                messages=messages,
+                verdicts=verdicts,
+                duration_ms=duration_ms,
+                grounded_count=sum(v.grounded and v.risk_id in batch_ids for v in verdicts),
+                batch_size=len(batch),
             )
 
     return result

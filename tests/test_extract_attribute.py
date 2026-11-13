@@ -240,6 +240,68 @@ def test_ground_and_extract_evidence_no_collector(mock_client):
     assert "R-001" in result
 
 
+def test_ground_and_extract_evidence_batches_with_sequential_call_ids(mock_client):
+    """max_batch_size splits candidates; each batch gets its own call record.
+
+    Batches run in order, so a risk id repeated across batches keeps the last
+    batch's verdict, and call ids increment once per recorded batch.
+    """
+    candidates = [
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.8,
+        ),
+        ScoredCandidate(
+            risk_id="R-001",
+            risk_name="Risk 1",
+            risk_description="Risk 1 description",
+            cross_encoder_score=0.8,
+        ),
+        # Duplicate candidate: R-000 also lands in the second batch.
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0 again",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.7,
+        ),
+    ]
+    # Batch 1 grounds R-000; batch 2 grounds R-000 again with new quotes.
+    batch_responses = [
+        _RiskEvidenceList(items=[_RiskEvidence(risk_id="R-000", grounded=True, confidence="low", quotes=["first"])]),
+        _RiskEvidenceList(
+            items=[
+                _RiskEvidence(risk_id="R-000", grounded=True, confidence="high", quotes=["overwritten"]),
+            ]
+        ),
+    ]
+    mock_client.chat.completions.create.side_effect = batch_responses
+
+    collector: list[LLMCallRecord] = []
+    result = ground_and_extract_evidence(
+        chunk_text="first overwritten",
+        candidates=candidates,
+        client=mock_client,
+        model="test-model",
+        document="doc.pdf",
+        chunk_index=0,
+        call_collector=collector,
+        max_batch_size=2,
+    )
+
+    assert mock_client.chat.completions.create.call_count == 2
+    # The later batch's verdict for the repeated risk id wins.
+    evidence, confidence = result["R-000"]
+    assert [e.text for e in evidence] == ["overwritten"]
+    assert confidence == "high"
+    # One record per batch with sequential ids and per-batch summaries.
+    assert [c.call_id for c in collector] == ["ground-001", "ground-002"]
+    assert [c.result_summary for c in collector] == ["1/2 grounded", "1/1 grounded"]
+    assert collector[0].risk_ids == ["R-000", "R-001"]
+    assert collector[1].risk_ids == ["R-000"]
+
+
 # ---------------------------------------------------------------------------
 # Tests for ground_risk_group
 # ---------------------------------------------------------------------------
