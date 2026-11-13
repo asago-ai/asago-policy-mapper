@@ -216,6 +216,57 @@ def ground_variants(
     return result
 
 
+def _group_verdicts_to_result(
+    verdicts,
+    risk_ids: set[str],
+    document: str,
+    find_chunk_for_quote,
+) -> dict[str, tuple[list[EvidenceSpan], str]]:
+    """Filter grounded group verdicts, placing each quote in its chunk."""
+    result: dict[str, tuple[list[EvidenceSpan], str]] = {}
+    for v in verdicts:
+        if not v.grounded or v.risk_id not in risk_ids:
+            continue
+        spans = [
+            EvidenceSpan(
+                text=quote,
+                document=document,
+                chunk_index=find_chunk_for_quote(quote),
+            )
+            for quote in v.quotes
+            if quote.strip()
+        ]
+        if spans:
+            result[v.risk_id] = (spans, v.confidence)
+    return result
+
+
+def _record_group_call(
+    call_collector: list[LLMCallRecord],
+    *,
+    chunk_indices: list[int],
+    risk_ids: list[str],
+    messages,
+    verdicts,
+    duration_ms: float,
+    grounded_count: int,
+    risk_count: int,
+) -> None:
+    call_id = f"ground-expand-{len([c for c in call_collector if 'expand' in c.call_id]) + 1:03d}"
+    call_collector.append(
+        LLMCallRecord(
+            call_id=call_id,
+            stage="grounding",
+            chunk_index=chunk_indices[0] if chunk_indices else -1,
+            risk_ids=risk_ids,
+            messages=messages,
+            response=[v.model_dump() for v in verdicts],
+            duration_ms=duration_ms,
+            result_summary=f"{grounded_count}/{risk_count} grounded (expansion)",
+        )
+    )
+
+
 def ground_risk_group(
     chunks: list,
     chunk_indices: list[int],
@@ -256,7 +307,6 @@ def ground_risk_group(
     duration_ms = (time.time() - t0) * 1000
 
     risk_ids = {r["risk_id"] for r in risks}
-    result: dict[str, tuple[list[EvidenceSpan], str]] = {}
 
     passage_texts = {idx: chunks[idx].text for idx in chunk_indices if idx < len(chunks)}
 
@@ -266,34 +316,18 @@ def ground_risk_group(
                 return idx
         return chunk_indices[0] if chunk_indices else 0
 
-    for v in verdicts:
-        if not v.grounded or v.risk_id not in risk_ids:
-            continue
-        spans = [
-            EvidenceSpan(
-                text=quote,
-                document=document,
-                chunk_index=_find_chunk_for_quote(quote),
-            )
-            for quote in v.quotes
-            if quote.strip()
-        ]
-        if spans:
-            result[v.risk_id] = (spans, v.confidence)
+    result = _group_verdicts_to_result(verdicts, risk_ids, document, _find_chunk_for_quote)
 
     if call_collector is not None:
-        call_id = f"ground-expand-{len([c for c in call_collector if 'expand' in c.call_id]) + 1:03d}"
-        call_collector.append(
-            LLMCallRecord(
-                call_id=call_id,
-                stage="grounding",
-                chunk_index=chunk_indices[0] if chunk_indices else -1,
-                risk_ids=[r["risk_id"] for r in risks],
-                messages=messages,
-                response=[v.model_dump() for v in verdicts],
-                duration_ms=duration_ms,
-                result_summary=f"{len(result)}/{len(risks)} grounded (expansion)",
-            )
+        _record_group_call(
+            call_collector,
+            chunk_indices=chunk_indices,
+            risk_ids=[r["risk_id"] for r in risks],
+            messages=messages,
+            verdicts=verdicts,
+            duration_ms=duration_ms,
+            grounded_count=len(result),
+            risk_count=len(risks),
         )
 
     return result
