@@ -61,7 +61,6 @@ def _validate_extract_options(
     policy_files,
     base_url,
     model,
-    nexus_base_dir,
     no_judge,
     no_grounding,
     expand_siblings,
@@ -78,8 +77,6 @@ def _validate_extract_options(
     if needs_llm and (not base_url or not model):
         _fail_validation("--base-url and --model are required (unless both --no-judge and --no-grounding are set)")
 
-    if not nexus_base_dir:
-        _fail_validation("--nexus-base-dir is required")
     return needs_llm
 
 
@@ -516,7 +513,6 @@ def extract(
         policy_files=policy_files,
         base_url=base_url,
         model=model,
-        nexus_base_dir=nexus_base_dir,
         no_judge=no_judge,
         no_grounding=no_grounding,
         expand_siblings=expand_siblings,
@@ -541,7 +537,10 @@ def extract(
     output.mkdir(parents=True, exist_ok=True)
 
     loaded_custom_risks = _load_custom_risks(custom_taxonomy)
-    all_risks, custom_risk_count = _load_risk_catalog(nexus_base_dir, loaded_custom_risks)
+    # Normalize once for every consumer (catalog + mitigation loaders): a blank
+    # --nexus-base-dir / NEXUS_BASE_DIR behaves exactly like unset.
+    nexus_base_dir_override = nexus_base_dir or None
+    all_risks, custom_risk_count = _load_risk_catalog(nexus_base_dir_override, loaded_custom_risks)
     _warn_risk_text(all_risks, check_risk_text)
 
     from asago_policy_mapper.extract.pipeline import run_extraction
@@ -582,7 +581,7 @@ def extract(
 
     result.token_usage = tracker.to_dict()
 
-    _attach_mitigations(result, nexus_base_dir)
+    _attach_mitigations(result, nexus_base_dir_override)
 
     result_data = result.model_dump()
 

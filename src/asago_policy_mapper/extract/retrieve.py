@@ -22,6 +22,24 @@ def _sent_tokenize(text: str) -> list[str]:
     return [sent.text for sent in _nlp(text).sents]
 
 
+def _try_expand_side(
+    neighbor: Chunk,
+    chunk_source: str,
+    budget: int,
+) -> tuple[bool, int]:
+    """Tell whether one neighbor chunk fits the context budget.
+
+    Returns (admitted, token_cost); a neighbor from another source or one
+    that overflows the budget is not admitted (cost 0).
+    """
+    if neighbor.source != chunk_source:
+        return False, 0
+    t = len(neighbor.text.split())
+    if t > budget:
+        return False, 0
+    return True, t
+
+
 def _expand_neighbor_indices(
     chunks: list[Chunk],
     i: int,
@@ -43,29 +61,21 @@ def _expand_neighbor_indices(
 
     while budget > 0 and (before_idx >= 0 or after_idx < len(chunks)):
         if expand_before and before_idx >= 0:
-            prev = chunks[before_idx]
-            if prev.source != chunk.source:
+            admitted, cost = _try_expand_side(chunks[before_idx], chunk.source, budget)
+            if admitted:
+                before_indices.insert(0, before_idx)
+                budget -= cost
+                before_idx -= 1
+            else:
                 before_idx = -1
-            else:
-                t = len(prev.text.split())
-                if t <= budget:
-                    before_indices.insert(0, before_idx)
-                    budget -= t
-                    before_idx -= 1
-                else:
-                    before_idx = -1
         elif not expand_before and after_idx < len(chunks):
-            nxt = chunks[after_idx]
-            if nxt.source != chunk.source:
-                after_idx = len(chunks)
+            admitted, cost = _try_expand_side(chunks[after_idx], chunk.source, budget)
+            if admitted:
+                after_indices.append(after_idx)
+                budget -= cost
+                after_idx += 1
             else:
-                t = len(nxt.text.split())
-                if t <= budget:
-                    after_indices.append(after_idx)
-                    budget -= t
-                    after_idx += 1
-                else:
-                    after_idx = len(chunks)
+                after_idx = len(chunks)
         expand_before = not expand_before
 
     return before_indices, after_indices, budget

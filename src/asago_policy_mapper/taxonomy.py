@@ -101,6 +101,44 @@ def warn_unterminated_descriptions(risks: Iterable[Risk]) -> list[str]:
     return [risk.id for risk in flagged]
 
 
+def _warn_builtin_prefix(rid: str, path: Path) -> None:
+    """Warn when a custom risk id reuses a built-in taxonomy prefix."""
+    for prefix in _BUILTIN_PREFIXES:
+        if rid.startswith(prefix):
+            logger.warning(
+                "Risk '%s' in %s uses built-in prefix '%s' - this may collide with Nexus risks",
+                rid,
+                path,
+                prefix,
+            )
+            break
+
+
+def _build_risk(entry: dict, taxonomy_id: str, path: Path) -> Risk:
+    """Build a Risk from a validated taxonomy entry, warning on thin input."""
+    rid = entry["id"]
+    _warn_builtin_prefix(rid, path)
+
+    desc = entry["description"]
+    if len(desc.strip()) < 10:
+        logger.warning(
+            "Risk '%s' in %s has a very short description (%d chars) - retrieval quality may be poor",
+            rid,
+            path,
+            len(desc.strip()),
+        )
+
+    return Risk(
+        id=rid,
+        name=entry["name"],
+        description=desc,
+        isDefinedByTaxonomy=taxonomy_id,
+        concern=entry.get("concern", ""),
+        risk_type=entry.get("risk_type"),
+        type="Risk",
+    )
+
+
 def load_custom_taxonomy(path: Path) -> list[Risk]:
     """Load and validate a custom taxonomy YAML file.
 
@@ -139,36 +177,7 @@ def load_custom_taxonomy(path: Path) -> list[Risk]:
             raise ValueError(f"Duplicate risk ID '{rid}' in {path}")
         seen_ids.add(rid)
 
-        for prefix in _BUILTIN_PREFIXES:
-            if rid.startswith(prefix):
-                logger.warning(
-                    "Risk '%s' in %s uses built-in prefix '%s' - this may collide with Nexus risks",
-                    rid,
-                    path,
-                    prefix,
-                )
-                break
-
-        desc = entry["description"]
-        if len(desc.strip()) < 10:
-            logger.warning(
-                "Risk '%s' in %s has a very short description (%d chars) - retrieval quality may be poor",
-                rid,
-                path,
-                len(desc.strip()),
-            )
-
-        risks.append(
-            Risk(
-                id=rid,
-                name=entry["name"],
-                description=desc,
-                isDefinedByTaxonomy=taxonomy_id,
-                concern=entry.get("concern", ""),
-                risk_type=entry.get("risk_type"),
-                type="Risk",
-            )
-        )
+        risks.append(_build_risk(entry, taxonomy_id, path))
 
     logger.info(
         "Loaded %d custom risks from taxonomy '%s' (%s)",
