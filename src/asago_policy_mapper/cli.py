@@ -48,6 +48,13 @@ def _run_needs_llm(no_judge, no_grounding, expand_siblings, query_gen) -> bool:
     return not (no_judge and no_grounding and not expand_siblings) or query_gen
 
 
+def _require_existing_policy_files(policy_files) -> None:
+    """Fail validation unless every policy file exists."""
+    for pf in policy_files:
+        if not pf.exists():
+            _fail_validation(f"{pf} does not exist")
+
+
 def _validate_extract_options(
     *,
     output_format,
@@ -65,9 +72,7 @@ def _validate_extract_options(
     if output_format not in valid_formats:
         _fail_validation(f"--output-format must be one of: {', '.join(sorted(valid_formats))}")
 
-    for pf in policy_files:
-        if not pf.exists():
-            _fail_validation(f"{pf} does not exist")
+    _require_existing_policy_files(policy_files)
 
     needs_llm = _run_needs_llm(no_judge, no_grounding, expand_siblings, query_gen)
     if needs_llm and (not base_url or not model):
