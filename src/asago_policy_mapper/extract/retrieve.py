@@ -247,6 +247,39 @@ def _record_judge_call(
     )
 
 
+def _judge_batch(
+    batch: list[ScoredCandidate],
+    chunk_text: str,
+    client,
+    model: str,
+    prompt_name: str,
+) -> tuple[list[ScoredCandidate], list, list, float]:
+    """Judge one batch; return (accepted candidates, messages, verdicts, duration_ms)."""
+    messages = render_prompt(
+        prompt_name,
+        {
+            "chunk_text": chunk_text,
+            "risks": [
+                {"risk_id": c.risk_id, "risk_name": c.risk_name, "risk_description": c.risk_description} for c in batch
+            ],
+        },
+    )
+
+    t0 = time.time()
+    verdicts_resp = client.chat.completions.create(
+        model=model,
+        response_model=_JudgeVerdicts,
+        messages=messages,
+    )
+    verdicts = verdicts_resp.items
+    duration_ms = (time.time() - t0) * 1000
+
+    batch_ids = {c.risk_id for c in batch}
+    accepted_ids = {v.risk_id for v in verdicts if v.relevant and v.risk_id in batch_ids}
+    accepted = [c for c in batch if c.risk_id in accepted_ids]
+    return accepted, messages, verdicts, duration_ms
+
+
 def judge_borderline(
     candidates: list[ScoredCandidate],
     chunk_text: str,
@@ -269,29 +302,8 @@ def judge_borderline(
     result: list[ScoredCandidate] = []
 
     for batch in batches:
-        messages = render_prompt(
-            prompt_name,
-            {
-                "chunk_text": chunk_text,
-                "risks": [
-                    {"risk_id": c.risk_id, "risk_name": c.risk_name, "risk_description": c.risk_description}
-                    for c in batch
-                ],
-            },
-        )
-
-        t0 = time.time()
-        verdicts_resp = client.chat.completions.create(
-            model=model,
-            response_model=_JudgeVerdicts,
-            messages=messages,
-        )
-        verdicts = verdicts_resp.items
-        duration_ms = (time.time() - t0) * 1000
-
-        batch_ids = {c.risk_id for c in batch}
-        accepted_ids = {v.risk_id for v in verdicts if v.relevant and v.risk_id in batch_ids}
-        result.extend(c for c in batch if c.risk_id in accepted_ids)
+        accepted, messages, verdicts, duration_ms = _judge_batch(batch, chunk_text, client, model, prompt_name)
+        result.extend(accepted)
 
         if call_collector is not None:
             _record_judge_call(
@@ -301,7 +313,7 @@ def judge_borderline(
                 messages=messages,
                 verdicts=verdicts,
                 duration_ms=duration_ms,
-                batch_accepted=sum(1 for c in batch if c.risk_id in accepted_ids),
+                batch_accepted=len(accepted),
                 batch_size=len(batch),
             )
 
