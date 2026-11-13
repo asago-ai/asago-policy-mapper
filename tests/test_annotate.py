@@ -8,7 +8,9 @@ import pytest
 from asago_policy_mapper.extract.annotate import (
     _find_span_in_chunk,
     _locate_evidence,
+    _map_normalized_offsets,
     _normalize,
+    _overlaps_existing,
     prepare_annotation_data,
 )
 from asago_policy_mapper.extract.parse import Chunk
@@ -72,6 +74,71 @@ class TestFindSpanInChunk:
         start, end, is_fuzzy = _find_span_in_chunk("", "some chunk text")
         assert start == 0
         assert end == 0
+
+
+class TestMapNormalizedOffsets:
+    def test_identical_strings_map_directly(self):
+        text = "hello world"
+        start, end = _map_normalized_offsets(text, text, 6, 11)
+        assert (start, end) == (6, 11)
+
+    def test_interior_end_offset_returns_early(self):
+        start, end = _map_normalized_offsets("hello world", "hello world", 6, 8)
+        assert (start, end) == (6, 8)
+
+    def test_extra_whitespace_in_original_skipped(self):
+        # The original has a run of spaces the normalized form collapses; the
+        # walk skips them without consuming normalized characters, so the
+        # mapped span covers "world" up to the same trailing offset.
+        original = "hello    world"
+        normalized = "hello world"
+        start, end = _map_normalized_offsets(original, normalized, 6, 11)
+        assert original[start:end] == "   world"
+        assert original[start:end].strip() == "world"
+
+    def test_start_found_but_end_beyond_walk(self):
+        # norm_end past the end of both strings: the walk exits with
+        # orig_end clamped to the walked position.
+        start, end = _map_normalized_offsets("hello world", "hello world", 6, 999)
+        assert start == 6
+        assert end == 11
+
+    def test_start_not_found_falls_back_to_proportional(self):
+        # normalized longer than original so the walk ends before norm_start
+        # is reached; the fallback maps it proportionally.
+        original = "abc"
+        normalized = "abcdefghij"
+        start, end = _map_normalized_offsets(original, normalized, 8, 10)
+        assert start == int(8 * len(original) / len(normalized))
+        assert end == min(len(original), 10)
+
+
+class TestOverlapsExisting:
+    def test_same_risk_same_chunk_half_overlap_flags(self):
+        seen = [("risk-a", 0, 10, 20)]
+        assert _overlaps_existing("risk-a", 0, 15, 25, seen) is True
+
+    def test_half_of_shorter_span_flags(self):
+        # Overlap is judged against the shorter span: a 4-char span overlapping
+        # a 10-char seen span by 2 chars is exactly half of the shorter one.
+        seen = [("risk-a", 0, 10, 20)]
+        assert _overlaps_existing("risk-a", 0, 18, 22, seen) is True
+
+    def test_below_half_overlap_does_not_flag(self):
+        seen = [("risk-a", 0, 10, 20)]
+        assert _overlaps_existing("risk-a", 0, 19, 29, seen) is False
+
+    def test_adjacent_spans_do_not_flag(self):
+        seen = [("risk-a", 0, 10, 20)]
+        assert _overlaps_existing("risk-a", 0, 20, 30, seen) is False
+
+    def test_different_risk_or_chunk_does_not_flag(self):
+        seen = [("risk-a", 0, 10, 20)]
+        assert _overlaps_existing("risk-b", 0, 10, 20, seen) is False
+        assert _overlaps_existing("risk-a", 1, 10, 20, seen) is False
+
+    def test_empty_seen_does_not_flag(self):
+        assert _overlaps_existing("risk-a", 0, 10, 20, []) is False
 
 
 class TestLocateEvidence:
