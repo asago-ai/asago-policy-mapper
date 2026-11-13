@@ -461,6 +461,127 @@ def test_validate_extract_options_ignores_nexus_base_dir(tmp_path):
     assert _validate_extract_options(**_validate_kwargs(tmp_path)) is True
 
 
+def test_validate_extract_options_expand_siblings_forces_llm(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    # Judge and grounding off, but sibling expansion needs the LLM: the flag
+    # combination needs an endpoint, so a missing one is fatal.
+    with pytest.raises(typer.Exit) as excinfo:
+        _validate_extract_options(
+            **_validate_kwargs(
+                tmp_path, no_judge=True, no_grounding=True, expand_siblings=True, base_url=None, model=None
+            )
+        )
+    assert excinfo.value.exit_code == 1
+    # With the endpoint present the same combination passes and reports the need.
+    assert (
+        _validate_extract_options(**_validate_kwargs(tmp_path, no_judge=True, no_grounding=True, expand_siblings=True))
+        is True
+    )
+
+
+def test_validate_extract_options_valid_formats_accepted(tmp_path):
+    from asago_policy_mapper.cli import _validate_extract_options
+
+    # All three formats pass validation (with an LLM endpoint present).
+    for fmt in ("json", "yaml", "both"):
+        assert _validate_extract_options(**_validate_kwargs(tmp_path, output_format=fmt)) is True
+
+
+# --- _load_risk_catalog unit tests ---
+
+
+def test_load_risk_catalog_merges_custom_risks_and_counts(monkeypatch, tmp_path):
+    from asago_policy_mapper.cli import _load_risk_catalog
+
+    nexus_risks = [
+        Risk(id="r1", name="r1", description="A risk.", isDefinedByTaxonomy="test", type="Risk"),
+    ]
+    custom = [
+        Risk(id="c1", name="c1", description="Custom risk.", isDefinedByTaxonomy="custom", type="Risk"),
+        Risk(id="r1", name="r1 duplicate", description="Collides.", isDefinedByTaxonomy="custom", type="Risk"),
+    ]
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            pass
+
+        def get_all_risks(self):
+            return nexus_risks
+
+    monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
+
+    all_risks, custom_count = _load_risk_catalog(str(tmp_path), custom)
+
+    ids = [r.id for r in all_risks]
+    assert ids.count("r1") == 1  # the colliding custom risk is skipped
+    # The survivor is the Nexus risk, not the custom duplicate.
+    kept_r1 = next(r for r in all_risks if r.id == "r1")
+    assert kept_r1.description == "A risk."
+    assert "c1" in ids
+    assert custom_count == 1
+
+
+def test_load_risk_catalog_collision_warns_on_stderr(monkeypatch, tmp_path, capsys):
+    from asago_policy_mapper.cli import _load_risk_catalog
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            pass
+
+        def get_all_risks(self):
+            return [Risk(id="r1", name="r1", description="A risk.", isDefinedByTaxonomy="test", type="Risk")]
+
+    monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
+    colliding = [Risk(id="r1", name="dup", description="Collides.", isDefinedByTaxonomy="custom", type="Risk")]
+
+    _load_risk_catalog(str(tmp_path), colliding)
+
+    err = capsys.readouterr().err
+    assert "custom risk 'r1' collides with an existing risk - skipping" in err
+
+
+def test_load_risk_catalog_excludes_excluded_taxonomies(monkeypatch, tmp_path):
+    from asago_policy_mapper.cli import EXCLUDED_TAXONOMIES, _load_risk_catalog
+
+    excluded_tax = sorted(EXCLUDED_TAXONOMIES)[0]
+    nexus_risks = [
+        Risk(id="keep", name="keep", description="Kept.", isDefinedByTaxonomy="test", type="Risk"),
+        Risk(id="drop", name="drop", description="Dropped.", isDefinedByTaxonomy=excluded_tax, type="Risk"),
+    ]
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            pass
+
+        def get_all_risks(self):
+            return nexus_risks
+
+    monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
+
+    all_risks, _ = _load_risk_catalog(str(tmp_path), [])
+
+    assert [r.id for r in all_risks] == ["keep"]
+
+
+def test_load_risk_catalog_without_custom_risks(monkeypatch, tmp_path):
+    from asago_policy_mapper.cli import _load_risk_catalog
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            pass
+
+        def get_all_risks(self):
+            return [Risk(id="r1", name="r1", description="A risk.", isDefinedByTaxonomy="test", type="Risk")]
+
+    monkeypatch.setattr("ai_atlas_nexus.AIAtlasNexus", FakeNexus)
+
+    all_risks, custom_count = _load_risk_catalog(str(tmp_path), [])
+
+    assert len(all_risks) == 1
+    assert custom_count == 0
+
+
 # --- _write_extraction_outputs unit tests ---
 
 
