@@ -200,6 +200,32 @@ def classify_candidates(
     )
 
 
+def _record_judge_call(
+    call_collector: list[LLMCallRecord],
+    *,
+    chunk_index: int,
+    risk_ids: list[str],
+    messages,
+    verdicts,
+    duration_ms: float,
+    batch_accepted: int,
+    batch_size: int,
+) -> None:
+    call_id = f"judge-{len([c for c in call_collector if c.stage == 'judge']) + 1:03d}"
+    call_collector.append(
+        LLMCallRecord(
+            call_id=call_id,
+            stage="judge",
+            chunk_index=chunk_index,
+            risk_ids=risk_ids,
+            messages=messages,
+            response=[v.model_dump() for v in verdicts],
+            duration_ms=duration_ms,
+            result_summary=f"{batch_accepted}/{batch_size} accepted",
+        )
+    )
+
+
 def judge_borderline(
     candidates: list[ScoredCandidate],
     chunk_text: str,
@@ -247,19 +273,15 @@ def judge_borderline(
         result.extend(c for c in batch if c.risk_id in accepted_ids)
 
         if call_collector is not None:
-            call_id = f"judge-{len([c for c in call_collector if c.stage == 'judge']) + 1:03d}"
-            batch_accepted = sum(1 for c in batch if c.risk_id in accepted_ids)
-            call_collector.append(
-                LLMCallRecord(
-                    call_id=call_id,
-                    stage="judge",
-                    chunk_index=chunk_index,
-                    risk_ids=[c.risk_id for c in batch],
-                    messages=messages,
-                    response=[v.model_dump() for v in verdicts],
-                    duration_ms=duration_ms,
-                    result_summary=f"{batch_accepted}/{len(batch)} accepted",
-                )
+            _record_judge_call(
+                call_collector,
+                chunk_index=chunk_index,
+                risk_ids=[c.risk_id for c in batch],
+                messages=messages,
+                verdicts=verdicts,
+                duration_ms=duration_ms,
+                batch_accepted=sum(1 for c in batch if c.risk_id in accepted_ids),
+                batch_size=len(batch),
             )
 
     return result
