@@ -394,6 +394,16 @@ def _request_causal_chain(
     return messages, results, retry_exhausted, duration_ms
 
 
+def _downgrade_empty_chain(chain: _CausalChain | None, risk_id: str) -> _CausalChain | None:
+    """Return None when the synthesized chain has no content in any field."""
+    if chain and all(
+        not v for v in (chain.threat, chain.threat_source, chain.vulnerability, chain.consequence, chain.impact)
+    ):
+        logger.warning("Causal synthesis returned all-empty fields for %s", risk_id)
+        return None
+    return chain
+
+
 def synthesize_causal_chain(
     risk_match: RiskMatch,
     chunk_texts: dict[int, str],
@@ -411,13 +421,7 @@ def synthesize_causal_chain(
 
     messages, results, retry_exhausted, duration_ms = _request_causal_chain(risk_match, combined_text, client, model)
 
-    chain = results[0] if results else None
-
-    if chain and all(
-        not v for v in (chain.threat, chain.threat_source, chain.vulnerability, chain.consequence, chain.impact)
-    ):
-        logger.warning("Causal synthesis returned all-empty fields for %s", risk_match.risk_id)
-        chain = None
+    chain = _downgrade_empty_chain(results[0] if results else None, risk_match.risk_id)
 
     if call_collector is not None:
         call_id = f"causal-{len([c for c in call_collector if c.stage == 'causal_synthesis']) + 1:03d}"
