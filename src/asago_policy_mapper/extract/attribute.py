@@ -344,24 +344,24 @@ def _is_output_validation_exhaustion(exc: ValidationRetryExhausted) -> bool:
     return bool(exc.failed_attempts) and isinstance(exc.__cause__, _OUTPUT_VALIDATION_ERRORS)
 
 
-def synthesize_causal_chain(
-    risk_match: RiskMatch,
-    chunk_texts: dict[int, str],
-    client,
-    model: str,
-    *,
-    call_collector: list[LLMCallRecord] | None = None,
-) -> _CausalChain | None:
+def _evidence_chunk_texts(risk_match: RiskMatch, chunk_texts: dict[int, str]) -> list[str]:
+    """Collect the distinct chunk texts the risk's evidence points at, in order."""
     evidence_chunks = []
     for ev in risk_match.evidence:
         if ev.chunk_index in chunk_texts and chunk_texts[ev.chunk_index] not in evidence_chunks:
             evidence_chunks.append(chunk_texts[ev.chunk_index])
+    return evidence_chunks
 
-    if not evidence_chunks:
-        return None
 
-    combined_text = "\n\n---\n\n".join(evidence_chunks)
+def _request_causal_chain(
+    risk_match: RiskMatch, combined_text: str, client, model: str
+) -> tuple[list[dict[str, str]], list, bool, float]:
+    """Render the prompt and call the causal-synthesis endpoint.
 
+    Returns (messages, results, retry_exhausted, duration_ms). A validation
+    exhaustion caused by unfixable model output downgrades to an empty result
+    with retry_exhausted set; anything else propagates.
+    """
     messages = render_prompt(
         "causal_synthesis",
         {
@@ -371,7 +371,6 @@ def synthesize_causal_chain(
             "chunk_texts": combined_text,
         },
     )
-
     t0 = time.time()
     retry_exhausted = False
     try:
@@ -392,6 +391,25 @@ def synthesize_causal_chain(
         results = []
         retry_exhausted = True
     duration_ms = (time.time() - t0) * 1000
+    return messages, results, retry_exhausted, duration_ms
+
+
+def synthesize_causal_chain(
+    risk_match: RiskMatch,
+    chunk_texts: dict[int, str],
+    client,
+    model: str,
+    *,
+    call_collector: list[LLMCallRecord] | None = None,
+) -> _CausalChain | None:
+    evidence_chunks = _evidence_chunk_texts(risk_match, chunk_texts)
+
+    if not evidence_chunks:
+        return None
+
+    combined_text = "\n\n---\n\n".join(evidence_chunks)
+
+    messages, results, retry_exhausted, duration_ms = _request_causal_chain(risk_match, combined_text, client, model)
 
     chain = results[0] if results else None
 
