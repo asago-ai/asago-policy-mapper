@@ -926,16 +926,18 @@ class TestRetryWithValidation:
         # The 201st E must not leak into the logged hint.
         assert "E" * 201 not in warning
 
-    def test_context_overflow_retry_resets_messages_to_original(self):
-        """An overflow retry calls the wire with the original messages deep-copied.
+    def test_context_overflow_retry_resets_to_current_messages(self):
+        """An overflow retry calls the wire with the current messages deep-copied.
 
-        Pins that the retry passes ``original_messages`` (not None) through to
-        the budget reducer: the retry conversation must be the caller's
-        original, not the mutated kwargs copy.
+        Pins that the retry resets to ``current_messages`` — the prompt as it
+        stands, shortened after an incomplete output — so a shortening
+        survives the retry. ``original_messages`` is still accepted (the
+        callers pass it by name) but no longer drives the retry.
         """
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         original = [{"role": "user", "content": "original prompt"}]
+        current = [{"role": "user", "content": "current prompt"}]
         kwargs = {"messages": [{"role": "user", "content": "grown prompt"}], "max_tokens": 4096}
         config = self._make_config()
 
@@ -945,15 +947,15 @@ class TestRetryWithValidation:
             config,
             tracker=None,
             original_messages=original,
-            current_messages=[{"role": "user", "content": "current prompt"}],
+            current_messages=current,
             max_retries=1,
         )
 
-        # The retry call used the original messages, and as a deep copy:
+        # The retry call used the current messages, and as a deep copy:
         second_call_messages = do_call.call_args_list[1].args[0]["messages"]
-        assert second_call_messages == [{"role": "user", "content": "original prompt"}]
+        assert second_call_messages == [{"role": "user", "content": "current prompt"}]
         second_call_messages[0]["content"] = "mutated"
-        assert original[0]["content"] == "original prompt"
+        assert current[0]["content"] == "current prompt"
 
     def test_validation_exhausted_incident_carries_message(self):
         exc = _make_retry_exc("persistent validation error")
@@ -1154,6 +1156,168 @@ class TestApplyBudget:
         client.chat.completions.create(messages=[{"role": "user", "content": "hello"}])
 
         assert "service_tier" not in client.create_with_completion.call_args.kwargs
+
+
+# ---------------------------------------------------------------------------
+# Context overflow after prompt shortening
+# ---------------------------------------------------------------------------
+
+
+def _length_truncated_body():
+    """A vLLM-shaped truncation: finish_reason=length, no content."""
+    return {
+        "id": "chatcmpl-1",
+        "object": "chat.completion",
+        "created": 0,
+        "model": "test-model",
+        "choices": [{"index": 0, "finish_reason": "length", "message": {"role": "assistant", "content": None}}],
+        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+    }
+
+
+def _overflow_body():
+    """A 400 in the shape endpoints report context-length overflow.
+
+    The reduction the client computes is context 8192 - 7500 input - 32 = 660.
+    """
+    return {
+        "error": {
+            "message": "maximum context length is 8192 tokens. However, you requested 4096 output tokens "
+            "and 7500 input tokens",
+            "type": "invalid_request_error",
+            "param": None,
+            "code": None,
+        }
+    }
+
+
+def _stubbed_client_for(config, handler):
+    """Build the production stack over a stubbed transport for an explicit config."""
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+    with patch(
+        "asago_policy_mapper.llm.OpenAI",
+        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+    ):
+        return create_client(config)
+
+
+class TestOverflowAfterShortening:
+    """An overflow retry resets to the current base prompt, never the original one.
+
+    Resetting to the original full prompt would undo a shortening made after
+    an incomplete output and resend the very tokens that overflowed the
+    context.
+    """
+
+    @pytest.mark.parametrize("parameter", ["max_tokens", "max_completion_tokens"])
+    def test_overflow_after_truncation_keeps_shortened_prompt(self, parameter):
+        """Truncated answer, then context overflow, then success.
+
+        The second and third requests carry the shortened prompt, and the
+        third has the reduced output budget under the configured parameter.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) == 1:
+                return httpx.Response(200, json=_length_truncated_body())
+            if len(requests) == 2:
+                return httpx.Response(400, json=_overflow_body())
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(
+            base_url="http://localhost:8000/v1",
+            model="test-model",
+            output_token_parameter=parameter,
+        )
+        client = _stubbed_client_for(config, handler)
+        result = client.chat.completions.create(
+            model="test-model",
+            response_model=_StructuredAnswer,
+            messages=[{"role": "user", "content": "A" * 2000}],
+            **{parameter: 4096},
+        )
+
+        assert result.answer == "ok"
+        assert len(requests) == 3
+        # First request: the full prompt and the caller's budget.
+        assert len(requests[0]["messages"][0]["content"]) == 2000
+        assert requests[0][parameter] == 4096
+        # Second and third requests: the shortened prompt (2000 -> 1200 chars).
+        for body in requests[1:]:
+            assert body["messages"][0]["content"] == "A" * 1200
+        # The overflow retry reduced the budget under the configured parameter.
+        assert requests[2][parameter] == 660
+        other = "max_completion_tokens" if parameter == "max_tokens" else "max_tokens"
+        assert other not in requests[2]
+
+    def test_overflow_without_truncation_unchanged(self):
+        """Without a shortening, the overflow retry resends the same messages."""
+        requests = []
+        messages = [{"role": "user", "content": "short"}]
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) == 1:
+                return httpx.Response(400, json=_overflow_body())
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model")
+        client = _stubbed_client_for(config, handler)
+        result = client.chat.completions.create(
+            model="test-model",
+            response_model=_StructuredAnswer,
+            messages=messages,
+            max_tokens=4096,
+        )
+
+        assert result.answer == "ok"
+        assert len(requests) == 2
+        assert requests[1]["messages"] == messages
+        assert requests[1]["max_tokens"] == 660
+
+    def test_overflow_discards_repair_hint_without_restoring_full_prompt(self):
+        """An overflow after a validation retry drops the hint pair, not the shortening.
+
+        Request sequence: truncated answer (shorten), invalid JSON (append the
+        failed answer and an error hint), context overflow (reset), success.
+        The overflow retry must resend the shortened base prompt alone.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) == 1:
+                return httpx.Response(200, json=_length_truncated_body())
+            if len(requests) == 2:
+                return httpx.Response(200, json=_completion_body('{"items": "not a list"}'))
+            if len(requests) == 3:
+                return httpx.Response(400, json=_overflow_body())
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=3)
+        client = _stubbed_client_for(config, handler)
+        result = client.chat.completions.create(
+            model="test-model",
+            response_model=_StructuredAnswer,
+            messages=[{"role": "user", "content": "A" * 2000}],
+            max_tokens=4096,
+        )
+
+        assert result.answer == "ok"
+        assert len(requests) == 4
+        # Request 3 (the hinted retry) carries the failed answer and the hint.
+        hinted = requests[2]["messages"]
+        assert len(hinted) == 3
+        assert hinted[1]["role"] == "assistant"
+        assert "Validation error:" in hinted[2]["content"]
+        # Request 4 (after the overflow) is the shortened base prompt alone:
+        # no assistant message, no hint, and not the original 2000 chars.
+        reset = requests[3]["messages"]
+        assert len(reset) == 1
+        assert reset[0]["content"] == "A" * 1200
+        assert requests[3]["max_tokens"] == 660
 
 
 # ---------------------------------------------------------------------------

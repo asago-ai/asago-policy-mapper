@@ -385,11 +385,18 @@ def _reduce_output_budget_and_retry(
     kwargs,
     config,
     tracker,
-    original_messages,
+    base_messages,
     new_max: int,
     stage: str | None = None,
 ) -> None:
-    """Reset the messages and lower the output budget for an overflow retry."""
+    """Reset the messages and lower the output budget for an overflow retry.
+
+    ``base_messages`` is the prompt to retry from. The caller passes the
+    current prompt (shortened after an incomplete output), never the original
+    one, so the retry never resends tokens a shortening already removed.
+    Repair hints from validation retries are dropped too: the overflow reset
+    rebuilds the request from the base prompt alone.
+    """
     old_max = _get_output_token_budget(kwargs, config)
     parameter = config.output_token_parameter
     logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
@@ -397,7 +404,7 @@ def _reduce_output_budget_and_retry(
         tracker.record_incident(
             "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}", stage=stage
         )
-    kwargs["messages"] = copy.deepcopy(original_messages)
+    kwargs["messages"] = copy.deepcopy(base_messages)
     _set_output_token_budget(kwargs, config, new_max)
     _apply_budget(kwargs, config)
 
@@ -423,6 +430,13 @@ def _build_validation_retry_messages(current_messages, exc: ValidationRetryExhau
 def _retry_with_validation(
     do_call, kwargs, config, tracker, original_messages, current_messages, max_retries, stage=None
 ):
+    """Retry a single LLM call across validation failures and context overflow.
+
+    ``original_messages`` is kept (unused) because callers pass it by name;
+    overflow retries reset to ``current_messages``, the prompt as it stands —
+    shortened after an incomplete output — so a shortening survives them.
+    """
+    del original_messages
     for val_attempt in range(max_retries + 1):
         try:
             return do_call(kwargs)
@@ -434,7 +448,7 @@ def _retry_with_validation(
             new_max = _extract_reduced_max_tokens(e)
             if new_max is None or val_attempt >= max_retries:
                 raise
-            _reduce_output_budget_and_retry(kwargs, config, tracker, original_messages, new_max, stage=stage)
+            _reduce_output_budget_and_retry(kwargs, config, tracker, current_messages, new_max, stage=stage)
             continue
         except ValidationRetryExhausted as e:
             if val_attempt < max_retries:
