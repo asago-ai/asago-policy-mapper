@@ -393,6 +393,53 @@ def _rescue_and_merge_scores(
     return results
 
 
+class _SyntheticRisk:
+    """Minimal stand-in with the same attributes RiskIndex reads."""
+
+    def __init__(self, *, id, name, description, concern, isPartOf, isDefinedByTaxonomy):
+        self.id = id
+        self.name = name
+        self.description = description
+        self.concern = concern
+        self.isPartOf = isPartOf
+        self.isDefinedByTaxonomy = isDefinedByTaxonomy
+
+
+def _make_synthetic_parent(parent_id, variants) -> _SyntheticRisk:
+    """Build the parent entry that replaces a variant group in the index."""
+    first = variants[0]
+    parent_name = (first.name or "").rsplit(" - ", 1)[0] if " - " in (first.name or "") else first.name or ""
+    variant_labels = sorted(
+        (v.name or "").rsplit(" - ", 1)[-1] if " - " in (v.name or "") else v.id.rsplit("---", 1)[-1] for v in variants
+    )
+    description = (
+        f"{parent_name}: risk of AI systems involving "
+        f"{parent_name.lower()} across categories including "
+        f"{', '.join(variant_labels)}."
+    )
+    return _SyntheticRisk(
+        id=parent_id,
+        name=f"{parent_name} ({len(variants)} variants)",
+        description=description,
+        concern=getattr(first, "concern", "") or "",
+        isPartOf=getattr(first, "isPartOf", "") or "",
+        isDefinedByTaxonomy=getattr(first, "isDefinedByTaxonomy", "") or "",
+    )
+
+
+def _variant_map_entries(variants) -> list[dict]:
+    """Record the per-variant metadata the pipeline grounds against."""
+    return [
+        {
+            "risk_id": v.id,
+            "name": v.name or "",
+            "description": v.description or "",
+            "taxonomy": getattr(v, "isDefinedByTaxonomy", "") or "",
+        }
+        for v in variants
+    ]
+
+
 def _collapse_variants(risks: list) -> tuple[list, dict[str, list[dict]]]:
     """Collapse ``---`` variant risks into parent-level entries for indexing.
 
@@ -416,49 +463,9 @@ def _collapse_variants(risks: list) -> tuple[list, dict[str, list[dict]]]:
         return risks, {}
 
     variant_map: dict[str, list[dict]] = {}
-
-    class _SyntheticRisk:
-        """Minimal stand-in with the same attributes RiskIndex reads."""
-
-        def __init__(self, *, id, name, description, concern, isPartOf, isDefinedByTaxonomy):
-            self.id = id
-            self.name = name
-            self.description = description
-            self.concern = concern
-            self.isPartOf = isPartOf
-            self.isDefinedByTaxonomy = isDefinedByTaxonomy
-
     for parent_id, variants in groups.items():
-        first = variants[0]
-        parent_name = (first.name or "").rsplit(" - ", 1)[0] if " - " in (first.name or "") else first.name or ""
-        variant_labels = sorted(
-            (v.name or "").rsplit(" - ", 1)[-1] if " - " in (v.name or "") else v.id.rsplit("---", 1)[-1]
-            for v in variants
-        )
-        description = (
-            f"{parent_name}: risk of AI systems involving "
-            f"{parent_name.lower()} across categories including "
-            f"{', '.join(variant_labels)}."
-        )
-        synthetic = _SyntheticRisk(
-            id=parent_id,
-            name=f"{parent_name} ({len(variants)} variants)",
-            description=description,
-            concern=getattr(first, "concern", "") or "",
-            isPartOf=getattr(first, "isPartOf", "") or "",
-            isDefinedByTaxonomy=getattr(first, "isDefinedByTaxonomy", "") or "",
-        )
-        non_variant.append(synthetic)
-
-        variant_map[parent_id] = [
-            {
-                "risk_id": v.id,
-                "name": v.name or "",
-                "description": v.description or "",
-                "taxonomy": getattr(v, "isDefinedByTaxonomy", "") or "",
-            }
-            for v in variants
-        ]
+        non_variant.append(_make_synthetic_parent(parent_id, variants))
+        variant_map[parent_id] = _variant_map_entries(variants)
 
     logger.info(
         "Collapsed %d variant risks into %d parent groups (%d index entries)",
@@ -467,6 +474,52 @@ def _collapse_variants(risks: list) -> tuple[list, dict[str, list[dict]]]:
         len(non_variant),
     )
     return non_variant, variant_map
+
+
+def _load_encoders(
+    self,
+    *,
+    colbert_model,
+    bi_encoder_model,
+    cross_encoder_model,
+    cross_encoder_type,
+    bi_encoder_api_key,
+    bi_encoder_model_name,
+    cross_encoder_model_name,
+    query_instruction,
+    descriptions: list[str],
+) -> None:
+    """Load the ColBERT or bi/cross-encoder stack onto this index."""
+    if colbert_model:
+        self._colbert, self._colbert_doc_embeddings = _load_colbert(colbert_model, descriptions)
+        self._bi_encoder = None
+        self._cross_encoder = None
+        self._apply_sigmoid = False
+        self._is_nli = False
+        return
+
+    self._colbert = None
+    self._bi_encoder, self._remote_bi_encoder, self._embeddings = _load_bi_encoder(
+        bi_encoder_model,
+        descriptions,
+        query_instruction,
+        api_key=bi_encoder_api_key,
+        remote_model_name=bi_encoder_model_name,
+    )
+
+    if cross_encoder_model:
+        self._cross_encoder, self._remote_cross_encoder, self._apply_sigmoid, self._is_nli = _load_cross_encoder(
+            cross_encoder_model, cross_encoder_type, cross_encoder_model_name
+        )
+    else:
+        self._cross_encoder = None
+        self._apply_sigmoid = False
+        self._is_nli = False
+
+    self._score_normalizer = _make_score_normalizer(
+        is_nli=self._is_nli,
+        apply_sigmoid=self._apply_sigmoid,
+    )
 
 
 class RiskIndex:
@@ -492,6 +545,10 @@ class RiskIndex:
 
         self._remote_bi_encoder: _RemoteBiEncoder | None = None
         self._remote_cross_encoder: _RemoteCrossEncoder | None = None
+        # _load_encoders sets these; declared here for type checkers (see rerank).
+        self._is_nli: bool = False
+        self._apply_sigmoid: bool = False
+        self._score_normalizer = _make_score_normalizer(is_nli=False, apply_sigmoid=False)
 
         if not risks:
             self._bi_encoder = None
@@ -522,35 +579,18 @@ class RiskIndex:
             descriptions.append(text)
         self._bm25 = BM25Okapi(bm25_corpus)
 
-        if colbert_model:
-            self._colbert, self._colbert_doc_embeddings = _load_colbert(colbert_model, descriptions)
-            self._bi_encoder = None
-            self._cross_encoder = None
-            self._apply_sigmoid = False
-            self._is_nli = False
-        else:
-            self._colbert = None
-            self._bi_encoder, self._remote_bi_encoder, self._embeddings = _load_bi_encoder(
-                bi_encoder_model,
-                descriptions,
-                query_instruction,
-                api_key=bi_encoder_api_key,
-                remote_model_name=bi_encoder_model_name,
-            )
-
-            if cross_encoder_model:
-                self._cross_encoder, self._remote_cross_encoder, self._apply_sigmoid, self._is_nli = (
-                    _load_cross_encoder(cross_encoder_model, cross_encoder_type, cross_encoder_model_name)
-                )
-            else:
-                self._cross_encoder = None
-                self._apply_sigmoid = False
-                self._is_nli = False
-
-            self._score_normalizer = _make_score_normalizer(
-                is_nli=self._is_nli,
-                apply_sigmoid=self._apply_sigmoid,
-            )
+        _load_encoders(
+            self,
+            colbert_model=colbert_model,
+            bi_encoder_model=bi_encoder_model,
+            cross_encoder_model=cross_encoder_model,
+            cross_encoder_type=cross_encoder_type,
+            bi_encoder_api_key=bi_encoder_api_key,
+            bi_encoder_model_name=bi_encoder_model_name,
+            cross_encoder_model_name=cross_encoder_model_name,
+            query_instruction=query_instruction,
+            descriptions=descriptions,
+        )
 
     @property
     def risk_count(self) -> int:

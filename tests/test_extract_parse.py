@@ -59,6 +59,98 @@ def test_chunk_plain_text_documents():
     assert chunks[1].index == 0
 
 
+def test_chunk_documents_dispatches_docling_documents(monkeypatch):
+    """Docling documents chunk through the extracted docling helper."""
+
+    def fake_chunker(doc, max_tokens):
+        return [
+            Chunk(text="First policy section.", source=doc.source, index=0, page=2, section="Introduction"),
+            Chunk(text="Second policy section.", source=doc.source, index=1),
+        ]
+
+    monkeypatch.setattr("asago_policy_mapper.extract.parse._chunk_docling_document", fake_chunker)
+    doc = ParsedDocument(source="policy.md", content="ignored", doc=types.SimpleNamespace())
+    chunks = chunk_documents([doc])
+
+    assert [c.text for c in chunks] == ["First policy section.", "Second policy section."]
+    assert chunks[0].page == 2
+    assert chunks[0].section == "Introduction"
+
+
+def test_chunk_docling_document_metadata(monkeypatch):
+    """The docling helper picks the minimum page and the last heading."""
+    from unittest.mock import MagicMock
+
+    import asago_policy_mapper.extract.parse as parse_mod
+
+    fake_chunk_0 = types.SimpleNamespace(
+        text="First policy section.",
+        meta=types.SimpleNamespace(
+            doc_items=[
+                types.SimpleNamespace(prov=[types.SimpleNamespace(page_no=5), types.SimpleNamespace(page_no=2)]),
+                types.SimpleNamespace(prov=[types.SimpleNamespace(page_no=7)]),
+            ],
+            headings=["Policy", "Introduction"],
+        ),
+    )
+    fake_chunk_1 = types.SimpleNamespace(text="Second.", meta=types.SimpleNamespace(doc_items=[], headings=[]))
+
+    monkeypatch.setattr(parse_mod, "_get_serializer_provider", lambda: None)
+    monkeypatch.setattr(
+        "docling_core.transforms.chunker.HybridChunker",
+        MagicMock(return_value=MagicMock(chunk=MagicMock(return_value=[fake_chunk_0, fake_chunk_1]))),
+    )
+    monkeypatch.setattr(
+        "docling_core.transforms.chunker.tokenizer.huggingface.HuggingFaceTokenizer",
+        MagicMock(return_value=MagicMock()),
+    )
+    monkeypatch.setattr("transformers.AutoTokenizer", MagicMock())
+
+    doc = ParsedDocument(source="policy.md", content="ignored", doc=types.SimpleNamespace())
+    chunks = parse_mod._chunk_docling_document(doc, 512)
+
+    assert [c.text for c in chunks] == ["First policy section.", "Second."]
+    # page is the minimum across all provenance items; section is the last heading.
+    assert chunks[0].page == 2
+    assert chunks[0].section == "Introduction"
+    assert chunks[1].page is None
+    assert chunks[1].section is None
+    assert chunks[1].index == 1
+
+
+def test_chunk_docling_document_no_chunks_returns_whole_document(monkeypatch):
+    """A docling document whose chunker yields nothing falls back to whole content.
+
+    The fallback keeps document order and restarts chunk indices per document.
+    """
+    from unittest.mock import MagicMock
+
+    import asago_policy_mapper.extract.parse as parse_mod
+
+    monkeypatch.setattr(parse_mod, "_get_serializer_provider", lambda: None)
+    monkeypatch.setattr(
+        "docling_core.transforms.chunker.HybridChunker",
+        MagicMock(return_value=MagicMock(chunk=MagicMock(return_value=[]))),
+    )
+    monkeypatch.setattr(
+        "docling_core.transforms.chunker.tokenizer.huggingface.HuggingFaceTokenizer",
+        MagicMock(return_value=MagicMock()),
+    )
+    monkeypatch.setattr("transformers.AutoTokenizer", MagicMock())
+
+    docling_doc = ParsedDocument(source="empty.md", content="Whole doc fallback.", doc=types.SimpleNamespace())
+    plain_doc = ParsedDocument(source="next.txt", content="Next document.", doc=None)
+    chunks = parse_mod.chunk_documents([docling_doc, plain_doc])
+
+    # The fallback chunk precedes the next document's chunks; indices restart.
+    assert len(chunks) == 2
+    assert chunks[0].text == "Whole doc fallback."
+    assert chunks[0].source == "empty.md"
+    assert chunks[0].index == 0
+    assert chunks[1].text == "Next document."
+    assert chunks[1].index == 0
+
+
 def test_chunk_preserves_content():
     content = "A " * 500
     docs = [ParsedDocument(source="big.txt", content=content, doc=None)]
