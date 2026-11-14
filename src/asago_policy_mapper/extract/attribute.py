@@ -13,7 +13,11 @@ from asago_policy_mapper.extract.models import (
     _CausalChains,
     _RiskEvidenceList,
 )
-from asago_policy_mapper.llm import _OUTPUT_VALIDATION_ERRORS, ValidationRetryExhausted
+from asago_policy_mapper.llm import (
+    _OUTPUT_VALIDATION_ERRORS,
+    ValidationRetryExhausted,
+    last_call_shortenings,
+)
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
@@ -90,7 +94,8 @@ def _record_grounding_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{grounded_count}/{batch_size} grounded",
-        )
+            prompt_shortenings=last_call_shortenings(),
+        ),
     )
 
 
@@ -216,7 +221,8 @@ def ground_variants(
                 response=[v.model_dump() for v in verdicts],
                 duration_ms=duration_ms,
                 result_summary=(f"{len(result)}/{len(variants)} variants grounded (parent: {parent_id})"),
-            )
+                prompt_shortenings=last_call_shortenings(),
+            ),
         )
 
     return result
@@ -269,7 +275,8 @@ def _record_group_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{grounded_count}/{risk_count} grounded (expansion)",
-        )
+            prompt_shortenings=last_call_shortenings(),
+        ),
     )
 
 
@@ -444,7 +451,8 @@ def synthesize_causal_chain(
                 response=chain.model_dump() if chain else {},
                 duration_ms=duration_ms,
                 result_summary="synthesized" if chain else "retry_exhausted" if retry_exhausted else "empty",
-            )
+                prompt_shortenings=last_call_shortenings(),
+            ),
         )
 
     return chain

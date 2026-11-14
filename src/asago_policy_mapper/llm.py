@@ -1,10 +1,11 @@
 import copy
+import hashlib
 import json
 import logging
 import os
 import re
 import threading
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -172,6 +173,47 @@ STAGES = (
 
 
 @dataclass
+class PromptShortening:
+    """One prompt shortening made to retry after an incomplete output.
+
+    Sizes are characters, not tokens: the truncation heuristic cuts content
+    by character count, and the hashes pin the exact before/after text so a
+    recorded shortening can be replayed or audited later.
+    """
+
+    attempt: int
+    message_index: int
+    chars_before: int
+    chars_after: int
+    sha256_before: str
+    sha256_after: str
+    reason: str = "incomplete_output"
+
+
+_shortening_local = threading.local()
+
+
+def _current_shortenings() -> list["PromptShortening"]:
+    """Return the calling thread's shortening list, creating it on first use."""
+    shortenings = getattr(_shortening_local, "shortenings", None)
+    if shortenings is None:
+        shortenings = []
+        _shortening_local.shortenings = shortenings
+    return shortenings
+
+
+def last_call_shortenings() -> list[dict]:
+    """Return the prompt shortenings the calling thread's last LLM call made.
+
+    The tracked ``create`` call clears the list before it runs, so the list
+    holds exactly what that one call shortened — usually nothing. Stage
+    workers read it right after ``chat.completions.create`` returns to copy
+    the shortenings onto their ``LLMCallRecord``.
+    """
+    return [asdict(s) for s in _current_shortenings()]
+
+
+@dataclass
 class TokenTracker:
     prompt_tokens: int = 0
     completion_tokens: int = 0
@@ -209,9 +251,11 @@ class TokenTracker:
                 s["total_tokens"] += tt
                 s["calls"] += 1
 
-    def record_incident(self, kind: str, detail: str, stage: str | None = None) -> None:
+    def record_incident(self, kind: str, detail: str, counts: dict | None = None, stage: str | None = None) -> None:
         with self._lock:
             incident: dict = {"kind": kind, "detail": detail}
+            if counts:
+                incident.update(counts)
             if stage:
                 incident["stage"] = stage
             messages = getattr(self._thread_local, "current_messages", None)
@@ -345,6 +389,33 @@ def _truncate_messages(messages: list[dict[str, str]]) -> list[dict[str, str]] |
     return truncated
 
 
+def _shortening_between(
+    attempt: int,
+    before: list[dict[str, str]],
+    after: list[dict[str, str]],
+) -> PromptShortening:
+    """Describe the one prompt shortening made between two message lists.
+
+    ``_truncate_messages`` shortens exactly one user message, so the first
+    message whose content differs identifies the shortened one. Raises
+    ``ValueError`` when no message differs, which cannot happen for a list
+    that came from ``_truncate_messages``.
+    """
+    for i, (old, new) in enumerate(zip(before, after)):
+        old_content = old.get("content", "")
+        new_content = new.get("content", "")
+        if old_content != new_content:
+            return PromptShortening(
+                attempt=attempt,
+                message_index=i,
+                chars_before=len(old_content),
+                chars_after=len(new_content),
+                sha256_before=hashlib.sha256(old_content.encode()).hexdigest(),
+                sha256_after=hashlib.sha256(new_content.encode()).hexdigest(),
+            )
+    raise ValueError("no message was shortened")
+
+
 def _get_output_token_budget(kwargs: dict, config: LLMConfig) -> int:
     """Read an explicit output budget, accepting either wire-format parameter."""
     if config.output_token_parameter in kwargs:
@@ -472,6 +543,14 @@ def _retry_with_validation(
     raise RuntimeError("_retry_with_validation exhausted retries without returning a completion")
 
 
+def _longest_user_message_chars(messages: list[dict[str, str]]) -> int:
+    """Return the character count of the longest user message, 0 when none."""
+    return max(
+        (len(m.get("content", "")) for m in messages if m.get("role") == "user"),
+        default=0,
+    )
+
+
 def _call_with_retry(
     do_call,
     kwargs: dict,
@@ -483,8 +562,8 @@ def _call_with_retry(
     current_messages = kwargs.get("messages", [])
     max_validation_retries = kwargs.pop("max_retries", config.max_retries)
 
-    incomplete: _IncompleteOutput | None = None
-    for attempt in range(_MAX_TRUNCATION_RETRIES + 1):
+    attempt = 0
+    while True:
         try:
             return _retry_with_validation(  # type: ignore[no-any-return]
                 do_call,
@@ -497,37 +576,69 @@ def _call_with_retry(
                 stage=stage,
             )
         except _IncompleteOutput as e:
-            incomplete = e
-            shorter = _truncate_messages(current_messages)
+            exhausted = attempt >= _MAX_TRUNCATION_RETRIES
+            shorter = None if exhausted else _truncate_messages(current_messages)
             if shorter is None:
                 if tracker:
-                    tracker.record_incident(
-                        "output_truncated", "Output truncated and prompt cannot be shortened further", stage=stage
-                    )
+                    _record_truncation_dead_end(tracker, attempt, exhausted, current_messages, stage=stage)
                 raise e.cause
-            logger.info(
-                "Output truncated (attempt %d/%d), retrying with shorter prompt", attempt + 1, _MAX_TRUNCATION_RETRIES
-            )
-            if tracker:
-                tracker.record_incident(
-                    "output_truncated",
-                    f"Output truncated (attempt {attempt + 1}/{_MAX_TRUNCATION_RETRIES}), retrying with shorter prompt",
-                    stage=stage,
-                )
+            shortening = _shortening_between(attempt + 1, current_messages, shorter)
+            _current_shortenings().append(shortening)
+            _log_and_record_shortening(tracker, attempt, shortening, stage=stage)
             current_messages = shorter
             kwargs["messages"] = shorter
             _apply_budget(kwargs, config)
-    # The truncation budget ran out while the prompt was still shortenable.
-    # Raise the incomplete-output cause, not an internal RuntimeError, so
-    # callers see the endpoint condition that ended the run.
+            attempt += 1
+
+
+def _record_truncation_dead_end(
+    tracker: TokenTracker,
+    attempt: int,
+    exhausted: bool,
+    current_messages: list[dict[str, str]],
+    stage: str | None = None,
+) -> None:
+    """Record why a truncation retry path ended without another request."""
+    longest = _longest_user_message_chars(current_messages)
+    if exhausted:
+        tracker.record_incident(
+            "output_truncated",
+            f"Output truncated after {attempt + 1} attempts; the truncation retry budget is "
+            f"exhausted with the longest user message at {longest} chars",
+            counts={"chars_before": longest},
+            stage=stage,
+        )
+    else:
+        tracker.record_incident(
+            "output_truncated",
+            f"Output truncated and prompt cannot be shortened further (longest user message: {longest} chars)",
+            counts={"chars_before": longest},
+            stage=stage,
+        )
+
+
+def _log_and_record_shortening(
+    tracker: TokenTracker | None, attempt: int, shortening: PromptShortening, stage: str | None = None
+) -> None:
+    """Announce one shortening in the log and the tracker's incidents."""
+    logger.info(
+        "Output truncated (attempt %d/%d), retrying with shorter prompt (%d -> %d chars)",
+        attempt + 1,
+        _MAX_TRUNCATION_RETRIES,
+        shortening.chars_before,
+        shortening.chars_after,
+    )
     if tracker:
         tracker.record_incident(
             "output_truncated",
-            f"Output truncated after {_MAX_TRUNCATION_RETRIES + 1} attempts with progressively shorter prompts",
+            f"Output truncated (attempt {attempt + 1}/{_MAX_TRUNCATION_RETRIES}), retrying with shorter "
+            f"prompt ({shortening.chars_before} -> {shortening.chars_after} chars)",
+            counts={
+                "chars_before": shortening.chars_before,
+                "chars_after": shortening.chars_after,
+            },
             stage=stage,
         )
-    assert incomplete is not None
-    raise incomplete.cause
 
 
 def _track_completion(tracker: TokenTracker, completion, stage: str | None = None) -> None:
@@ -744,6 +855,7 @@ def _wrap_with_tracking(client: _StructuredClient, tracker: TokenTracker, config
             extra = kwargs.setdefault("extra_body", {})
             extra.setdefault("top_k", config.top_k)
         _apply_budget(kwargs, config)
+        _current_shortenings().clear()
         tracker._thread_local.current_messages = kwargs.get("messages")
         try:
             result, completion = _call_with_retry(_do_call, kwargs, config, tracker=tracker, stage=stage)

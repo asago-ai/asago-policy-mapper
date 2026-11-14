@@ -108,6 +108,7 @@ class LLMCallRecord(BaseModel):
     response: dict | str | list[dict]
     duration_ms: float
     result_summary: str
+    prompt_shortenings: list[dict] = []
 
 
 class FilteredCandidate(BaseModel):

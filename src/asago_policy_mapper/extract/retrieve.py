@@ -9,6 +9,7 @@ import spacy
 from asago_policy_mapper.extract.calllog import next_call_number
 from asago_policy_mapper.extract.models import LLMCallRecord, ScoredCandidate, _JudgeVerdicts
 from asago_policy_mapper.extract.parse import Chunk
+from asago_policy_mapper.llm import last_call_shortenings
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
@@ -260,7 +261,8 @@ def _record_judge_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{batch_accepted}/{batch_size} accepted",
-        )
+            prompt_shortenings=last_call_shortenings(),
+        ),
     )
 
 
