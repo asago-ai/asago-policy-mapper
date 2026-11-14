@@ -38,7 +38,7 @@ wheels = [
 [[package]]
 name = "ai-atlas-nexus"
 version = "1.2.5"
-source = { git = "https://github.com/IBM/ai-atlas-nexus.git?rev=main#c7a53040c45761376993386b0416a2b977591426" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "chardet" },
     { name = "cymple" },
@@ -62,6 +62,10 @@ dependencies = [
     { name = "tqdm" },
     { name = "txtai" },
     { name = "typer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c1/07/96eedef9cf2898bdabc2697a652eb4267dcf3165bc1e41e9591b161234d9/ai_atlas_nexus-1.2.5.tar.gz", hash = "sha256:e1394ab91e2971e1ff94bdd696d0f651d755739ac6d3e3051ea5e425a82f16a3", size = 587224, upload-time = "2026-08-31T18:21:52.869Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/aa/67fb3a756df419edf1e38ef313bd2bc6d104160269c19a9320a7f8564890/ai_atlas_nexus-1.2.5-py3-none-any.whl", hash = "sha256:e65e42e70b49820762ca82cb23a48f8a79b6984abe951ec2087305857d0b642d", size = 660287, upload-time = "2026-08-31T18:21:51.343Z" },
 ]
 
 [[package]]
@@ -279,7 +283,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ai-atlas-nexus", git = "https://github.com/IBM/ai-atlas-nexus.git?rev=main" },
+    { name = "ai-atlas-nexus", specifier = "==1.2.5" },
     { name = "aiohttp", specifier = ">=3.14.0" },
     { name = "docling", specifier = ">=2.0,<3.0" },
     { name = "dspy", marker = "extra == 'experiments'", specifier = ">=2.0" },

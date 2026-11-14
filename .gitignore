@@ -215,6 +215,9 @@ tempCodeRunnerFile.py
 # Ruff stuff:
 .ruff_cache/
 
+# mutmut sandbox/cache (mutation testing, local-only)
+mutants/
+
 # PyPI configuration file
 .pypirc
 

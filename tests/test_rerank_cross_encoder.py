@@ -192,8 +192,6 @@ def _invoke_extract_capturing_retrieval(tmp_path, extra_args=(), env=None):
                 str(policy),
                 "-o",
                 str(tmp_path / "out"),
-                "--nexus-base-dir",
-                str(tmp_path),
                 "--no-judge",
                 "--no-grounding",
                 "--no-expand-siblings",
