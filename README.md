@@ -112,7 +112,8 @@ All LLM calls go through `llm.py`, which wraps the plain OpenAI SDK client with 
 
 The structured-output mode is selected by `create_client`'s `mode` argument, or by the `POLICY_MAPPER_STRUCTURED_OUTPUT_MODE` environment variable when no argument is passed (`json_schema`, the default; `json`, schema-in-prompt without server-side grammar; `json_schema_with_prompt`, both). On vLLM endpoints, `json_schema` enables server-side guided decoding, which measured −16.1% tokens but −0.016 micro-F1 on the 27-policy battery versus the instructor-era schema-in-prompt wire format (2026-11-05, `experiments/EXPERIMENT_LOG.md`; the `json_schema_with_prompt` arm reuses that wire format's instructor schema block while keeping guided decoding, at −0.014 micro-F1 and −1.1% tokens). The `json` mode sends a `json_object` `response_format` plus a "Respond with a single JSON object that matches this JSON schema exactly:" schema-in-prompt instruction; it keeps decoding unconstrained but has not been battery-measured against the instructor-era wire format.
 
-- Automatic retry on validation errors (appends error hint), context overflow detection (reduces the configured output-token parameter), and prompt truncation on incomplete output
+- Automatic retry on validation errors (appends error hint), context overflow detection (reduces the configured output-token parameter), and prompt truncation on incomplete output. A prompt shortened after a truncated answer stays shortened across overflow retries, and each shortening is recorded on the call's `llm_calls` entry (`prompt_shortenings`: attempt, message index, character counts before/after, sha256 of both, reason `incomplete_output`) and in the output-truncation incidents' character counts
+- The SDK's transport retry count and timeout are set explicitly on the OpenAI client: `LLMConfig.sdk_max_retries` and `LLMConfig.sdk_timeout_s` (defaults `POLICY_MAPPER_SDK_MAX_RETRIES`, `POLICY_MAPPER_SDK_TIMEOUT_S`; unset values pass the SDK's own `DEFAULT_MAX_RETRIES`/`DEFAULT_TIMEOUT`). They configure the transport only, never a completion request, and are independent of the mapper's validation retries (`LLMConfig.max_retries` / `--max-retries`)
 - `LLMConfig.max_tokens` (default 8192) is always sent on chat completions. Without this, vLLM treats omitted `max_tokens` as “fill the remaining context”, so grounding calls can generate for tens of minutes. Override the budget with `--max-tokens`, `POLICY_MAPPER_MAX_OUTPUT_TOKENS`, or `--max-context`.
 - The output-token parameter defaults to `max_tokens` for vLLM compatibility. For endpoints that require OpenAI's newer parameter, set `--output-token-parameter max_completion_tokens` or `POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens`. Only the selected parameter is sent.
 - An optional processing tier can be passed unchanged to the LLM endpoint with `--service-tier` or `POLICY_MAPPER_SERVICE_TIER`. For OpenAI, current examples include `default` (Standard), `flex`, and `fast`/`priority` (Fast mode); other API-compatible endpoints may support different values. If omitted, no parameter is sent and the endpoint/project default is used. This applies to LLM chat-completion calls; Batch API jobs are not currently supported by the mapper.
@@ -233,6 +234,10 @@ export POLICY_MAPPER_MAX_OUTPUT_TOKENS=8192
 export POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER=max_completion_tokens
 # Optional: default, flex, fast, or priority. Omit to use the project setting.
 export POLICY_MAPPER_SERVICE_TIER=default
+# Optional: SDK transport retries. Omit both this and the timeout to use the
+# SDK's own defaults. Setting POLICY_MAPPER_SDK_TIMEOUT_S replaces the whole
+# timeout, including the default 5-second connect phase, with one flat value.
+export POLICY_MAPPER_SDK_MAX_RETRIES=2
 
 uv run asago-policy-mapper extract policy.pdf -o output/ \
   --base-url https://api.openai.com/v1 \
@@ -272,7 +277,7 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --model my-model
 ```
 
-Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both. The JSON includes an `llm_calls` array with every LLM call (messages, response, timing) for analysis; it is written once when the run completes. `retrieval_stats.auto_promoted` counts the borderline candidates `--no-judge` promoted (with `llm_judged` then 0), `token_usage.per_stage` breaks token usage down by pipeline stage, and `metadata.structured_output_mode` records the wire format the client resolved.
+Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both. The JSON includes an `llm_calls` array with every LLM call (messages, response, timing, `prompt_shortenings`) for analysis; it is written once when the run completes. `retrieval_stats.auto_promoted` counts the borderline candidates `--no-judge` promoted (with `llm_judged` then 0), `token_usage.per_stage` breaks token usage down by pipeline stage, and `metadata.structured_output_mode` records the wire format the client resolved.
 
 ### Evaluate against ground truth
 

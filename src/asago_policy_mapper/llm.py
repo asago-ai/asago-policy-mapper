@@ -2,6 +2,7 @@ import copy
 import hashlib
 import json
 import logging
+import math
 import os
 import re
 import threading
@@ -134,6 +135,39 @@ _MIN_OUTPUT_TOKENS = 256
 _OUTPUT_TOKEN_PARAMETERS = ("max_tokens", "max_completion_tokens")
 
 
+_SDK_MAX_RETRIES_ENV = "POLICY_MAPPER_SDK_MAX_RETRIES"
+_SDK_TIMEOUT_ENV = "POLICY_MAPPER_SDK_TIMEOUT_S"
+
+
+def _env_int(name: str) -> int | None:
+    """Read an integer environment variable, None when unset or empty."""
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return None
+    return int(raw)
+
+
+def _env_float(name: str) -> float | None:
+    """Read a float environment variable, None when unset or empty."""
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return None
+    return float(raw)
+
+
+def _validate_sdk_settings(sdk_max_retries: int | None, sdk_timeout_s: float | None) -> None:
+    """Reject transport settings the OpenAI SDK would silently mishandle.
+
+    A negative retry count and a zero, negative or non-finite timeout are
+    configuration errors, not runtime conditions: fail at construction,
+    before any client exists.
+    """
+    if sdk_max_retries is not None and sdk_max_retries < 0:
+        raise ValueError(f"sdk_max_retries must be at least 0, got {sdk_max_retries}")
+    if sdk_timeout_s is not None and (not math.isfinite(sdk_timeout_s) or sdk_timeout_s <= 0):
+        raise ValueError(f"sdk_timeout_s must be finite and positive, got {sdk_timeout_s}")
+
+
 @dataclass
 class LLMConfig:
     base_url: str
@@ -148,6 +182,8 @@ class LLMConfig:
     service_tier: str | None = None
     max_concurrent: int = 32
     max_context: int = 0
+    sdk_max_retries: int | None = None
+    sdk_timeout_s: float | None = None
 
     def __post_init__(self):
         if self.output_token_parameter not in _OUTPUT_TOKEN_PARAMETERS:
@@ -157,6 +193,13 @@ class LLMConfig:
             self.service_tier = self.service_tier.strip() or None
         if self.max_context > 0 and self.max_tokens >= self.max_context:
             self.max_tokens = self.max_context - _SAFETY_MARGIN - _SCHEMA_OVERHEAD_TOKENS
+        # Transport settings default from the environment when the
+        # constructor leaves them unset; a constructor value wins.
+        if self.sdk_max_retries is None:
+            self.sdk_max_retries = _env_int(_SDK_MAX_RETRIES_ENV)
+        if self.sdk_timeout_s is None:
+            self.sdk_timeout_s = _env_float(_SDK_TIMEOUT_ENV)
+        _validate_sdk_settings(self.sdk_max_retries, self.sdk_timeout_s)
 
 
 # The pipeline stages a call site can mark its calls with. for_stage rejects
@@ -330,12 +373,24 @@ def create_client(
     ``mode`` defaults to ``JSON_SCHEMA``; the ``POLICY_MAPPER_STRUCTURED_OUTPUT_MODE``
     environment variable overrides it (one of the ``StructuredOutputMode`` values,
     e.g. ``json_schema_with_prompt`` for battery comparisons).
+
+    The OpenAI SDK's transport retry count and timeout are always passed
+    explicitly: ``config.sdk_max_retries`` and ``config.sdk_timeout_s`` when
+    set, the SDK's own ``openai.DEFAULT_MAX_RETRIES`` / ``openai.DEFAULT_TIMEOUT``
+    when not. They configure the transport only and never appear in a
+    completion request; ``config.max_retries`` keeps its separate meaning as
+    the validation retry count.
     """
     if mode is None:
         env = os.environ.get("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE")
         mode = StructuredOutputMode(env) if env else StructuredOutputMode.JSON_SCHEMA
     client = _StructuredClient(
-        OpenAI(base_url=config.base_url, api_key=config.api_key),
+        OpenAI(
+            base_url=config.base_url,
+            api_key=config.api_key,
+            max_retries=(config.sdk_max_retries if config.sdk_max_retries is not None else openai.DEFAULT_MAX_RETRIES),
+            timeout=config.sdk_timeout_s if config.sdk_timeout_s is not None else openai.DEFAULT_TIMEOUT,
+        ),
         mode=mode,
     )
     _wrap_with_tracking(client, tracker if tracker is not None else TokenTracker(), config)

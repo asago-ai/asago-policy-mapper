@@ -1192,11 +1192,15 @@ def _overflow_body():
 
 
 def _stubbed_client_for(config, handler):
-    """Build the production stack over a stubbed transport for an explicit config."""
+    """Build the production stack over a stubbed transport for an explicit config.
+
+    The config must carry ``sdk_max_retries=0``: the shim forwards every
+    constructor kwarg, so the SDK's transport retries stay off over the mock.
+    """
     http_client = httpx.Client(transport=httpx.MockTransport(handler))
     with patch(
         "asago_policy_mapper.llm.OpenAI",
-        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+        lambda **kw: openai.OpenAI(http_client=http_client, **kw),
     ):
         return create_client(config)
 
@@ -1230,6 +1234,7 @@ class TestOverflowAfterShortening:
             base_url="http://localhost:8000/v1",
             model="test-model",
             output_token_parameter=parameter,
+            sdk_max_retries=0,
         )
         client = _stubbed_client_for(config, handler)
         result = client.chat.completions.create(
@@ -1263,7 +1268,7 @@ class TestOverflowAfterShortening:
                 return httpx.Response(400, json=_overflow_body())
             return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
 
-        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model")
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", sdk_max_retries=0)
         client = _stubbed_client_for(config, handler)
         result = client.chat.completions.create(
             model="test-model",
@@ -1296,7 +1301,7 @@ class TestOverflowAfterShortening:
                 return httpx.Response(400, json=_overflow_body())
             return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
 
-        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=3)
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=3, sdk_max_retries=0)
         client = _stubbed_client_for(config, handler)
         result = client.chat.completions.create(
             model="test-model",
@@ -1331,11 +1336,13 @@ class _StructuredAnswer(SlimModel):
 
 def _stubbed_client(handler, max_retries):
     """Build the full production stack (create_client -> tracking wrapper) over a stubbed transport."""
-    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=max_retries)
+    config = LLMConfig(
+        base_url="http://localhost:8000/v1", model="test-model", max_retries=max_retries, sdk_max_retries=0
+    )
     http_client = httpx.Client(transport=httpx.MockTransport(handler))
     with patch(
         "asago_policy_mapper.llm.OpenAI",
-        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+        lambda **kw: openai.OpenAI(http_client=http_client, **kw),
     ):
         return create_client(config)
 
@@ -1574,11 +1581,11 @@ class TestStructuredClientResponseFormat:
             bodies.append(json.loads(request.read()))
             return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
 
-        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_context=0)
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_context=0, sdk_max_retries=0)
         http_client = httpx.Client(transport=httpx.MockTransport(handler))
         with patch(
             "asago_policy_mapper.llm.OpenAI",
-            lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+            lambda **kw: openai.OpenAI(http_client=http_client, **kw),
         ):
             client = create_client(config, mode=mode)
             client.chat.completions.create(

@@ -1031,11 +1031,11 @@ def test_synthesize_causal_chain_non_client_error_propagates(mock_client):
 
 def _real_client(handler):
     """Build the production client stack (structured client -> tracked create -> retry) over a stubbed transport."""
-    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=1)
+    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=1, sdk_max_retries=0)
     http_client = httpx.Client(transport=httpx.MockTransport(handler))
     with patch(
         "asago_policy_mapper.llm.OpenAI",
-        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+        lambda **kw: openai.OpenAI(http_client=http_client, **kw),
     ):
         return create_client(config)
 
