@@ -26,6 +26,7 @@ from asago_policy_mapper.extract.models import (
 )
 from asago_policy_mapper.extract.pipeline import (
     _build_result_metadata,
+    _build_retrieval_stats,
     _cap_accepted_candidates,
     _run_causal_synthesis,
     _run_judge,
@@ -183,6 +184,85 @@ def test_run_extraction_metadata_carries_client_mode(mock_config, tmp_path):
     )
 
     assert result.metadata["structured_output_mode"] == "json_schema"
+
+
+def _chunk_result_judged_borderline(count=1):
+    """Build one ChunkResult with `count` borderline candidates that were judged.
+
+    The pipeline fills borderline_judged both when the LLM judge accepts
+    candidates and when --no-judge auto-promotes them, so both counts come
+    from the same field.
+    """
+    borderline = [
+        ScoredCandidate(risk_id=f"R-B{i}", risk_name=f"R-B{i}", risk_description="d", cross_encoder_score=0.5)
+        for i in range(count)
+    ]
+    return ChunkResult(
+        chunk_index=0,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[],
+        borderline=borderline,
+        borderline_judged=list(borderline),
+        stats={"candidates_retrieved": count, "auto_accepted": 0, "borderline": count, "discarded": 0},
+    )
+
+
+def test_retrieval_stats_no_judge_counts_auto_promoted():
+    """Under --no-judge, llm_judged stays 0 and auto_promoted holds the count."""
+    stats = _build_retrieval_stats(
+        [_chunk_result_judged_borderline(2), _chunk_result_judged_borderline(1)],
+        [],
+        {},
+        0,
+        no_judge=True,
+    )
+    assert stats.llm_judged == 0
+    assert stats.auto_promoted == 3
+
+
+def test_retrieval_stats_normal_mode_keeps_llm_judged():
+    """Normal mode keeps counting borderline_judged as llm_judged; auto_promoted stays 0."""
+    stats = _build_retrieval_stats(
+        [_chunk_result_judged_borderline(2), _chunk_result_judged_borderline(1)],
+        [],
+        {},
+        0,
+        no_judge=False,
+    )
+    assert stats.llm_judged == 3
+    assert stats.auto_promoted == 0
+
+
+@pytest.mark.slow
+def test_run_extraction_no_judge_reports_auto_promoted(mock_config, tmp_path):
+    """An end-to-end --no-judge run reports zero llm_judged and its promotions in auto_promoted."""
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "AI policy document about data governance and risk management. "
+        "We must ensure bias detection and mitigation strategies are in place. "
+        "Training data integrity is critical for model reliability."
+    )
+
+    # top_n_accept=0 with no score floor sends every retrieved candidate to
+    # the borderline band, which --no-judge then promotes, so the test
+    # exercises a nonzero count.
+    result = run_extraction(
+        documents=[doc],
+        client=MagicMock(),
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(
+            query_gen=False, no_judge=True, no_grounding=True, top_n_accept=0, min_score_floor=0.0
+        ),
+        ocr=False,
+    )
+
+    borderline_total = sum(cs.borderline for cs in result.chunks)
+    assert borderline_total > 0
+    assert result.retrieval_stats.llm_judged == 0
+    assert result.retrieval_stats.auto_promoted == borderline_total
 
 
 @pytest.mark.slow

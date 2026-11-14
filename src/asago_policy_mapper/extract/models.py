@@ -80,6 +80,7 @@ class RetrievalStats(BaseModel):
     total_candidates_retrieved: int
     auto_accepted: int
     llm_judged: int
+    auto_promoted: int = 0
     grounding_filtered: int
     timing_ms: dict[str, float] = {}
 
