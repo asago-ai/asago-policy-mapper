@@ -25,6 +25,7 @@ from asago_policy_mapper.extract.models import (
     _RiskEvidenceList,
 )
 from asago_policy_mapper.extract.pipeline import (
+    _build_result_metadata,
     _cap_accepted_candidates,
     _run_causal_synthesis,
     _run_judge,
@@ -140,6 +141,48 @@ def test_run_extraction_no_chunks_returns_empty_result(mock_config, tmp_path, mo
     assert isinstance(result, ExtractionResult)
     assert result.risks == []
     assert result.retrieval_stats.total_chunks == 0
+
+
+def test_metadata_records_structured_output_mode(mock_config):
+    """A real structured-output client's resolved mode lands in the metadata."""
+    from asago_policy_mapper.llm import StructuredOutputMode, _StructuredClient
+
+    client = _StructuredClient.__new__(_StructuredClient)
+    client.mode = StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT
+
+    metadata = _build_result_metadata(mock_config, RetrievalConfig(query_gen=False), {}, [], set(), client)
+
+    assert metadata["structured_output_mode"] == "json_schema_with_prompt"
+
+
+def test_metadata_omits_mode_without_real_client(mock_config):
+    """A mocked or absent client leaves the structured_output_mode key out."""
+    for client in (MagicMock(), None, SimpleNamespace(mode="json_schema")):
+        metadata = _build_result_metadata(mock_config, RetrievalConfig(query_gen=False), {}, [], set(), client)
+        assert "structured_output_mode" not in metadata
+
+
+@pytest.mark.slow
+def test_run_extraction_metadata_carries_client_mode(mock_config, tmp_path):
+    """The pipeline passes its client to _build_result_metadata (wiring check)."""
+    from asago_policy_mapper.llm import StructuredOutputMode, _StructuredClient
+
+    doc = tmp_path / "test.md"
+    doc.write_text("AI policy text about bias in model outputs and data governance.")
+
+    client = _StructuredClient.__new__(_StructuredClient)
+    client.mode = StructuredOutputMode.JSON_SCHEMA
+
+    result = run_extraction(
+        documents=[doc],
+        client=client,
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
+        ocr=False,
+    )
+
+    assert result.metadata["structured_output_mode"] == "json_schema"
 
 
 @pytest.mark.slow

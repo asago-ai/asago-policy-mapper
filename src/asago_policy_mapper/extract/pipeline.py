@@ -42,7 +42,7 @@ from asago_policy_mapper.extract.retrieve import (
     judge_borderline,
     retrieve_chunk,
 )
-from asago_policy_mapper.llm import LLMConfig
+from asago_policy_mapper.llm import LLMConfig, StructuredOutputMode
 
 logger = logging.getLogger(__name__)
 
@@ -934,7 +934,9 @@ def _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered) ->
     )
 
 
-def _build_result_metadata(config, retrieval, expansion_stats, query_results, fallback_chunk_indices) -> dict:
+def _build_result_metadata(
+    config, retrieval, expansion_stats, query_results, fallback_chunk_indices, client=None
+) -> dict:
     """Assemble the run metadata recorded alongside the extraction result."""
     metadata = {
         "model": config.model,
@@ -943,6 +945,9 @@ def _build_result_metadata(config, retrieval, expansion_stats, query_results, fa
         "expansion_stats": expansion_stats,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+    mode = getattr(client, "mode", None)
+    if isinstance(mode, StructuredOutputMode):
+        metadata["structured_output_mode"] = mode.value
     if retrieval.query_gen:
         metadata["query_gen_queries"] = [
             {"query": qr.query, "chunk_indices": qr.chunk_indices, "section": qr.section} for qr in query_results
@@ -1159,7 +1164,9 @@ def run_extraction(
         risks=merged,
         source_documents=[str(d) for d in documents],
         retrieval_stats=total_stats,
-        metadata=_build_result_metadata(config, retrieval, expansion_stats, query_results, fallback_chunk_indices),
+        metadata=_build_result_metadata(
+            config, retrieval, expansion_stats, query_results, fallback_chunk_indices, client
+        ),
         chunks=chunk_summaries,
         llm_calls=call_collector,
         grounding_filtered_candidates=all_filtered,
