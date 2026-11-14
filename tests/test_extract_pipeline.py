@@ -186,7 +186,86 @@ def test_run_extraction_metadata_carries_client_mode(mock_config, tmp_path):
     assert result.metadata["structured_output_mode"] == "json_schema"
 
 
-def _chunk_result_judged_borderline(count=1):
+def test_metadata_carries_query_gen_and_service_tier():
+    """Query-gen runs record their queries, fallback chunks and service tier."""
+    from asago_policy_mapper.extract.querygen import QueryResult
+
+    config = SimpleNamespace(model="test-model", service_tier="flex")
+    retrieval = RetrievalConfig(query_gen=True)
+    query_results = [QueryResult(query="q-bias", chunk_indices=[0, 1], section="AI")]
+
+    metadata = _build_result_metadata(config, retrieval, {"expanded_candidates": 2}, query_results, {3, 1})
+
+    assert metadata["model"] == "test-model"
+    assert metadata["service_tier"] == "flex"
+    assert metadata["expansion_stats"] == {"expanded_candidates": 2}
+    # The timestamp is UTC: it carries a +00:00 offset, not a naive one.
+    assert metadata["timestamp"].endswith("+00:00")
+    assert metadata["query_gen_queries"] == [{"query": "q-bias", "chunk_indices": [0, 1], "section": "AI"}]
+    assert metadata["query_gen_fallback_chunks"] == [1, 3]
+
+
+def test_metadata_omits_service_tier_when_unset():
+    """Without a service tier the key stays out of the metadata."""
+    config = SimpleNamespace(model="test-model", service_tier=None)
+
+    metadata = _build_result_metadata(config, RetrievalConfig(query_gen=False), {}, [], set())
+
+    assert "service_tier" not in metadata
+    assert "query_gen_queries" not in metadata
+    assert "query_gen_fallback_chunks" not in metadata
+
+
+def test_run_extraction_passes_every_metadata_argument(mock_config, tmp_path, monkeypatch):
+    """run_extraction forwards config, retrieval, stats, queries, fallbacks and client.
+
+    Fast wiring check: the retrieval index is stubbed out so no embedding
+    model loads; deleting or reordering a _build_result_metadata argument
+    fails here instead of only in the slow suite.
+    """
+    from asago_policy_mapper.extract import pipeline
+    from asago_policy_mapper.llm import StructuredOutputMode, _StructuredClient
+
+    class _StubIndex:
+        variant_map = {}
+        risks = []
+
+        def hybrid_search(self, query, top_k=50, bm25_rescue_rank=0, rrf_min_score=0.0):
+            return []
+
+        def get_taxonomy(self, rid):
+            return "test-taxonomy"
+
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "AI policy text about data governance and risk management. "
+        "The organization commits to bias detection and mitigation strategies "
+        "across all machine learning development activities. "
+        "Training data integrity is critical for model reliability and safety. "
+        "Personal data must be protected during every processing stage. "
+        "Third-party model suppliers undergo security review before deployment."
+    )
+    monkeypatch.setattr(pipeline, "_build_risk_index", lambda risks, retrieval: _StubIndex())
+
+    client = _StructuredClient.__new__(_StructuredClient)
+    client.mode = StructuredOutputMode.JSON_SCHEMA
+
+    result = run_extraction(
+        documents=[doc],
+        client=client,
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
+        ocr=False,
+    )
+
+    assert result.metadata["model"] == mock_config.model
+    assert result.metadata["structured_output_mode"] == "json_schema"
+    assert result.metadata["expansion_stats"]["expanded_candidates"] == 0
+    assert result.metadata["no_judge"] is False
+
+
+def _chunk_result_judged_borderline(count=1, retrieved=None, auto_accepted=0):
     """Build one ChunkResult with `count` borderline candidates that were judged.
 
     The pipeline fills borderline_judged both when the LLM judge accepts
@@ -205,21 +284,55 @@ def _chunk_result_judged_borderline(count=1):
         accepted=[],
         borderline=borderline,
         borderline_judged=list(borderline),
-        stats={"candidates_retrieved": count, "auto_accepted": 0, "borderline": count, "discarded": 0},
+        stats={
+            "candidates_retrieved": retrieved if retrieved is not None else count,
+            "auto_accepted": auto_accepted,
+            "borderline": count,
+            "discarded": 0,
+        },
     )
 
 
 def test_retrieval_stats_no_judge_counts_auto_promoted():
     """Under --no-judge, llm_judged stays 0 and auto_promoted holds the count."""
     stats = _build_retrieval_stats(
-        [_chunk_result_judged_borderline(2), _chunk_result_judged_borderline(1)],
-        [],
-        {},
-        0,
+        [_chunk_result_judged_borderline(2, retrieved=5, auto_accepted=1), _chunk_result_judged_borderline(1)],
+        [object(), object()],
+        {"judge_ms": 1.0},
+        7,
         no_judge=True,
     )
     assert stats.llm_judged == 0
     assert stats.auto_promoted == 3
+    # The aggregates the run report relies on stay intact.
+    assert stats.total_chunks == 2
+    assert stats.total_candidates_retrieved == 6
+    assert stats.auto_accepted == 1
+    assert stats.grounding_filtered == 7
+    assert stats.timing_ms == {"judge_ms": 1.0}
+
+
+def test_retrieval_stats_defaults_to_normal_mode():
+    """Omitting no_judge keeps the legacy llm_judged count (mutant guard for the default)."""
+    stats = _build_retrieval_stats(
+        [_chunk_result_judged_borderline(2)],
+        [],
+        {},
+        0,
+    )
+    assert stats.llm_judged == 2
+    assert stats.auto_promoted == 0
+
+
+def test_retrieval_stats_missing_stat_keys_count_as_zero():
+    """Chunk results whose stats lack the counters contribute zero, not an error."""
+    cr = _chunk_result_judged_borderline(2)
+    cr.stats = {}
+
+    stats = _build_retrieval_stats([cr], [object()], {}, 0, no_judge=False)
+
+    assert stats.total_candidates_retrieved == 0
+    assert stats.auto_accepted == 0
 
 
 def test_retrieval_stats_normal_mode_keeps_llm_judged():
