@@ -666,3 +666,335 @@ def test_expansion_carries_variant_taxonomy_onto_expanded_variant_risks():
     expanded = {m.risk_id: m for m in merged if m.accepted_by == "expansion"}
     assert set(expanded) == {v["risk_id"] for v in VARIANTS}
     assert {m.taxonomy for m in expanded.values()} == {"ai-risk-taxonomy"}
+
+
+# ---------------------------------------------------------------------------
+# Expansion helper unit tests
+# ---------------------------------------------------------------------------
+
+
+def _grounding_group(risk_ids, chunk_indices=(0,)):
+    from asago_policy_mapper.extract.expand import GroundingGroup
+
+    return GroundingGroup(
+        parent="grp",
+        risk_ids=list(risk_ids),
+        risk_lookup={
+            rid: {"risk_id": rid, "risk_name": f"name {rid}", "risk_description": f"desc {rid}"} for rid in risk_ids
+        },
+        chunk_indices=list(chunk_indices),
+    )
+
+
+def test_ground_expansion_group_passes_group_to_ground_risk_group():
+    """One call to ground_risk_group with the group's chunks, risks and document."""
+    from asago_policy_mapper.extract import pipeline
+
+    calls = []
+
+    def fake_ground_risk_group(**kwargs):
+        calls.append(kwargs)
+        return {}
+
+    with patch.object(pipeline, "ground_risk_group", side_effect=fake_ground_risk_group):
+        group = _grounding_group(["R-001", "R-002"], chunk_indices=(2, 5))
+        result = pipeline._ground_expansion_group(
+            group,
+            _make_chunks(["a", "b", "c", "d", "e", "f"]),
+            ["doc.md"],
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            None,
+        )
+
+    assert result == {}
+    assert len(calls) == 1
+    assert calls[0]["chunk_indices"] == [2, 5]
+    assert [r["risk_id"] for r in calls[0]["risks"]] == ["R-001", "R-002"]
+    assert calls[0]["document"] == "doc.md"
+    assert calls[0]["model"] == "test-model"
+
+
+def test_ground_expansion_group_multi_first_pass_wins():
+    """Across passes, a risk grounded earlier keeps its evidence and confidence."""
+    from asago_policy_mapper.extract import pipeline
+
+    pass_results = [
+        {"R-001": ([EvidenceSpan(text="first", document="doc.md", chunk_index=0)], "high")},
+        {
+            "R-001": ([EvidenceSpan(text="second", document="doc.md", chunk_index=1)], "low"),
+            "R-002": ([EvidenceSpan(text="only-late", document="doc.md", chunk_index=1)], "medium"),
+        },
+    ]
+
+    with patch.object(pipeline, "ground_risk_group", side_effect=lambda **kwargs: pass_results.pop(0)):
+        group = _grounding_group(["R-001", "R-002"])
+        merged = pipeline._ground_expansion_group_multi(
+            group,
+            _make_chunks(["a", "b"]),
+            ["doc.md"],
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            None,
+            passes=2,
+        )
+
+    assert set(merged) == {"R-001", "R-002"}
+    evidence, confidence = merged["R-001"]
+    assert evidence[0].text == "first"
+    assert confidence == "high"
+    evidence, _ = merged["R-002"]
+    assert evidence[0].text == "only-late"
+
+
+def test_ground_expansion_group_multi_empty_passes_change_nothing():
+    """Passes that ground nothing leave earlier results untouched."""
+    from asago_policy_mapper.extract import pipeline
+
+    pass_results = [{"R-001": ([EvidenceSpan(text="first", document="doc.md", chunk_index=0)], "high")}, {}]
+
+    with patch.object(pipeline, "ground_risk_group", side_effect=lambda **kwargs: pass_results.pop(0)):
+        group = _grounding_group(["R-001"])
+        merged = pipeline._ground_expansion_group_multi(
+            group,
+            _make_chunks(["a"]),
+            ["doc.md"],
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            None,
+            passes=2,
+        )
+
+    assert set(merged) == {"R-001"}
+    evidence, confidence = merged["R-001"]
+    assert evidence[0].text == "first"
+    assert confidence == "high"
+
+
+def test_build_expansion_matches_uses_risk_lookup_and_taxonomy():
+    """Each grounded risk becomes an expansion match with zeroed confidence."""
+    from asago_policy_mapper.extract import pipeline
+
+    grounded = {
+        "R-001": ([EvidenceSpan(text="quote", document="doc.md", chunk_index=0)], "high"),
+    }
+    risk_lookup = {"R-001": {"name": "Model Bias", "description": "Systematic errors."}}
+    index = SimpleNamespace(get_taxonomy=lambda rid: f"tax-{rid}")
+
+    matches = pipeline._build_expansion_matches(grounded, index, risk_lookup)
+
+    assert len(matches) == 1
+    m = matches[0]
+    assert m.risk_id == "R-001"
+    assert m.risk_name == "Model Bias"
+    assert m.risk_description == "Systematic errors."
+    assert m.accepted_by == "expansion"
+    assert m.confidence == 0.0
+    assert m.grounding_confidence == "high"
+    assert m.taxonomy == "tax-R-001"
+    assert [e.text for e in m.evidence] == ["quote"]
+
+
+def test_build_found_risk_chunks_unions_candidates_and_evidence():
+    """Found chunks come from accepted candidates and merged evidence."""
+    from asago_policy_mapper.extract.models import ScoredCandidate
+    from asago_policy_mapper.extract.pipeline import _build_found_risk_chunks
+    from asago_policy_mapper.extract.retrieve import ChunkResult
+
+    cr0 = ChunkResult(
+        chunk_index=0,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[ScoredCandidate(risk_id="R-001 extra", risk_name="a", risk_description="")],
+        borderline=[],
+        borderline_judged=[],
+        stats={},
+    )
+    cr1 = ChunkResult(
+        chunk_index=1,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[ScoredCandidate(risk_id="R-002", risk_name="b", risk_description="")],
+        borderline=[],
+        borderline_judged=[],
+        stats={},
+    )
+    merged = [
+        RiskMatch(
+            risk_id="R-001",
+            risk_name="a",
+            risk_description="",
+            confidence=0.9,
+            grounding_confidence="high",
+            accepted_by="threshold",
+            evidence=[EvidenceSpan(text="q", document="doc.md", chunk_index=2)],
+            scores=RetrievalScores(bm25_rank=1, embedding_distance=0.1, cross_encoder_score=0.9, rrf_score=0.03),
+        ),
+    ]
+
+    found = _build_found_risk_chunks(merged, [cr0, cr1])
+
+    assert found == {"R-001": {0, 2}, "R-002": {1}}
+
+
+def test_ground_expansion_groups_counts_and_builds_matches():
+    """Every group's grounded risks become matches and the grounded count adds up."""
+    from asago_policy_mapper.extract import pipeline
+
+    def fake_ground_risk_group(**kwargs):
+        risk_ids = [r["risk_id"] for r in kwargs["risks"]]
+        return {rid: ([EvidenceSpan(text=f"q-{rid}", document="doc.md", chunk_index=0)], "medium") for rid in risk_ids}
+
+    groups = [_grounding_group(["R-005"]), _grounding_group(["R-006", "R-007"])]
+    risk_lookup = {
+        "R-005": {"name": "n5", "description": "d5"},
+        "R-006": {"name": "n6", "description": "d6"},
+        "R-007": {"name": "n7", "description": "d7"},
+    }
+    index = SimpleNamespace(get_taxonomy=lambda rid: f"tax-{rid}")
+
+    with patch.object(pipeline, "ground_risk_group", side_effect=fake_ground_risk_group):
+        matches, grounded_count = pipeline._ground_expansion_groups(
+            groups,
+            _make_chunks(["a"]),
+            ["doc.md"],
+            index,
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            2,
+            None,
+            1,
+            risk_lookup,
+        )
+
+    assert grounded_count == 3
+    assert sorted(m.risk_id for m in matches) == ["R-005", "R-006", "R-007"]
+    assert all(m.accepted_by == "expansion" for m in matches)
+
+
+def test_ground_expansion_groups_multi_pass_uses_union_worker():
+    """With several passes the per-group first-wins union worker runs inside the pool."""
+    from asago_policy_mapper.extract import pipeline
+
+    multi_calls = []
+
+    def fake_multi(group, chunks, documents, client, config, call_collector, passes):
+        multi_calls.append((tuple(group.risk_ids), passes))
+        return {"R-005": ([EvidenceSpan(text="q", document="doc.md", chunk_index=0)], "medium")}
+
+    risk_lookup = {"R-005": {"name": "n5", "description": "d5"}}
+    index = SimpleNamespace(get_taxonomy=lambda rid: f"tax-{rid}")
+
+    with patch.object(pipeline, "_ground_expansion_group_multi", side_effect=fake_multi):
+        matches, grounded_count = pipeline._ground_expansion_groups(
+            [_grounding_group(["R-005"])],
+            _make_chunks(["a"]),
+            ["doc.md"],
+            index,
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            1,
+            None,
+            3,
+            risk_lookup,
+        )
+
+    assert multi_calls == [(("R-005",), 3)]
+    assert grounded_count == 1
+    assert [m.risk_id for m in matches] == ["R-005"]
+
+
+def test_run_expansion_variant_map_routes_through_variant_grounding():
+    """With a variant map, expansion matches are variant-grounded before merging."""
+    catalog = [
+        _catalog_risk("R-001", "Model bias", "Systematic errors.", "other-taxonomy", "grp"),
+        *[_catalog_risk(v["risk_id"], v["name"], v["description"], v["taxonomy"], "grp") for v in VARIANTS],
+    ]
+    found = RiskMatch(
+        risk_id="R-001",
+        risk_name="Model bias",
+        risk_description="Systematic errors.",
+        confidence=0.9,
+        grounding_confidence="high",
+        accepted_by="threshold",
+        evidence=[EvidenceSpan(text="quote", document="doc.md", chunk_index=0)],
+        scores=RetrievalScores(bm25_rank=1, embedding_distance=0.1, cross_encoder_score=0.9, rrf_score=0.03),
+    )
+
+    def _ground_all(**kwargs):
+        evidence = [EvidenceSpan(text="quote", document="doc.md", chunk_index=0)]
+        return {r["risk_id"]: (evidence, "medium") for r in kwargs["risks"]}
+
+    with (
+        patch("asago_policy_mapper.extract.index._load_bi_encoder", return_value=(None, None, None)),
+        patch("asago_policy_mapper.extract.index._load_cross_encoder", return_value=(None, None, False, False)),
+        patch("asago_policy_mapper.extract.pipeline.ground_risk_group", side_effect=_ground_all),
+        patch(
+            "asago_policy_mapper.extract.pipeline._run_variant_grounding",
+            side_effect=lambda matches, *a, **k: matches,
+        ) as variant_grounding,
+    ):
+        index = RiskIndex(catalog)
+        merged, stats = _run_expansion(
+            catalog,
+            [found],
+            [],
+            _make_chunks(["chunk about biometric and health data"]),
+            ["doc.md"],
+            index,
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            1,
+            None,
+            variant_map=index.variant_map,
+        )
+
+    # the expanded variant parents went through variant grounding
+    variant_grounding.assert_called_once()
+    assert stats["expanded_candidates"] == len(VARIANTS)
+    assert stats["expanded_grounded"] == len(VARIANTS)
+    expanded = {m.risk_id for m in merged if m.accepted_by == "expansion"}
+    assert expanded == {v["risk_id"] for v in VARIANTS}
+
+
+def test_run_expansion_without_candidates_returns_merged_unchanged():
+    """No expansion candidates means the merged list and zeroed stats come back as-is."""
+    catalog = [
+        _catalog_risk("R-001", "Model bias", "Systematic errors.", "other-taxonomy", "grp"),
+    ]
+    found = RiskMatch(
+        risk_id="R-001",
+        risk_name="Model bias",
+        risk_description="Systematic errors.",
+        confidence=0.9,
+        grounding_confidence="high",
+        accepted_by="threshold",
+        evidence=[EvidenceSpan(text="quote", document="doc.md", chunk_index=0)],
+        scores=RetrievalScores(bm25_rank=1, embedding_distance=0.1, cross_encoder_score=0.9, rrf_score=0.03),
+    )
+
+    with (
+        patch("asago_policy_mapper.extract.index._load_bi_encoder", return_value=(None, None, None)),
+        patch("asago_policy_mapper.extract.index._load_cross_encoder", return_value=(None, None, False, False)),
+        patch("asago_policy_mapper.extract.pipeline.ground_risk_group") as ground_group,
+    ):
+        index = RiskIndex(catalog)
+        merged, stats = _run_expansion(
+            catalog,
+            [found],
+            [],
+            _make_chunks(["chunk about model bias"]),
+            ["doc.md"],
+            index,
+            MagicMock(),
+            SimpleNamespace(model="test-model"),
+            1,
+            None,
+        )
+
+    # R-001 has no siblings in the catalog: nothing to ground, merged unchanged
+    ground_group.assert_not_called()
+    assert merged == [found]
+    assert stats == {"expanded_candidates": 0, "expanded_grounded": 0, "expansion_groups": 0}

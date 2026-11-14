@@ -373,6 +373,42 @@ class _IncompleteOutput(Exception):
         self.cause = cause
 
 
+def _reduce_output_budget_and_retry(
+    kwargs,
+    config,
+    tracker,
+    original_messages,
+    new_max: int,
+) -> None:
+    """Reset the messages and lower the output budget for an overflow retry."""
+    old_max = _get_output_token_budget(kwargs, config)
+    parameter = config.output_token_parameter
+    logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
+    if tracker:
+        tracker.record_incident("context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}")
+    kwargs["messages"] = copy.deepcopy(original_messages)
+    _set_output_token_budget(kwargs, config, new_max)
+    _apply_budget(kwargs, config)
+
+
+def _build_validation_retry_messages(current_messages, exc: ValidationRetryExhausted) -> list:
+    """Deep-copy the messages and append the failed output plus an error hint."""
+    retry_messages: list = copy.deepcopy(current_messages)
+    last_attempt = exc.failed_attempts[-1] if exc.failed_attempts else None
+    if last_attempt and last_attempt.completion:
+        failed_content = _extract_response_content(last_attempt.completion)
+        if failed_content:
+            retry_messages.append({"role": "assistant", "content": failed_content})
+    error_text = str(last_attempt.exception) if last_attempt else str(exc)
+    retry_messages.append(
+        {
+            "role": "user",
+            "content": f"Validation error: {error_text}\nCorrect your JSON response, fix the errors.",
+        }
+    )
+    return retry_messages
+
+
 def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, current_messages, max_retries):
     for val_attempt in range(max_retries + 1):
         try:
@@ -385,16 +421,7 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
             new_max = _extract_reduced_max_tokens(e)
             if new_max is None or val_attempt >= max_retries:
                 raise
-            old_max = _get_output_token_budget(kwargs, config)
-            parameter = config.output_token_parameter
-            logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
-            if tracker:
-                tracker.record_incident(
-                    "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}"
-                )
-            kwargs["messages"] = copy.deepcopy(original_messages)
-            _set_output_token_budget(kwargs, config, new_max)
-            _apply_budget(kwargs, config)
+            _reduce_output_budget_and_retry(kwargs, config, tracker, original_messages, new_max)
             continue
         except ValidationRetryExhausted as e:
             if val_attempt < max_retries:
@@ -409,20 +436,7 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
                     max_retries + 1,
                     summary[:200],
                 )
-                retry_messages = copy.deepcopy(current_messages)
-                last_attempt = e.failed_attempts[-1] if e.failed_attempts else None
-                if last_attempt and last_attempt.completion:
-                    failed_content = _extract_response_content(last_attempt.completion)
-                    if failed_content:
-                        retry_messages.append({"role": "assistant", "content": failed_content})
-                error_text = str(last_attempt.exception) if last_attempt else str(e)
-                retry_messages.append(
-                    {
-                        "role": "user",
-                        "content": f"Validation error: {error_text}\nCorrect your JSON response, fix the errors.",
-                    }
-                )
-                kwargs["messages"] = retry_messages
+                kwargs["messages"] = _build_validation_retry_messages(current_messages, e)
                 _apply_budget(kwargs, config)
                 continue
             if tracker:

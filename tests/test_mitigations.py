@@ -238,7 +238,7 @@ def test_build_action_descriptions_from_mock_nexus(tmp_path):
         )
     )
 
-    descs = build_action_descriptions(str(tmp_path), data_dir=data_dir)
+    descs = build_action_descriptions(tmp_path, data_dir=data_dir)
 
     assert descs["GV-1.2-003"] == "Establish AI governance"
     assert descs["aiuc1-req-a1"] == "Ensure transparency"
@@ -246,10 +246,59 @@ def test_build_action_descriptions_from_mock_nexus(tmp_path):
     assert len(descs) == 3
 
 
+def test_build_action_descriptions_default_uses_installed_package_data():
+    """Without an override, the loaders read the installed ai-atlas-nexus package data.
+
+    Regression test for the PyPI pin migration: the default path must come
+    from ai_atlas_nexus.data.get_data_path(), not a clone-checkout layout.
+    """
+    from ai_atlas_nexus.data import get_data_path
+
+    descs = build_action_descriptions()
+
+    kg = Path(get_data_path())
+    expected_sources = [
+        (kg / "nist_ai_rmf_actions_data.yaml", "actions"),
+        (kg / "aiuc1_data.yaml", "rules"),
+    ]
+    for path, key in expected_sources:
+        assert path.exists(), f"installed package data missing: {path}"
+        with open(path) as f:
+            raw = yaml.safe_load(f)
+        for entry in raw.get(key, []):
+            if entry.get("id") and entry.get("description"):
+                assert descs[entry["id"]] == entry["description"].strip()
+    assert len(descs) > 0
+
+
+def test_build_risk_crossmap_default_uses_installed_package_data():
+    """Without an override, the crossmap reads the installed package mappings."""
+    from ai_atlas_nexus.data import get_data_path
+
+    crossmap = build_risk_crossmap()
+
+    kg = Path(get_data_path()) / "mappings"
+    for name in ("mit-ai-risk-repository_ibm-risk-atlas_from_tsv_data.yaml", "credo-ucf.sssom_from_tsv_data.yaml"):
+        path = kg / name
+        assert path.exists(), f"installed package mapping missing: {path}"
+        with open(path) as f:
+            raw = yaml.safe_load(f)
+        for entry in raw.get("entries", []):
+            eid = entry["id"]
+            for pred in ("close_mappings", "related_mappings", "broad_mappings", "exact_mappings"):
+                for target in entry.get(pred, []):
+                    if eid.startswith("atlas-") or target.startswith("atlas-"):
+                        non_atlas = eid if not eid.startswith("atlas-") else target
+                        atlas = target if target.startswith("atlas-") else eid
+                        if non_atlas != atlas:
+                            assert atlas in crossmap.get(non_atlas, set())
+    assert len(crossmap) > 0
+
+
 def test_build_action_descriptions_missing_files(tmp_path):
-    """Non-existent nexus dir returns empty dict."""
+    """Non-existent override dir and data dir return an empty dict."""
     descs = build_action_descriptions(
-        str(tmp_path / "nonexistent"),
+        tmp_path / "nonexistent",
         data_dir=tmp_path / "also_nonexistent",
     )
     assert descs == {}
@@ -274,7 +323,7 @@ def test_build_action_descriptions_skips_entries_without_id_or_description(tmp_p
 
     empty_data_dir = tmp_path / "empty_data"
     empty_data_dir.mkdir()
-    descs = build_action_descriptions(str(tmp_path), data_dir=empty_data_dir)
+    descs = build_action_descriptions(tmp_path, data_dir=empty_data_dir)
 
     assert descs == {"GV-1.1-001": "Valid entry"}
 
@@ -303,7 +352,7 @@ def test_build_risk_crossmap_basic(tmp_path):
         )
     )
 
-    crossmap = build_risk_crossmap(str(tmp_path))
+    crossmap = build_risk_crossmap(tmp_path)
 
     assert "mit-risk-042" in crossmap
     assert crossmap["mit-risk-042"] == {"atlas-hallucination", "atlas-prompt-injection"}
@@ -333,7 +382,7 @@ def test_build_risk_crossmap_bidirectional(tmp_path):
         )
     )
 
-    crossmap = build_risk_crossmap(str(tmp_path))
+    crossmap = build_risk_crossmap(tmp_path)
 
     assert crossmap["mit-risk-042"] == {"atlas-data-poisoning"}
     assert crossmap["mit-risk-099"] == {"atlas-model-theft"}
@@ -361,24 +410,24 @@ def test_build_risk_crossmap_credo(tmp_path):
         )
     )
 
-    crossmap = build_risk_crossmap(str(tmp_path))
+    crossmap = build_risk_crossmap(tmp_path)
 
     assert crossmap["credo-risk-005"] == {"atlas-data-transparency"}
     assert crossmap["credo-risk-003"] == {"atlas-harmful-output"}
 
 
-def test_build_risk_crossmap_air_local_file():
-    """Local AIR crossmap file loads AIR→Atlas entries without Nexus."""
-    crossmap = build_risk_crossmap("/nonexistent")
+def test_build_risk_crossmap_override_missing_dir_loads_local_air_only(tmp_path):
+    """A non-existent override dir still loads the local AIR crossmap file."""
+    crossmap = build_risk_crossmap(tmp_path / "nonexistent")
     air_keys = [k for k in crossmap if k.startswith("ai-risk-taxonomy-")]
     assert len(air_keys) > 0
     for k in air_keys:
         assert all(v.startswith("atlas-") for v in crossmap[k])
 
 
-def test_build_risk_crossmap_missing_files(tmp_path):
-    """Non-existent mappings dir still loads local AIR file."""
-    crossmap = build_risk_crossmap(str(tmp_path / "nonexistent"))
+def test_build_risk_crossmap_override_empty_tree_skips_nexus_files(tmp_path):
+    """An override dir with no knowledge_graph loads only the local AIR file."""
+    crossmap = build_risk_crossmap(tmp_path)
     assert "atlas-" not in crossmap
 
 
@@ -402,7 +451,7 @@ def test_build_risk_crossmap_multiple_predicates_merge(tmp_path):
         )
     )
 
-    crossmap = build_risk_crossmap(str(tmp_path))
+    crossmap = build_risk_crossmap(tmp_path)
 
     assert crossmap["mit-risk-001"] == {"atlas-hallucination", "atlas-data-poisoning"}
 

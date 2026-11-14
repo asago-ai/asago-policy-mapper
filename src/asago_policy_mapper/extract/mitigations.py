@@ -45,12 +45,26 @@ def load_mitigation_index(
     return index
 
 
+def _nexus_knowledge_graph_dir(nexus_base_dir: Path | str | None) -> Path:
+    """Resolve the Nexus knowledge_graph directory.
+
+    Defaults to the installed ai-atlas-nexus package data. When
+    ``nexus_base_dir`` is given, it points at a local clone checkout
+    (escape hatch for experimentation; layout: ``<clone>/src/ai_atlas_nexus/data``).
+    """
+    if nexus_base_dir is not None:
+        return Path(nexus_base_dir) / "src" / "ai_atlas_nexus" / "data" / "knowledge_graph"
+    from ai_atlas_nexus.data import get_data_path
+
+    return Path(get_data_path())
+
+
 def build_action_descriptions(
-    nexus_base_dir: str,
+    nexus_base_dir: Path | str | None = None,
     data_dir: Path | None = None,
 ) -> dict[str, str]:
     """Build action_id → description lookup from Nexus YAML files and local data."""
-    kg = Path(nexus_base_dir) / "src" / "ai_atlas_nexus" / "data" / "knowledge_graph"
+    kg = _nexus_knowledge_graph_dir(nexus_base_dir)
     data_dir = data_dir or _DATA_DIR
     descs: dict[str, str] = {}
 
@@ -73,9 +87,9 @@ def build_action_descriptions(
     return descs
 
 
-def build_risk_crossmap(nexus_base_dir: str) -> dict[str, set[str]]:
+def build_risk_crossmap(nexus_base_dir: Path | str | None = None) -> dict[str, set[str]]:
     """Build non-atlas-risk-id → set[atlas-risk-id] from Nexus + local mapping files."""
-    kg = Path(nexus_base_dir) / "src" / "ai_atlas_nexus" / "data" / "knowledge_graph" / "mappings"
+    kg = _nexus_knowledge_graph_dir(nexus_base_dir) / "mappings"
     crossmap: dict[str, set[str]] = {}
 
     nexus_files = [
@@ -136,6 +150,30 @@ def _resolve_via_crossmap(risk_id, data_dict, crossmap):
     return result
 
 
+def _resolve_mitigations(risk_id: str, index: dict[str, list[MitigationRef]], risk_crossmap) -> list[MitigationRef]:
+    """Look up the risk's mitigations directly, then via crossmap atlas ids."""
+    mitigations = list(index.get(risk_id, []))
+
+    if not mitigations and risk_crossmap:
+        atlas_ids = risk_crossmap.get(risk_id, set())
+        seen: set[str] = set()
+        for atlas_id in sorted(atlas_ids):
+            for m in index.get(atlas_id, []):
+                if m.action_id not in seen:
+                    seen.add(m.action_id)
+                    mitigations.append(m)
+    return mitigations
+
+
+def _fill_causal_fields(risk, data_dict, fields: tuple[str, ...]) -> None:
+    """Fill the risk's causal fields from data_dict where they are None."""
+    if not data_dict:
+        return
+    for field in fields:
+        if getattr(risk, field) is None:
+            setattr(risk, field, data_dict.get(field))
+
+
 def enrich_with_mitigations(
     risks: list[RiskMatch],
     index: dict[str, list[MitigationRef]],
@@ -145,16 +183,7 @@ def enrich_with_mitigations(
     risk_consequences: dict[str, dict[str, str]] | None = None,
 ) -> None:
     for risk in risks:
-        mitigations = index.get(risk.risk_id, [])
-
-        if not mitigations and risk_crossmap:
-            atlas_ids = risk_crossmap.get(risk.risk_id, set())
-            seen: set[str] = set()
-            for atlas_id in sorted(atlas_ids):
-                for m in index.get(atlas_id, []):
-                    if m.action_id not in seen:
-                        seen.add(m.action_id)
-                        mitigations.append(m)
+        mitigations = _resolve_mitigations(risk.risk_id, index, risk_crossmap)
 
         if descriptions:
             for m in mitigations:
@@ -163,18 +192,8 @@ def enrich_with_mitigations(
 
         if risk_threats:
             threat_data = _resolve_via_crossmap(risk.risk_id, risk_threats, risk_crossmap)
-            if threat_data:
-                if risk.threat is None:
-                    risk.threat = threat_data.get("threat")
-                if risk.threat_source is None:
-                    risk.threat_source = threat_data.get("threat_source")
-                if risk.vulnerability is None:
-                    risk.vulnerability = threat_data.get("vulnerability")
+            _fill_causal_fields(risk, threat_data, ("threat", "threat_source", "vulnerability"))
 
         if risk_consequences:
             cons_data = _resolve_via_crossmap(risk.risk_id, risk_consequences, risk_crossmap)
-            if cons_data:
-                if risk.consequence is None:
-                    risk.consequence = cons_data.get("consequence")
-                if risk.impact is None:
-                    risk.impact = cons_data.get("impact")
+            _fill_causal_fields(risk, cons_data, ("consequence", "impact"))

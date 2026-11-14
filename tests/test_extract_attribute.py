@@ -240,6 +240,380 @@ def test_ground_and_extract_evidence_no_collector(mock_client):
     assert "R-001" in result
 
 
+def test_ground_and_extract_evidence_batches_with_sequential_call_ids(mock_client):
+    """max_batch_size splits candidates; each batch gets its own call record.
+
+    Batches run in order, so a risk id repeated across batches keeps the last
+    batch's verdict, and call ids increment once per recorded batch.
+    """
+    candidates = [
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.8,
+        ),
+        ScoredCandidate(
+            risk_id="R-001",
+            risk_name="Risk 1",
+            risk_description="Risk 1 description",
+            cross_encoder_score=0.8,
+        ),
+        # Duplicate candidate: R-000 also lands in the second batch.
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0 again",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.7,
+        ),
+    ]
+    # Batch 1 grounds R-000; batch 2 grounds R-000 again with new quotes.
+    batch_responses = [
+        _RiskEvidenceList(items=[_RiskEvidence(risk_id="R-000", grounded=True, confidence="low", quotes=["first"])]),
+        _RiskEvidenceList(
+            items=[
+                _RiskEvidence(risk_id="R-000", grounded=True, confidence="high", quotes=["overwritten"]),
+            ]
+        ),
+    ]
+    mock_client.chat.completions.create.side_effect = batch_responses
+
+    collector: list[LLMCallRecord] = []
+    result = ground_and_extract_evidence(
+        chunk_text="first overwritten",
+        candidates=candidates,
+        client=mock_client,
+        model="test-model",
+        document="doc.pdf",
+        chunk_index=0,
+        call_collector=collector,
+        max_batch_size=2,
+    )
+
+    assert mock_client.chat.completions.create.call_count == 2
+    # The later batch's verdict for the repeated risk id wins.
+    evidence, confidence = result["R-000"]
+    assert [e.text for e in evidence] == ["overwritten"]
+    assert confidence == "high"
+    # One record per batch with sequential ids and per-batch summaries.
+    assert [c.call_id for c in collector] == ["ground-001", "ground-002"]
+    assert [c.result_summary for c in collector] == ["1/2 grounded", "1/1 grounded"]
+    assert collector[0].risk_ids == ["R-000", "R-001"]
+    assert collector[1].risk_ids == ["R-000"]
+
+
+def test_ground_and_extract_evidence_batches_five_candidates_size_two(mock_client):
+    """5 candidates with max_batch_size=2 make 3 calls with 2/2/1 groups.
+
+    Each call's prompt carries exactly the batch's risk ids, so the split is
+    observable both in the wire calls and in the recorded call ids.
+    """
+    candidates = [
+        ScoredCandidate(
+            risk_id=f"R-{i:03d}",
+            risk_name=f"Risk {i}",
+            risk_description=f"Risk {i} description",
+            cross_encoder_score=0.8,
+        )
+        for i in range(5)
+    ]
+    batch_responses = [
+        _RiskEvidenceList(items=[_RiskEvidence(risk_id="R-000", grounded=True, confidence="high", quotes=["q0"])]),
+        _RiskEvidenceList(items=[_RiskEvidence(risk_id="R-002", grounded=True, confidence="high", quotes=["q2"])]),
+        _RiskEvidenceList(items=[_RiskEvidence(risk_id="R-004", grounded=True, confidence="high", quotes=["q4"])]),
+    ]
+    mock_client.chat.completions.create.side_effect = batch_responses
+
+    collector: list[LLMCallRecord] = []
+    result = ground_and_extract_evidence(
+        chunk_text="grounding text",
+        candidates=candidates,
+        client=mock_client,
+        model="test-model",
+        document="doc.pdf",
+        chunk_index=0,
+        call_collector=collector,
+        max_batch_size=2,
+    )
+
+    # Exactly 3 wire calls, not 4 and not 1.
+    assert mock_client.chat.completions.create.call_count == 3
+    # The exact 2/2/1 split by risk id.
+    assert [c.risk_ids for c in collector] == [
+        ["R-000", "R-001"],
+        ["R-002", "R-003"],
+        ["R-004"],
+    ]
+    assert [c.call_id for c in collector] == ["ground-001", "ground-002", "ground-003"]
+    # Each batch's grounded verdict lands in the result.
+    assert sorted(result) == ["R-000", "R-002", "R-004"]
+
+
+def test_ground_and_extract_evidence_batch_size_equal_to_count_is_single_call(mock_client):
+    """max_batch_size == len(candidates) still makes exactly one call.
+
+    The observable contract is one wire call carrying every candidate; the
+    split-at-equality path would also produce a single batch, so only the
+    call count and payload distinguish real splits from this boundary.
+    """
+    candidates = [
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.8,
+        ),
+        ScoredCandidate(
+            risk_id="R-001",
+            risk_name="Risk 1",
+            risk_description="Risk 1 description",
+            cross_encoder_score=0.8,
+        ),
+    ]
+    mock_client.chat.completions.create.return_value = _RiskEvidenceList(
+        items=[_RiskEvidence(risk_id="R-000", grounded=True, confidence="high", quotes=["q0"])]
+    )
+
+    collector: list[LLMCallRecord] = []
+    ground_and_extract_evidence(
+        chunk_text="grounding text",
+        candidates=candidates,
+        client=mock_client,
+        model="test-model",
+        document="doc.pdf",
+        chunk_index=0,
+        call_collector=collector,
+        max_batch_size=2,
+    )
+
+    assert mock_client.chat.completions.create.call_count == 1
+    assert len(collector) == 1
+    assert collector[0].risk_ids == ["R-000", "R-001"]
+
+
+def test_ground_and_extract_evidence_default_batch_size_is_one_call(mock_client):
+    """The default max_batch_size=0 keeps all candidates in a single batch."""
+    candidates = [
+        ScoredCandidate(
+            risk_id=f"R-{i:03d}",
+            risk_name=f"Risk {i}",
+            risk_description=f"Risk {i} description",
+            cross_encoder_score=0.8,
+        )
+        for i in range(4)
+    ]
+    mock_client.chat.completions.create.return_value = _RiskEvidenceList(
+        items=[_RiskEvidence(risk_id="R-000", grounded=True, confidence="high", quotes=["q0"])]
+    )
+
+    collector: list[LLMCallRecord] = []
+    ground_and_extract_evidence(
+        chunk_text="grounding text",
+        candidates=candidates,
+        client=mock_client,
+        model="test-model",
+        document="doc.pdf",
+        chunk_index=0,
+        call_collector=collector,
+    )
+
+    assert mock_client.chat.completions.create.call_count == 1
+    assert collector[0].risk_ids == [f"R-{i:03d}" for i in range(4)]
+
+
+def test_ground_and_extract_evidence_each_call_carries_only_its_batch(mock_client):
+    """Each wire call's prompt carries only that batch's risks, verbatim.
+
+    The rendered user message must include the exact chunk text and the full
+    candidate line (id, name, description) for the batch's risks and no
+    candidate from any other batch. Each call must also use the
+    ``ground_evidence`` template by name — an important guarantee on
+    case-sensitive filesystems, where a case-mutated template name would
+    fail to load.
+    """
+    candidates = [
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Alpha risk",
+            risk_description="Alpha description",
+            cross_encoder_score=0.8,
+        ),
+        ScoredCandidate(
+            risk_id="R-001",
+            risk_name="Beta risk",
+            risk_description="Beta description",
+            cross_encoder_score=0.8,
+        ),
+        ScoredCandidate(
+            risk_id="R-002",
+            risk_name="Gamma risk",
+            risk_description="Gamma description",
+            cross_encoder_score=0.8,
+        ),
+    ]
+    mock_client.chat.completions.create.side_effect = [
+        _RiskEvidenceList(items=[]),
+        _RiskEvidenceList(items=[]),
+    ]
+
+    with patch(
+        "asago_policy_mapper.extract.attribute.render_prompt",
+        wraps=render_prompt,
+    ) as render_spy:
+        ground_and_extract_evidence(
+            chunk_text="CHUNK-MARKER",
+            candidates=candidates,
+            client=mock_client,
+            model="test-model",
+            document="doc.pdf",
+            chunk_index=0,
+            max_batch_size=2,
+        )
+
+    # Every batch renders the ground_evidence template exactly once.
+    assert [c.args[0] for c in render_spy.call_args_list] == ["ground_evidence", "ground_evidence"]
+
+    calls = mock_client.chat.completions.create.call_args_list
+    assert len(calls) == 2
+    # The user message (index 1) carries the rendered candidate list.
+    first_prompt = calls[0].kwargs["messages"][1]["content"]
+    second_prompt = calls[1].kwargs["messages"][1]["content"]
+    assert "CHUNK-MARKER" in first_prompt
+    assert "CHUNK-MARKER" in second_prompt
+    # Full candidate lines, so any mutated context key leaves a gap.
+    assert "- **R-000** (Alpha risk): Alpha description" in first_prompt
+    assert "- **R-001** (Beta risk): Beta description" in first_prompt
+    assert "- **R-002** (Gamma risk): Gamma description" in second_prompt
+    # No cross-batch leakage of candidates.
+    assert "R-002" not in first_prompt
+    assert "R-000" not in second_prompt
+    assert "R-001" not in second_prompt
+
+
+def test_ground_and_extract_evidence_batch_size_one_splits_per_candidate(mock_client):
+    """max_batch_size=1 sends one wire call per candidate.
+
+    Pins the strict ``> 0`` in the batching guard: a size of 1 must split,
+    not fall through to the single unbatched call.
+    """
+    candidates = [
+        ScoredCandidate(
+            risk_id=f"R-{i:03d}",
+            risk_name=f"Risk {i}",
+            risk_description=f"Risk {i} description",
+            cross_encoder_score=0.8,
+        )
+        for i in range(3)
+    ]
+    mock_client.chat.completions.create.return_value = _RiskEvidenceList(items=[])
+
+    collector: list[LLMCallRecord] = []
+    ground_and_extract_evidence(
+        chunk_text="grounding text",
+        candidates=candidates,
+        client=mock_client,
+        model="test-model",
+        document="doc.pdf",
+        chunk_index=0,
+        call_collector=collector,
+        max_batch_size=1,
+    )
+
+    assert mock_client.chat.completions.create.call_count == 3
+    assert [c.risk_ids for c in collector] == [["R-000"], ["R-001"], ["R-002"]]
+
+
+def test_ground_and_extract_evidence_wire_call_kwargs(mock_client):
+    """Each wire call passes the model, response model, and rendered messages."""
+    candidates = [
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.8,
+        )
+    ]
+    mock_client.chat.completions.create.return_value = _RiskEvidenceList(items=[])
+
+    ground_and_extract_evidence(
+        chunk_text="grounding text",
+        candidates=candidates,
+        client=mock_client,
+        model="exact-model-name",
+        document="doc.pdf",
+        chunk_index=0,
+    )
+
+    call = mock_client.chat.completions.create.call_args
+    assert call.kwargs["model"] == "exact-model-name"
+    assert call.kwargs["response_model"] is _RiskEvidenceList
+    messages = call.kwargs["messages"]
+    assert isinstance(messages, list)
+    assert len(messages) == 2
+    assert messages[0]["role"] == "system"
+    assert messages[1]["role"] == "user"
+    assert "grounding text" in messages[1]["content"]
+
+
+def test_ground_and_extract_evidence_ungrounded_verdict_counts_zero(mock_client):
+    """A verdict for an in-batch risk with grounded=False counts as 0 grounded."""
+    candidates = [
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.8,
+        )
+    ]
+    mock_client.chat.completions.create.return_value = _RiskEvidenceList(
+        items=[_RiskEvidence(risk_id="R-000", grounded=False, confidence="low", quotes=[])]
+    )
+
+    collector: list[LLMCallRecord] = []
+    ground_and_extract_evidence(
+        chunk_text="grounding text",
+        candidates=candidates,
+        client=mock_client,
+        model="test-model",
+        document="doc.pdf",
+        chunk_index=0,
+        call_collector=collector,
+    )
+
+    assert collector[0].result_summary == "0/1 grounded"
+
+
+def test_ground_and_extract_evidence_records_sane_duration(mock_client):
+    """duration_ms is the elapsed time in milliseconds.
+
+    A fixed clock pins the exact conversion: a 0.25-second gap between the
+    call start and end must record 250.0 ms, not a scaled or shifted value.
+    """
+    candidates = [
+        ScoredCandidate(
+            risk_id="R-000",
+            risk_name="Risk 0",
+            risk_description="Risk 0 description",
+            cross_encoder_score=0.8,
+        )
+    ]
+    mock_client.chat.completions.create.return_value = _RiskEvidenceList(items=[])
+
+    collector: list[LLMCallRecord] = []
+    with patch("asago_policy_mapper.extract.attribute.time.time", side_effect=[1000.0, 1000.25]):
+        ground_and_extract_evidence(
+            chunk_text="grounding text",
+            candidates=candidates,
+            client=mock_client,
+            model="test-model",
+            document="doc.pdf",
+            chunk_index=0,
+            call_collector=collector,
+        )
+
+    assert collector[0].duration_ms == 250.0
+
+
 # ---------------------------------------------------------------------------
 # Tests for ground_risk_group
 # ---------------------------------------------------------------------------

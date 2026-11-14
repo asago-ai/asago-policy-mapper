@@ -12,7 +12,7 @@ dependencies = [
     "docling>=2.0,<3.0",
     "torch>=2.11,<2.15",
     "transformers>=5.5,<5.20",
-    "ai-atlas-nexus @ git+https://github.com/IBM/ai-atlas-nexus.git@main",
+    "ai-atlas-nexus==1.2.5",
     "sentence-transformers>=3.0",
     "rank-bm25>=0.2",
     "spacy>=3.7",
@@ -33,9 +33,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/asago_policy_mapper"]
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -76,3 +73,20 @@ select = ["E", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
 "run_extract_battery.py" = ["E501"]
+
+# Mutation testing (mutmut 3.x). mutmut is NOT a project dependency: install it
+# ad hoc into the venv with `UV_NO_CONFIG=1 uv pip install mutmut` so uv.lock
+# stays untouched. See "Mutation testing" in CLAUDE.md for the per-PR workflow
+# and the sandbox-isolation caveats; tests/test_mutmut_canary.py guards the
+# sandbox against silently importing the original tree instead of mutants/.
+[tool.mutmut]
+source_paths = ["src/asago_policy_mapper/"]
+pytest_add_cli_args_test_selection = [
+    "-m",
+    "not slow and not llm",
+    "tests/",
+    # dspy-experiment tests import `experiments`, which breaks under the
+    # mutants/ sandbox cwd (see CLAUDE.md "Mutation testing").
+    "--ignore=tests/test_dspy_embedding_metric.py",
+    "--ignore=tests/test_dspy_embedding_dataset.py",
+]
