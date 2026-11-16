@@ -143,6 +143,51 @@ class TestSdkEnvDefaults:
         config = _config()
         assert config.max_retries == 3
 
+    def test_empty_env_values_behave_like_unset(self, monkeypatch):
+        """A set-but-empty env var is unset, not a parse error."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "")
+        config = _config()
+        assert config.sdk_max_retries is None
+        assert config.sdk_timeout_s is None
+
+    def test_whitespace_env_values_behave_like_unset(self, monkeypatch):
+        """A whitespace-only env var is unset too, for both readers."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "   ")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "  ")
+        config = _config()
+        assert config.sdk_max_retries is None
+        assert config.sdk_timeout_s is None
+
+
+class TestCreateClientStructuredOutputModeEnv:
+    def test_structured_output_mode_env_selects_the_mode(self, monkeypatch):
+        """The mode env var is read inside create_client, JSON_SCHEMA without it."""
+        from asago_policy_mapper.llm import StructuredOutputMode
+
+        monkeypatch.setenv("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE", "json")
+        client = create_client(_config())
+        assert client.mode is StructuredOutputMode.JSON
+
+        monkeypatch.setenv("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE", "json_schema_with_prompt")
+        client = create_client(_config())
+        assert client.mode is StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT
+
+    def test_without_env_the_mode_is_json_schema(self, monkeypatch):
+        from asago_policy_mapper.llm import StructuredOutputMode
+
+        monkeypatch.delenv("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE", raising=False)
+        client = create_client(_config())
+        assert client.mode is StructuredOutputMode.JSON_SCHEMA
+
+    def test_connection_settings_come_from_the_config(self, captured):
+        """base_url and api_key flow from the config into OpenAI(...)."""
+        config = LLMConfig(base_url="http://elsewhere:9000/v1", model="test-model", api_key="secret", sdk_max_retries=0)
+        create_client(config)
+        (instance,) = captured.instances
+        assert instance.kwargs["base_url"] == "http://elsewhere:9000/v1"
+        assert instance.kwargs["api_key"] == "secret"
+
 
 class TestInvalidSdkSettings:
     def test_invalid_sdk_settings_fail_before_client_creation(self, captured):
@@ -158,6 +203,17 @@ class TestInvalidSdkSettings:
         with pytest.raises(ValueError, match="sdk_timeout_s"):
             create_client(_config(sdk_timeout_s=float("nan")))
         assert captured.instances == []
+
+    def test_timeout_boundary_is_at_zero(self):
+        """Any positive timeout is legal, including fractional ones and 1.0.
+
+        The boundary is at zero, not at one: a 0.5-second timeout is a legal
+        fast-fail setting, and exactly 1.0 seconds passes too.
+        """
+        config = _config(sdk_timeout_s=0.5)
+        assert config.sdk_timeout_s == 0.5
+        config = _config(sdk_timeout_s=1.0)
+        assert config.sdk_timeout_s == 1.0
 
     def test_zero_sdk_retries_is_valid(self, captured):
         """Zero transport retries is a legal setting (retry count at least 0)."""
