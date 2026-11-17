@@ -99,6 +99,12 @@ _ENVVAR_OPTIONS = [
     ("max_tokens", "POLICY_MAPPER_MAX_OUTPUT_TOKENS"),
     ("output_token_parameter", "POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER"),
     ("service_tier", "POLICY_MAPPER_SERVICE_TIER"),
+    ("max_concurrent", "POLICY_MAPPER_MAX_CONCURRENT"),
+    ("temperature", "POLICY_MAPPER_TEMPERATURE"),
+    ("top_p", "POLICY_MAPPER_TOP_P"),
+    ("top_k", "POLICY_MAPPER_TOP_K"),
+    ("timeout", "POLICY_MAPPER_TIMEOUT"),
+    ("max_retries", "POLICY_MAPPER_MAX_RETRIES"),
     ("bi_encoder_model", "POLICY_MAPPER_BI_ENCODER_MODEL"),
     ("bi_encoder_api_key", "POLICY_MAPPER_BI_ENCODER_API_KEY"),
     ("bi_encoder_model_name", "POLICY_MAPPER_BI_ENCODER_MODEL_NAME"),
@@ -265,6 +271,12 @@ def test_extract_env_values_reach_llm_config(monkeypatch, tmp_path):
             "POLICY_MAPPER_MAX_OUTPUT_TOKENS": "4096",
             "POLICY_MAPPER_OUTPUT_TOKEN_PARAMETER": "max_completion_tokens",
             "POLICY_MAPPER_SERVICE_TIER": "default",
+            "POLICY_MAPPER_MAX_CONCURRENT": "8",
+            "POLICY_MAPPER_TEMPERATURE": "0.2",
+            "POLICY_MAPPER_TOP_P": "0.9",
+            "POLICY_MAPPER_TOP_K": "50",
+            "POLICY_MAPPER_TIMEOUT": "42",
+            "POLICY_MAPPER_MAX_RETRIES": "1",
         },
     )
 
@@ -275,6 +287,12 @@ def test_extract_env_values_reach_llm_config(monkeypatch, tmp_path):
     assert config.output_token_parameter == "max_completion_tokens"
     assert config.base_url == "http://localhost:8000/v1"
     assert config.model == "test-model"
+    assert config.max_concurrent == 8
+    assert config.temperature == 0.2
+    assert config.top_p == 0.9
+    assert config.top_k == 50
+    assert config.timeout == 42
+    assert config.max_retries == 1
 
 
 def test_extract_invalid_custom_taxonomy():

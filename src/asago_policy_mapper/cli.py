@@ -51,7 +51,12 @@ def extract(
         "--check-risk-text",
         help="Warn about loaded risks whose description lacks closing punctuation (possible truncation)",
     ),
-    max_concurrent: int = typer.Option(32, "--max-concurrent", help="Max parallel LLM calls"),
+    max_concurrent: int = typer.Option(
+        32,
+        "--max-concurrent",
+        envvar="POLICY_MAPPER_MAX_CONCURRENT",
+        help="Max parallel LLM calls",
+    ),
     max_tokens: int = typer.Option(
         8192,
         "--max-tokens",
@@ -72,6 +77,18 @@ def extract(
     ),
     max_context: int = typer.Option(
         0, "--max-context", help="Model context window in tokens (0=do not budget against context)"
+    ),
+    timeout: float | None = typer.Option(
+        None,
+        "--timeout",
+        envvar="POLICY_MAPPER_TIMEOUT",
+        help="Per-request timeout in seconds (default: SDK default)",
+    ),
+    max_retries: int = typer.Option(
+        3,
+        "--max-retries",
+        envvar="POLICY_MAPPER_MAX_RETRIES",
+        help="Validation retries after schema-invalid model output (default: 3)",
     ),
     ocr: bool = typer.Option(False, "--ocr", help="Enable OCR for document conversion"),
     chunk_max_tokens: int = typer.Option(512, "--chunk-max-tokens", help="Max tokens per chunk (default: 512)"),
@@ -183,10 +200,23 @@ def extract(
     output_format: str = typer.Option(
         "json", "--output-format", "-f", help="Output format: json, yaml, or both (default: json)"
     ),
-    temperature: float = typer.Option(0.0, "--temperature", help="LLM sampling temperature (default: 0.0)"),
-    top_p: float = typer.Option(None, "--top-p", help="LLM nucleus sampling top-p (omitted if not set)"),
+    temperature: float = typer.Option(
+        0.0,
+        "--temperature",
+        envvar="POLICY_MAPPER_TEMPERATURE",
+        help="LLM sampling temperature (default: 0.0)",
+    ),
+    top_p: float = typer.Option(
+        None,
+        "--top-p",
+        envvar="POLICY_MAPPER_TOP_P",
+        help="LLM nucleus sampling top-p (omitted if not set)",
+    ),
     top_k: int = typer.Option(
-        None, "--top-k", help="LLM top-k sampling (passed via extra_body for vLLM; omitted if not set)"
+        None,
+        "--top-k",
+        envvar="POLICY_MAPPER_TOP_K",
+        help="LLM top-k sampling (passed via extra_body for vLLM; omitted if not set)",
     ),
 ):
     """Extract risks from policy documents using hybrid retrieval."""
@@ -224,6 +254,8 @@ def extract(
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
+            timeout=timeout,
+            max_retries=max_retries,
         )
         tracker = TokenTracker()
         client = None
@@ -240,6 +272,8 @@ def extract(
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
+            timeout=timeout,
+            max_retries=max_retries,
         )
         tracker = TokenTracker()
         client = create_client(config, tracker=tracker)

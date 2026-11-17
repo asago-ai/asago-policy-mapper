@@ -147,6 +147,7 @@ class LLMConfig:
     service_tier: str | None = None
     max_concurrent: int = 32
     max_context: int = 0
+    timeout: float | None = None
 
     def __post_init__(self):
         if self.output_token_parameter not in _OUTPUT_TOKEN_PARAMETERS:
@@ -283,7 +284,11 @@ def create_client(
         env = os.environ.get("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE")
         mode = StructuredOutputMode(env) if env else StructuredOutputMode.JSON_SCHEMA
     client = _StructuredClient(
-        OpenAI(base_url=config.base_url, api_key=config.api_key),
+        OpenAI(
+            base_url=config.base_url,
+            api_key=config.api_key,
+            timeout=config.timeout,
+        ),
         mode=mode,
     )
     _wrap_with_tracking(client, tracker if tracker is not None else TokenTracker(), config)

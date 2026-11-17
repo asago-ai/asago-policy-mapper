@@ -166,6 +166,12 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 | `--bi-encoder-model-name` | `POLICY_MAPPER_BI_ENCODER_MODEL_NAME` | Explicit remote bi-encoder model name |
 | `--cross-encoder-model` | `POLICY_MAPPER_CROSS_ENCODER_MODEL` | Cross-encoder endpoint URL or local model name |
 | `--cross-encoder-model-name` | `POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME` | Explicit remote cross-encoder model name |
+| `--temperature` | `POLICY_MAPPER_TEMPERATURE` | LLM sampling temperature (default 0.0) |
+| `--top-p` | `POLICY_MAPPER_TOP_P` | Nucleus sampling top-p (omitted if unset) |
+| `--top-k` | `POLICY_MAPPER_TOP_K` | Top-k sampling (omitted if unset) |
+| `--max-concurrent` | `POLICY_MAPPER_MAX_CONCURRENT` | Maximum parallel LLM calls (default 32) |
+| `--timeout` | `POLICY_MAPPER_TIMEOUT` | Per-request timeout in seconds |
+| `--max-retries` | `POLICY_MAPPER_MAX_RETRIES` | Validation retries after schema-invalid output (default 3) |
 
 If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` and `--cross-encoder-model-name` to set it explicitly. A bare IP host derives a meaningless name (the first octet), so always set the name for those endpoints.
 
