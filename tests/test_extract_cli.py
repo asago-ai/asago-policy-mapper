@@ -333,3 +333,48 @@ def test_eval_command_exists():
     result = runner.invoke(app, ["eval", "--help"])
     assert result.exit_code == 0
     assert "Evaluate" in result.stdout or "eval" in result.stdout.lower()
+
+
+def test_create_client_forwards_timeout_only_when_configured(monkeypatch):
+    from asago_policy_mapper import llm
+
+    captured = {}
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr(llm, "OpenAI", FakeOpenAI)
+    monkeypatch.setattr(llm, "_StructuredClient", lambda client, mode: client)
+    monkeypatch.setattr(llm, "_wrap_with_tracking", lambda *args, **kwargs: None)
+
+    llm.create_client(llm.LLMConfig(base_url="https://example.invalid/v1", model="m"))
+    assert "timeout" not in captured
+
+    captured.clear()
+    llm.create_client(
+        llm.LLMConfig(
+            base_url="https://example.invalid/v1",
+            model="m",
+            timeout=42.0,
+        )
+    )
+    assert captured["timeout"] == 42.0
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"timeout": 0},
+        {"timeout": -1},
+        {"max_retries": -1},
+        {"max_concurrent": 0},
+        {"top_p": 1.5},
+        {"top_k": 0},
+    ],
+)
+def test_llm_config_rejects_invalid_control_values(kwargs):
+    from asago_policy_mapper.llm import LLMConfig
+
+    with pytest.raises(ValueError):
+        LLMConfig(base_url="https://example.invalid/v1", model="m", **kwargs)

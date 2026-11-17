@@ -241,40 +241,29 @@ def extract(
         typer.echo("Error: --nexus-base-dir is required", err=True)
         raise typer.Exit(1)
 
+    config_kwargs = {
+        "api_key": api_key,
+        "max_concurrent": max_concurrent,
+        "max_tokens": max_tokens,
+        "output_token_parameter": output_token_parameter,
+        "service_tier": service_tier,
+        "max_context": max_context,
+        "temperature": temperature,
+        "top_p": top_p,
+        "top_k": top_k,
+        "timeout": timeout,
+        "max_retries": max_retries,
+    }
     if not needs_llm:
         config = LLMConfig(
             base_url=base_url or "unused",
             model=model or "unused",
-            api_key=api_key,
-            max_concurrent=max_concurrent,
-            max_tokens=max_tokens,
-            output_token_parameter=output_token_parameter,
-            service_tier=service_tier,
-            max_context=max_context,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            timeout=timeout,
-            max_retries=max_retries,
+            **config_kwargs,
         )
         tracker = TokenTracker()
         client = None
     else:
-        config = LLMConfig(
-            base_url=base_url,
-            model=model,
-            api_key=api_key,
-            max_concurrent=max_concurrent,
-            max_tokens=max_tokens,
-            output_token_parameter=output_token_parameter,
-            service_tier=service_tier,
-            max_context=max_context,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            timeout=timeout,
-            max_retries=max_retries,
-        )
+        config = LLMConfig(base_url=base_url, model=model, **config_kwargs)
         tracker = TokenTracker()
         client = create_client(config, tracker=tracker)
 

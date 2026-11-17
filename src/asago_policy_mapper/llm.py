@@ -155,6 +155,16 @@ class LLMConfig:
             raise ValueError(f"output_token_parameter must be one of: {allowed}")
         if self.service_tier is not None:
             self.service_tier = self.service_tier.strip() or None
+        if self.timeout is not None and self.timeout <= 0:
+            raise ValueError("timeout must be a positive number of seconds or None")
+        if self.max_retries < 0:
+            raise ValueError("max_retries must be zero or greater")
+        if self.max_concurrent < 1:
+            raise ValueError("max_concurrent must be positive")
+        if self.top_p is not None and not 0.0 <= self.top_p <= 1.0:
+            raise ValueError("top_p must be between 0 and 1")
+        if self.top_k is not None and self.top_k < 1:
+            raise ValueError("top_k must be positive")
         if self.max_context > 0 and self.max_tokens >= self.max_context:
             self.max_tokens = self.max_context - _SAFETY_MARGIN - _SCHEMA_OVERHEAD_TOKENS
 
@@ -283,14 +293,13 @@ def create_client(
     if mode is None:
         env = os.environ.get("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE")
         mode = StructuredOutputMode(env) if env else StructuredOutputMode.JSON_SCHEMA
-    client = _StructuredClient(
-        OpenAI(
-            base_url=config.base_url,
-            api_key=config.api_key,
-            timeout=config.timeout,
-        ),
-        mode=mode,
-    )
+    client_kwargs: dict[str, Any] = {
+        "base_url": config.base_url,
+        "api_key": config.api_key,
+    }
+    if config.timeout is not None:
+        client_kwargs["timeout"] = config.timeout
+    client = _StructuredClient(OpenAI(**client_kwargs), mode=mode)
     _wrap_with_tracking(client, tracker if tracker is not None else TokenTracker(), config)
     return client
 
