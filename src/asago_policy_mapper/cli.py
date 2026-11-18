@@ -1,6 +1,7 @@
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import typer
 import yaml
@@ -241,7 +242,7 @@ def extract(
         typer.echo("Error: --nexus-base-dir is required", err=True)
         raise typer.Exit(1)
 
-    config_kwargs = {
+    config_kwargs: dict[str, Any] = {
         "api_key": api_key,
         "max_concurrent": max_concurrent,
         "max_tokens": max_tokens,
