@@ -118,7 +118,7 @@ The structured-output mode is selected by `create_client`'s `mode` argument, or 
 - An optional processing tier can be passed unchanged to the LLM endpoint with `--service-tier` or `POLICY_MAPPER_SERVICE_TIER`. For OpenAI, current examples include `default` (Standard), `flex`, and `fast`/`priority` (Fast mode); other API-compatible endpoints may support different values. If omitted, no parameter is sent and the endpoint/project default is used. This applies to LLM chat-completion calls; Batch API jobs are not currently supported by the mapper.
 - Grounding splits candidate lists into `--grounding-batch-size` risks per call (default 15) so structured JSON fits in the output budget.
 - Sampling parameters (`temperature`, `top_p`, `top_k`) are injected by the tracking wrapper from `LLMConfig` defaults — call sites don't set them directly. `top_k` is passed via `extra_body` for vLLM compatibility.
-- All LLM calls default to `temperature=0.0`; override with `--temperature`, `--top-p`, `--top-k` CLI flags (e.g. `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4)
+- All LLM calls default to `temperature=0.0`; override with `--temperature`, `--top-p`, `--top-k` flags or `POLICY_MAPPER_TEMPERATURE`, `POLICY_MAPPER_TOP_P`, `POLICY_MAPPER_TOP_K` (e.g. `--temperature 1.0 --top-p 0.95 --top-k 64` for Gemma 4). `--timeout`/`POLICY_MAPPER_TIMEOUT` bounds chat-completion requests only; remote retrieval clients keep their own timeouts.
 
 ## Recommended Models
 
@@ -166,6 +166,17 @@ Pass a **model name** to run locally (downloaded on first use), or a **URL** to 
 | `--bi-encoder-model-name` | `POLICY_MAPPER_BI_ENCODER_MODEL_NAME` | Explicit remote bi-encoder model name |
 | `--cross-encoder-model` | `POLICY_MAPPER_CROSS_ENCODER_MODEL` | Cross-encoder endpoint URL or local model name |
 | `--cross-encoder-model-name` | `POLICY_MAPPER_CROSS_ENCODER_MODEL_NAME` | Explicit remote cross-encoder model name |
+
+**LLM request controls:** these tune the chat-completion client; explicit CLI values take precedence over environment values, which take precedence over defaults.
+
+| Flag | Env var | Description |
+|------|---------|-------------|
+| `--temperature` | `POLICY_MAPPER_TEMPERATURE` | LLM sampling temperature (default 0.0) |
+| `--top-p` | `POLICY_MAPPER_TOP_P` | Nucleus sampling top-p (omitted if unset) |
+| `--top-k` | `POLICY_MAPPER_TOP_K` | Top-k sampling (omitted if unset) |
+| `--max-concurrent` | `POLICY_MAPPER_MAX_CONCURRENT` | Maximum parallel LLM calls (default 32) |
+| `--timeout` | `POLICY_MAPPER_TIMEOUT` | Chat-completion request timeout in seconds (SDK default if unset) |
+| `--max-retries` | `POLICY_MAPPER_MAX_RETRIES` | Schema-validation retries after invalid model output (default 3; SDK transport retries are separate) |
 
 If the model name differs from what can be derived from the endpoint URL (e.g. the hostname prefix), use `--bi-encoder-model-name` and `--cross-encoder-model-name` to set it explicitly. A bare IP host derives a meaningless name (the first octet), so always set the name for those endpoints.
 
