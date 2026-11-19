@@ -99,6 +99,35 @@ class ChunkSummary(BaseModel):
     accepted_risk_ids: list[str] = []
 
 
+class DecisionItem(BaseModel):
+    """One risk's raw assessor answers and reduced keep/drop verdict."""
+
+    risk_id: str
+    answers: list[dict]
+    keep: bool
+    reason: str
+
+
+class DecisionLog(BaseModel):
+    """The decision seam's record of one keep/drop reduction.
+
+    Identifies the question, prompt, assessor and rule that produced the
+    decisions, so a run's borderline judgements can be replayed and audited.
+    ``prompt_sha256`` hashes the rendered system template, telling alternate
+    ``--judge-prompt`` templates apart.
+    """
+
+    question_id: str
+    question_version: str
+    prompt_name: str
+    prompt_sha256: str
+    assessor_id: str
+    rule_id: str
+    latency_ms: float
+    items: list[DecisionItem]
+    unmatched_ids: list[str] = []
+
+
 class LLMCallRecord(BaseModel):
     call_id: str
     stage: Literal["judge", "grounding", "variant_grounding", "causal_synthesis", "query_gen"]
@@ -109,6 +138,7 @@ class LLMCallRecord(BaseModel):
     duration_ms: float
     result_summary: str
     prompt_shortenings: list[dict] = []
+    decision: DecisionLog | None = None
 
 
 class FilteredCandidate(BaseModel):
