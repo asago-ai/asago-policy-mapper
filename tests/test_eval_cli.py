@@ -86,6 +86,9 @@ def test_eval_command_uses_yaml_when_json_missing(tmp_path):
     # Pins the known yaml-only bug: evaluate_extraction json.loads the yaml
     # sidecar, so a yaml-only run directory fails with a decode error rather
     # than evaluating. The command exits 1 and writes no eval.json.
+    # When the fix lands, flip BOTH assertions: the command should exit 1
+    # with a clean error message (no traceback), not just parse the yaml —
+    # this test currently pins the unhandled-crash shape too.
     assert result.exit_code == 1
     assert isinstance(result.exception, json.JSONDecodeError)
     assert not (run_dir / "eval.json").exists()
