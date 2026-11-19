@@ -3,9 +3,11 @@
 The OpenAI SDK's transport-level retry count and timeout are now explicit
 and configurable independently of the mapper's own validation retries:
 ``LLMConfig.sdk_max_retries`` and ``LLMConfig.sdk_timeout_s`` go to
-``OpenAI(...)`` only, never into a completion request, and default from
-``POLICY_MAPPER_SDK_MAX_RETRIES`` / ``POLICY_MAPPER_SDK_TIMEOUT_S`` when the
-constructor leaves them unset.
+``OpenAI(...)`` only, never into a completion request. Unset fields resolve
+at client build — constructor value, else ``POLICY_MAPPER_SDK_MAX_RETRIES``
+/ ``POLICY_MAPPER_SDK_TIMEOUT_S``, else the SDK's own defaults — so a run
+that builds no client never parses the env vars. A malformed env value
+raises an error naming the variable and the bad value.
 """
 
 from unittest.mock import patch
@@ -125,17 +127,38 @@ class TestSdkEnvDefaults:
         assert override.kwargs["max_retries"] == 2
         assert override.kwargs["timeout"] == 8.0
 
-    def test_env_values_are_read_in_llm_config_fields(self, monkeypatch):
-        """The env defaults land on the config, so callers can inspect them."""
+    def test_config_fields_stay_unset_until_client_build(self, monkeypatch):
+        """LLMConfig construction never reads the env; create_client resolves it."""
         monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "4")
         monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "17.0")
         config = _config()
-        assert config.sdk_max_retries == 4
-        assert config.sdk_timeout_s == 17.0
+        assert config.sdk_max_retries is None
+        assert config.sdk_timeout_s is None
 
-        config = _config(sdk_max_retries=None, sdk_timeout_s=None)
-        assert config.sdk_max_retries == 4
-        assert config.sdk_timeout_s == 17.0
+    def test_no_client_build_never_parses_env(self, monkeypatch):
+        """A run that needs no LLM never parses the env vars.
+
+        LLM-free runs still build an LLMConfig (with "unused" endpoint
+        values); constructing it must not raise on a malformed env var,
+        because nothing will ever read it.
+        """
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "not-a-number")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "not-a-number")
+        config = _config()
+        assert config.sdk_max_retries is None
+        assert config.sdk_timeout_s is None
+
+    def test_invalid_env_values_name_variable_and_value(self, captured, monkeypatch):
+        """A malformed env value fails at client build, naming the variable and value."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "xyz")
+        with pytest.raises(ValueError, match=r"POLICY_MAPPER_SDK_MAX_RETRIES.*xyz"):
+            create_client(_config())
+
+        monkeypatch.delenv("POLICY_MAPPER_SDK_MAX_RETRIES")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "nope")
+        with pytest.raises(ValueError, match=r"POLICY_MAPPER_SDK_TIMEOUT_S.*nope"):
+            create_client(_config())
+        assert captured.instances == []
 
     def test_env_vars_do_not_override_validation_retries(self, monkeypatch):
         """POLICY_MAPPER_SDK_MAX_RETRIES leaves max_retries (validation) alone."""
@@ -143,21 +166,23 @@ class TestSdkEnvDefaults:
         config = _config()
         assert config.max_retries == 3
 
-    def test_empty_env_values_behave_like_unset(self, monkeypatch):
+    def test_empty_env_values_behave_like_unset(self, captured, monkeypatch):
         """A set-but-empty env var is unset, not a parse error."""
         monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "")
         monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "")
-        config = _config()
-        assert config.sdk_max_retries is None
-        assert config.sdk_timeout_s is None
+        create_client(_config())
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == openai.DEFAULT_MAX_RETRIES
+        assert instance.kwargs["timeout"] == openai.DEFAULT_TIMEOUT
 
-    def test_whitespace_env_values_behave_like_unset(self, monkeypatch):
+    def test_whitespace_env_values_behave_like_unset(self, captured, monkeypatch):
         """A whitespace-only env var is unset too, for both readers."""
         monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "   ")
         monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "  ")
-        config = _config()
-        assert config.sdk_max_retries is None
-        assert config.sdk_timeout_s is None
+        create_client(_config())
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == openai.DEFAULT_MAX_RETRIES
+        assert instance.kwargs["timeout"] == openai.DEFAULT_TIMEOUT
 
 
 class TestCreateClientStructuredOutputModeEnv:

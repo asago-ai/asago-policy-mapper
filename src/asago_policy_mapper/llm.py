@@ -144,7 +144,10 @@ def _env_int(name: str) -> int | None:
     raw = os.environ.get(name)
     if raw is None or raw.strip() == "":
         return None
-    return int(raw)
+    try:
+        return int(raw)
+    except ValueError:
+        raise ValueError(f"{name} must be an integer, got {raw!r}") from None
 
 
 def _env_float(name: str) -> float | None:
@@ -152,15 +155,19 @@ def _env_float(name: str) -> float | None:
     raw = os.environ.get(name)
     if raw is None or raw.strip() == "":
         return None
-    return float(raw)
+    try:
+        return float(raw)
+    except ValueError:
+        raise ValueError(f"{name} must be a number, got {raw!r}") from None
 
 
 def _validate_sdk_settings(sdk_max_retries: int | None, sdk_timeout_s: float | None) -> None:
     """Reject transport settings the OpenAI SDK would silently mishandle.
 
     A negative retry count and a zero, negative or non-finite timeout are
-    configuration errors, not runtime conditions: fail at construction,
-    before any client exists.
+    configuration errors, not runtime conditions: fail where the value is
+    resolved — at ``LLMConfig`` construction or at client build — before
+    any client exists.
     """
     if sdk_max_retries is not None and sdk_max_retries < 0:
         raise ValueError(f"sdk_max_retries must be at least 0, got {sdk_max_retries}")
@@ -193,13 +200,28 @@ class LLMConfig:
             self.service_tier = self.service_tier.strip() or None
         if self.max_context > 0 and self.max_tokens >= self.max_context:
             self.max_tokens = self.max_context - _SAFETY_MARGIN - _SCHEMA_OVERHEAD_TOKENS
-        # Transport settings default from the environment when the
-        # constructor leaves them unset; a constructor value wins.
-        if self.sdk_max_retries is None:
-            self.sdk_max_retries = _env_int(_SDK_MAX_RETRIES_ENV)
-        if self.sdk_timeout_s is None:
-            self.sdk_timeout_s = _env_float(_SDK_TIMEOUT_ENV)
+        # Transport settings are validated here but resolve from the
+        # environment only at client build (``create_client``): a run that
+        # needs no LLM builds a config and never parses the env vars.
         _validate_sdk_settings(self.sdk_max_retries, self.sdk_timeout_s)
+
+
+def _resolve_sdk_settings(config: LLMConfig) -> tuple[int | None, float | None]:
+    """Resolve the transport settings: constructor value, else env, else unset.
+
+    Runs at client build, so a config built for an LLM-free run never
+    parses the environment. A malformed env value raises an error naming
+    the variable and the bad value; the constructor value skips the env
+    entirely and wins.
+    """
+    sdk_max_retries = config.sdk_max_retries
+    if sdk_max_retries is None:
+        sdk_max_retries = _env_int(_SDK_MAX_RETRIES_ENV)
+    sdk_timeout_s = config.sdk_timeout_s
+    if sdk_timeout_s is None:
+        sdk_timeout_s = _env_float(_SDK_TIMEOUT_ENV)
+    _validate_sdk_settings(sdk_max_retries, sdk_timeout_s)
+    return sdk_max_retries, sdk_timeout_s
 
 
 # The pipeline stages a call site can mark its calls with. for_stage rejects
@@ -376,20 +398,24 @@ def create_client(
 
     The OpenAI SDK's transport retry count and timeout are always passed
     explicitly: ``config.sdk_max_retries`` and ``config.sdk_timeout_s`` when
-    set, the SDK's own ``openai.DEFAULT_MAX_RETRIES`` / ``openai.DEFAULT_TIMEOUT``
-    when not. They configure the transport only and never appear in a
-    completion request; ``config.max_retries`` keeps its separate meaning as
-    the validation retry count.
+    set, the ``POLICY_MAPPER_SDK_MAX_RETRIES`` / ``POLICY_MAPPER_SDK_TIMEOUT_S``
+    environment variables when the config leaves them unset, and the SDK's own
+    ``openai.DEFAULT_MAX_RETRIES`` / ``openai.DEFAULT_TIMEOUT`` when neither
+    applies. This is the only place the env vars are read, so a run that
+    builds no client never parses them. They configure the transport only
+    and never appear in a completion request; ``config.max_retries`` keeps
+    its separate meaning as the validation retry count.
     """
     if mode is None:
         env = os.environ.get("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE")
         mode = StructuredOutputMode(env) if env else StructuredOutputMode.JSON_SCHEMA
+    sdk_max_retries, sdk_timeout_s = _resolve_sdk_settings(config)
     client = _StructuredClient(
         OpenAI(
             base_url=config.base_url,
             api_key=config.api_key,
-            max_retries=(config.sdk_max_retries if config.sdk_max_retries is not None else openai.DEFAULT_MAX_RETRIES),
-            timeout=config.sdk_timeout_s if config.sdk_timeout_s is not None else openai.DEFAULT_TIMEOUT,
+            max_retries=(sdk_max_retries if sdk_max_retries is not None else openai.DEFAULT_MAX_RETRIES),
+            timeout=sdk_timeout_s if sdk_timeout_s is not None else openai.DEFAULT_TIMEOUT,
         ),
         mode=mode,
     )

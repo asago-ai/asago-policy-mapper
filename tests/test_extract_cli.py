@@ -501,6 +501,39 @@ def test_run_needs_llm_matrix():
     assert _run_needs_llm(no_judge=True, no_grounding=True, expand_siblings=False, query_gen=True) is True
 
 
+def test_setup_llm_free_run_ignores_malformed_sdk_env(monkeypatch):
+    """An LLM-free run builds its config without parsing the SDK env vars.
+
+    The run substitutes "unused" endpoint values and never builds a client,
+    so a malformed POLICY_MAPPER_SDK_MAX_RETRIES or POLICY_MAPPER_SDK_TIMEOUT_S
+    must not fail it: nothing reads those variables without a client.
+    """
+    from asago_policy_mapper.cli import _setup_llm
+
+    monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "not-a-number")
+    monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "not-a-number")
+
+    config, tracker, client = _setup_llm(
+        needs_llm=False,
+        base_url=None,
+        model=None,
+        api_key="none",
+        max_concurrent=1,
+        max_tokens=1024,
+        output_token_parameter="max_tokens",
+        service_tier=None,
+        max_context=0,
+        temperature=0.0,
+        top_p=None,
+        top_k=None,
+    )
+
+    assert client is None
+    assert config.base_url == "unused"
+    assert config.model == "unused"
+    assert tracker.calls == 0
+
+
 # --- _load_risk_catalog unit tests ---
 
 
