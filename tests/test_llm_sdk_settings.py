@@ -252,3 +252,36 @@ class TestInvalidSdkSettings:
             _config(sdk_max_retries=-2)
         with pytest.raises(ValueError, match="sdk_timeout_s"):
             _config(sdk_timeout_s=0.0)
+
+    def test_constructor_rejects_non_integral_retry_counts(self):
+        """A fractional retry count is a type error, not a valid setting."""
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=2.7)
+
+    def test_constructor_rejects_boolean_retry_counts(self):
+        """True and False are ints in Python but are not retry counts.
+
+        Accepting them would let ``sdk_max_retries=True`` silently mean 1
+        instead of failing a typo'd flag or config parse.
+        """
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=True)
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=False)
+
+    def test_integral_float_retry_count_is_rejected(self):
+        """2.0 is an int-valued float; the retry count must be a real int."""
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=2.0)
+
+    def test_boolean_timeout_is_rejected(self):
+        """True would silently mean a 1.0-second timeout; reject it."""
+        with pytest.raises(ValueError, match="sdk_timeout_s"):
+            _config(sdk_timeout_s=True)
+
+    def test_env_fractional_retry_count_fails_at_client_build(self, captured, monkeypatch):
+        """A fractional value from the env fails naming the env variable and value."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "2.7")
+        with pytest.raises(ValueError, match=r"POLICY_MAPPER_SDK_MAX_RETRIES.*2\.7"):
+            create_client(_config())
+        assert captured.instances == []

@@ -167,10 +167,17 @@ def _validate_sdk_settings(sdk_max_retries: int | None, sdk_timeout_s: float | N
     A negative retry count and a zero, negative or non-finite timeout are
     configuration errors, not runtime conditions: fail where the value is
     resolved — at ``LLMConfig`` construction or at client build — before
-    any client exists.
+    any client exists. A retry count that is not a plain integer —
+    a fractional or integral float, or a boolean — is rejected too, and so
+    is a boolean timeout. ``bool`` subclasses ``int`` in Python, so it needs
+    its own check.
     """
+    if sdk_max_retries is not None and (isinstance(sdk_max_retries, bool) or not isinstance(sdk_max_retries, int)):
+        raise ValueError(f"sdk_max_retries must be an integer, got {sdk_max_retries!r}")
     if sdk_max_retries is not None and sdk_max_retries < 0:
         raise ValueError(f"sdk_max_retries must be at least 0, got {sdk_max_retries}")
+    if sdk_timeout_s is not None and isinstance(sdk_timeout_s, bool):
+        raise ValueError(f"sdk_timeout_s must be a number, not a boolean, got {sdk_timeout_s!r}")
     if sdk_timeout_s is not None and (not math.isfinite(sdk_timeout_s) or sdk_timeout_s <= 0):
         raise ValueError(f"sdk_timeout_s must be finite and positive, got {sdk_timeout_s}")
 
