@@ -20,6 +20,8 @@ import pytest
 
 from asago_policy_mapper.extract.attribute import (
     ground_and_extract_evidence,
+    ground_risk_group,
+    ground_variants,
     synthesize_causal_chain,
 )
 from asago_policy_mapper.extract.models import (
@@ -29,6 +31,8 @@ from asago_policy_mapper.extract.models import (
     _RiskEvidence,
     _RiskEvidenceList,
 )
+from asago_policy_mapper.extract.parse import Chunk
+from asago_policy_mapper.extract.querygen import generate_queries, group_chunks
 from asago_policy_mapper.extract.retrieve import judge_borderline
 from asago_policy_mapper.llm import (
     _MAX_TRUNCATION_RETRIES,
@@ -120,6 +124,30 @@ def _completion_body(content):
 
 def _sha(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
+
+
+def _shortening_stub_client(response_body: str):
+    """Build the production client over a transport that shortens once.
+
+    The first response stops at the token limit, so the tracked call
+    shortens the longest user message and retries; the second returns
+    ``response_body`` and the call succeeds. A site's user prompt must
+    exceed the 500-char shortening floor for the shortening to happen.
+    """
+    state = {"shortened": False}
+
+    def handler(request):
+        if not state["shortened"]:
+            state["shortened"] = True
+            return httpx.Response(200, json=_length_truncated_body())
+        return httpx.Response(200, json=_completion_body(response_body))
+
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+    with patch(
+        "asago_policy_mapper.llm.OpenAI",
+        lambda **kw: openai.OpenAI(http_client=http_client, **kw),
+    ):
+        return create_client(LLMConfig(base_url="http://localhost:8000/v1", model="test-model", sdk_max_retries=0))
 
 
 class TestShorteningRecord:
@@ -409,6 +437,109 @@ class TestRecordHelpersCopyShortenings:
         )
         assert len(collector) == 1
         assert collector[0].prompt_shortenings == []
+
+    def test_querygen_record_carries_shortenings(self):
+        """generate_queries' inline LLMCallRecord copies the calling thread's shortenings."""
+        client = _shortening_stub_client('{"queries": []}')
+
+        chunks = [Chunk(text="Query generation source text. " * 40, source="doc.pdf", index=0, section=None)]
+        collector: list[LLMCallRecord] = []
+        generate_queries(
+            chunks,
+            group_chunks(chunks),
+            client,
+            "test-model",
+            records=collector,
+        )
+
+        assert len(collector) == 1
+        shortenings = collector[0].prompt_shortenings
+        assert len(shortenings) == 1
+        assert shortenings[0]["chars_before"] > shortenings[0]["chars_after"]
+        assert shortenings[0]["reason"] == "incomplete_output"
+
+    def test_grounding_record_carries_shortenings(self):
+        """_record_grounding_call's LLMCallRecord copies the calling thread's shortenings."""
+        client = _shortening_stub_client('{"items": []}')
+
+        candidates = [
+            ScoredCandidate(
+                risk_id="R-001",
+                risk_name="Bias",
+                risk_description="Model bias risk",
+                cross_encoder_score=0.5,
+            ),
+        ]
+        collector: list[LLMCallRecord] = []
+        ground_and_extract_evidence(
+            chunk_text="AI systems must avoid bias. " * 60,
+            candidates=candidates,
+            client=client,
+            model="test-model",
+            document="policy.pdf",
+            chunk_index=0,
+            records=collector,
+        )
+
+        assert len(collector) == 1
+        shortenings = collector[0].prompt_shortenings
+        assert len(shortenings) == 1
+        assert shortenings[0]["chars_before"] > shortenings[0]["chars_after"]
+        assert shortenings[0]["reason"] == "incomplete_output"
+
+    def test_variant_grounding_record_carries_shortenings(self):
+        """ground_variants' LLMCallRecord copies the calling thread's shortenings."""
+        client = _shortening_stub_client('{"items": []}')
+
+        variants = [
+            {
+                "risk_id": "parent---variant-a",
+                "name": "Variant A",
+                "description": "Unauthorized processing of biometric data.",
+            }
+        ]
+        collector: list[LLMCallRecord] = []
+        ground_variants(
+            chunk_text="Facial recognition data was collected without consent. " * 40,
+            parent_id="parent",
+            parent_name="Unauthorized processing",
+            parent_description="Processing of personal data without legal basis or consent.",
+            variants=variants,
+            client=client,
+            model="test-model",
+            document="policy.pdf",
+            chunk_index=0,
+            records=collector,
+        )
+
+        assert len(collector) == 1
+        shortenings = collector[0].prompt_shortenings
+        assert len(shortenings) == 1
+        assert shortenings[0]["chars_before"] > shortenings[0]["chars_after"]
+        assert shortenings[0]["reason"] == "incomplete_output"
+
+    def test_group_grounding_record_carries_shortenings(self):
+        """_record_group_call's LLMCallRecord copies the calling thread's shortenings."""
+        client = _shortening_stub_client('{"items": []}')
+
+        chunks = [Chunk(text="Location data processing without awareness. " * 40, source="doc.pdf", index=0)]
+        risks = [{"risk_id": "R-001", "risk_name": "Bias", "risk_description": "Model bias risk"}]
+        collector: list[LLMCallRecord] = []
+        ground_risk_group(
+            chunks,
+            chunk_indices=[0],
+            risks=risks,
+            client=client,
+            model="test-model",
+            document="policy.pdf",
+            records=collector,
+        )
+
+        assert len(collector) == 1
+        shortenings = collector[0].prompt_shortenings
+        assert len(shortenings) == 1
+        assert shortenings[0]["chars_before"] > shortenings[0]["chars_after"]
+        assert shortenings[0]["reason"] == "incomplete_output"
 
     def test_causal_record_carries_shortenings(self):
         """synthesize_causal_chain's LLMCallRecord copies the calling thread's shortenings."""
