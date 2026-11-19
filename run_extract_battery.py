@@ -41,7 +41,9 @@ from asago_policy_mapper.tracking import (
 PACKAGE_DIR = Path(__file__).parent
 ROOT = PACKAGE_DIR
 RUNS_DIR = PACKAGE_DIR / "extract-runs"
-NEXUS_BASE_DIR = os.environ.get("NEXUS_BASE_DIR", "/Users/hjrnunes/workspace/redhat/ibm/ai-atlas-nexus")
+# Optional override pointing the pipeline at a local ai-atlas-nexus clone;
+# unset means the installed package data (the default since the PyPI pin).
+NEXUS_BASE_DIR = os.environ.get("NEXUS_BASE_DIR")
 GROUND_TRUTH_DIR = PACKAGE_DIR / "evals" / "ground_truth"
 
 POLICY_EXTENSIONS = {".json", ".md", ".txt", ".pdf", ".docx", ".html", ".htm"}
@@ -136,8 +138,6 @@ def run_one(
         base_url,
         "--model",
         model,
-        "--nexus-base-dir",
-        NEXUS_BASE_DIR,
         "--chunk-max-tokens",
         str(chunk_max_tokens),
         "--top-n-accept",
@@ -157,6 +157,8 @@ def run_one(
         cmd.extend(["--bi-encoder-model-name", bi_encoder_model_name])
     if query_instruction:
         cmd.extend(["--query-instruction", query_instruction])
+    if NEXUS_BASE_DIR:
+        cmd.extend(["--nexus-base-dir", NEXUS_BASE_DIR])
     cmd += [
         "--bm25-rescue-rank",
         str(bm25_rescue_rank),

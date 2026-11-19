@@ -45,12 +45,26 @@ def load_mitigation_index(
     return index
 
 
+def _nexus_knowledge_graph_dir(nexus_base_dir: Path | str | None) -> Path:
+    """Resolve the Nexus knowledge_graph directory.
+
+    Defaults to the installed ai-atlas-nexus package data. When
+    ``nexus_base_dir`` is given, it points at a local clone checkout
+    (escape hatch for experimentation; layout: ``<clone>/src/ai_atlas_nexus/data``).
+    """
+    if nexus_base_dir is not None:
+        return Path(nexus_base_dir) / "src" / "ai_atlas_nexus" / "data" / "knowledge_graph"
+    from ai_atlas_nexus.data import get_data_path
+
+    return Path(get_data_path())
+
+
 def build_action_descriptions(
-    nexus_base_dir: str,
+    nexus_base_dir: Path | str | None = None,
     data_dir: Path | None = None,
 ) -> dict[str, str]:
     """Build action_id → description lookup from Nexus YAML files and local data."""
-    kg = Path(nexus_base_dir) / "src" / "ai_atlas_nexus" / "data" / "knowledge_graph"
+    kg = _nexus_knowledge_graph_dir(nexus_base_dir)
     data_dir = data_dir or _DATA_DIR
     descs: dict[str, str] = {}
 
@@ -73,9 +87,9 @@ def build_action_descriptions(
     return descs
 
 
-def build_risk_crossmap(nexus_base_dir: str) -> dict[str, set[str]]:
+def build_risk_crossmap(nexus_base_dir: Path | str | None = None) -> dict[str, set[str]]:
     """Build non-atlas-risk-id → set[atlas-risk-id] from Nexus + local mapping files."""
-    kg = Path(nexus_base_dir) / "src" / "ai_atlas_nexus" / "data" / "knowledge_graph" / "mappings"
+    kg = _nexus_knowledge_graph_dir(nexus_base_dir) / "mappings"
     crossmap: dict[str, set[str]] = {}
 
     nexus_files = [

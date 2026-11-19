@@ -32,8 +32,6 @@ def test_extract_missing_base_url():
                 f.name,
                 "-o",
                 "/tmp/test-output",
-                "--nexus-base-dir",
-                "/tmp/nexus",
             ],
             env={"POLICY_MAPPER_BASE_URL": "", "POLICY_MAPPER_MODEL": ""},
         )
@@ -52,8 +50,6 @@ def test_extract_nonexistent_file():
             "http://localhost:8000/v1",
             "--model",
             "test",
-            "--nexus-base-dir",
-            "/tmp/nexus",
         ],
     )
     assert result.exit_code != 0
@@ -145,8 +141,6 @@ def test_cli_configures_logging():
                 "http://localhost:8000/v1",
                 "--model",
                 "test",
-                "--nexus-base-dir",
-                "/tmp/nexus",
             ],
         )
         assert result.exit_code != 0
@@ -193,7 +187,7 @@ def test_extract_check_risk_text_warnings_only_when_enabled(monkeypatch, tmp_pat
     monkeypatch.setattr("asago_policy_mapper.extract.pipeline.run_extraction", stop)
     policy = tmp_path / "policy.txt"
     policy.write_text("test policy")
-    args = ["extract", str(policy), "-o", str(tmp_path / "out"), "--nexus-base-dir", str(tmp_path)]
+    args = ["extract", str(policy), "-o", str(tmp_path / "out")]
     args += ["--no-judge", "--no-grounding", "--no-query-gen", "--no-expand-siblings"]
     if check_risk_text:
         args.append("--check-risk-text")
@@ -253,8 +247,6 @@ def test_extract_env_values_reach_llm_config(monkeypatch, tmp_path):
             str(policy),
             "-o",
             str(tmp_path / "out"),
-            "--nexus-base-dir",
-            str(tmp_path),
             "--no-judge",
             "--no-grounding",
             "--no-expand-siblings",
@@ -277,6 +269,78 @@ def test_extract_env_values_reach_llm_config(monkeypatch, tmp_path):
     assert config.model == "test-model"
 
 
+def test_extract_blank_nexus_base_dir_behaves_like_unset(monkeypatch, tmp_path):
+    """A blank --nexus-base-dir reaches the catalog and both mitigation loaders as None.
+
+    Regression test for a normalization split: the CLI normalized '' for the
+    catalog (``AIAtlasNexus(base_dir=None)``) but passed the raw '' to the
+    mitigation loaders, which resolved relative ``src/ai_atlas_nexus/...``
+    paths against the CWD — a package catalog with CWD-relative mitigation
+    data. Blank must behave exactly like unset for every consumer. (The test
+    drives the option, not the envvar: click treats an empty NEXUS_BASE_DIR
+    envvar as unset, so the option is the path that carries '' into the body.)
+    """
+    from unittest.mock import MagicMock, patch
+
+    import asago_policy_mapper.extract.mitigations as mitigations_module
+
+    received: dict = {}
+
+    class FakeNexus:
+        def __init__(self, base_dir=None):
+            received["catalog_base_dir"] = base_dir
+
+        def get_all_risks(self):
+            return [Risk(id="r1", name="r1", description="A risk.", isDefinedByTaxonomy="test", type="Risk")]
+
+    def fake_build_action_descriptions(nexus_base_dir=None, data_dir=None):
+        received["action_descs"] = nexus_base_dir
+        return {}
+
+    def fake_build_risk_crossmap(nexus_base_dir=None):
+        received["crossmap"] = nexus_base_dir
+        return {}
+
+    def fake_enrich(risks, index, descriptions=None, risk_crossmap=None, risk_threats=None, risk_consequences=None):
+        pass
+
+    def fake_run_extraction(**kwargs):
+        result = MagicMock()
+        result.risks = []
+        result.token_usage = {}
+        result.model_dump = lambda: {"risks": [], "retrieval_stats": {}}
+        return result
+
+    monkeypatch.setattr(mitigations_module, "build_action_descriptions", fake_build_action_descriptions)
+    monkeypatch.setattr(mitigations_module, "build_risk_crossmap", fake_build_risk_crossmap)
+    monkeypatch.setattr(mitigations_module, "enrich_with_mitigations", fake_enrich)
+
+    policy = tmp_path / "policy.txt"
+    policy.write_text("test policy")
+    args = [
+        str(policy),
+        "-o",
+        str(tmp_path / "out"),
+        "--no-judge",
+        "--no-grounding",
+        "--no-query-gen",
+        "--no-expand-siblings",
+    ]
+
+    with (
+        patch("ai_atlas_nexus.AIAtlasNexus", FakeNexus),
+        patch("asago_policy_mapper.extract.pipeline.run_extraction", fake_run_extraction),
+    ):
+        # An explicit empty option reaches the command body as '' (click treats
+        # an empty *envvar* as unset, so the option is the path that carries it).
+        result = runner.invoke(app, ["extract", *args, "--nexus-base-dir", ""])
+
+    assert result.exit_code == 0, result.exception
+    assert received["catalog_base_dir"] is None
+    assert received["action_descs"] is None
+    assert received["crossmap"] is None
+
+
 def test_extract_invalid_custom_taxonomy():
     with tempfile.NamedTemporaryFile(suffix=".txt", mode="w", delete=False) as f:
         f.write("test policy")
@@ -295,8 +359,6 @@ def test_extract_invalid_custom_taxonomy():
                     "http://localhost:8000/v1",
                     "--model",
                     "test",
-                    "--nexus-base-dir",
-                    "/tmp/nexus",
                     "--custom-taxonomy",
                     bad_yaml.name,
                     "--no-judge",
