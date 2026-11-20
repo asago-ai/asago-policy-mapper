@@ -18,6 +18,7 @@ from asago_policy_mapper.llm import (
     TokenTracker,
     ValidationRetryExhausted,
     _call_with_retry,
+    _extract_json_span,
     _extract_response_content,
     _IncompleteOutput,
     _parse_completion,
@@ -27,6 +28,7 @@ from asago_policy_mapper.llm import (
     _track_completion,
     _truncate_messages,
     _wrap_with_tracking,
+    budget_max_tokens,
     create_client,
 )
 
@@ -282,6 +284,67 @@ class TestExtractResponseContent:
 
 
 # ---------------------------------------------------------------------------
+# _extract_json_span
+# ---------------------------------------------------------------------------
+
+
+class TestExtractJsonSpan:
+    """The last complete JSON object or array wins; raw non-JSON passes through."""
+
+    def test_single_object(self):
+        assert _extract_json_span('{"a": 1}') == '{"a": 1}'
+
+    def test_prose_before_object(self):
+        assert _extract_json_span('Here you go:\n{"a": 1}') == '{"a": 1}'
+
+    def test_last_span_wins_over_earlier_quoted_span(self):
+        content = 'Prompt said {"a": 1}. Answer: {"b": 2}'
+        assert _extract_json_span(content) == '{"b": 2}'
+
+    def test_span_at_index_zero(self):
+        assert _extract_json_span('{"a": 1} trailing prose') == '{"a": 1}'
+
+    def test_invalid_span_between_two_valid_ones(self):
+        # The middle object is incomplete (unclosed brace), so raw_decode
+        # fails at its opening index and the last complete span still wins.
+        content = '{"a": 1} then {"broken: ' + "x" * 20 + ' then {"c": 3}'
+        assert _extract_json_span(content) == '{"c": 3}'
+
+    def test_array_span_wins_when_last(self):
+        content = 'object {"a": 1} then array [1, 2, 3]'
+        assert _extract_json_span(content) == "[1, 2, 3]"
+
+    def test_nested_braces_inside_string_do_not_confuse(self):
+        content = 'result: {"text": "a { not json start", "n": 2}'
+        assert _extract_json_span(content) == '{"text": "a { not json start", "n": 2}'
+
+    def test_raw_non_json_content_returned_as_is(self):
+        content = "no json here at all"
+        assert _extract_json_span(content) == content
+
+    def test_empty_string_returned_as_is(self):
+        assert _extract_json_span("") == ""
+
+    def test_incomplete_json_only_returns_content_as_is(self):
+        # An unclosed object never completes, so nothing valid was found and
+        # the raw content comes back unchanged.
+        content = '{"broken": '
+        assert _extract_json_span(content) == content
+
+    def test_consumed_prefix_skips_nested_open_braces(self):
+        # After the first span consumes '{"a": 1}', the inner "{b" region of
+        # the second object must not produce a bogus shorter span; the last
+        # complete object still wins.
+        content = '{"a": 1} {"x": {"b": 2}}'
+        assert _extract_json_span(content) == '{"x": {"b": 2}}'
+
+    def test_only_open_brackets_inside_larger_content(self):
+        # Characters that are not object/array openers never start a span.
+        content = "plain [not a span"
+        assert _extract_json_span(content) == content
+
+
+# ---------------------------------------------------------------------------
 # _truncate_messages
 # ---------------------------------------------------------------------------
 
@@ -345,6 +408,120 @@ class TestTruncateMessages:
         result = _truncate_messages(messages)
         assert result is not None
         assert len(result[0]["content"]) == 500
+
+    def test_equal_length_user_messages_truncates_first(self):
+        """Two equal-length user messages: the FIRST one is truncated."""
+        messages = [
+            {"role": "user", "content": "a" * 1000},
+            {"role": "user", "content": "b" * 1000},
+        ]
+        result = _truncate_messages(messages)
+        assert result is not None
+        # The first message keeps its distinct content prefix after truncation.
+        assert result[0]["content"] == "a" * 600
+        assert result[1]["content"] == "b" * 1000
+
+    def test_later_longer_user_message_wins(self):
+        """A strictly longer later message must override an earlier selection."""
+        messages = [
+            {"role": "user", "content": "a" * 1000},
+            {"role": "user", "content": "b" * 2000},
+        ]
+        result = _truncate_messages(messages)
+        assert result is not None
+        assert result[0]["content"] == "a" * 1000
+        assert result[1]["content"] == "b" * 1200
+
+    def test_longest_user_message_before_longer_system_message(self):
+        """Only user messages are truncation candidates, regardless of length."""
+        messages = [
+            {"role": "system", "content": "s" * 5000},
+            {"role": "user", "content": "u" * 1000},
+        ]
+        result = _truncate_messages(messages)
+        assert result is not None
+        assert result[0]["content"] == "s" * 5000
+        assert result[1]["content"] == "u" * 600
+
+
+# ---------------------------------------------------------------------------
+# budget_max_tokens
+# ---------------------------------------------------------------------------
+
+
+class TestBudgetMaxTokens:
+    """Pin the exact budget arithmetic with literal expected values.
+
+    ``estimate_message_tokens`` counts 4 tokens per message plus one token per
+    3 characters of content, plus a closing 2. With one message of 30 chars:
+    4 + 10 + 2 = 16 estimated input tokens, plus the 500-token schema
+    overhead. The safety margin is 64 and the minimum output budget is 256.
+    """
+
+    MESSAGES = [{"role": "user", "content": "a" * 30}]
+
+    def test_zero_max_context_returns_requested_unchanged(self):
+        assert budget_max_tokens(self.MESSAGES, max_context=0, requested_max_tokens=8192) == 8192
+
+    def test_negative_max_context_returns_requested_unchanged(self):
+        assert budget_max_tokens(self.MESSAGES, max_context=-8, requested_max_tokens=8192) == 8192
+
+    def test_normal_case_caps_to_available_minus_margin(self):
+        # estimated_input = 16 + 500 = 516; available = 8192 - 516 - 64 = 7612
+        assert budget_max_tokens(self.MESSAGES, max_context=8192, requested_max_tokens=9999) == 7612
+
+    def test_requested_below_available_is_returned_unchanged(self):
+        # available = 7612, so a smaller request stays as-is
+        assert budget_max_tokens(self.MESSAGES, max_context=8192, requested_max_tokens=3000) == 3000
+
+    def test_available_exactly_min_returns_min(self):
+        # max_context = 516 + 64 + 256 = 836 makes available exactly the
+        # minimum (256), which passes the "< min" check and is returned.
+        assert budget_max_tokens(self.MESSAGES, max_context=836, requested_max_tokens=9999) == 256
+
+    def test_available_exactly_min_with_smaller_request_returns_request(self):
+        """available == 256 is NOT critically low; a request below it stands.
+
+        This pins the strict `<` in the minimum check: with the boundary
+        available == _MIN_OUTPUT_TOKENS, the function caps rather than clamps.
+        """
+        assert budget_max_tokens(self.MESSAGES, max_context=836, requested_max_tokens=100) == 100
+
+    def test_max_context_of_one_still_computes_budget(self):
+        """max_context=1 is positive, so the budget path runs and clamps to min.
+
+        Pins the strict `<= 0` in the guard: 1 must not be treated as "no
+        context limit".
+        """
+        assert budget_max_tokens(self.MESSAGES, max_context=1, requested_max_tokens=9999) == 256
+
+    def test_available_just_below_min_clamps_to_min(self):
+        # max_context = 835 makes available = 255, one below the minimum.
+        assert budget_max_tokens(self.MESSAGES, max_context=835, requested_max_tokens=9999) == 256
+
+    def test_critically_low_budget_logs_warning_with_values(self, caplog):
+        with caplog.at_level(logging.WARNING):
+            result = budget_max_tokens(self.MESSAGES, max_context=700, requested_max_tokens=9999)
+        assert result == 256
+        records = [r for r in caplog.records if r.name == "asago_policy_mapper.llm"]
+        assert len(records) == 1
+        # The exact rendered message, not a mutated template.
+        assert records[0].getMessage() == (
+            "Token budget critically low: estimated_input=516, max_context=700, available_for_output=120 (min=256)"
+        )
+
+    def test_normal_capping_logs_debug_with_values(self, caplog):
+        with caplog.at_level(logging.DEBUG):
+            result = budget_max_tokens(self.MESSAGES, max_context=8192, requested_max_tokens=9999)
+        assert result == 7612
+        records = [r for r in caplog.records if r.name == "asago_policy_mapper.llm"]
+        assert len(records) == 1
+        assert records[0].getMessage() == "Budget: max_tokens 9999 -> 7612 (input~516, context=8192)"
+
+    def test_no_debug_log_when_request_not_capped(self, caplog):
+        with caplog.at_level(logging.DEBUG):
+            budget_max_tokens(self.MESSAGES, max_context=8192, requested_max_tokens=3000)
+        assert "Budget: max_tokens" not in caplog.text
 
 
 # ---------------------------------------------------------------------------
@@ -585,6 +762,249 @@ class TestRetryWithValidation:
         # On retry, messages should have an appended user message with the error hint
         retry_messages = kwargs["messages"]
         assert any(msg["role"] == "user" and "Validation error:" in msg["content"] for msg in retry_messages)
+
+    def test_max_retries_two_makes_exactly_three_wire_calls(self):
+        """max_retries=2 means 1 initial call + 2 retries = exactly 3 calls."""
+        exc = _make_retry_exc("persistent error")
+        do_call = MagicMock(side_effect=[exc, exc, exc, ("late", "comp")])
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        # A tracker makes the final ValidationRetryExhausted branch record an
+        # incident, which the trailing RuntimeError path would never do.
+        tracker = TokenTracker()
+        with pytest.raises(ValidationRetryExhausted):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=tracker,
+                original_messages=original,
+                current_messages=messages,
+                max_retries=2,
+            )
+        # The fourth configured side effect must never be reached.
+        assert do_call.call_count == 3
+        assert any(i["kind"] == "validation_exhausted" for i in tracker.incidents)
+
+    def test_max_retries_zero_makes_exactly_one_wire_call(self):
+        exc = _make_retry_exc("immediate failure")
+        do_call = MagicMock(side_effect=[exc, ("never", "comp")])
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        with pytest.raises(ValidationRetryExhausted):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=None,
+                original_messages=original,
+                current_messages=messages,
+                max_retries=0,
+            )
+        assert do_call.call_count == 1
+
+    def test_negative_max_retries_never_calls_and_raises_runtimeerror(self):
+        """A negative max_retries permits zero attempts and hits the guard raise.
+
+        Pins the loop bound ``range(max_retries + 1)``: with max_retries=-1
+        the loop body never runs, so the wire is never called and the trailing
+        RuntimeError (not a validation exception) propagates.
+        """
+        do_call = MagicMock(return_value=("ok", "comp"))
+        messages = self._make_messages()
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        with pytest.raises(RuntimeError, match=r"^_retry_with_validation exhausted retries"):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=None,
+                original_messages=copy.deepcopy(messages),
+                current_messages=messages,
+                max_retries=-1,
+            )
+        do_call.assert_not_called()
+
+    def test_retry_messages_are_deep_copied_from_current(self):
+        """Mutating the retry messages must not leak into current_messages."""
+        exc = _make_retry_exc("some validation error")
+        do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        _retry_with_validation(
+            do_call,
+            kwargs,
+            config,
+            tracker=None,
+            original_messages=original,
+            current_messages=messages,
+            max_retries=1,
+        )
+        retry_messages = kwargs["messages"]
+        # The retry conversation grows beyond the original single message.
+        assert len(retry_messages) > len(messages)
+        # The caller's current_messages list stays untouched.
+        assert messages == self._make_messages()
+        # Deep copy: mutating the retry copy must not touch the original.
+        retry_messages[0]["content"] = "mutated"
+        assert messages[0]["content"] == "hello"
+
+    def test_validation_retry_logs_warning_with_attempt_count(self, caplog):
+        """Each validation retry logs attempt n/(max_retries+1) with the summary."""
+        exc = _make_retry_exc("line one of error\nline two of error")
+        do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        with caplog.at_level(logging.WARNING):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=None,
+                original_messages=original,
+                current_messages=messages,
+                max_retries=1,
+            )
+        warning = caplog.text
+        # The full template as one string, so mutated fragments cannot pass.
+        assert (
+            "Structured output validation failed (attempt 1/2), "
+            "retrying with fresh messages + error hint: line one of error" in warning
+        )
+
+    def test_validation_retry_with_empty_message_logs_exception_name(self, caplog):
+        """An empty exception message falls back to the exception class name."""
+        exc = _make_retry_exc("")
+        do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        with caplog.at_level(logging.WARNING):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=None,
+                original_messages=original,
+                current_messages=messages,
+                max_retries=1,
+            )
+        warning = caplog.text
+        assert "retrying with fresh messages + error hint: ValidationRetryExhausted" in warning
+
+    def test_validation_retry_truncates_long_summary_to_200_chars(self, caplog):
+        """The retry warning carries at most the first 200 chars of the summary."""
+        long_summary = "E" * 250
+        exc = _make_retry_exc(long_summary)
+        do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        with caplog.at_level(logging.WARNING):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=None,
+                original_messages=original,
+                current_messages=messages,
+                max_retries=1,
+            )
+        warning = caplog.text
+        expected_hint = "retrying with fresh messages + error hint: " + "E" * 200
+        assert expected_hint in warning
+        # The 201st E must not leak into the logged hint.
+        assert "E" * 201 not in warning
+
+    def test_context_overflow_retry_resets_messages_to_original(self):
+        """An overflow retry calls the wire with the original messages deep-copied.
+
+        Pins that the retry passes ``original_messages`` (not None) through to
+        the budget reducer: the retry conversation must be the caller's
+        original, not the mutated kwargs copy.
+        """
+        exc = _context_overflow_error()
+        do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
+        original = [{"role": "user", "content": "original prompt"}]
+        kwargs = {"messages": [{"role": "user", "content": "grown prompt"}], "max_tokens": 4096}
+        config = self._make_config()
+
+        _retry_with_validation(
+            do_call,
+            kwargs,
+            config,
+            tracker=None,
+            original_messages=original,
+            current_messages=[{"role": "user", "content": "current prompt"}],
+            max_retries=1,
+        )
+
+        # The retry call used the original messages, and as a deep copy:
+        second_call_messages = do_call.call_args_list[1].args[0]["messages"]
+        assert second_call_messages == [{"role": "user", "content": "original prompt"}]
+        second_call_messages[0]["content"] = "mutated"
+        assert original[0]["content"] == "original prompt"
+
+    def test_validation_exhausted_incident_carries_message(self):
+        exc = _make_retry_exc("persistent validation error")
+        do_call = MagicMock(side_effect=exc)
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+        tracker = TokenTracker()
+
+        with pytest.raises(ValidationRetryExhausted):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=tracker,
+                original_messages=original,
+                current_messages=messages,
+                max_retries=1,
+            )
+        incident = next(i for i in tracker.incidents if i["kind"] == "validation_exhausted")
+        assert "Validation retries exhausted" in incident["detail"]
+
+    def test_context_overflow_on_final_attempt_reraises(self):
+        """Overflow on the last permitted attempt propagates the API error."""
+        exc = _context_overflow_error()
+        do_call = MagicMock(side_effect=exc)
+        messages = self._make_messages()
+        original = copy.deepcopy(messages)
+        kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
+        config = self._make_config()
+
+        with pytest.raises(openai.APIError):
+            _retry_with_validation(
+                do_call,
+                kwargs,
+                config,
+                tracker=None,
+                original_messages=original,
+                current_messages=messages,
+                max_retries=1,
+            )
+        assert do_call.call_count == 2
 
     def test_validation_exhausted_raises(self):
         exc = _make_retry_exc("persistent validation error")
