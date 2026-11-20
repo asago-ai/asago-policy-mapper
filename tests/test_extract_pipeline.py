@@ -26,6 +26,7 @@ from asago_policy_mapper.extract.models import (
 from asago_policy_mapper.extract.pipeline import (
     _cap_accepted_candidates,
     _run_causal_synthesis,
+    _run_judge,
     build_risk_match,
     determine_accepted_by,
     run_extraction,
@@ -117,6 +118,66 @@ def test_run_extraction_no_risks(mock_config, tmp_path):
     assert isinstance(result, ExtractionResult)
     assert result.risks == []
     assert result.retrieval_stats.total_chunks == 0
+
+
+def test_run_extraction_no_chunks_returns_empty_result(mock_config, tmp_path, monkeypatch):
+    """A parse that yields content but no chunks short-circuits to the empty result."""
+    from asago_policy_mapper.extract import pipeline
+
+    doc = tmp_path / "test.txt"
+    doc.write_text("Some policy text.")
+    monkeypatch.setattr(pipeline, "chunk_documents", lambda docs, max_tokens=512: [])
+
+    result = run_extraction(
+        documents=[doc],
+        client=MagicMock(),
+        config=mock_config,
+        risks=MOCK_RISKS,
+        ocr=False,
+    )
+
+    assert isinstance(result, ExtractionResult)
+    assert result.risks == []
+    assert result.retrieval_stats.total_chunks == 0
+
+
+@pytest.mark.slow
+def test_run_extraction_expands_variants_when_no_grounding(mock_config, tmp_path):
+    """Ungrounded runs with variant catalogs re-expand chunk candidates to variants."""
+    variant_risks = [
+        _make_risk("R-001", "Model Bias", "Systematic errors in AI outputs"),
+        _make_risk(
+            "unauthorized-processing---biometric-data",
+            "Unauthorized Processing - Biometric Data",
+            "Unauthorized processing of biometric data.",
+        ),
+        _make_risk(
+            "unauthorized-processing---location-data",
+            "Unauthorized Processing - Location Data",
+            "Unauthorized processing of location data.",
+        ),
+    ]
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "Policy covering unauthorized processing of biometric and location data. "
+        "This document establishes controls for personal data handling across "
+        "all processing activities undertaken by the organization."
+    )
+
+    result = run_extraction(
+        documents=[doc],
+        client=MagicMock(),
+        config=mock_config,
+        risks=variant_risks,
+        retrieval=RetrievalConfig(query_gen=False, no_judge=True, no_grounding=True),
+        ocr=False,
+    )
+
+    # the collapsed parent candidates are expanded back to their variants
+    variant_ids = {r.risk_id for r in result.risks}
+    assert "unauthorized-processing---biometric-data" in variant_ids
+    assert "unauthorized-processing---location-data" in variant_ids
+    assert all(r.grounding_confidence == "ungrounded" for r in result.risks)
 
 
 @pytest.mark.slow
@@ -824,3 +885,126 @@ def test_cap_accepted_candidates_keeps_highest_rrf():
     _cap_accepted_candidates([cr], limit=2)
     assert [c.risk_id for c in cr.accepted] == ["high", "mid"]
     assert cr.stats["auto_accepted"] == 2
+
+
+# --- _run_judge unit tests ---
+
+
+def _chunk_result_with_borderline(chunk_index=0, borderline_ids=("R-003",)):
+    borderline = [_candidate(rid) for rid in borderline_ids]
+    return ChunkResult(
+        chunk_index=chunk_index,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[_candidate("R-001")],
+        borderline=borderline,
+        borderline_judged=[],
+        stats={"auto_accepted": 1, "candidates_retrieved": 1 + len(borderline), "borderline": len(borderline)},
+    )
+
+
+def _judge_retrieval(**overrides):
+    from asago_policy_mapper.extract.models import RetrievalConfig
+
+    return RetrievalConfig(query_gen=False, **overrides)
+
+
+def test_run_judge_no_judge_auto_promotes_borderline(mock_config):
+    """With no_judge, every borderline candidate joins accepted and borderline_judged."""
+    cr = _chunk_result_with_borderline()
+    retrieval = _judge_retrieval(no_judge=True)
+
+    _run_judge([cr], [], MagicMock(), mock_config, retrieval, [])
+
+    assert [c.risk_id for c in cr.borderline_judged] == ["R-003"]
+    assert [c.risk_id for c in cr.accepted] == ["R-001", "R-003"]
+
+
+def test_run_judge_no_judge_skips_chunks_without_borderline(mock_config):
+    """With no_judge, chunks without borderline candidates are left untouched."""
+    cr = ChunkResult(
+        chunk_index=1,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[_candidate("R-001")],
+        borderline=[],
+        borderline_judged=[],
+        stats={"auto_accepted": 1, "candidates_retrieved": 1},
+    )
+    retrieval = _judge_retrieval(no_judge=True)
+
+    _run_judge([cr], [], MagicMock(), mock_config, retrieval, [])
+
+    assert cr.borderline_judged == []
+    assert [c.risk_id for c in cr.accepted] == ["R-001"]
+
+
+def test_run_judge_cross_encoder_judges_via_thread_pool(mock_config, monkeypatch):
+    """With the cross-encoder path, each borderline chunk is judged concurrently;
+    the chunk records the judged candidates and adds them to accepted."""
+    from asago_policy_mapper.extract import pipeline
+
+    cr0 = _chunk_result_with_borderline(0, ("R-003", "R-004"))
+    cr0.borderline_judged = [_candidate("R-099")]  # stale judging is replaced, not extended
+    cr1 = _chunk_result_with_borderline(1, ("R-005",))
+    judged_by_chunk = {}
+
+    def fake_judge_one(i, cr, client, model, call_collector, judge_prompt, max_batch_size, context_text):
+        judged_by_chunk[i] = (judge_prompt, max_batch_size, context_text)
+        # judge keeps only the first borderline candidate of each chunk
+        return i, [cr.borderline[0]]
+
+    monkeypatch.setattr(pipeline, "_judge_one", fake_judge_one)
+    retrieval = _judge_retrieval()
+    contexts = ["context zero", "context one"]
+
+    _run_judge([cr0, cr1], [], MagicMock(), mock_config, retrieval, [], chunk_contexts=contexts)
+
+    assert judged_by_chunk[0] == ("judge_risk", 15, "context zero")
+    assert judged_by_chunk[1] == ("judge_risk", 15, "context one")
+    assert [c.risk_id for c in cr0.borderline_judged] == ["R-003"]
+    assert [c.risk_id for c in cr0.accepted] == ["R-001", "R-003"]
+    assert [c.risk_id for c in cr1.borderline_judged] == ["R-005"]
+    assert [c.risk_id for c in cr1.accepted] == ["R-001", "R-005"]
+
+
+def test_run_judge_cross_encoder_without_borderline_makes_no_calls(mock_config, monkeypatch):
+    """With no borderline candidates the thread pool never submits work."""
+    from asago_policy_mapper.extract import pipeline
+
+    submitted = []
+
+    class _NoPool:
+        def __init__(self, max_workers=None):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def submit(self, fn, *args, **kwargs):
+            submitted.append((fn.__name__, args))
+            raise AssertionError("judge submitted work with no borderline candidates")
+
+    monkeypatch.setattr(pipeline, "ThreadPoolExecutor", _NoPool)
+    cr = ChunkResult(
+        chunk_index=0,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[_candidate("R-001")],
+        borderline=[],
+        borderline_judged=[],
+        stats={"auto_accepted": 1, "candidates_retrieved": 1},
+    )
+    retrieval = _judge_retrieval()
+
+    _run_judge([cr], [], MagicMock(), mock_config, retrieval, [])
+
+    assert submitted == []
+    assert cr.stats["auto_accepted"] == 1
+    assert cr.borderline_judged == []

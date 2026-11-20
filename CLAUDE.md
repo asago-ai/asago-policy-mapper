@@ -41,8 +41,34 @@ uv run mypy path/to/file.py
 # env: LLM_BASE_URL=http://localhost:11434/v1  LLM_MODEL=gemma3:1b
 uv run pytest --test-llm -m llm -v -s --tb=short -W ignore::DeprecationWarning
 
+# Mutation testing (local, per-PR; mutmut is not a project dependency)
+UV_NO_CONFIG=1 uv pip install mutmut   # ad-hoc venv install; uv.lock untouched
+.venv/bin/mutmut run "asago_policy_mapper.llm*" --max-children 8   # scope to changed modules
+.venv/bin/mutmut results                                            # non-killed mutants only (killed omitted)
+.venv/bin/mutmut results --all true                                 # full listing incl. killed
+.venv/bin/mutmut show <mutant-id>                                   # diff for one surviving mutant
+uv run pytest tests/test_mutmut_canary.py -q                        # sandbox-isolation guard (slow-marked)
+
 # See README.md for full CLI usage examples (extract, eval, battery, remote models)
 ```
+
+## Mutation testing
+
+Run mutmut locally on the modules a PR changes; it is not wired into CI. Install it ad hoc with `UV_NO_CONFIG=1 uv pip install mutmut` — never add it to the dependency groups or uv.lock, which the nexus-pin PR owns. The `[tool.mutmut]` block in pyproject.toml carries the source paths and the pytest selection (fast suite, with the two dspy-experiment test modules ignored because their `experiments` import breaks under the `mutants/` sandbox cwd).
+
+Per-PR procedure:
+
+1. Scope the run to the modules you touched: `.venv/bin/mutmut run "asago_policy_mapper.<module>*" --max-children 8`. A scoped selection retests every matching mutant on each invocation; the `mutants/` cache means the per-function test-stat collection runs only once, which is where the cold-run cost goes. An unfiltered `mutmut run` retests only functions whose source changed.
+2. Inspect survivors with `.venv/bin/mutmut show <id>`. `mutmut results` lists results for the whole source tree, not just your module, so read the entries for the changed module; `.venv/bin/mutmut browse` opens an interactive triage TUI over the same data. Default `mutmut results` omits killed mutants from the listing, so a listing with no killed lines does not mean the run had zero kills. Count kills with `mutmut results --all true` or read the run's exit summary (the `🎉`/`🙁` tally) before drawing conclusions.
+3. Gate on **no new surviving mutants in changed code** relative to the run before your changes — not on a score threshold. The existing baseline has too much survival for a threshold to be useful.
+
+Two known macOS artifacts: forking from the post-stats process can segfault child runs (exit code `-11`, concentrated in client-construction paths — treat as unjudged, not kills), and true timeouts are classified separately with a `⏰` marker. The `mutants/` directory is the sandbox cache; delete it to force a cold run.
+
+### Sandbox isolation and the canary guard
+
+mutmut copies the source into `mutants/` with a trampoline per function, puts `mutants/src` first on `sys.path`, and runs pytest in-process from `mutants/`. The venv's editable install (a `.pth` pointing at the repo's original `src/`) is also on `sys.path`, but behind `mutants/src`, so real `mutmut run` workers import the mutated copies. Caveat: a plain `python` or `python -m pytest` started inside `mutants/` does NOT get that front-of-path entry — the editable `.pth` wins and the original tree is imported. Always verify the workflow through `mutmut run` itself, never by manually running pytest inside the sandbox. (This differs from the producer repo, where a `pythonpath = ["src"]` pytest setting is required because its tests import via a flat path; here the pytest `pythonpath` setting does not help and is deliberately absent.)
+
+A run that imports the original tree reports every mutant as survived — a false 0% score. `tests/test_mutmut_canary.py` (slow-marked, so it runs in the full suite but not the fast battery) guards against this: it runs one known-killable mutant (`x_merge_matches__mutmut_2`, which inverts `merge_matches`'s empty-input guard) through real `mutmut run` machinery in a scratch copy of the checkout and asserts the verdict is killed. If you renumber or rewrite `merge.py`, pick a new canary: run the merge scope, choose a killed mutant whose diff inverts a directly asserted behavior, and update `_CANARY_MUTANT`. An exit-0 "passing" run is not sufficient verification that mutation testing works; only observed kills are.
 
 ## Architecture
 
