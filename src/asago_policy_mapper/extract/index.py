@@ -476,6 +476,52 @@ def _collapse_variants(risks: list) -> tuple[list, dict[str, list[dict]]]:
     return non_variant, variant_map
 
 
+def _load_encoders(
+    self,
+    *,
+    colbert_model,
+    bi_encoder_model,
+    cross_encoder_model,
+    cross_encoder_type,
+    bi_encoder_api_key,
+    bi_encoder_model_name,
+    cross_encoder_model_name,
+    query_instruction,
+    descriptions: list[str],
+) -> None:
+    """Load the ColBERT or bi/cross-encoder stack onto this index."""
+    if colbert_model:
+        self._colbert, self._colbert_doc_embeddings = _load_colbert(colbert_model, descriptions)
+        self._bi_encoder = None
+        self._cross_encoder = None
+        self._apply_sigmoid = False
+        self._is_nli = False
+        return
+
+    self._colbert = None
+    self._bi_encoder, self._remote_bi_encoder, self._embeddings = _load_bi_encoder(
+        bi_encoder_model,
+        descriptions,
+        query_instruction,
+        api_key=bi_encoder_api_key,
+        remote_model_name=bi_encoder_model_name,
+    )
+
+    if cross_encoder_model:
+        self._cross_encoder, self._remote_cross_encoder, self._apply_sigmoid, self._is_nli = _load_cross_encoder(
+            cross_encoder_model, cross_encoder_type, cross_encoder_model_name
+        )
+    else:
+        self._cross_encoder = None
+        self._apply_sigmoid = False
+        self._is_nli = False
+
+    self._score_normalizer = _make_score_normalizer(
+        is_nli=self._is_nli,
+        apply_sigmoid=self._apply_sigmoid,
+    )
+
+
 class RiskIndex:
     def __init__(
         self,
@@ -499,6 +545,10 @@ class RiskIndex:
 
         self._remote_bi_encoder: _RemoteBiEncoder | None = None
         self._remote_cross_encoder: _RemoteCrossEncoder | None = None
+        # _load_encoders sets these; declared here for type checkers (see rerank).
+        self._is_nli: bool = False
+        self._apply_sigmoid: bool = False
+        self._score_normalizer = _make_score_normalizer(is_nli=False, apply_sigmoid=False)
 
         if not risks:
             self._bi_encoder = None
@@ -529,35 +579,18 @@ class RiskIndex:
             descriptions.append(text)
         self._bm25 = BM25Okapi(bm25_corpus)
 
-        if colbert_model:
-            self._colbert, self._colbert_doc_embeddings = _load_colbert(colbert_model, descriptions)
-            self._bi_encoder = None
-            self._cross_encoder = None
-            self._apply_sigmoid = False
-            self._is_nli = False
-        else:
-            self._colbert = None
-            self._bi_encoder, self._remote_bi_encoder, self._embeddings = _load_bi_encoder(
-                bi_encoder_model,
-                descriptions,
-                query_instruction,
-                api_key=bi_encoder_api_key,
-                remote_model_name=bi_encoder_model_name,
-            )
-
-            if cross_encoder_model:
-                self._cross_encoder, self._remote_cross_encoder, self._apply_sigmoid, self._is_nli = (
-                    _load_cross_encoder(cross_encoder_model, cross_encoder_type, cross_encoder_model_name)
-                )
-            else:
-                self._cross_encoder = None
-                self._apply_sigmoid = False
-                self._is_nli = False
-
-            self._score_normalizer = _make_score_normalizer(
-                is_nli=self._is_nli,
-                apply_sigmoid=self._apply_sigmoid,
-            )
+        _load_encoders(
+            self,
+            colbert_model=colbert_model,
+            bi_encoder_model=bi_encoder_model,
+            cross_encoder_model=cross_encoder_model,
+            cross_encoder_type=cross_encoder_type,
+            bi_encoder_api_key=bi_encoder_api_key,
+            bi_encoder_model_name=bi_encoder_model_name,
+            cross_encoder_model_name=cross_encoder_model_name,
+            query_instruction=query_instruction,
+            descriptions=descriptions,
+        )
 
     @property
     def risk_count(self) -> int:

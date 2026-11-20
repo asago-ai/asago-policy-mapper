@@ -33,6 +33,28 @@ EXCLUDED_TAXONOMIES = {
 }
 
 
+def _fail_validation(message: str) -> None:
+    """Echo a validation error and exit with code 1."""
+    typer.echo(f"Error: {message}", err=True)
+    raise typer.Exit(1)
+
+
+def _run_needs_llm(no_judge, no_grounding, expand_siblings, query_gen) -> bool:
+    """Tell whether the run makes LLM calls.
+
+    Pure IR runs (no judge, no grounding, no sibling expansion) skip the LLM
+    entirely; query generation always needs one.
+    """
+    return not (no_judge and no_grounding and not expand_siblings) or query_gen
+
+
+def _require_existing_policy_files(policy_files) -> None:
+    """Fail validation unless every policy file exists."""
+    for pf in policy_files:
+        if not pf.exists():
+            _fail_validation(f"{pf} does not exist")
+
+
 def _validate_extract_options(
     *,
     output_format,
@@ -47,20 +69,13 @@ def _validate_extract_options(
     """Validate extract options; exit on error. Returns whether the run needs an LLM."""
     valid_formats = {"json", "yaml", "both"}
     if output_format not in valid_formats:
-        typer.echo(f"Error: --output-format must be one of: {', '.join(sorted(valid_formats))}", err=True)
-        raise typer.Exit(1)
+        _fail_validation(f"--output-format must be one of: {', '.join(sorted(valid_formats))}")
 
-    for pf in policy_files:
-        if not pf.exists():
-            typer.echo(f"Error: {pf} does not exist", err=True)
-            raise typer.Exit(1)
+    _require_existing_policy_files(policy_files)
 
-    needs_llm = not (no_judge and no_grounding and not expand_siblings) or query_gen
+    needs_llm = _run_needs_llm(no_judge, no_grounding, expand_siblings, query_gen)
     if needs_llm and (not base_url or not model):
-        typer.echo(
-            "Error: --base-url and --model are required (unless both --no-judge and --no-grounding are set)", err=True
-        )
-        raise typer.Exit(1)
+        _fail_validation("--base-url and --model are required (unless both --no-judge and --no-grounding are set)")
 
     return needs_llm
 

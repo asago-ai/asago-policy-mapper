@@ -207,6 +207,27 @@ def test_invalid_yaml(tmp_path):
         load_custom_taxonomy(f)
 
 
+def test_non_mapping_root(tmp_path):
+    f = tmp_path / "bad.yaml"
+    f.write_text("- just\n- a list\n")
+    with pytest.raises(ValueError, match="must be a YAML mapping, got list"):
+        load_custom_taxonomy(f)
+
+
+def test_taxonomy_block_not_a_mapping(tmp_path):
+    f = tmp_path / "bad.yaml"
+    f.write_text("taxonomy: not-a-mapping\nrisks: []\n")
+    with pytest.raises(ValueError, match="'taxonomy' in .* must be a mapping, got str"):
+        load_custom_taxonomy(f)
+
+
+def test_risk_entry_not_a_mapping(tmp_path):
+    f = tmp_path / "bad.yaml"
+    f.write_text("taxonomy:\n  id: test\n  name: Test\nrisks:\n  - just a string\n")
+    with pytest.raises(ValueError, match="Risk at index 0 .* must be a mapping, got str"):
+        load_custom_taxonomy(f)
+
+
 def test_example_file_loads():
     example = Path(__file__).parent.parent / "examples" / "custom-taxonomy-example.yaml"
     if not example.exists():

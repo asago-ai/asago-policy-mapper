@@ -197,6 +197,48 @@ def _serialize_table(data, caption: str = "") -> str:
     return "\n".join(parts)
 
 
+def _chunk_docling_document(doc: ParsedDocument, max_tokens: int) -> list[Chunk]:
+    """Chunk a parsed docling document, extracting page and section metadata."""
+    from docling_core.transforms.chunker import HybridChunker
+    from docling_core.transforms.chunker.tokenizer.huggingface import (
+        HuggingFaceTokenizer,
+    )
+    from transformers import AutoTokenizer
+
+    tokenizer = HuggingFaceTokenizer(
+        tokenizer=AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2"),
+        max_tokens=max_tokens,
+    )
+    chunker = HybridChunker(
+        tokenizer=tokenizer,
+        merge_peers=True,
+        serializer_provider=_get_serializer_provider(),
+    )
+    doc_chunks = list(chunker.chunk(dl_doc=doc.doc))  # type: ignore[arg-type]
+
+    if not doc_chunks:
+        return [Chunk(text=doc.content, source=doc.source, index=0)]
+
+    chunks: list[Chunk] = []
+    for i, dc in enumerate(doc_chunks):
+        page = None
+        section = None
+        if hasattr(dc, "meta") and dc.meta:
+            pages = []
+            for item in getattr(dc.meta, "doc_items", []) or []:
+                for prov_item in getattr(item, "prov", []) or []:
+                    page_no = getattr(prov_item, "page_no", None)
+                    if page_no is not None:
+                        pages.append(page_no)
+            if pages:
+                page = min(pages)
+            headings = getattr(dc.meta, "headings", []) or []
+            if headings:
+                section = headings[-1]
+        chunks.append(Chunk(text=dc.text, source=doc.source, index=i, page=page, section=section))
+    return chunks
+
+
 def chunk_documents(
     docs: list[ParsedDocument],
     max_tokens: int = 512,
@@ -205,43 +247,7 @@ def chunk_documents(
 
     for doc in docs:
         if doc.doc is not None:
-            from docling_core.transforms.chunker import HybridChunker
-            from docling_core.transforms.chunker.tokenizer.huggingface import (
-                HuggingFaceTokenizer,
-            )
-            from transformers import AutoTokenizer
-
-            tokenizer = HuggingFaceTokenizer(
-                tokenizer=AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2"),
-                max_tokens=max_tokens,
-            )
-            chunker = HybridChunker(
-                tokenizer=tokenizer,
-                merge_peers=True,
-                serializer_provider=_get_serializer_provider(),
-            )
-            doc_chunks = list(chunker.chunk(dl_doc=doc.doc))  # type: ignore[arg-type]
-
-            if not doc_chunks:
-                chunks.append(Chunk(text=doc.content, source=doc.source, index=0))
-                continue
-
-            for i, dc in enumerate(doc_chunks):
-                page = None
-                section = None
-                if hasattr(dc, "meta") and dc.meta:
-                    pages = []
-                    for item in getattr(dc.meta, "doc_items", []) or []:
-                        for prov_item in getattr(item, "prov", []) or []:
-                            page_no = getattr(prov_item, "page_no", None)
-                            if page_no is not None:
-                                pages.append(page_no)
-                    if pages:
-                        page = min(pages)
-                    headings = getattr(dc.meta, "headings", []) or []
-                    if headings:
-                        section = headings[-1]
-                chunks.append(Chunk(text=dc.text, source=doc.source, index=i, page=page, section=section))
+            chunks.extend(_chunk_docling_document(doc, max_tokens))
         else:
             text_chunks = _chunk_plain_text(doc.content, max_tokens=max_tokens)
             for i, text in enumerate(text_chunks):

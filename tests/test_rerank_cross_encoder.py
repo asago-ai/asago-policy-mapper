@@ -7,7 +7,11 @@ import pytest
 from typer.testing import CliRunner
 
 from asago_policy_mapper.cli import app
-from asago_policy_mapper.extract.index import _load_cross_encoder, _RemoteCrossEncoder
+from asago_policy_mapper.extract.index import (
+    _load_cross_encoder,
+    _RemoteCrossEncoder,
+    _RemoteGenerativeReranker,
+)
 from asago_policy_mapper.extract.models import RetrievalConfig
 
 RERANK_URL = "http://reranker.example:8001/v1/rerank"
@@ -128,6 +132,75 @@ def test_score_type_honours_model_name_override(mock_httpx_client_cls):
 def test_unknown_api_type_rejected():
     with pytest.raises(ValueError, match="api_type"):
         _RemoteCrossEncoder(RERANK_URL, api_type="bogus")
+
+
+def _generative_response(logprobs: dict[str, float]) -> dict:
+    return {"choices": [{"logprobs": {"top_logprobs": [logprobs]}}]}
+
+
+@patch("httpx.Client")
+def test_generative_reranker_scores_yes_no_logprobs(mock_httpx_client_cls):
+    mock_client = MagicMock()
+    mock_httpx_client_cls.return_value = mock_client
+    response = MagicMock()
+    response.json.return_value = _generative_response({"yes": -0.2, "no": -3.0})
+    mock_client.post.return_value = response
+    reranker = _RemoteGenerativeReranker(RERANK_URL, model_name="qwen3-reranker-4b")
+
+    scores = reranker.predict([("risk A", "the chunk"), ("risk B", "the chunk")])
+
+    import math
+
+    expected = math.exp(-0.2) / (math.exp(-0.2) + math.exp(-3.0))
+    assert len(scores) == 2
+    np.testing.assert_allclose(scores, [expected, expected])
+    payload = mock_client.post.call_args.kwargs["json"]
+    assert payload["model"] == "qwen3-reranker-4b"
+    assert payload["max_tokens"] == 1
+    assert payload["logprobs"] == 5
+    assert "<Query>: the chunk" in payload["prompt"]
+    assert "<Document>: risk B" in payload["prompt"]
+    assert mock_client.post.call_args.args[0] == "http://reranker.example:8001/v1/completions"
+
+
+@patch("httpx.Client")
+def test_generative_reranker_zero_mass_gives_zero_score(mock_httpx_client_cls):
+    mock_client = MagicMock()
+    mock_httpx_client_cls.return_value = mock_client
+    response = MagicMock()
+    # Underflow: exp() of both very negative logprobs is 0, so the guard returns 0.0.
+    response.json.return_value = _generative_response({"yes": -1000.0, "no": -2000.0})
+    mock_client.post.return_value = response
+    reranker = _RemoteGenerativeReranker(RERANK_URL)
+
+    scores = reranker.predict([("risk A", "the chunk")])
+
+    np.testing.assert_allclose(scores, [0.0])
+
+
+@patch("httpx.Client")
+def test_generative_reranker_missing_tokens_default_to_low_probability(mock_httpx_client_cls):
+    mock_client = MagicMock()
+    mock_httpx_client_cls.return_value = mock_client
+    response = MagicMock()
+    # Neither "yes" nor "no" present: both fall back to -10.0, giving 0.5.
+    response.json.return_value = _generative_response({"maybe": -0.5})
+    mock_client.post.return_value = response
+    reranker = _RemoteGenerativeReranker(RERANK_URL)
+
+    scores = reranker.predict([("risk A", "the chunk")])
+
+    np.testing.assert_allclose(scores, [0.5])
+
+
+@patch("httpx.Client")
+def test_generative_reranker_empty_pairs_make_no_request(mock_httpx_client_cls):
+    mock_client = MagicMock()
+    mock_httpx_client_cls.return_value = mock_client
+    reranker = _RemoteGenerativeReranker(RERANK_URL)
+
+    assert reranker.predict([]).shape == (0,)
+    mock_client.post.assert_not_called()
 
 
 @patch("httpx.Client")

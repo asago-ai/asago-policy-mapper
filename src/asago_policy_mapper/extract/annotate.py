@@ -143,26 +143,41 @@ def _overlaps_existing(
     return False
 
 
-def prepare_annotation_data(
+def _build_annotation(ev: dict, risk: dict, evidence_id: str, start: int, end: int, is_fuzzy: bool) -> dict:
+    """Build one annotation record from an evidence entry and its located span."""
+    return {
+        "evidence_id": evidence_id,
+        "start": start,
+        "end": end,
+        "evidence_text": ev.get("text", ""),
+        "matched_in_text": end > start,
+        "is_fuzzy": is_fuzzy,
+        "risk_id": risk.get("risk_id", ""),
+        "risk_name": risk.get("risk_name", ""),
+        "risk_description": risk.get("risk_description", ""),
+        "taxonomy": risk.get("taxonomy", ""),
+        "confidence": risk.get("confidence", 0.0),
+        "grounding_confidence": risk.get("grounding_confidence", ""),
+        "causal_chain": {
+            "threat": risk.get("threat"),
+            "threat_source": risk.get("threat_source"),
+            "vulnerability": risk.get("vulnerability"),
+            "consequence": risk.get("consequence"),
+            "impact": risk.get("impact"),
+        },
+    }
+
+
+def _locate_risk_evidence(
     extraction_data: dict,
-    source_document: Path,
-    ground_truth_path: Path | None = None,
-    extracted_path: Path | None = None,
-    ocr: bool = False,
-    chunk_max_tokens: int = 512,
-) -> dict:
-    """Prepare annotation data for the document-centric HTML report.
+    chunks: list[Chunk],
+    chunk_annotations: dict[int, list[dict]],
+    seen_spans: list[tuple[str, int, int, int]],
+) -> tuple[int, int, int]:
+    """Locate every evidence span; fill chunk_annotations and dedup overlaps.
 
-    Re-parses the source document, locates evidence spans within chunk text,
-    and returns a dict structured for template rendering. When ground_truth_path
-    is provided, classifies each risk as matched/spurious and lists missed risks.
+    Returns (total_evidence, matched_spans, unmatched_spans).
     """
-    doc = parse_document(source_document, ocr=ocr)
-    chunks = chunk_documents([doc], max_tokens=chunk_max_tokens)
-
-    chunk_annotations: dict[int, list[dict]] = {i: [] for i in range(len(chunks))}
-    seen_spans: list[tuple[str, int, int, int]] = []
-
     total_evidence = 0
     matched_spans = 0
     unmatched_spans = 0
@@ -185,28 +200,66 @@ def prepare_annotation_data(
                 unmatched_spans += 1
 
             evidence_id_counter += 1
-            annotation = {
-                "evidence_id": f"ev-{evidence_id_counter}",
-                "start": start,
-                "end": end,
-                "evidence_text": ev_text,
-                "matched_in_text": end > start,
-                "is_fuzzy": is_fuzzy,
-                "risk_id": risk.get("risk_id", ""),
-                "risk_name": risk.get("risk_name", ""),
-                "risk_description": risk.get("risk_description", ""),
-                "taxonomy": risk.get("taxonomy", ""),
-                "confidence": risk.get("confidence", 0.0),
-                "grounding_confidence": risk.get("grounding_confidence", ""),
-                "causal_chain": {
-                    "threat": risk.get("threat"),
-                    "threat_source": risk.get("threat_source"),
-                    "vulnerability": risk.get("vulnerability"),
-                    "consequence": risk.get("consequence"),
-                    "impact": risk.get("impact"),
-                },
-            }
-            chunk_annotations[ci].append(annotation)
+            chunk_annotations[ci].append(_build_annotation(ev, risk, f"ev-{evidence_id_counter}", start, end, is_fuzzy))
+
+    return total_evidence, matched_spans, unmatched_spans
+
+
+def _classify_against_ground_truth(
+    annotated_chunks: list[dict],
+    eval_result: dict,
+) -> list[dict]:
+    """Tag each annotation matched/spurious and return the missed-risk list."""
+    gt_matched_ids = set(eval_result.get("matched_ids", []))
+    gt_spurious_ids = set(eval_result.get("spurious", []))
+
+    missed_risks = [{"risk_id": risk_id} for risk_id in eval_result.get("missing", [])]
+
+    for chunk_data in annotated_chunks:
+        for ann in chunk_data["annotations"]:
+            rid = ann["risk_id"]
+            if rid in gt_matched_ids:
+                ann["classification"] = "matched"
+            elif rid in gt_spurious_ids:
+                ann["classification"] = "spurious"
+            else:
+                ann["classification"] = None
+
+    return missed_risks
+
+
+def _ground_truth_risk_ids(ground_truth_path: Path) -> list[str]:
+    """Read the risk ids a ground-truth YAML lists (either schema)."""
+    import yaml as _yaml
+
+    gt_data = _yaml.safe_load(ground_truth_path.read_text())
+    if "risks" in gt_data:
+        return [r["id"] for r in gt_data["risks"]]
+    return [str(rid) for rid in gt_data.get("risk_ids", [])]
+
+
+def prepare_annotation_data(
+    extraction_data: dict,
+    source_document: Path,
+    ground_truth_path: Path | None = None,
+    extracted_path: Path | None = None,
+    ocr: bool = False,
+    chunk_max_tokens: int = 512,
+) -> dict:
+    """Prepare annotation data for the document-centric HTML report.
+
+    Re-parses the source document, locates evidence spans within chunk text,
+    and returns a dict structured for template rendering. When ground_truth_path
+    is provided, classifies each risk as matched/spurious and lists missed risks.
+    """
+    doc = parse_document(source_document, ocr=ocr)
+    chunks = chunk_documents([doc], max_tokens=chunk_max_tokens)
+
+    chunk_annotations: dict[int, list[dict]] = {i: [] for i in range(len(chunks))}
+    seen_spans: list[tuple[str, int, int, int]] = []
+    total_evidence, matched_spans, unmatched_spans = _locate_risk_evidence(
+        extraction_data, chunks, chunk_annotations, seen_spans
+    )
 
     annotated_chunks = []
     for i, chunk in enumerate(chunks):
@@ -231,8 +284,6 @@ def prepare_annotation_data(
     gt_filename = ""
 
     if ground_truth_path is not None and extracted_path is not None:
-        import yaml as _yaml
-
         from asago_policy_mapper.evals.eval import evaluate_extraction
 
         eval_result = evaluate_extraction(
@@ -243,25 +294,8 @@ def prepare_annotation_data(
         gt_matched_ids = set(eval_result.get("matched_ids", []))
         gt_spurious_ids = set(eval_result.get("spurious", []))
         gt_filename = ground_truth_path.name
-
-        gt_data = _yaml.safe_load(ground_truth_path.read_text())
-        if "risks" in gt_data:
-            gt_risk_ids = [r["id"] for r in gt_data["risks"]]
-        else:
-            gt_risk_ids = [str(rid) for rid in gt_data.get("risk_ids", [])]
-
-        for risk_id in eval_result.get("missing", []):
-            missed_risks.append({"risk_id": risk_id})
-
-        for chunk_data in annotated_chunks:
-            for ann in chunk_data["annotations"]:  # type: ignore[attr-defined]
-                rid = ann["risk_id"]
-                if rid in gt_matched_ids:
-                    ann["classification"] = "matched"
-                elif rid in gt_spurious_ids:
-                    ann["classification"] = "spurious"
-                else:
-                    ann["classification"] = None
+        gt_risk_ids = _ground_truth_risk_ids(ground_truth_path)
+        missed_risks = _classify_against_ground_truth(annotated_chunks, eval_result)
 
     return {
         "chunks": annotated_chunks,
