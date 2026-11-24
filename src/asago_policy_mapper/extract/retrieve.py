@@ -249,6 +249,21 @@ def classify_candidates(
     )
 
 
+def _dump_entry(entry: object) -> object:
+    """Return ``entry`` as plain data, if it is not already.
+
+    ``AnswerBatch.exchange`` response entries are plain dicts, matching
+    the call record's ``list[dict]`` response field: assessors serialize
+    their responses at their own boundary. An assessor that still hands
+    back an object with a ``model_dump`` records too; it is dumped here,
+    so both shapes record.
+    """
+    dump = getattr(entry, "model_dump", None)
+    if dump is None:
+        return entry
+    return dump()
+
+
 def _record_judge_call(
     records: list[LLMCallRecord],
     *,
@@ -270,7 +285,7 @@ def _record_judge_call(
             chunk_index=chunk_index,
             risk_ids=risk_ids,
             messages=messages,
-            response=[v.model_dump() for v in verdicts],
+            response=[_dump_entry(v) for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{batch_accepted}/{batch_size} accepted",
             prompt_shortenings=prompt_shortenings,

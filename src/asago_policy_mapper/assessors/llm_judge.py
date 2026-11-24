@@ -4,8 +4,9 @@ Renders the ``<prompt_name>`` prompt for the batch, makes exactly the
 ``client.chat.completions.create(model=..., response_model=_JudgeVerdicts,
 messages=...)`` call the judge has always made, and maps each verdict to
 ``BooleanAnswer(relevant, justification)``. Duplicate verdicts for one id
-stay as duplicate answers; the rule reduces them. Transport and API
-exceptions propagate untouched.
+stay as duplicate answers; the rule reduces them. The exchange payload
+carries the verdicts dumped to plain JSON-able dicts at this boundary.
+Transport and API exceptions propagate untouched.
 """
 
 from __future__ import annotations
@@ -20,7 +21,15 @@ from asago_policy_mapper.prompts import render_prompt
 
 
 class LlmJudgeAssessor:
-    """The borderline-judge assessor over the structured chat client."""
+    """The borderline-judge assessor over the structured chat client.
+
+    ``assess`` routes its call through the client's ``for_stage``
+    stage view, so the client must be the tracked client
+    ``llm.create_client`` returns (``_StructuredClient``); a bare
+    ``OpenAI`` client constructs (its host is readable for
+    ``sends_offsite``) but fails at assess time, which names the
+    missing ``for_stage`` attribute.
+    """
 
     answer_types: frozenset[type] = frozenset({BooleanAnswer})
 
@@ -57,10 +66,14 @@ class LlmJudgeAssessor:
 def _client_host(client) -> str | None:
     """Read the API host off a chat client, when it exposes one.
 
-    The production stack wraps the ``OpenAI`` client inside
-    ``_StructuredClient`` (field ``_openai``), which has no ``base_url`` of
-    its own; a bare ``OpenAI`` client carries ``base_url`` at the top level.
-    Both paths are checked, so the same assessor works over either.
+    This is host reading only, at construction time. The production
+    stack wraps the ``OpenAI`` client inside ``_StructuredClient``
+    (field ``_openai``), which has no ``base_url`` of its own; a bare
+    ``OpenAI`` client carries ``base_url`` at the top level. Both paths
+    are checked, so the host read works over either — but only the
+    tracked client from ``create_client`` (``_StructuredClient``)
+    exposes the ``for_stage`` view ``assess`` calls, so constructing
+    over a bare client works while assessing over one raises.
     """
     for holder in (getattr(client, "_openai", None), client):
         base_url = getattr(holder, "base_url", None)
@@ -91,11 +104,12 @@ def _batch_from_verdicts(
     """Collect raw answers from judge verdicts, keeping duplicates raw.
 
     Verdict ids outside the batch land in ``unmatched_ids`` and nowhere
-    else, mirroring today's judge, which ignores them. The exchange payload
-    carries the verdict objects themselves; the caller dumps them for the
-    call record the way the judge always did. The prompt shortenings the
-    call made ride the same payload, so the record site reads them from
-    the batch instead of a side channel.
+    else, mirroring today's judge, which ignores them. The exchange
+    payload carries the verdicts as plain dicts, dumped here at the
+    assessor boundary: the assessor knows its response shape, so it
+    serializes it, and no consumer of the batch needs model knowledge.
+    The prompt shortenings the call made ride the same payload, so the
+    record site reads them from the batch instead of a side channel.
     """
     answers: dict[str, tuple[Answer, ...]] = {}
     case_ids = {c.risk_id for c in cases}
@@ -109,7 +123,7 @@ def _batch_from_verdicts(
 
     exchange = {
         "messages": messages,
-        "response": list(verdicts),
+        "response": [v.model_dump() for v in verdicts],
         "prompt_shortenings": list(prompt_shortenings or []),
     }
     return AnswerBatch(

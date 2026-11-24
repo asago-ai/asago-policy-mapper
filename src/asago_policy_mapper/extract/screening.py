@@ -97,6 +97,15 @@ class AnswerBatch:
     measures the invocation, never multiplied per candidate. ``exchange``
     holds the raw requests and responses the assessor sent and received
     (``{"messages", "response"}`` for the chat judge).
+
+    ``exchange`` carries plain JSON-able data, not model objects: an
+    assessor that talks to a structured client serializes its responses
+    at its own boundary, where it knows the response shape, so no
+    consumer of the batch needs that model knowledge. The judge's
+    ``response`` entries are plain dicts, matching the call record's
+    ``response`` field (``list[dict]``); keys beyond
+    ``messages``/``response`` are assessor-specific (the HTTP probability
+    assessor records ``requests``/``responses``).
     """
 
     answers: dict[str, tuple[Answer, ...]]
@@ -112,7 +121,9 @@ class Assessor(Protocol):
     a rule can reject an assessor whose answers it cannot reduce.
     ``sends_offsite`` states whether answers leave the machine, for runs
     that must stay local. ``prompt_name`` names the prompt the answers came
-    from, so the decision log can tell prompt variants apart.
+    from, so the decision log can tell prompt variants apart. An assessor
+    serializes its raw responses to plain data itself, so its batch's
+    ``exchange`` never carries model objects.
     """
 
     assessor_id: str

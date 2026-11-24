@@ -233,13 +233,15 @@ def test_judge_assessor_never_emits_probability():
     assert batch.unmatched_ids == ("R-009",)
 
     # The rendered prompt carries each case's name and description, and the
-    # exchange payload is the messages that travelled plus the raw verdicts.
+    # exchange payload is the messages that travelled plus the verdicts,
+    # dumped to plain dicts at the assessor boundary.
     user_message = batch.exchange["messages"][1]["content"]
     assert "Risk R-001" in user_message
     assert "Description for R-001." in user_message
     assert batch.exchange["messages"][0]["role"] == "system"
     assert batch.latency_ms >= 0
-    assert batch.exchange["response"] == list(client.chat.completions.create.return_value.items)
+    assert batch.exchange["response"] == [v.model_dump() for v in client.chat.completions.create.return_value.items]
+    assert all(isinstance(entry, dict) for entry in batch.exchange["response"])
 
 
 def test_judge_batch_passes_question_and_cases_to_the_assessor():
@@ -574,3 +576,80 @@ def test_answer_payloads_pin_stable_serialized_kinds():
         {"kind": "no_answer", "reason": "timeout", "detail": "504"},
         {"kind": "boolean", "holds": False, "rationale": None},
     ]
+
+
+def test_judge_exchange_response_entries_are_plain_data():
+    """The judge assessor dumps its verdicts to plain dicts at its boundary.
+
+    ``AnswerBatch.exchange`` entries are JSON-able data, not model
+    objects, so the record path never needs the response model. A verdict
+    object appearing in the exchange would break every consumer that
+    conforms to the documented contract without model knowledge.
+    """
+    client = _client(_verdicts(("R-001", True)))
+    assessor = LlmJudgeAssessor(client, "test-model", "judge_risk")
+
+    batch = assessor.assess(RELEVANCE_QUESTION_V1, "Chunk text.", [_case("R-001")])
+
+    response = batch.exchange["response"]
+    assert all(isinstance(entry, dict) for entry in response)
+    assert response == [{"risk_id": "R-001", "relevant": True, "justification": "stubbed"}]
+
+
+def test_judge_records_plain_dict_assessor_responses():
+    """A conforming assessor returning plain dicts records without crashing.
+
+    The judge record path must tolerate plain-dict exchange entries: the
+    contract the ``AnswerBatch`` docstring states is JSON-able data, so a
+    protocol-conforming assessor with no model objects cannot crash the
+    record. A legacy entry carrying ``model_dump`` still records.
+    """
+    from asago_policy_mapper.extract import retrieve
+
+    plain_verdict = {"risk_id": "R-001", "relevant": True, "justification": "via plain dict"}
+
+    def fake_assess(assessor_self, question, context, cases):
+        return AnswerBatch(
+            answers={"R-001": (BooleanAnswer(True, "plain"),)},
+            unmatched_ids=(),
+            latency_ms=1.0,
+            exchange={
+                "messages": [{"role": "system", "content": "s"}],
+                "response": [plain_verdict],
+            },
+        )
+
+    with patch.object(retrieve.LlmJudgeAssessor, "assess", autospec=True, side_effect=fake_assess):
+        collector: list[LLMCallRecord] = []
+        accepted = retrieve.judge_borderline(
+            _candidates("R-001"),
+            "Chunk text.",
+            MagicMock(),
+            "test-model",
+            records=collector,
+        )
+
+    assert [c.risk_id for c in accepted] == ["R-001"]
+    assert collector[0].response == [plain_verdict]
+
+    # A legacy entry that still carries model_dump records through the
+    # same path, dumped rather than passed through.
+    class _LegacyVerdict:
+        def model_dump(self) -> dict:
+            return {"risk_id": "R-002", "relevant": False, "justification": "legacy"}
+
+    def legacy_assess(assessor_self, question, context, cases):
+        return AnswerBatch(
+            answers={"R-002": (BooleanAnswer(True, "legacy"),)},
+            unmatched_ids=(),
+            latency_ms=1.0,
+            exchange={"messages": [], "response": [_LegacyVerdict()]},
+        )
+
+    with patch.object(retrieve.LlmJudgeAssessor, "assess", autospec=True, side_effect=legacy_assess):
+        collector = []
+        retrieve.judge_borderline(
+            _candidates("R-002"), "Chunk text.", MagicMock(), "test-model", records=collector
+        )
+
+    assert collector[0].response == [{"risk_id": "R-002", "relevant": False, "justification": "legacy"}]
