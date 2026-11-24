@@ -98,6 +98,14 @@ class AnswerBatch:
     holds the raw requests and responses the assessor sent and received
     (``{"messages", "response"}`` for the chat judge).
 
+    The batch is a single-owner value. It is frozen, but ``answers`` and
+    ``exchange`` are plain dict fields, so the freeze is shallow: the
+    assessor redacts everything it must redact while building them (at
+    its boundary, where it knows its credential), and every consumer
+    after construction treats both fields as read-only. Consumers that
+    record the same payload twice build their own copies; the frozen
+    dataclass gives per-assessment identity, not nested immutability.
+
     ``exchange`` carries plain JSON-able data, not model objects: an
     assessor that talks to a structured client serializes its responses
     at its own boundary, where it knows the response shape, so no
