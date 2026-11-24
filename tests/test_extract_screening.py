@@ -11,6 +11,8 @@ They stub the LLM client at the ``chat.completions.create`` seam with
 """
 
 import hashlib
+import subprocess
+import sys
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -653,3 +655,24 @@ def test_judge_records_plain_dict_assessor_responses():
         )
 
     assert collector[0].response == [{"risk_id": "R-002", "relevant": False, "justification": "legacy"}]
+
+
+def test_assessors_import_without_extract_pipeline():
+    """Importing an assessor module first does not fail on a fresh start.
+
+    The ``extract`` package init is lazy (PEP 562) because assessors
+    import ``extract.screening`` and an eager ``pipeline`` import there
+    would be circular. This test fails the day someone adds an eager
+    ``extract.pipeline``/``extract.retrieve`` import to
+    ``extract/__init__.py``: importing an assessor would then try to
+    import ``extract.retrieve``, which imports the assessor back while it
+    is still initializing.
+    """
+    script = "import asago_policy_mapper.assessors.llm_judge; import asago_policy_mapper.extract"
+    run = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert run.returncode == 0, f"assessor-first import failed:\n{run.stderr}"

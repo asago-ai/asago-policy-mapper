@@ -5,6 +5,8 @@ The pipeline imports lazily: ``extract`` submodules (``screening``,
 ``pipeline`` import here would make that circular
 (``assessors.llm_judge`` -> ``extract.screening`` -> ``extract/__init__``
 -> ``extract.pipeline`` -> ``extract.retrieve`` -> ``assessors.llm_judge``).
+``tests/test_extract_screening.py::test_assessors_import_without_extract_pipeline``
+pins that import order: an eager submodule import added here fails it.
 """
 
 from typing import TYPE_CHECKING
