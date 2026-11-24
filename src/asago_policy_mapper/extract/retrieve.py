@@ -18,6 +18,7 @@ from asago_policy_mapper.extract.screening import (
     Decision,
     DecisionCase,
     Keep,
+    Question,
     Rule,
     answer_payloads,
 )
@@ -336,8 +337,16 @@ def build_decision_log(
     assessor: Assessor,
     rule: Rule,
     messages: list,
+    question: Question | None = None,
 ) -> DecisionLog:
-    """Assemble the seam's decision log for one assessed batch."""
+    """Assemble the seam's decision log for one assessed batch.
+
+    ``question`` is the question the answers answer; it defaults to the
+    judge's relevance question, so callers with their own question pass it
+    rather than rebuilding this loop.
+    """
+    if question is None:
+        question = RELEVANCE_QUESTION_V1
     items = [
         DecisionItem(
             risk_id=d.risk_id,
@@ -349,8 +358,8 @@ def build_decision_log(
     ]
     system = next((m["content"] for m in messages if m.get("role") == "system"), "")
     return DecisionLog(
-        question_id=RELEVANCE_QUESTION_V1.question_id,
-        question_version=RELEVANCE_QUESTION_V1.version,
+        question_id=question.question_id,
+        question_version=question.version,
         prompt_name=assessor.prompt_name,
         prompt_sha256=hashlib.sha256(system.encode()).hexdigest(),
         assessor_id=assessor.assessor_id,

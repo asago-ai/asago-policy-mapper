@@ -29,6 +29,7 @@ from asago_policy_mapper.extract.screening import (
     Keep,
     NoAnswer,
     ProbabilityAnswer,
+    Question,
     answer_payloads,
 )
 
@@ -58,8 +59,8 @@ def _verdicts(*entries: tuple[str, bool]) -> _JudgeVerdicts:
 
 def _client(returning: _JudgeVerdicts) -> MagicMock:
     client = MagicMock()
-    client.for_stage = lambda stage: client
     client.chat.completions.create.return_value = returning
+    client.for_stage = lambda stage: client
     return client
 
 
@@ -650,9 +651,7 @@ def test_judge_records_plain_dict_assessor_responses():
 
     with patch.object(retrieve.LlmJudgeAssessor, "assess", autospec=True, side_effect=legacy_assess):
         collector = []
-        retrieve.judge_borderline(
-            _candidates("R-002"), "Chunk text.", MagicMock(), "test-model", records=collector
-        )
+        retrieve.judge_borderline(_candidates("R-002"), "Chunk text.", MagicMock(), "test-model", records=collector)
 
     assert collector[0].response == [{"risk_id": "R-002", "relevant": False, "justification": "legacy"}]
 
@@ -676,3 +675,31 @@ def test_assessors_import_without_extract_pipeline():
         timeout=60,
     )
     assert run.returncode == 0, f"assessor-first import failed:\n{run.stderr}"
+
+
+def test_build_decision_log_takes_the_question():
+    """build_decision_log records the question it is given, not the judge's.
+
+    The default stays the judge's relevance question, but a caller with
+    its own question (the prefilter's) passes it instead of rebuilding
+    this loop.
+    """
+    from asago_policy_mapper.extract.retrieve import build_decision_log
+
+    answers = AnswerBatch(
+        answers={"R-001": (BooleanAnswer(True, "n"),)},
+        unmatched_ids=(),
+        latency_ms=1.0,
+        exchange=None,
+    )
+    decisions = [Decision(risk_id="R-001", keep=True, reason="yes")]
+    assessor = LlmJudgeAssessor(MagicMock(), "m", "prefilter-prompt")
+
+    other = Question(question_id="grounding-likelihood", version="1", criterion="any criterion")
+    log = build_decision_log(answers, decisions, assessor, Keep(), [{"role": "user", "content": "u"}], question=other)
+
+    assert log.question_id == "grounding-likelihood"
+    assert log.question_version == "1"
+
+    default_log = build_decision_log(answers, decisions, assessor, Keep(), [{"role": "user", "content": "u"}])
+    assert default_log.question_id == RELEVANCE_QUESTION_V1.question_id
