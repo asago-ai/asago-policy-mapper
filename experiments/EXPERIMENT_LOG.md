@@ -1139,3 +1139,25 @@ without LLM query generation. All runs used GPT-6 Luna for judging and grounding
 generation performed best. Disabling query generation substantially reduced GTE recall.
 The detailed commands and evaluator methodology are in
 `experiments/st-johns-openai-retrieval-comparison.md`. No MLflow run was used.
+
+---
+
+## 2026-11-14: Logging-fix smoke on gemma4 (per-stage token usage)
+
+**Description:** One-doc smoke run (ars.md) on the internal gemma-4 26B endpoint to
+verify the #148 part-1 logging fixes live: per-stage token usage, unique call ids
+under concurrency, and the new output fields. Default battery settings, no MLflow.
+
+**Command:** `UV_NO_CONFIG=1 uv run --frozen python run_extract_battery.py
+batteries/smoke-ars.yaml --base-url <endpoint-url> --model gemma-4-26b-a4b-it -j 4
+--no-mlflow`
+
+**Results:** 34 risks matched, 300 auto-accepted, 0 judged (query-gen mode has no
+borderline candidates for this doc), 205 grounding-filtered, recall 0.742,
+precision 0.676. Token usage: 356,104 total over 202 calls, per_stage populated:
+query_gen 6, grounding 72, expansion_grounding 90, causal_synthesis 34. All 202
+`llm_calls` ids unique. `metadata.structured_output_mode` recorded as `json_schema`;
+`retrieval_stats.auto_promoted` 0 alongside a truthful `llm_judged` 0.
+
+**Conclusion:** The per-stage token accounting and the id-atomicity hold on a live
+concurrent run; the new output fields serialize correctly. No MLflow run (disabled).
