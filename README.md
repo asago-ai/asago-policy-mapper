@@ -272,7 +272,7 @@ uv run asago-policy-mapper extract policy.pdf -o output/ \
   --model my-model
 ```
 
-Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both. The JSON includes an `llm_calls` array with every LLM call (messages, response, timing) for analysis; it is written once when the run completes.
+Outputs `risk-extraction.json` and `risk-extraction.html` report. Use `--output-format yaml` to get `risk-extraction.yaml` instead, or `--output-format both` for both. The JSON includes an `llm_calls` array with every LLM call (messages, response, timing) for analysis; it is written once when the run completes. `retrieval_stats.auto_promoted` counts the borderline candidates `--no-judge` promoted (with `llm_judged` then 0), `token_usage.per_stage` breaks token usage down by pipeline stage, and `metadata.structured_output_mode` records the wire format the client resolved.
 
 ### Evaluate against ground truth
 
