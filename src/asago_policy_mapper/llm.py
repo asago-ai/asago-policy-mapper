@@ -181,7 +181,6 @@ class TokenTracker:
     incidents: list[dict] = field(default_factory=list)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     _warned_no_usage: bool = field(default=False, repr=False)
-    _current_stage: str | None = field(default=None, repr=False)
     _thread_local: threading.local = field(default_factory=threading.local, repr=False)
 
     @staticmethod
@@ -210,14 +209,9 @@ class TokenTracker:
                 s["total_tokens"] += tt
                 s["calls"] += 1
 
-    def set_stage(self, stage: str | None) -> None:
-        with self._lock:
-            self._current_stage = stage
-
     def record_incident(self, kind: str, detail: str, stage: str | None = None) -> None:
         with self._lock:
             incident: dict = {"kind": kind, "detail": detail}
-            stage = stage if stage is not None else self._current_stage
             if stage:
                 incident["stage"] = stage
             messages = getattr(self._thread_local, "current_messages", None)
