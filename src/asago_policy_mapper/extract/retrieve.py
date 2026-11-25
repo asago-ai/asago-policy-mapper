@@ -9,7 +9,7 @@ import spacy
 from asago_policy_mapper.extract.calllog import next_call_number
 from asago_policy_mapper.extract.models import LLMCallRecord, ScoredCandidate, _JudgeVerdicts
 from asago_policy_mapper.extract.parse import Chunk
-from asago_policy_mapper.llm import last_call_shortenings
+from asago_policy_mapper.llm import _shortenings_of
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
@@ -249,6 +249,7 @@ def _record_judge_call(
     duration_ms: float,
     batch_accepted: int,
     batch_size: int,
+    prompt_shortenings: list[dict],
 ) -> None:
     number = next_call_number(records, counts=_counts_judge)
     records.append(
@@ -261,7 +262,7 @@ def _record_judge_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{batch_accepted}/{batch_size} accepted",
-            prompt_shortenings=last_call_shortenings(),
+            prompt_shortenings=prompt_shortenings,
         ),
     )
 
@@ -272,8 +273,8 @@ def _judge_batch(
     client,
     model: str,
     prompt_name: str,
-) -> tuple[list[ScoredCandidate], list, list, float]:
-    """Judge one batch; return (accepted candidates, messages, verdicts, duration_ms)."""
+) -> tuple[list[ScoredCandidate], list, list, float, list[dict]]:
+    """Judge one batch; return (accepted, messages, verdicts, duration_ms, shortenings)."""
     messages = render_prompt(
         prompt_name,
         {
@@ -297,7 +298,7 @@ def _judge_batch(
     batch_ids = {c.risk_id for c in batch}
     accepted_ids = {v.risk_id for v in verdicts if v.relevant and v.risk_id in batch_ids}
     accepted = [c for c in batch if c.risk_id in accepted_ids]
-    return accepted, messages, verdicts, duration_ms
+    return accepted, messages, verdicts, duration_ms, _shortenings_of(verdicts_resp)
 
 
 def judge_borderline(
@@ -322,7 +323,9 @@ def judge_borderline(
     result: list[ScoredCandidate] = []
 
     for batch in batches:
-        accepted, messages, verdicts, duration_ms = _judge_batch(batch, chunk_text, client, model, prompt_name)
+        accepted, messages, verdicts, duration_ms, shortenings = _judge_batch(
+            batch, chunk_text, client, model, prompt_name
+        )
         result.extend(accepted)
 
         if records is not None:
@@ -335,6 +338,7 @@ def judge_borderline(
                 duration_ms=duration_ms,
                 batch_accepted=len(accepted),
                 batch_size=len(batch),
+                prompt_shortenings=shortenings,
             )
 
     return result

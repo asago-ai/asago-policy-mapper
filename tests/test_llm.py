@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import logging
 from types import SimpleNamespace
@@ -350,8 +351,16 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
+        truncated, shortening = result
         # 60% of 2000 = 1200, which is > 500 min
-        assert len(result[1]["content"]) == 1200
+        assert len(truncated[1]["content"]) == 1200
+        assert shortening.message_index == 1
+        assert shortening.chars_before == 2000
+        assert shortening.chars_after == 1200
+        assert shortening.sha256_before == hashlib.sha256(long_content.encode()).hexdigest()
+        assert shortening.sha256_after == hashlib.sha256(truncated[1]["content"].encode()).hexdigest()
+        # The untouched sibling message survives the copy intact.
+        assert truncated[0] == messages[0]
 
     def test_short_user_message_returns_none(self):
         messages = [
@@ -390,16 +399,20 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
+        truncated, shortening = result
         # Longest is index 1 (3000 chars), truncated to 60% = 1800
-        assert len(result[0]["content"]) == 1000  # unchanged
-        assert len(result[1]["content"]) == 1800
+        assert len(truncated[0]["content"]) == 1000  # unchanged
+        assert len(truncated[1]["content"]) == 1800
+        assert shortening.message_index == 1
 
     def test_truncation_respects_minimum(self):
         # 60% of 600 = 360, which is < 500, so clamp to 500
         messages = [{"role": "user", "content": "y" * 600}]
         result = _truncate_messages(messages)
         assert result is not None
-        assert len(result[0]["content"]) == 500
+        truncated, shortening = result
+        assert len(truncated[0]["content"]) == 500
+        assert shortening.chars_after == 500
 
     def test_equal_length_user_messages_truncates_first(self):
         """Two equal-length user messages: the FIRST one is truncated."""
@@ -409,9 +422,11 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
+        truncated, shortening = result
         # The first message keeps its distinct content prefix after truncation.
-        assert result[0]["content"] == "a" * 600
-        assert result[1]["content"] == "b" * 1000
+        assert truncated[0]["content"] == "a" * 600
+        assert truncated[1]["content"] == "b" * 1000
+        assert shortening.message_index == 0
 
     def test_later_longer_user_message_wins(self):
         """A strictly longer later message must override an earlier selection."""
@@ -421,8 +436,10 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
-        assert result[0]["content"] == "a" * 1000
-        assert result[1]["content"] == "b" * 1200
+        truncated, shortening = result
+        assert truncated[0]["content"] == "a" * 1000
+        assert truncated[1]["content"] == "b" * 1200
+        assert shortening.message_index == 1
 
     def test_longest_user_message_before_longer_system_message(self):
         """Only user messages are truncation candidates, regardless of length."""
@@ -432,8 +449,10 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
-        assert result[0]["content"] == "s" * 5000
-        assert result[1]["content"] == "u" * 600
+        truncated, shortening = result
+        assert truncated[0]["content"] == "s" * 5000
+        assert truncated[1]["content"] == "u" * 600
+        assert shortening.message_index == 1
 
 
 # ---------------------------------------------------------------------------
@@ -530,8 +549,10 @@ class TestCallWithRetry:
         kwargs = {"messages": [{"role": "user", "content": "hello"}], "max_retries": 0}
         config = self._make_config()
 
-        result = _call_with_retry(do_call, kwargs, config)
-        assert result == ("result", "completion")
+        result, completion, shortenings = _call_with_retry(do_call, kwargs, config)
+        assert result == "result"
+        assert completion == "completion"
+        assert shortenings == []
         do_call.assert_called_once()
 
     def test_incomplete_output_with_truncatable_messages_retries(self):
@@ -541,9 +562,12 @@ class TestCallWithRetry:
         kwargs = {"messages": [{"role": "user", "content": long_content}], "max_retries": 0}
         config = self._make_config()
 
-        result = _call_with_retry(do_call, kwargs, config)
-        assert result == ("ok", "comp")
+        result, completion, shortenings = _call_with_retry(do_call, kwargs, config)
+        assert result == "ok"
         assert do_call.call_count == 2
+        assert len(shortenings) == 1
+        assert shortenings[0]["chars_before"] == 2000
+        assert shortenings[0]["chars_after"] == 1200
 
     def test_incomplete_output_short_messages_raises(self):
         cause = IncompleteOutputException()
@@ -575,6 +599,38 @@ class TestCallWithRetry:
 
         _call_with_retry(do_call, kwargs, config, tracker=tracker)
         assert any(i["kind"] == "output_truncated" for i in tracker.incidents)
+
+    def test_failed_call_exception_carries_partial_shortenings(self):
+        """A call that shortens and then dies carries its partials on the exception.
+
+        The truncation budget exhausts after three shortenings, so the
+        escaped IncompleteOutputException must carry all three — a failed
+        call's shortenings reach its record by value, not by reading shared
+        state afterwards.
+        """
+        cause = IncompleteOutputException()
+        do_call = MagicMock(side_effect=_IncompleteOutput(cause))
+        kwargs = {"messages": [{"role": "user", "content": "x" * 5000}], "max_retries": 0}
+        config = self._make_config()
+
+        with pytest.raises(IncompleteOutputException) as exc_info:
+            _call_with_retry(do_call, kwargs, config)
+
+        shortenings = getattr(exc_info.value, "prompt_shortenings", None)
+        assert shortenings is not None
+        assert [s["chars_before"] for s in shortenings] == [5000, 3000, 1800]
+        assert [s["chars_after"] for s in shortenings] == [3000, 1800, 1080]
+
+    def test_failed_call_without_shortenings_carries_no_attribute(self):
+        """No shortening, no attribute: the empty case stays unset, not []."""
+        cause = IncompleteOutputException()
+        do_call = MagicMock(side_effect=_IncompleteOutput(cause))
+        kwargs = {"messages": [{"role": "user", "content": "short"}], "max_retries": 0}
+        config = self._make_config()
+
+        with pytest.raises(IncompleteOutputException) as exc_info:
+            _call_with_retry(do_call, kwargs, config)
+        assert getattr(exc_info.value, "prompt_shortenings", None) is None
 
     def test_messages_shortened_on_retry(self):
         long_content = "x" * 2000
@@ -638,7 +694,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=copy.deepcopy(messages),
             current_messages=messages,
             max_retries=2,
         )
@@ -658,7 +713,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=copy.deepcopy(messages),
                 current_messages=messages,
                 max_retries=2,
             )
@@ -669,7 +723,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -678,7 +731,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -691,7 +743,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
         tracker = TokenTracker()
@@ -701,7 +752,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=tracker,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -711,7 +761,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_completion_tokens": 4096}
         config = LLMConfig(
             base_url="http://test",
@@ -724,7 +773,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -736,7 +784,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("some validation error")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -745,7 +792,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -760,7 +806,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("persistent error")
         do_call = MagicMock(side_effect=[exc, exc, exc, ("late", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -773,7 +818,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=tracker,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=2,
             )
@@ -785,7 +829,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("immediate failure")
         do_call = MagicMock(side_effect=[exc, ("never", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -795,7 +838,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=0,
             )
@@ -819,7 +861,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=copy.deepcopy(messages),
                 current_messages=messages,
                 max_retries=-1,
             )
@@ -830,7 +871,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("some validation error")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -839,7 +879,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -857,7 +896,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("line one of error\nline two of error")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -867,7 +905,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -883,7 +920,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -893,7 +929,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -906,7 +941,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc(long_summary)
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -916,7 +950,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -931,12 +964,10 @@ class TestRetryWithValidation:
 
         Pins that the retry resets to ``current_messages`` — the prompt as it
         stands, shortened after an incomplete output — so a shortening
-        survives the retry. ``original_messages`` is still accepted (the
-        callers pass it by name) but no longer drives the retry.
+        survives the retry.
         """
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
-        original = [{"role": "user", "content": "original prompt"}]
         current = [{"role": "user", "content": "current prompt"}]
         kwargs = {"messages": [{"role": "user", "content": "grown prompt"}], "max_tokens": 4096}
         config = self._make_config()
@@ -946,7 +977,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=current,
             max_retries=1,
         )
@@ -961,7 +991,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("persistent validation error")
         do_call = MagicMock(side_effect=exc)
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
         tracker = TokenTracker()
@@ -972,7 +1001,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=tracker,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -984,7 +1012,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=exc)
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -994,7 +1021,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -1004,7 +1030,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("persistent validation error")
         do_call = MagicMock(side_effect=exc)
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
         tracker = TokenTracker()
@@ -1015,7 +1040,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=tracker,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=2,
             )
@@ -1037,7 +1061,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("validation error", failed_attempts=[failed_attempt])
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -1046,7 +1069,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )

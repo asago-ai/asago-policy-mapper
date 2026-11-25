@@ -56,6 +56,7 @@ def test_worker_side_numbering_is_sequential():
             duration_ms=0.0,
             grounded_count=1,
             batch_size=1,
+            prompt_shortenings=[],
         )
         assert records[-1].call_id == expected
     assert [r.call_id for r in records] == ["ground-001", "ground-002", "ground-003"]
@@ -82,6 +83,7 @@ def test_record_ids_keep_legacy_counting():
         duration_ms=0.0,
         grounded_count=1,
         batch_size=1,
+        prompt_shortenings=[],
     )
 
     assert [r.call_id for r in records] == ["ground-expand-001", "ground-002"]
@@ -124,6 +126,7 @@ def test_merge_is_deterministic_under_reverse_completion():
             duration_ms=0.0,
             grounded_count=1,
             batch_size=1,
+            prompt_shortenings=[],
         )
 
     threads = [threading.Thread(target=worker, args=(i,)) for i in range(task_count)]
@@ -253,6 +256,7 @@ def _run_grounding_with_reverse_completion(monkeypatch, task_count):
             duration_ms=0.0,
             grounded_count=1,
             batch_size=1,
+            prompt_shortenings=[],
         )
         gate.finish(index)
         return cr, {}
@@ -302,6 +306,7 @@ def test_run_grounding_without_collector_records_nothing(monkeypatch):
             duration_ms=0.0,
             grounded_count=1,
             batch_size=1,
+            prompt_shortenings=[],
         )
         return cr, {}
 

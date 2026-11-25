@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from asago_policy_mapper.extract.models import LLMCallRecord
 from asago_policy_mapper.extract.parse import Chunk
-from asago_policy_mapper.llm import SlimModel, last_call_shortenings
+from asago_policy_mapper.llm import SlimModel, _shortenings_of
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ def generate_queries(
                 response={"queries": response.queries},
                 duration_ms=duration_ms,
                 result_summary=f"{len(response.queries)} queries generated",
-                prompt_shortenings=last_call_shortenings(),
+                prompt_shortenings=_shortenings_of(response),
             )
             if records is not None
             else None

@@ -16,7 +16,7 @@ from asago_policy_mapper.extract.models import (
 from asago_policy_mapper.llm import (
     _OUTPUT_VALIDATION_ERRORS,
     ValidationRetryExhausted,
-    last_call_shortenings,
+    _shortenings_of,
 )
 from asago_policy_mapper.prompts import render_prompt
 
@@ -82,6 +82,7 @@ def _record_grounding_call(
     duration_ms: float,
     grounded_count: int,
     batch_size: int,
+    prompt_shortenings: list[dict],
 ) -> None:
     number = next_call_number(records, counts=_counts_grounding)
     records.append(
@@ -94,7 +95,7 @@ def _record_grounding_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{grounded_count}/{batch_size} grounded",
-            prompt_shortenings=last_call_shortenings(),
+            prompt_shortenings=prompt_shortenings,
         ),
     )
 
@@ -161,6 +162,7 @@ def ground_and_extract_evidence(
                 duration_ms=duration_ms,
                 grounded_count=sum(v.grounded and v.risk_id in batch_ids for v in verdicts),
                 batch_size=len(batch),
+                prompt_shortenings=_shortenings_of(verdicts_resp),
             )
 
     return result
@@ -221,7 +223,7 @@ def ground_variants(
                 response=[v.model_dump() for v in verdicts],
                 duration_ms=duration_ms,
                 result_summary=(f"{len(result)}/{len(variants)} variants grounded (parent: {parent_id})"),
-                prompt_shortenings=last_call_shortenings(),
+                prompt_shortenings=_shortenings_of(verdicts_resp),
             ),
         )
 
@@ -263,6 +265,7 @@ def _record_group_call(
     duration_ms: float,
     grounded_count: int,
     risk_count: int,
+    prompt_shortenings: list[dict],
 ) -> None:
     number = next_call_number(records, counts=_counts_expansion)
     records.append(
@@ -275,7 +278,7 @@ def _record_group_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{grounded_count}/{risk_count} grounded (expansion)",
-            prompt_shortenings=last_call_shortenings(),
+            prompt_shortenings=prompt_shortenings,
         ),
     )
 
@@ -342,6 +345,7 @@ def ground_risk_group(
             duration_ms=duration_ms,
             grounded_count=len(result),
             risk_count=len(risks),
+            prompt_shortenings=_shortenings_of(verdicts_resp),
         )
 
     return result
@@ -369,12 +373,15 @@ def _evidence_chunk_texts(risk_match: RiskMatch, chunk_texts: dict[int, str]) ->
 
 def _request_causal_chain(
     risk_match: RiskMatch, combined_text: str, client, model: str
-) -> tuple[list[dict[str, str]], list, bool, float]:
+) -> tuple[list[dict[str, str]], list, bool, float, list[dict]]:
     """Render the prompt and call the causal-synthesis endpoint.
 
-    Returns (messages, results, retry_exhausted, duration_ms). A validation
-    exhaustion caused by unfixable model output downgrades to an empty result
-    with retry_exhausted set; anything else propagates.
+    Returns (messages, results, retry_exhausted, duration_ms, shortenings).
+    A validation exhaustion caused by unfixable model output downgrades to
+    an empty result with retry_exhausted set; anything else propagates. The
+    shortenings come from the call's own outcome — the response on success,
+    the escaped exception on the exhaustion path — so a failed call's
+    partial shortenings reach its record too.
     """
     messages = render_prompt(
         "causal_synthesis",
@@ -395,6 +402,7 @@ def _request_causal_chain(
             messages=messages,
         )
         results = results_resp.items
+        shortenings = _shortenings_of(results_resp)
     except ValidationRetryExhausted as exc:
         if not _is_output_validation_exhaustion(exc):
             raise
@@ -405,8 +413,9 @@ def _request_causal_chain(
         )
         results = []
         retry_exhausted = True
+        shortenings = _shortenings_of(exc)
     duration_ms = (time.time() - t0) * 1000
-    return messages, results, retry_exhausted, duration_ms
+    return messages, results, retry_exhausted, duration_ms, shortenings
 
 
 def _downgrade_empty_chain(chain: _CausalChain | None, risk_id: str) -> _CausalChain | None:
@@ -434,7 +443,9 @@ def synthesize_causal_chain(
 
     combined_text = "\n\n---\n\n".join(evidence_chunks)
 
-    messages, results, retry_exhausted, duration_ms = _request_causal_chain(risk_match, combined_text, client, model)
+    messages, results, retry_exhausted, duration_ms, shortenings = _request_causal_chain(
+        risk_match, combined_text, client, model
+    )
 
     chain = _downgrade_empty_chain(results[0] if results else None, risk_match.risk_id)
 
@@ -451,7 +462,7 @@ def synthesize_causal_chain(
                 response=chain.model_dump() if chain else {},
                 duration_ms=duration_ms,
                 result_summary="synthesized" if chain else "retry_exhausted" if retry_exhausted else "empty",
-                prompt_shortenings=last_call_shortenings(),
+                prompt_shortenings=shortenings,
             ),
         )
 

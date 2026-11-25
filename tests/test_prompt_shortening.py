@@ -1,7 +1,7 @@
 """Tests for prompt-shortening records: what a shortening left on the call.
 
 A shortening made after an incomplete output must be visible afterwards:
-``last_call_shortenings()`` reports it in the calling thread, the pipeline's
+the tracked create call attaches it to its own result, the pipeline's
 record helpers copy it onto the ``LLMCallRecord``, and the output-truncation
 incidents carry the character counts. One worker's diagnostics must never
 leak into another's call.
@@ -40,50 +40,13 @@ from asago_policy_mapper.llm import (
     LLMConfig,
     SlimModel,
     TokenTracker,
-    _shortening_between,
+    _shortenings_of,
     create_client,
-    last_call_shortenings,
 )
 
 
 class _StructuredAnswer(SlimModel):
     answer: str
-
-
-def test_shortening_between_contract():
-    """_shortening_between pins the differing message by content, not position.
-
-    A message dict without a content key and an unchanged message must both
-    fall through to the one that actually changed; identical lists mean no
-    shortening happened and must raise.
-    """
-    before = [
-        {"role": "system", "content": "sys"},
-        {"role": "user", "content": "u" * 900},
-        {"role": "user"},
-    ]
-    after = [
-        {"role": "system", "content": "sys"},
-        {"role": "user", "content": "u" * 540},
-        {"role": "user"},
-    ]
-    s = _shortening_between(2, before, after)
-    assert s.message_index == 1
-    assert s.attempt == 2
-    assert s.chars_before == 900
-    assert s.chars_after == 540
-    assert s.sha256_before == _sha("u" * 900)
-    assert s.sha256_after == _sha("u" * 540)
-
-    # Content absent in the changed message: the empty-string defaults must
-    # both apply, so a missing-vs-empty pair counts as unchanged. The match
-    # is anchored so a decorated message cannot pass for the real one.
-    with pytest.raises(ValueError, match="^no message was shortened$"):
-        _shortening_between(1, [{"role": "user"}], [{"role": "user", "content": ""}])
-
-    # No message differs: the function must raise, not return a record.
-    with pytest.raises(ValueError, match="^no message was shortened$"):
-        _shortening_between(1, before, [dict(m) for m in before])
 
 
 def test_longest_user_message_chars_contract():
@@ -182,7 +145,7 @@ class TestShorteningRecord:
         )
         assert response.items == []
 
-        shortenings = last_call_shortenings()
+        shortenings = _shortenings_of(response)
         assert len(shortenings) == 1
         s = shortenings[0]
         assert s["attempt"] == 1
@@ -193,11 +156,11 @@ class TestShorteningRecord:
         assert s["sha256_after"] == _sha("J" * 1200)
         assert s["reason"] == "incomplete_output"
 
-    def test_shortening_cleared_before_each_call(self):
-        """The tracked create call clears the thread-local list before running.
+    def test_shortening_stays_on_its_own_call(self):
+        """Each call's result carries exactly its own shortenings.
 
-        A shortening from one call must not appear in the next call's list
-        even when that next call shortens nothing.
+        A shortening from one call must not appear in the next call's
+        result even when that next call shortens nothing.
         """
         requests = []
 
@@ -215,21 +178,21 @@ class TestShorteningRecord:
         ):
             client = create_client(config)
 
-        client.chat.completions.create(
+        shortened = client.chat.completions.create(
             model="test-model",
             response_model=_StructuredAnswer,
             messages=[{"role": "user", "content": "S" * 2000}],
             max_tokens=256,
         )
-        assert len(last_call_shortenings()) == 1
+        assert len(_shortenings_of(shortened)) == 1
 
-        client.chat.completions.create(
+        plain = client.chat.completions.create(
             model="test-model",
             response_model=_StructuredAnswer,
             messages=[{"role": "user", "content": "short"}],
             max_tokens=256,
         )
-        assert last_call_shortenings() == []
+        assert _shortenings_of(plain) == []
 
     def test_shortening_indexes_and_attempts_across_messages(self):
         """A system message shifts message_index; each retry bumps attempt.
@@ -266,7 +229,7 @@ class TestShorteningRecord:
 
         assert result.answer == "ok"
         assert len(requests) == 4
-        shortenings = last_call_shortenings()
+        shortenings = _shortenings_of(result)
         assert [s["attempt"] for s in shortenings] == [1, 2, 3]
         assert [s["message_index"] for s in shortenings] == [1, 1, 1]
         assert [s["chars_before"] for s in shortenings] == [5000, 3000, 1800]
@@ -305,11 +268,11 @@ class TestShorteningRecord:
         assert len(requests) == _MAX_TRUNCATION_RETRIES + 1
 
     def test_retry_diagnostics_are_isolated_between_workers(self):
-        """Parallel workers' shortenings stay in their own threads.
+        """Parallel workers' shortenings stay on their own calls' results.
 
         Worker A shortens (2000 -> 1200) and succeeds; worker B runs a plain
-        short call concurrently. Both barrier after their calls; B's list must
-        be empty and A's must hold exactly A's shortening.
+        short call concurrently. Both barrier after their calls; B's result
+        must carry no shortening and A's must hold exactly A's shortening.
         """
         barrier = threading.Barrier(2)
         seen: dict[str, list] = {}
@@ -335,14 +298,14 @@ class TestShorteningRecord:
                 )
 
         def worker(name: str, content: str) -> None:
-            clients[name].chat.completions.create(
+            result = clients[name].chat.completions.create(
                 model="test-model",
                 response_model=_StructuredAnswer,
                 messages=[{"role": "user", "content": content}],
                 max_tokens=256,
             )
             barrier.wait()
-            seen[name] = copy.deepcopy(last_call_shortenings())
+            seen[name] = copy.deepcopy(_shortenings_of(result))
 
         threads = [
             threading.Thread(target=worker, args=("a", "A" * 2000)),
@@ -410,9 +373,6 @@ class TestRecordHelpersCopyShortenings:
 
     def test_grounding_record_defaults_to_empty_shortenings(self):
         """Without a shortening, the grounding record carries an empty list, not None."""
-        from asago_policy_mapper.llm import _current_shortenings
-
-        _current_shortenings().clear()
         client = MagicMock()
         client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[_RiskEvidence(risk_id="R-001", grounded=True, confidence="high", quotes=["text"])]
@@ -581,6 +541,52 @@ class TestRecordHelpersCopyShortenings:
         assert len(collector) == 1
         shortenings = collector[0].prompt_shortenings
         assert len(shortenings) == 1
+        assert shortenings[0]["chars_before"] > shortenings[0]["chars_after"]
+        assert shortenings[0]["reason"] == "incomplete_output"
+
+    def test_causal_record_carries_shortenings_from_the_exception(self):
+        """A failed causal call's partial shortenings reach its record.
+
+        The call shortens twice and then dies with a validation exhaustion;
+        synthesize_causal_chain downgrades to an empty result and records,
+        and the record must carry the partials the failed call made — read
+        from the escaped exception, not from state the call left behind.
+        """
+        from test_extract_attribute import _make_risk_match
+
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) <= 2:
+                return httpx.Response(200, json=_length_truncated_body())
+            # Invalid JSON three times: the validation budget exhausts.
+            return httpx.Response(200, json=_completion_body("not json at all"))
+
+        http_client = httpx.Client(transport=httpx.MockTransport(handler))
+        with patch(
+            "asago_policy_mapper.llm.OpenAI",
+            lambda **kw: openai.OpenAI(http_client=http_client, **kw),
+        ):
+            client = create_client(
+                LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=2, sdk_max_retries=0)
+            )
+
+        collector: list[LLMCallRecord] = []
+        chain = synthesize_causal_chain(
+            risk_match=_make_risk_match(),
+            chunk_texts={0: "Long evidence text. " * 150, 2: "More text."},
+            client=client,
+            model="test-model",
+            records=collector,
+        )
+
+        assert chain is None
+        assert len(collector) == 1
+        assert collector[0].result_summary == "retry_exhausted"
+        shortenings = collector[0].prompt_shortenings
+        assert len(shortenings) == 2
+        assert [s["attempt"] for s in shortenings] == [1, 2]
         assert shortenings[0]["chars_before"] > shortenings[0]["chars_after"]
         assert shortenings[0]["reason"] == "incomplete_output"
 

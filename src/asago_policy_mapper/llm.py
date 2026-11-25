@@ -262,27 +262,19 @@ class PromptShortening:
     reason: str = "incomplete_output"
 
 
-_shortening_local = threading.local()
+def _shortenings_of(value: Any) -> list[dict]:
+    """Return the prompt shortenings a call's outcome carries.
 
-
-def _current_shortenings() -> list["PromptShortening"]:
-    """Return the calling thread's shortening list, creating it on first use."""
-    shortenings = getattr(_shortening_local, "shortenings", None)
-    if shortenings is None:
-        shortenings = []
-        _shortening_local.shortenings = shortenings
-    return shortenings
-
-
-def last_call_shortenings() -> list[dict]:
-    """Return the prompt shortenings the calling thread's last LLM call made.
-
-    The tracked ``create`` call clears the list before it runs, so the list
-    holds exactly what that one call shortened — usually nothing. Stage
-    workers read it right after ``chat.completions.create`` returns to copy
-    the shortenings onto their ``LLMCallRecord``.
+    The tracked ``create`` call attaches the shortenings it made to what it
+    hands the caller — the validated model for a successful call, the
+    exception that escaped for a failed one — so they travel with the call's
+    own result instead of a side channel keyed to the thread. The attribute
+    is absent when the call shortened nothing (and on values from mocked
+    clients), which reads as an empty list. The attach uses plain dicts, so
+    the value is exactly what an ``LLMCallRecord.prompt_shortenings`` holds.
     """
-    return [asdict(s) for s in _current_shortenings()]
+    shortenings = getattr(value, "prompt_shortenings", None)
+    return list(shortenings) if shortenings else []
 
 
 @dataclass
@@ -460,7 +452,15 @@ _MIN_USER_MESSAGE_CHARS = 500
 _MAX_TRUNCATION_RETRIES = 3
 
 
-def _truncate_messages(messages: list[dict[str, str]]) -> list[dict[str, str]] | None:
+def _truncate_messages(
+    messages: list[dict[str, str]],
+) -> tuple[list[dict[str, str]], PromptShortening] | None:
+    """Shorten the longest user message and describe the shortening.
+
+    Returns ``(truncated_messages, shortening)`` — the metadata names the cut
+    message, its sizes and its before/after hashes, exactly what the caller
+    records — or None when no user message clears the shortening floor.
+    """
     longest_idx = -1
     longest_len = 0
     for i, msg in enumerate(messages):
@@ -473,35 +473,20 @@ def _truncate_messages(messages: list[dict[str, str]]) -> list[dict[str, str]] |
         return None
     truncated = copy.deepcopy(messages)
     new_len = max(int(longest_len * _TRUNCATION_FACTOR), _MIN_USER_MESSAGE_CHARS)
-    truncated[longest_idx]["content"] = truncated[longest_idx]["content"][:new_len]
-    return truncated
-
-
-def _shortening_between(
-    attempt: int,
-    before: list[dict[str, str]],
-    after: list[dict[str, str]],
-) -> PromptShortening:
-    """Describe the one prompt shortening made between two message lists.
-
-    ``_truncate_messages`` shortens exactly one user message, so the first
-    message whose content differs identifies the shortened one. Raises
-    ``ValueError`` when no message differs, which cannot happen for a list
-    that came from ``_truncate_messages``.
-    """
-    for i, (old, new) in enumerate(zip(before, after)):
-        old_content = old.get("content", "")
-        new_content = new.get("content", "")
-        if old_content != new_content:
-            return PromptShortening(
-                attempt=attempt,
-                message_index=i,
-                chars_before=len(old_content),
-                chars_after=len(new_content),
-                sha256_before=hashlib.sha256(old_content.encode()).hexdigest(),
-                sha256_after=hashlib.sha256(new_content.encode()).hexdigest(),
-            )
-    raise ValueError("no message was shortened")
+    before = truncated[longest_idx]["content"]
+    after = before[:new_len]
+    truncated[longest_idx]["content"] = after
+    return (
+        truncated,
+        PromptShortening(
+            attempt=0,
+            message_index=longest_idx,
+            chars_before=len(before),
+            chars_after=len(after),
+            sha256_before=hashlib.sha256(before.encode()).hexdigest(),
+            sha256_after=hashlib.sha256(after.encode()).hexdigest(),
+        ),
+    )
 
 
 def _get_output_token_budget(kwargs: dict, config: LLMConfig) -> int:
@@ -540,6 +525,20 @@ class _IncompleteOutput(Exception):
         self.cause = cause
 
 
+def _swap_request_messages(tracker: TokenTracker | None, kwargs: dict, messages: list) -> None:
+    """Point the next request at ``messages`` and refresh the incident snapshot.
+
+    Every retry that changes the prompt (an overflow reset, a shortening)
+    goes through here, so the tracker's in-flight messages — what
+    ``record_incident`` snapshots into an incident — always match the
+    request the endpoint is about to see, not the one the call started
+    with. The tracker deep-copies on record, so a reference is enough.
+    """
+    kwargs["messages"] = messages
+    if tracker is not None:
+        tracker._thread_local.current_messages = messages
+
+
 def _reduce_output_budget_and_retry(
     kwargs,
     config,
@@ -563,7 +562,7 @@ def _reduce_output_budget_and_retry(
         tracker.record_incident(
             "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}", stage=stage
         )
-    kwargs["messages"] = copy.deepcopy(base_messages)
+    _swap_request_messages(tracker, kwargs, copy.deepcopy(base_messages))
     _set_output_token_budget(kwargs, config, new_max)
     _apply_budget(kwargs, config)
 
@@ -586,16 +585,12 @@ def _build_validation_retry_messages(current_messages, exc: ValidationRetryExhau
     return retry_messages
 
 
-def _retry_with_validation(
-    do_call, kwargs, config, tracker, original_messages, current_messages, max_retries, stage=None
-):
+def _retry_with_validation(do_call, kwargs, config, tracker, current_messages, max_retries, stage=None):
     """Retry a single LLM call across validation failures and context overflow.
 
-    ``original_messages`` is kept (unused) because callers pass it by name;
-    overflow retries reset to ``current_messages``, the prompt as it stands —
+    Overflow retries reset to ``current_messages``, the prompt as it stands —
     shortened after an incomplete output — so a shortening survives them.
     """
-    del original_messages
     for val_attempt in range(max_retries + 1):
         try:
             return do_call(kwargs)
@@ -622,7 +617,7 @@ def _retry_with_validation(
                     max_retries + 1,
                     summary[:200],
                 )
-                kwargs["messages"] = _build_validation_retry_messages(current_messages, e)
+                _swap_request_messages(tracker, kwargs, _build_validation_retry_messages(current_messages, e))
                 _apply_budget(kwargs, config)
                 continue
             if tracker:
@@ -646,37 +641,55 @@ def _call_with_retry(
     tracker: TokenTracker | None = None,
     stage: str | None = None,
 ) -> tuple:
-    original_messages = copy.deepcopy(kwargs.get("messages", []))
+    """Retry one tracked call across truncation, overflow and validation failures.
+
+    Returns ``(result, completion, shortenings)``: the shortenings are the
+    ones this call made, accumulated in this frame — not in shared state —
+    so a caller reads exactly what one call did. When the call fails after
+    shortening, the escaping exception carries the partial shortenings on a
+    ``prompt_shortenings`` attribute, so a failed call's shortenings reach
+    its record too.
+    """
     current_messages = kwargs.get("messages", [])
     max_validation_retries = kwargs.pop("max_retries", config.max_retries)
 
+    shortenings: list[dict] = []
     attempt = 0
     while True:
         try:
-            return _retry_with_validation(  # type: ignore[no-any-return]
+            result, completion = _retry_with_validation(  # type: ignore[no-any-return]
                 do_call,
                 kwargs,
                 config,
                 tracker,
-                original_messages,
                 current_messages,
                 max_validation_retries,
                 stage=stage,
             )
+            return result, completion, shortenings
         except _IncompleteOutput as e:
             exhausted = attempt >= _MAX_TRUNCATION_RETRIES
-            shorter = None if exhausted else _truncate_messages(current_messages)
-            if shorter is None:
+            shortened = None if exhausted else _truncate_messages(current_messages)
+            if shortened is None:
                 if tracker:
                     _record_truncation_dead_end(tracker, attempt, exhausted, current_messages, stage=stage)
+                if shortenings:
+                    object.__setattr__(e.cause, "prompt_shortenings", shortenings)
                 raise e.cause
-            shortening = _shortening_between(attempt + 1, current_messages, shorter)
-            _current_shortenings().append(shortening)
+            shorter, shortening = shortened
+            shortening.attempt = attempt + 1
+            shortenings.append(asdict(shortening))
             _log_and_record_shortening(tracker, attempt, shortening, stage=stage)
             current_messages = shorter
-            kwargs["messages"] = shorter
+            _swap_request_messages(tracker, kwargs, shorter)
             _apply_budget(kwargs, config)
             attempt += 1
+        except Exception as exc:
+            # A validation exhaustion or API error can escape after this call
+            # already shortened; the partials travel on the exception.
+            if shortenings:
+                object.__setattr__(exc, "prompt_shortenings", shortenings)
+            raise
 
 
 def _record_truncation_dead_end(
@@ -943,12 +956,13 @@ def _wrap_with_tracking(client: _StructuredClient, tracker: TokenTracker, config
             extra = kwargs.setdefault("extra_body", {})
             extra.setdefault("top_k", config.top_k)
         _apply_budget(kwargs, config)
-        _current_shortenings().clear()
         tracker._thread_local.current_messages = kwargs.get("messages")
         try:
-            result, completion = _call_with_retry(_do_call, kwargs, config, tracker=tracker, stage=stage)
+            result, completion, shortenings = _call_with_retry(_do_call, kwargs, config, tracker=tracker, stage=stage)
         finally:
             tracker._thread_local.current_messages = None
+        if shortenings:
+            object.__setattr__(result, "prompt_shortenings", shortenings)
         _track_completion(tracker, completion, stage=stage)
         return result
 

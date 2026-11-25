@@ -22,6 +22,7 @@ from asago_policy_mapper.llm import (
     LLMConfig,
     SlimModel,
     TokenTracker,
+    ValidationRetryExhausted,
     _wrap_with_tracking,
     create_client,
 )
@@ -168,6 +169,183 @@ class TestIncidentMessagesSnapshot:
         # The practical consequence: a post-call incident carries no messages.
         tracker.record_incident("later", "recorded after the call finished")
         assert "messages" not in tracker.incidents[-1]
+
+    def test_overflow_after_shortening_carries_the_shortened_messages(self):
+        """An overflow on the shortened retry snapshots the shortened prompt.
+
+        The first answer stops at the token limit, so the call shortens the
+        prompt and retries; the overflow fires on that shortened request,
+        and its incident must carry the messages that request sent — the
+        same shortened prompt the incident's own character counts describe.
+        """
+        tracker = TokenTracker()
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) == 1:
+                return httpx.Response(
+                    200,
+                    json={
+                        "id": "chatcmpl-1",
+                        "object": "chat.completion",
+                        "created": 0,
+                        "model": "test-model",
+                        "choices": [
+                            {"index": 0, "finish_reason": "length", "message": {"role": "assistant", "content": None}}
+                        ],
+                        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+                    },
+                )
+            if len(requests) == 2:
+                return httpx.Response(400, json=_overflow_error_body())
+            return httpx.Response(
+                200,
+                json={
+                    "id": "chatcmpl-1",
+                    "object": "chat.completion",
+                    "created": 0,
+                    "model": "test-model",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "finish_reason": "stop",
+                            "message": {"role": "assistant", "content": '{"answer": "ok"}'},
+                        }
+                    ],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+                },
+            )
+
+        config = _config(sdk_max_retries=0)
+        http_client = httpx.Client(transport=httpx.MockTransport(handler))
+        with patch(
+            "asago_policy_mapper.llm.OpenAI",
+            lambda **kw: openai.OpenAI(http_client=http_client, **kw),
+        ):
+            client = create_client(config, tracker=tracker)
+            client.chat.completions.create(
+                model="test-model",
+                response_model=_Answer,
+                messages=[{"role": "user", "content": "A" * 2000}],
+                max_tokens=4096,
+            )
+
+        assert len(requests) == 3
+        # The overflowed request is the shortened retry, not the original.
+        assert len(requests[1]["messages"][0]["content"]) == 1200
+        (incident,) = [i for i in tracker.incidents if i["kind"] == "context_overflow"]
+        assert incident["messages"] == [{"role": "user", "content": "A" * 1200}]
+
+    def test_validation_exhausted_after_hint_carries_the_hinted_messages(self):
+        """An exhausted validation retry snapshots the hinted prompt it last sent.
+
+        Retries exhaust after a hinted retry (max_retries >= 1); the last
+        request the endpoint saw carried base + failed output + hint, and
+        the incident must snapshot exactly that, not the base prompt.
+        """
+        tracker = TokenTracker()
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            # Invalid JSON on every attempt: the parse fails each time.
+            return httpx.Response(
+                200,
+                json={
+                    "id": "chatcmpl-1",
+                    "object": "chat.completion",
+                    "created": 0,
+                    "model": "test-model",
+                    "choices": [
+                        {"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "not json"}}
+                    ],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+                },
+            )
+
+        config = _config(max_retries=1, sdk_max_retries=0)
+        http_client = httpx.Client(transport=httpx.MockTransport(handler))
+        with patch(
+            "asago_policy_mapper.llm.OpenAI",
+            lambda **kw: openai.OpenAI(http_client=http_client, **kw),
+        ):
+            client = create_client(config, tracker=tracker)
+            with pytest.raises(ValidationRetryExhausted):
+                client.chat.completions.create(
+                    model="test-model",
+                    response_model=_Answer,
+                    messages=[{"role": "user", "content": "base prompt"}],
+                    max_tokens=64,
+                )
+
+        # Two requests: the original, then the hinted retry.
+        assert len(requests) == 2
+        assert [m["role"] for m in requests[1]["messages"]] == ["user", "assistant", "user"]
+
+        (incident,) = [i for i in tracker.incidents if i["kind"] == "validation_exhausted"]
+        # The snapshot matches the last request the endpoint saw: the base
+        # plus the failed output and the hint, not the base alone.
+        assert incident["messages"] == requests[1]["messages"]
+        assert any("Validation error" in m["content"] for m in incident["messages"])
+        assert any(m["content"] == "base prompt" for m in incident["messages"])
+
+    def test_validation_exhausted_without_retries_carries_the_original(self):
+        """With no validation retries (max_retries=0), the incident snapshots the base.
+
+        No hinted retry ever ran, so the one request the endpoint saw was the
+        original prompt and the incident snapshots exactly that.
+        """
+        tracker = TokenTracker()
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            return httpx.Response(
+                200,
+                json={
+                    "id": "chatcmpl-1",
+                    "object": "chat.completion",
+                    "created": 0,
+                    "model": "test-model",
+                    "choices": [
+                        {"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "not json"}}
+                    ],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+                },
+            )
+
+        config = _config(max_retries=0, sdk_max_retries=0)
+        http_client = httpx.Client(transport=httpx.MockTransport(handler))
+        with patch(
+            "asago_policy_mapper.llm.OpenAI",
+            lambda **kw: openai.OpenAI(http_client=http_client, **kw),
+        ):
+            client = create_client(config, tracker=tracker)
+            with pytest.raises(ValidationRetryExhausted):
+                client.chat.completions.create(
+                    model="test-model",
+                    response_model=_Answer,
+                    messages=[{"role": "user", "content": "base prompt"}],
+                    max_tokens=64,
+                )
+
+        assert len(requests) == 1
+        (incident,) = [i for i in tracker.incidents if i["kind"] == "validation_exhausted"]
+        assert incident["messages"] == [{"role": "user", "content": "base prompt"}]
+
+
+def _overflow_error_body() -> dict:
+    """A 400 in the shape endpoints report context-length overflow."""
+    return {
+        "error": {
+            "message": "maximum context length is 8192 tokens. However, you requested 4096 "
+            "output tokens and 7500 input tokens",
+            "type": "invalid_request_error",
+            "param": None,
+            "code": None,
+        }
+    }
 
 
 class TestLLMConfigClamp:
