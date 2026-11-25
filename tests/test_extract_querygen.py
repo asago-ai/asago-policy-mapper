@@ -199,12 +199,12 @@ def test_generate_queries_records_llm_calls():
     ]
     groups = [ChunkGroup(chunk_indices=[0], section="Bias")]
     client = _make_mock_client([["bias query"]])
-    call_collector = []
+    records = []
 
-    generate_queries(chunks, groups, client, "test-model", call_collector=call_collector)
+    generate_queries(chunks, groups, client, "test-model", records=records)
 
-    assert len(call_collector) == 1
-    assert call_collector[0].stage == "query_gen"
+    assert len(records) == 1
+    assert records[0].stage == "query_gen"
 
 
 def test_generate_queries_fallback_on_failure():

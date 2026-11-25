@@ -204,7 +204,7 @@ def test_ground_and_extract_evidence_captures_call(mock_client):
         model="test-model",
         document="policy.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
     )
 
     assert "R-001" in result
@@ -287,7 +287,7 @@ def test_ground_and_extract_evidence_batches_with_sequential_call_ids(mock_clien
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=2,
     )
 
@@ -333,7 +333,7 @@ def test_ground_and_extract_evidence_batches_five_candidates_size_two(mock_clien
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=2,
     )
 
@@ -383,7 +383,7 @@ def test_ground_and_extract_evidence_batch_size_equal_to_count_is_single_call(mo
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=2,
     )
 
@@ -415,7 +415,7 @@ def test_ground_and_extract_evidence_default_batch_size_is_one_call(mock_client)
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
     )
 
     assert mock_client.chat.completions.create.call_count == 1
@@ -516,7 +516,7 @@ def test_ground_and_extract_evidence_batch_size_one_splits_per_candidate(mock_cl
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=1,
     )
 
@@ -578,7 +578,7 @@ def test_ground_and_extract_evidence_ungrounded_verdict_counts_zero(mock_client)
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
     )
 
     assert collector[0].result_summary == "0/1 grounded"
@@ -609,7 +609,7 @@ def test_ground_and_extract_evidence_records_sane_duration(mock_client):
             model="test-model",
             document="doc.pdf",
             chunk_index=0,
-            call_collector=collector,
+            records=collector,
         )
 
     assert collector[0].duration_ms == 250.0
@@ -815,7 +815,7 @@ def test_ground_risk_group_captures_call(mock_client):
         client=mock_client,
         model="test-model",
         document="policy.pdf",
-        call_collector=collector,
+        records=collector,
     )
 
     assert "R-001" in result
@@ -954,7 +954,7 @@ def test_synthesize_causal_chain_validation_exhaustion_returns_none(mock_client,
             chunk_texts={0: "Some text.", 2: "More text."},
             client=mock_client,
             model="test-model",
-            call_collector=collector,
+            records=collector,
         )
 
     assert result is None
@@ -996,7 +996,7 @@ def test_synthesize_causal_chain_api_error_propagates_untouched(mock_client, mak
             chunk_texts={0: "Some text.", 2: "More text."},
             client=mock_client,
             model="test-model",
-            call_collector=collector,
+            records=collector,
         )
 
     assert excinfo.value is error
@@ -1122,7 +1122,7 @@ def test_synthesize_causal_chain_records_call(mock_client):
         chunk_texts=chunk_texts,
         client=mock_client,
         model="test-model",
-        call_collector=collector,
+        records=collector,
     )
 
     assert len(collector) == 1

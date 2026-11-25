@@ -338,7 +338,7 @@ class TestGroundVariants:
             model="test-model",
             document="policy.pdf",
             chunk_index=3,
-            call_collector=collector,
+            records=collector,
         )
 
         assert len(collector) == 1
@@ -882,7 +882,7 @@ def test_ground_expansion_groups_multi_pass_uses_union_worker():
 
     multi_calls = []
 
-    def fake_multi(group, chunks, documents, client, config, call_collector, passes):
+    def fake_multi(group, chunks, documents, client, config, records, passes):
         multi_calls.append((tuple(group.risk_ids), passes))
         return {"R-005": ([EvidenceSpan(text="q", document="doc.md", chunk_index=0)], "medium")}
 

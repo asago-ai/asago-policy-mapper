@@ -245,7 +245,7 @@ def test_judge_borderline_captures_call():
         "Some chunk text about AI bias.",
         mock_client,
         "test-model",
-        call_collector=collector,
+        records=collector,
         chunk_index=3,
     )
 

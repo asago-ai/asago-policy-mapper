@@ -942,6 +942,35 @@ def test_run_judge_no_judge_skips_chunks_without_borderline(mock_config):
     assert [c.risk_id for c in cr.accepted] == ["R-001"]
 
 
+def test_run_judge_cross_encoder_judges_via_thread_pool(mock_config, monkeypatch):
+    """With the cross-encoder path, each borderline chunk is judged concurrently;
+    the chunk records the judged candidates and adds them to accepted."""
+    from asago_policy_mapper.extract import pipeline
+
+    cr0 = _chunk_result_with_borderline(0, ("R-003", "R-004"))
+    cr0.borderline_judged = [_candidate("R-099")]  # stale judging is replaced, not extended
+    cr1 = _chunk_result_with_borderline(1, ("R-005",))
+    judged_by_chunk = {}
+
+    def fake_judge_one(i, cr, client, model, records, judge_prompt, max_batch_size, context_text):
+        judged_by_chunk[i] = (judge_prompt, max_batch_size, context_text)
+        # judge keeps only the first borderline candidate of each chunk
+        return i, [cr.borderline[0]]
+
+    monkeypatch.setattr(pipeline, "_judge_one", fake_judge_one)
+    retrieval = _judge_retrieval()
+    contexts = ["context zero", "context one"]
+
+    _run_judge([cr0, cr1], [], MagicMock(), mock_config, retrieval, [], chunk_contexts=contexts)
+
+    assert judged_by_chunk[0] == ("judge_risk", 15, "context zero")
+    assert judged_by_chunk[1] == ("judge_risk", 15, "context one")
+    assert [c.risk_id for c in cr0.borderline_judged] == ["R-003"]
+    assert [c.risk_id for c in cr0.accepted] == ["R-001", "R-003"]
+    assert [c.risk_id for c in cr1.borderline_judged] == ["R-005"]
+    assert [c.risk_id for c in cr1.accepted] == ["R-001", "R-005"]
+
+
 def test_run_judge_cross_encoder_without_borderline_makes_no_calls(mock_config, monkeypatch):
     """With no borderline candidates the thread pool never submits work."""
     from asago_policy_mapper.extract import pipeline
