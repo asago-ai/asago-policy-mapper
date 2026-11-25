@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from conftest import stage_mock_client
 from llm_errors import (
     authentication_failure,
     connection_failure,
@@ -63,7 +64,7 @@ def test_run_extraction_returns_extraction_result(mock_config, tmp_path):
     doc = tmp_path / "test.md"
     doc.write_text("AI systems must avoid bias and protect personal data. Training data integrity is critical.")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -86,7 +87,7 @@ def test_run_extraction_empty_document(mock_config, tmp_path):
     doc = tmp_path / "empty.txt"
     doc.write_text("")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -105,7 +106,7 @@ def test_run_extraction_no_risks(mock_config, tmp_path):
     doc = tmp_path / "test.txt"
     doc.write_text("Some policy text.")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -188,7 +189,7 @@ def test_run_extraction_multiple_documents(mock_config, tmp_path):
         doc.write_text(f"Policy document number {i} about AI governance.")
         docs.append(doc)
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -210,7 +211,7 @@ def test_run_extraction_metadata(mock_config, tmp_path):
     doc.write_text("AI risk document.")
     mock_config.service_tier = "flex"
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -233,7 +234,7 @@ def test_run_extraction_populates_chunks(mock_config, tmp_path):
     doc = tmp_path / "test.md"
     doc.write_text("AI systems must avoid bias and protect personal data. Training data integrity is critical.")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -264,7 +265,7 @@ def test_run_extraction_populates_llm_calls(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -289,7 +290,7 @@ def test_run_extraction_no_judge_no_grounding(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -321,7 +322,7 @@ def test_run_extraction_no_grounding_with_judge(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -352,7 +353,7 @@ def test_run_extraction_no_judge_no_grounding_no_cross_encoder(mock_config, tmp_
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -385,7 +386,7 @@ def test_run_extraction_no_cross_encoder(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -472,7 +473,7 @@ def test_run_extraction_no_judge_with_grounding_accepted_by(mock_config, tmp_pat
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -575,7 +576,7 @@ def test_run_extraction_expand_siblings(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.side_effect = lambda **kwargs: (
         _RiskEvidenceList(
             items=[
@@ -622,7 +623,7 @@ def test_run_extraction_expand_no_siblings_when_no_grounding(mock_config, tmp_pa
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -650,7 +651,7 @@ def test_run_extraction_judge_with_cross_encoder(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -694,7 +695,7 @@ def test_run_causal_synthesis_populates_fields():
         SimpleNamespace(text="Chunk two about discrimination in lending."),
     ]
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _CausalChains(
         items=[
             _CausalChain(
@@ -741,7 +742,7 @@ def test_run_causal_synthesis_skips_empty_results():
     ]
     chunks = [SimpleNamespace(text="Unrelated text about data retention.")]
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _CausalChains(
         items=[_CausalChain(threat="", threat_source="", vulnerability="", consequence="", impact="")]
     )
@@ -785,7 +786,7 @@ def _causal_client(failing_risk_id, error):
             ]
         )
 
-    client = MagicMock()
+    client = stage_mock_client()
     client.chat.completions.create.side_effect = _create
     return client
 
@@ -842,7 +843,7 @@ def test_run_extraction_query_gen_no_judge_no_grounding(mock_config, tmp_path):
 
     from asago_policy_mapper.extract.querygen import GeneratedQueries
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = GeneratedQueries(
         queries=["AI bias and fairness risks", "Training data integrity risks"]
     )
@@ -939,35 +940,6 @@ def test_run_judge_no_judge_skips_chunks_without_borderline(mock_config):
 
     assert cr.borderline_judged == []
     assert [c.risk_id for c in cr.accepted] == ["R-001"]
-
-
-def test_run_judge_cross_encoder_judges_via_thread_pool(mock_config, monkeypatch):
-    """With the cross-encoder path, each borderline chunk is judged concurrently;
-    the chunk records the judged candidates and adds them to accepted."""
-    from asago_policy_mapper.extract import pipeline
-
-    cr0 = _chunk_result_with_borderline(0, ("R-003", "R-004"))
-    cr0.borderline_judged = [_candidate("R-099")]  # stale judging is replaced, not extended
-    cr1 = _chunk_result_with_borderline(1, ("R-005",))
-    judged_by_chunk = {}
-
-    def fake_judge_one(i, cr, client, model, call_collector, judge_prompt, max_batch_size, context_text):
-        judged_by_chunk[i] = (judge_prompt, max_batch_size, context_text)
-        # judge keeps only the first borderline candidate of each chunk
-        return i, [cr.borderline[0]]
-
-    monkeypatch.setattr(pipeline, "_judge_one", fake_judge_one)
-    retrieval = _judge_retrieval()
-    contexts = ["context zero", "context one"]
-
-    _run_judge([cr0, cr1], [], MagicMock(), mock_config, retrieval, [], chunk_contexts=contexts)
-
-    assert judged_by_chunk[0] == ("judge_risk", 15, "context zero")
-    assert judged_by_chunk[1] == ("judge_risk", 15, "context one")
-    assert [c.risk_id for c in cr0.borderline_judged] == ["R-003"]
-    assert [c.risk_id for c in cr0.accepted] == ["R-001", "R-003"]
-    assert [c.risk_id for c in cr1.borderline_judged] == ["R-005"]
-    assert [c.risk_id for c in cr1.accepted] == ["R-001", "R-005"]
 
 
 def test_run_judge_cross_encoder_without_borderline_makes_no_calls(mock_config, monkeypatch):

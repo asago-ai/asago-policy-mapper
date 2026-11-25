@@ -276,7 +276,8 @@ def _judge_batch(
     )
 
     t0 = time.time()
-    verdicts_resp = client.chat.completions.create(
+    stage_client = client.for_stage("judge")
+    verdicts_resp = stage_client.chat.completions.create(
         model=model,
         response_model=_JudgeVerdicts,
         messages=messages,

@@ -113,7 +113,8 @@ def ground_and_extract_evidence(
         )
 
         t0 = time.time()
-        verdicts_resp = client.chat.completions.create(
+        stage_client = client.for_stage("grounding")
+        verdicts_resp = stage_client.chat.completions.create(
             model=model,
             response_model=_RiskEvidenceList,
             messages=messages,
@@ -170,7 +171,8 @@ def ground_variants(
     )
 
     t0 = time.time()
-    verdicts_resp = client.chat.completions.create(
+    stage_client = client.for_stage("variant_grounding")
+    verdicts_resp = stage_client.chat.completions.create(
         model=model,
         response_model=_RiskEvidenceList,
         messages=messages,
@@ -281,7 +283,8 @@ def ground_risk_group(
     )
 
     t0 = time.time()
-    verdicts_resp = client.chat.completions.create(
+    stage_client = client.for_stage("expansion_grounding")
+    verdicts_resp = stage_client.chat.completions.create(
         model=model,
         response_model=_RiskEvidenceList,
         messages=messages,
@@ -357,7 +360,8 @@ def _request_causal_chain(
     t0 = time.time()
     retry_exhausted = False
     try:
-        results_resp = client.chat.completions.create(
+        stage_client = client.for_stage("causal_synthesis")
+        results_resp = stage_client.chat.completions.create(
             model=model,
             response_model=_CausalChains,
             messages=messages,
@@ -407,8 +411,8 @@ def synthesize_causal_chain(
     chain = _downgrade_empty_chain(results[0] if results else None, risk_match.risk_id)
 
     if call_collector is not None:
-        call_id = f"causal-{len([c for c in call_collector if c.stage == 'causal_synthesis']) + 1:03d}"
         first_chunk = risk_match.evidence[0].chunk_index if risk_match.evidence else -1
+        call_id = f"causal-{len([c for c in call_collector if c.stage == 'causal_synthesis']) + 1:03d}"
         call_collector.append(
             LLMCallRecord(
                 call_id=call_id,

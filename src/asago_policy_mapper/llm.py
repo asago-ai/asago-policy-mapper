@@ -576,6 +576,37 @@ class _Chat:
         self.completions = _Completions(client)
 
 
+class _StageCompletions:
+    """``chat.completions`` of a stage view; delegates with the stage attached."""
+
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self._client = client
+        self._stage = stage
+
+    def create(self, **kwargs: Any):
+        return self._client.chat.completions.create(stage=self._stage, **kwargs)
+
+
+class _StageChat:
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self.completions = _StageCompletions(client, stage)
+
+
+class _StageScopedClient:
+    """Stage-scoped view over a tracked structured client.
+
+    ``_StructuredClient.for_stage`` returns one per pipeline stage. The view
+    keeps the ``chat.completions.create`` API: every call through it carries
+    the stage into token-usage totals and incident records, while calls made
+    directly on the underlying client record no stage.
+    """
+
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self._client = client
+        self._stage = stage
+        self.chat = _StageChat(client, stage)
+
+
 class _StructuredClient:
     """Structured-output chat client over a plain ``OpenAI`` instance.
 
@@ -595,6 +626,18 @@ class _StructuredClient:
         self._openai = openai_client
         self.mode = mode
         self.chat = _Chat(self)
+
+    def for_stage(self, stage: str) -> _StageScopedClient:
+        """Return a view whose calls are attributed to ``stage``.
+
+        Stage workers call the model through this view; the stage flows
+        explicitly into the token totals and incident records of the call.
+        The name must be one of ``STAGES``; anything else raises
+        ``ValueError``, leaving the client untouched and usable.
+        """
+        if stage not in STAGES:
+            raise ValueError(f"unknown stage {stage!r}: expected one of {', '.join(STAGES)}")
+        return _StageScopedClient(self, stage)
 
     def create_with_completion(self, **kwargs: Any) -> tuple[Any, Any]:
         """Return ``(validated_model, raw_completion)`` for a single attempt.

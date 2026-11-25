@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 import openai
 import pytest
+from conftest import stage_mock_client
 from llm_errors import (
     authentication_failure,
     connection_failure,
@@ -36,7 +37,7 @@ from asago_policy_mapper.prompts import render_prompt
 
 
 def test_ground_and_extract_evidence_returns_grounded():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[
             MagicMock(
@@ -93,7 +94,7 @@ def test_ground_and_extract_evidence_returns_grounded():
 
 
 def test_ground_and_extract_evidence_empty_candidates():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     result = ground_and_extract_evidence(
         chunk_text="Some text.",
         candidates=[],
@@ -107,7 +108,7 @@ def test_ground_and_extract_evidence_empty_candidates():
 
 
 def test_ground_and_extract_evidence_ignores_unknown_risk_ids():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[
             MagicMock(
@@ -140,7 +141,7 @@ def test_ground_and_extract_evidence_ignores_unknown_risk_ids():
 
 
 def test_ground_and_extract_evidence_skips_empty_quotes():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[
             MagicMock(
@@ -625,7 +626,7 @@ def _make_chunks(texts: list[str]):
 
 
 def test_ground_risk_group_returns_grounded():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _RiskEvidenceList(
         items=[
             _RiskEvidence(
@@ -668,7 +669,7 @@ def test_ground_risk_group_returns_grounded():
 
 
 def test_ground_risk_group_empty_risks():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     chunks = _make_chunks(["Some text."])
 
     result = ground_risk_group(
@@ -685,7 +686,7 @@ def test_ground_risk_group_empty_risks():
 
 
 def test_ground_risk_group_empty_chunks():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     risks = [
         {"risk_id": "R-001", "risk_name": "Bias", "risk_description": "Bias risk."},
     ]
@@ -704,7 +705,7 @@ def test_ground_risk_group_empty_chunks():
 
 
 def test_ground_risk_group_out_of_range_chunks():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     chunks = _make_chunks(["Only one chunk."])
     risks = [
         {"risk_id": "R-001", "risk_name": "Bias", "risk_description": "Bias risk."},
@@ -724,7 +725,7 @@ def test_ground_risk_group_out_of_range_chunks():
 
 
 def test_ground_risk_group_ignores_unknown_risk_ids():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _RiskEvidenceList(
         items=[
             _RiskEvidence(
@@ -754,7 +755,7 @@ def test_ground_risk_group_ignores_unknown_risk_ids():
 
 
 def test_ground_risk_group_skips_empty_quotes():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _RiskEvidenceList(
         items=[
             _RiskEvidence(

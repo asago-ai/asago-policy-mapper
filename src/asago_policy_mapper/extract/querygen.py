@@ -82,8 +82,12 @@ def generate_queries(
         messages = render_prompt("generate_queries", {"chunk_text": chunk_text})
 
         t0 = time.time()
+        # The stage view is acquired outside the try so a misconfigured stage
+        # name fails loudly instead of degrading into the query-generation
+        # fallback.
+        stage_client = client.for_stage("query_gen")
         try:
-            response = client.chat.completions.create(
+            response = stage_client.chat.completions.create(
                 model=model,
                 response_model=GeneratedQueries,
                 messages=messages,
