@@ -260,7 +260,7 @@ def test_judge_borderline_real_llm(llm_client, llm_config):
         chunk_text=CHUNK_TEXT,
         client=client,
         model=llm_config.model,
-        call_collector=call_collector,
+        records=call_collector,
     )
 
     assert isinstance(accepted, list)
@@ -290,7 +290,7 @@ def test_grounding_real_llm(llm_client, llm_config):
         model=llm_config.model,
         document="policy.md",
         chunk_index=0,
-        call_collector=call_collector,
+        records=call_collector,
     )
 
     assert isinstance(result, dict)
@@ -333,7 +333,7 @@ def test_query_generation_real_llm(llm_client, llm_config):
         groups=groups,
         client=client,
         model=llm_config.model,
-        call_collector=call_collector,
+        records=call_collector,
         max_workers=1,
     )
 
@@ -376,7 +376,7 @@ def test_causal_synthesis_real_llm(llm_client, llm_config):
         chunk_texts={0: CHUNK_TEXT},
         client=client,
         model=llm_config.model,
-        call_collector=call_collector,
+        records=call_collector,
     )
 
     assert len(call_collector) >= 1

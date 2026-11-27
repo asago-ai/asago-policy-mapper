@@ -80,6 +80,7 @@ class RetrievalStats(BaseModel):
     total_candidates_retrieved: int
     auto_accepted: int
     llm_judged: int
+    auto_promoted: int = 0
     grounding_filtered: int
     timing_ms: dict[str, float] = {}
 
@@ -107,6 +108,7 @@ class LLMCallRecord(BaseModel):
     response: dict | str | list[dict]
     duration_ms: float
     result_summary: str
+    prompt_shortenings: list[dict] = []
 
 
 class FilteredCandidate(BaseModel):

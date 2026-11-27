@@ -1,10 +1,12 @@
 import copy
+import hashlib
 import json
 import logging
+import math
 import os
 import re
 import threading
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -133,6 +135,53 @@ _MIN_OUTPUT_TOKENS = 256
 _OUTPUT_TOKEN_PARAMETERS = ("max_tokens", "max_completion_tokens")
 
 
+_SDK_MAX_RETRIES_ENV = "POLICY_MAPPER_SDK_MAX_RETRIES"
+_SDK_TIMEOUT_ENV = "POLICY_MAPPER_SDK_TIMEOUT_S"
+
+
+def _env_int(name: str) -> int | None:
+    """Read an integer environment variable, None when unset or empty."""
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        raise ValueError(f"{name} must be an integer, got {raw!r}") from None
+
+
+def _env_float(name: str) -> float | None:
+    """Read a float environment variable, None when unset or empty."""
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        raise ValueError(f"{name} must be a number, got {raw!r}") from None
+
+
+def _validate_sdk_settings(sdk_max_retries: int | None, sdk_timeout_s: float | None) -> None:
+    """Reject transport settings the OpenAI SDK would silently mishandle.
+
+    A negative retry count and a zero, negative or non-finite timeout are
+    configuration errors, not runtime conditions: fail where the value is
+    resolved — at ``LLMConfig`` construction or at client build — before
+    any client exists. A retry count that is not a plain integer —
+    a fractional or integral float, or a boolean — is rejected too, and so
+    is a boolean timeout. ``bool`` subclasses ``int`` in Python, so it needs
+    its own check.
+    """
+    if sdk_max_retries is not None and (isinstance(sdk_max_retries, bool) or not isinstance(sdk_max_retries, int)):
+        raise ValueError(f"sdk_max_retries must be an integer, got {sdk_max_retries!r}")
+    if sdk_max_retries is not None and sdk_max_retries < 0:
+        raise ValueError(f"sdk_max_retries must be at least 0, got {sdk_max_retries}")
+    if sdk_timeout_s is not None and isinstance(sdk_timeout_s, bool):
+        raise ValueError(f"sdk_timeout_s must be a number, not a boolean, got {sdk_timeout_s!r}")
+    if sdk_timeout_s is not None and (not math.isfinite(sdk_timeout_s) or sdk_timeout_s <= 0):
+        raise ValueError(f"sdk_timeout_s must be finite and positive, got {sdk_timeout_s}")
+
+
 @dataclass
 class LLMConfig:
     base_url: str
@@ -147,6 +196,8 @@ class LLMConfig:
     service_tier: str | None = None
     max_concurrent: int = 32
     max_context: int = 0
+    sdk_max_retries: int | None = None
+    sdk_timeout_s: float | None = None
 
     def __post_init__(self):
         if self.output_token_parameter not in _OUTPUT_TOKEN_PARAMETERS:
@@ -156,6 +207,74 @@ class LLMConfig:
             self.service_tier = self.service_tier.strip() or None
         if self.max_context > 0 and self.max_tokens >= self.max_context:
             self.max_tokens = self.max_context - _SAFETY_MARGIN - _SCHEMA_OVERHEAD_TOKENS
+        # Transport settings are validated here but resolve from the
+        # environment only at client build (``create_client``): a run that
+        # needs no LLM builds a config and never parses the env vars.
+        _validate_sdk_settings(self.sdk_max_retries, self.sdk_timeout_s)
+
+
+def _resolve_sdk_settings(config: LLMConfig) -> tuple[int | None, float | None]:
+    """Resolve the transport settings: constructor value, else env, else unset.
+
+    Runs at client build, so a config built for an LLM-free run never
+    parses the environment. A malformed env value raises an error naming
+    the variable and the bad value; the constructor value skips the env
+    entirely and wins.
+    """
+    sdk_max_retries = config.sdk_max_retries
+    if sdk_max_retries is None:
+        sdk_max_retries = _env_int(_SDK_MAX_RETRIES_ENV)
+    sdk_timeout_s = config.sdk_timeout_s
+    if sdk_timeout_s is None:
+        sdk_timeout_s = _env_float(_SDK_TIMEOUT_ENV)
+    _validate_sdk_settings(sdk_max_retries, sdk_timeout_s)
+    return sdk_max_retries, sdk_timeout_s
+
+
+# The pipeline stages a call site can mark its calls with. for_stage rejects
+# names outside this tuple, so a typo or an unregistered stage fails loudly
+# instead of silently splitting token usage into a wrong bucket.
+STAGES = (
+    "query_gen",
+    "judge",
+    "grounding",
+    "variant_grounding",
+    "expansion_grounding",
+    "causal_synthesis",
+)
+
+
+@dataclass
+class PromptShortening:
+    """One prompt shortening made to retry after an incomplete output.
+
+    Sizes are characters, not tokens: the truncation heuristic cuts content
+    by character count, and the hashes pin the exact before/after text so a
+    recorded shortening can be replayed or audited later.
+    """
+
+    attempt: int
+    message_index: int
+    chars_before: int
+    chars_after: int
+    sha256_before: str
+    sha256_after: str
+    reason: str = "incomplete_output"
+
+
+def _shortenings_of(value: Any) -> list[dict]:
+    """Return the prompt shortenings a call's outcome carries.
+
+    The tracked ``create`` call attaches the shortenings it made to what it
+    hands the caller — the validated model for a successful call, the
+    exception that escaped for a failed one — so they travel with the call's
+    own result instead of a side channel keyed to the thread. The attribute
+    is absent when the call shortened nothing (and on values from mocked
+    clients), which reads as an empty list. The attach uses plain dicts, so
+    the value is exactly what an ``LLMCallRecord.prompt_shortenings`` holds.
+    """
+    shortenings = getattr(value, "prompt_shortenings", None)
+    return list(shortenings) if shortenings else []
 
 
 @dataclass
@@ -168,7 +287,6 @@ class TokenTracker:
     incidents: list[dict] = field(default_factory=list)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     _warned_no_usage: bool = field(default=False, repr=False)
-    _current_stage: str | None = field(default=None, repr=False)
     _thread_local: threading.local = field(default_factory=threading.local, repr=False)
 
     @staticmethod
@@ -197,15 +315,13 @@ class TokenTracker:
                 s["total_tokens"] += tt
                 s["calls"] += 1
 
-    def set_stage(self, stage: str | None) -> None:
-        with self._lock:
-            self._current_stage = stage
-
-    def record_incident(self, kind: str, detail: str) -> None:
+    def record_incident(self, kind: str, detail: str, counts: dict | None = None, stage: str | None = None) -> None:
         with self._lock:
             incident: dict = {"kind": kind, "detail": detail}
-            if self._current_stage:
-                incident["stage"] = self._current_stage
+            if counts:
+                incident.update(counts)
+            if stage:
+                incident["stage"] = stage
             messages = getattr(self._thread_local, "current_messages", None)
             if messages:
                 incident["messages"] = copy.deepcopy(messages)
@@ -278,12 +394,28 @@ def create_client(
     ``mode`` defaults to ``JSON_SCHEMA``; the ``POLICY_MAPPER_STRUCTURED_OUTPUT_MODE``
     environment variable overrides it (one of the ``StructuredOutputMode`` values,
     e.g. ``json_schema_with_prompt`` for battery comparisons).
+
+    The OpenAI SDK's transport retry count and timeout are always passed
+    explicitly: ``config.sdk_max_retries`` and ``config.sdk_timeout_s`` when
+    set, the ``POLICY_MAPPER_SDK_MAX_RETRIES`` / ``POLICY_MAPPER_SDK_TIMEOUT_S``
+    environment variables when the config leaves them unset, and the SDK's own
+    ``openai.DEFAULT_MAX_RETRIES`` / ``openai.DEFAULT_TIMEOUT`` when neither
+    applies. This is the only place the env vars are read, so a run that
+    builds no client never parses them. They configure the transport only
+    and never appear in a completion request; ``config.max_retries`` keeps
+    its separate meaning as the validation retry count.
     """
     if mode is None:
         env = os.environ.get("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE")
         mode = StructuredOutputMode(env) if env else StructuredOutputMode.JSON_SCHEMA
+    sdk_max_retries, sdk_timeout_s = _resolve_sdk_settings(config)
     client = _StructuredClient(
-        OpenAI(base_url=config.base_url, api_key=config.api_key),
+        OpenAI(
+            base_url=config.base_url,
+            api_key=config.api_key,
+            max_retries=(sdk_max_retries if sdk_max_retries is not None else openai.DEFAULT_MAX_RETRIES),
+            timeout=sdk_timeout_s if sdk_timeout_s is not None else openai.DEFAULT_TIMEOUT,
+        ),
         mode=mode,
     )
     _wrap_with_tracking(client, tracker if tracker is not None else TokenTracker(), config)
@@ -320,7 +452,15 @@ _MIN_USER_MESSAGE_CHARS = 500
 _MAX_TRUNCATION_RETRIES = 3
 
 
-def _truncate_messages(messages: list[dict[str, str]]) -> list[dict[str, str]] | None:
+def _truncate_messages(
+    messages: list[dict[str, str]],
+) -> tuple[list[dict[str, str]], PromptShortening] | None:
+    """Shorten the longest user message and describe the shortening.
+
+    Returns ``(truncated_messages, shortening)`` — the metadata names the cut
+    message, its sizes and its before/after hashes, exactly what the caller
+    records — or None when no user message clears the shortening floor.
+    """
     longest_idx = -1
     longest_len = 0
     for i, msg in enumerate(messages):
@@ -333,8 +473,20 @@ def _truncate_messages(messages: list[dict[str, str]]) -> list[dict[str, str]] |
         return None
     truncated = copy.deepcopy(messages)
     new_len = max(int(longest_len * _TRUNCATION_FACTOR), _MIN_USER_MESSAGE_CHARS)
-    truncated[longest_idx]["content"] = truncated[longest_idx]["content"][:new_len]
-    return truncated
+    before = truncated[longest_idx]["content"]
+    after = before[:new_len]
+    truncated[longest_idx]["content"] = after
+    return (
+        truncated,
+        PromptShortening(
+            attempt=0,
+            message_index=longest_idx,
+            chars_before=len(before),
+            chars_after=len(after),
+            sha256_before=hashlib.sha256(before.encode()).hexdigest(),
+            sha256_after=hashlib.sha256(after.encode()).hexdigest(),
+        ),
+    )
 
 
 def _get_output_token_budget(kwargs: dict, config: LLMConfig) -> int:
@@ -373,20 +525,44 @@ class _IncompleteOutput(Exception):
         self.cause = cause
 
 
+def _swap_request_messages(tracker: TokenTracker | None, kwargs: dict, messages: list) -> None:
+    """Point the next request at ``messages`` and refresh the incident snapshot.
+
+    Every retry that changes the prompt (an overflow reset, a shortening)
+    goes through here, so the tracker's in-flight messages — what
+    ``record_incident`` snapshots into an incident — always match the
+    request the endpoint is about to see, not the one the call started
+    with. The tracker deep-copies on record, so a reference is enough.
+    """
+    kwargs["messages"] = messages
+    if tracker is not None:
+        tracker._thread_local.current_messages = messages
+
+
 def _reduce_output_budget_and_retry(
     kwargs,
     config,
     tracker,
-    original_messages,
+    base_messages,
     new_max: int,
+    stage: str | None = None,
 ) -> None:
-    """Reset the messages and lower the output budget for an overflow retry."""
+    """Reset the messages and lower the output budget for an overflow retry.
+
+    ``base_messages`` is the prompt to retry from. The caller passes the
+    current prompt (shortened after an incomplete output), never the original
+    one, so the retry never resends tokens a shortening already removed.
+    Repair hints from validation retries are dropped too: the overflow reset
+    rebuilds the request from the base prompt alone.
+    """
     old_max = _get_output_token_budget(kwargs, config)
     parameter = config.output_token_parameter
     logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
     if tracker:
-        tracker.record_incident("context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}")
-    kwargs["messages"] = copy.deepcopy(original_messages)
+        tracker.record_incident(
+            "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}", stage=stage
+        )
+    _swap_request_messages(tracker, kwargs, copy.deepcopy(base_messages))
     _set_output_token_budget(kwargs, config, new_max)
     _apply_budget(kwargs, config)
 
@@ -409,7 +585,12 @@ def _build_validation_retry_messages(current_messages, exc: ValidationRetryExhau
     return retry_messages
 
 
-def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, current_messages, max_retries):
+def _retry_with_validation(do_call, kwargs, config, tracker, current_messages, max_retries, stage=None):
+    """Retry a single LLM call across validation failures and context overflow.
+
+    Overflow retries reset to ``current_messages``, the prompt as it stands —
+    shortened after an incomplete output — so a shortening survives them.
+    """
     for val_attempt in range(max_retries + 1):
         try:
             return do_call(kwargs)
@@ -421,7 +602,7 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
             new_max = _extract_reduced_max_tokens(e)
             if new_max is None or val_attempt >= max_retries:
                 raise
-            _reduce_output_budget_and_retry(kwargs, config, tracker, original_messages, new_max)
+            _reduce_output_budget_and_retry(kwargs, config, tracker, current_messages, new_max, stage=stage)
             continue
         except ValidationRetryExhausted as e:
             if val_attempt < max_retries:
@@ -436,13 +617,21 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
                     max_retries + 1,
                     summary[:200],
                 )
-                kwargs["messages"] = _build_validation_retry_messages(current_messages, e)
+                _swap_request_messages(tracker, kwargs, _build_validation_retry_messages(current_messages, e))
                 _apply_budget(kwargs, config)
                 continue
             if tracker:
-                tracker.record_incident("validation_exhausted", f"Validation retries exhausted: {e}")
+                tracker.record_incident("validation_exhausted", f"Validation retries exhausted: {e}", stage=stage)
             raise
     raise RuntimeError("_retry_with_validation exhausted retries without returning a completion")
+
+
+def _longest_user_message_chars(messages: list[dict[str, str]]) -> int:
+    """Return the character count of the longest user message, 0 when none."""
+    return max(
+        (len(m.get("content", "")) for m in messages if m.get("role") == "user"),
+        default=0,
+    )
 
 
 def _call_with_retry(
@@ -450,62 +639,116 @@ def _call_with_retry(
     kwargs: dict,
     config: LLMConfig,
     tracker: TokenTracker | None = None,
+    stage: str | None = None,
 ) -> tuple:
-    original_messages = copy.deepcopy(kwargs.get("messages", []))
+    """Retry one tracked call across truncation, overflow and validation failures.
+
+    Returns ``(result, completion, shortenings)``: the shortenings are the
+    ones this call made, accumulated in this frame — not in shared state —
+    so a caller reads exactly what one call did. When the call fails after
+    shortening, the escaping exception carries the partial shortenings on a
+    ``prompt_shortenings`` attribute, so a failed call's shortenings reach
+    its record too.
+    """
     current_messages = kwargs.get("messages", [])
     max_validation_retries = kwargs.pop("max_retries", config.max_retries)
 
-    incomplete: _IncompleteOutput | None = None
-    for attempt in range(_MAX_TRUNCATION_RETRIES + 1):
+    shortenings: list[dict] = []
+    attempt = 0
+    while True:
         try:
-            return _retry_with_validation(  # type: ignore[no-any-return]
+            result, completion = _retry_with_validation(  # type: ignore[no-any-return]
                 do_call,
                 kwargs,
                 config,
                 tracker,
-                original_messages,
                 current_messages,
                 max_validation_retries,
+                stage=stage,
             )
+            return result, completion, shortenings
         except _IncompleteOutput as e:
-            incomplete = e
-            shorter = _truncate_messages(current_messages)
-            if shorter is None:
+            exhausted = attempt >= _MAX_TRUNCATION_RETRIES
+            shortened = None if exhausted else _truncate_messages(current_messages)
+            if shortened is None:
                 if tracker:
-                    tracker.record_incident(
-                        "output_truncated", "Output truncated and prompt cannot be shortened further"
-                    )
+                    _record_truncation_dead_end(tracker, attempt, exhausted, current_messages, stage=stage)
+                if shortenings:
+                    object.__setattr__(e.cause, "prompt_shortenings", shortenings)
                 raise e.cause
-            logger.info(
-                "Output truncated (attempt %d/%d), retrying with shorter prompt", attempt + 1, _MAX_TRUNCATION_RETRIES
-            )
-            if tracker:
-                tracker.record_incident(
-                    "output_truncated",
-                    f"Output truncated (attempt {attempt + 1}/{_MAX_TRUNCATION_RETRIES}), retrying with shorter prompt",
-                )
+            shorter, shortening = shortened
+            shortening.attempt = attempt + 1
+            shortenings.append(asdict(shortening))
+            _log_and_record_shortening(tracker, attempt, shortening, stage=stage)
             current_messages = shorter
-            kwargs["messages"] = shorter
+            _swap_request_messages(tracker, kwargs, shorter)
             _apply_budget(kwargs, config)
-    # The truncation budget ran out while the prompt was still shortenable.
-    # Raise the incomplete-output cause, not an internal RuntimeError, so
-    # callers see the endpoint condition that ended the run.
+            attempt += 1
+        except Exception as exc:
+            # A validation exhaustion or API error can escape after this call
+            # already shortened; the partials travel on the exception.
+            if shortenings:
+                object.__setattr__(exc, "prompt_shortenings", shortenings)
+            raise
+
+
+def _record_truncation_dead_end(
+    tracker: TokenTracker,
+    attempt: int,
+    exhausted: bool,
+    current_messages: list[dict[str, str]],
+    stage: str | None = None,
+) -> None:
+    """Record why a truncation retry path ended without another request."""
+    longest = _longest_user_message_chars(current_messages)
+    if exhausted:
+        tracker.record_incident(
+            "output_truncated",
+            f"Output truncated after {attempt + 1} attempts; the truncation retry budget is "
+            f"exhausted with the longest user message at {longest} chars",
+            counts={"chars_before": longest},
+            stage=stage,
+        )
+    else:
+        tracker.record_incident(
+            "output_truncated",
+            f"Output truncated and prompt cannot be shortened further (longest user message: {longest} chars)",
+            counts={"chars_before": longest},
+            stage=stage,
+        )
+
+
+def _log_and_record_shortening(
+    tracker: TokenTracker | None, attempt: int, shortening: PromptShortening, stage: str | None = None
+) -> None:
+    """Announce one shortening in the log and the tracker's incidents."""
+    logger.info(
+        "Output truncated (attempt %d/%d), retrying with shorter prompt (%d -> %d chars)",
+        attempt + 1,
+        _MAX_TRUNCATION_RETRIES,
+        shortening.chars_before,
+        shortening.chars_after,
+    )
     if tracker:
         tracker.record_incident(
             "output_truncated",
-            f"Output truncated after {_MAX_TRUNCATION_RETRIES + 1} attempts with progressively shorter prompts",
+            f"Output truncated (attempt {attempt + 1}/{_MAX_TRUNCATION_RETRIES}), retrying with shorter "
+            f"prompt ({shortening.chars_before} -> {shortening.chars_after} chars)",
+            counts={
+                "chars_before": shortening.chars_before,
+                "chars_after": shortening.chars_after,
+            },
+            stage=stage,
         )
-    assert incomplete is not None
-    raise incomplete.cause
 
 
-def _track_completion(tracker: TokenTracker, completion) -> None:
+def _track_completion(tracker: TokenTracker, completion, stage: str | None = None) -> None:
     usage = getattr(completion, "usage", None)
     if usage is None or (getattr(usage, "total_tokens", 0) or 0) == 0:
         if not tracker._warned_no_usage:
             logger.warning("LLM backend returned no token usage — cost tracking unavailable")
             tracker._warned_no_usage = True
-    tracker.add(usage)
+    tracker.add(usage, stage=stage)
 
 
 def _extract_json_span(content: str) -> str:
@@ -537,7 +780,13 @@ class _Completions:
         self._client = client
 
     def create(self, **kwargs: Any):
-        """Return the validated response model for a structured completion."""
+        """Return the validated response model for a structured completion.
+
+        ``stage`` is the tracking wrapper's routing key (a stage view passes
+        it in); it is consumed here so the underlying SDK call never sees it,
+        wrapped client or not.
+        """
+        kwargs.pop("stage", None)
         result, _ = self._client.create_with_completion(**kwargs)
         return result
 
@@ -545,6 +794,37 @@ class _Completions:
 class _Chat:
     def __init__(self, client: "_StructuredClient"):
         self.completions = _Completions(client)
+
+
+class _StageCompletions:
+    """``chat.completions`` of a stage view; delegates with the stage attached."""
+
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self._client = client
+        self._stage = stage
+
+    def create(self, **kwargs: Any):
+        return self._client.chat.completions.create(stage=self._stage, **kwargs)
+
+
+class _StageChat:
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self.completions = _StageCompletions(client, stage)
+
+
+class _StageScopedClient:
+    """Stage-scoped view over a tracked structured client.
+
+    ``_StructuredClient.for_stage`` returns one per pipeline stage. The view
+    keeps the ``chat.completions.create`` API: every call through it carries
+    the stage into token-usage totals and incident records, while calls made
+    directly on the underlying client record no stage.
+    """
+
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self._client = client
+        self._stage = stage
+        self.chat = _StageChat(client, stage)
 
 
 class _StructuredClient:
@@ -566,6 +846,18 @@ class _StructuredClient:
         self._openai = openai_client
         self.mode = mode
         self.chat = _Chat(self)
+
+    def for_stage(self, stage: str) -> _StageScopedClient:
+        """Return a view whose calls are attributed to ``stage``.
+
+        Stage workers call the model through this view; the stage flows
+        explicitly into the token totals and incident records of the call.
+        The name must be one of ``STAGES``; anything else raises
+        ``ValueError``, leaving the client untouched and usable.
+        """
+        if stage not in STAGES:
+            raise ValueError(f"unknown stage {stage!r}: expected one of {', '.join(STAGES)}")
+        return _StageScopedClient(self, stage)
 
     def create_with_completion(self, **kwargs: Any) -> tuple[Any, Any]:
         """Return ``(validated_model, raw_completion)`` for a single attempt.
@@ -650,7 +942,11 @@ def _wrap_with_tracking(client: _StructuredClient, tracker: TokenTracker, config
     def _do_call(kwargs):
         return client.create_with_completion(**kwargs)
 
-    def tracked_create(**kwargs):
+    def tracked_create(*, stage: str | None = None, **kwargs):
+        if stage is not None and stage not in STAGES:
+            # for_stage validates; this guards the wrapped create itself, so
+            # an unregistered name can never split usage into a wrong bucket.
+            raise ValueError(f"unknown stage {stage!r}: expected one of {', '.join(STAGES)}")
         kwargs.setdefault("temperature", config.temperature)
         if config.service_tier is not None:
             kwargs.setdefault("service_tier", config.service_tier)
@@ -662,10 +958,12 @@ def _wrap_with_tracking(client: _StructuredClient, tracker: TokenTracker, config
         _apply_budget(kwargs, config)
         tracker._thread_local.current_messages = kwargs.get("messages")
         try:
-            result, completion = _call_with_retry(_do_call, kwargs, config, tracker=tracker)
+            result, completion, shortenings = _call_with_retry(_do_call, kwargs, config, tracker=tracker, stage=stage)
         finally:
             tracker._thread_local.current_messages = None
-        _track_completion(tracker, completion)
+        if shortenings:
+            object.__setattr__(result, "prompt_shortenings", shortenings)
+        _track_completion(tracker, completion, stage=stage)
         return result
 
     client.chat.completions.create = tracked_create  # type: ignore[method-assign,assignment]

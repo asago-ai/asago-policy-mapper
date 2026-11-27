@@ -6,11 +6,19 @@ from dataclasses import dataclass
 
 import spacy
 
+from asago_policy_mapper.extract.calllog import next_call_number
 from asago_policy_mapper.extract.models import LLMCallRecord, ScoredCandidate, _JudgeVerdicts
 from asago_policy_mapper.extract.parse import Chunk
+from asago_policy_mapper.llm import _shortenings_of
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
+
+
+def _counts_judge(record: LLMCallRecord) -> bool:
+    """The ``judge-NNN`` predicate."""
+    return record.stage == "judge"
+
 
 _nlp = spacy.blank("en")
 _nlp.add_pipe("sentencizer")
@@ -232,7 +240,7 @@ def classify_candidates(
 
 
 def _record_judge_call(
-    call_collector: list[LLMCallRecord],
+    records: list[LLMCallRecord],
     *,
     chunk_index: int,
     risk_ids: list[str],
@@ -241,11 +249,12 @@ def _record_judge_call(
     duration_ms: float,
     batch_accepted: int,
     batch_size: int,
+    prompt_shortenings: list[dict],
 ) -> None:
-    call_id = f"judge-{len([c for c in call_collector if c.stage == 'judge']) + 1:03d}"
-    call_collector.append(
+    number = next_call_number(records, counts=_counts_judge)
+    records.append(
         LLMCallRecord(
-            call_id=call_id,
+            call_id=f"judge-{number:03d}",
             stage="judge",
             chunk_index=chunk_index,
             risk_ids=risk_ids,
@@ -253,7 +262,8 @@ def _record_judge_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{batch_accepted}/{batch_size} accepted",
-        )
+            prompt_shortenings=prompt_shortenings,
+        ),
     )
 
 
@@ -263,8 +273,8 @@ def _judge_batch(
     client,
     model: str,
     prompt_name: str,
-) -> tuple[list[ScoredCandidate], list, list, float]:
-    """Judge one batch; return (accepted candidates, messages, verdicts, duration_ms)."""
+) -> tuple[list[ScoredCandidate], list, list, float, list[dict]]:
+    """Judge one batch; return (accepted, messages, verdicts, duration_ms, shortenings)."""
     messages = render_prompt(
         prompt_name,
         {
@@ -276,7 +286,8 @@ def _judge_batch(
     )
 
     t0 = time.time()
-    verdicts_resp = client.chat.completions.create(
+    stage_client = client.for_stage("judge")
+    verdicts_resp = stage_client.chat.completions.create(
         model=model,
         response_model=_JudgeVerdicts,
         messages=messages,
@@ -287,7 +298,7 @@ def _judge_batch(
     batch_ids = {c.risk_id for c in batch}
     accepted_ids = {v.risk_id for v in verdicts if v.relevant and v.risk_id in batch_ids}
     accepted = [c for c in batch if c.risk_id in accepted_ids]
-    return accepted, messages, verdicts, duration_ms
+    return accepted, messages, verdicts, duration_ms, _shortenings_of(verdicts_resp)
 
 
 def judge_borderline(
@@ -296,7 +307,7 @@ def judge_borderline(
     client,
     model: str,
     *,
-    call_collector: list[LLMCallRecord] | None = None,
+    records: list[LLMCallRecord] | None = None,
     chunk_index: int = 0,
     prompt_name: str = "judge_risk",
     max_batch_size: int = 0,
@@ -312,12 +323,14 @@ def judge_borderline(
     result: list[ScoredCandidate] = []
 
     for batch in batches:
-        accepted, messages, verdicts, duration_ms = _judge_batch(batch, chunk_text, client, model, prompt_name)
+        accepted, messages, verdicts, duration_ms, shortenings = _judge_batch(
+            batch, chunk_text, client, model, prompt_name
+        )
         result.extend(accepted)
 
-        if call_collector is not None:
+        if records is not None:
             _record_judge_call(
-                call_collector,
+                records,
                 chunk_index=chunk_index,
                 risk_ids=[c.risk_id for c in batch],
                 messages=messages,
@@ -325,6 +338,7 @@ def judge_borderline(
                 duration_ms=duration_ms,
                 batch_accepted=len(accepted),
                 batch_size=len(batch),
+                prompt_shortenings=shortenings,
             )
 
     return result

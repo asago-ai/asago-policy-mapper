@@ -36,5 +36,16 @@ def mock_config():
 
 @pytest.fixture
 def mock_client():
+    return stage_mock_client()
+
+
+def stage_mock_client():
+    """Return a MagicMock client whose for_stage returns the client itself.
+
+    Production workers call the model through ``client.for_stage(stage)``;
+    a mock built this way keeps those calls landing on the same
+    ``chat.completions.create`` the test configures.
+    """
     client = MagicMock()
+    client.for_stage = lambda stage: client
     return client
