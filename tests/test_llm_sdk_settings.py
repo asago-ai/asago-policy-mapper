@@ -1,0 +1,287 @@
+"""Tests for the SDK retry and timeout settings on LLMConfig.
+
+The OpenAI SDK's transport-level retry count and timeout are now explicit
+and configurable independently of the mapper's own validation retries:
+``LLMConfig.sdk_max_retries`` and ``LLMConfig.sdk_timeout_s`` go to
+``OpenAI(...)`` only, never into a completion request. Unset fields resolve
+at client build — constructor value, else ``POLICY_MAPPER_SDK_MAX_RETRIES``
+/ ``POLICY_MAPPER_SDK_TIMEOUT_S``, else the SDK's own defaults — so a run
+that builds no client never parses the env vars. A malformed env value
+raises an error naming the variable and the bad value.
+"""
+
+from unittest.mock import patch
+
+import httpx
+import openai
+import pytest
+
+from asago_policy_mapper.llm import LLMConfig, create_client
+
+
+class _CapturedOpenAI:
+    """Records the constructor kwargs create_client passes to OpenAI."""
+
+    instances: list = []
+
+    def __init__(self, **kwargs):
+        self.kwargs = dict(kwargs)
+        # A real client over a dead transport: create_client only constructs
+        # it, no request is made in these tests.
+        self._real = openai.OpenAI(**kwargs)
+        self.chat = self._real.chat
+        type(self).instances.append(self)
+
+
+@pytest.fixture(autouse=True)
+def _clean_env(monkeypatch):
+    monkeypatch.delenv("POLICY_MAPPER_SDK_MAX_RETRIES", raising=False)
+    monkeypatch.delenv("POLICY_MAPPER_SDK_TIMEOUT_S", raising=False)
+
+
+@pytest.fixture
+def captured():
+    _CapturedOpenAI.instances = []
+    with patch("asago_policy_mapper.llm.OpenAI", _CapturedOpenAI):
+        yield _CapturedOpenAI
+
+
+def _config(**kwargs) -> LLMConfig:
+    return LLMConfig(base_url="http://localhost:8000/v1", model="test-model", **kwargs)
+
+
+class TestCreateClientSdkSettings:
+    def test_create_client_passes_explicit_sdk_retries_and_timeout(self, captured):
+        create_client(_config(sdk_max_retries=5, sdk_timeout_s=12.5))
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == 5
+        assert instance.kwargs["timeout"] == 12.5
+
+    def test_sdk_settings_independent_of_validation_retries(self, captured):
+        """LLMConfig.max_retries (validation retries) never reaches OpenAI(...)."""
+        create_client(_config(max_retries=7, sdk_max_retries=1, sdk_timeout_s=30.0))
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == 1
+        assert instance.kwargs["timeout"] == 30.0
+
+        # The validation retries keep their meaning: the same kwargs reach
+        # the retry loop's config, and the create call still accepts the
+        # caller's max_retries kwarg without forwarding it to the SDK.
+        config = _config(max_retries=7, sdk_max_retries=1, sdk_timeout_s=30.0)
+        assert config.max_retries == 7
+        assert config.sdk_max_retries == 1
+
+    def test_unset_sdk_settings_pass_sdk_defaults(self, captured):
+        """Unset values become the SDK's own defaults, explicitly."""
+        create_client(_config())
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == openai.DEFAULT_MAX_RETRIES
+        assert instance.kwargs["timeout"] == openai.DEFAULT_TIMEOUT
+
+    def test_sdk_settings_never_reach_the_completion_request(self):
+        """Neither value is ever sent as a completion parameter."""
+        requests = []
+
+        def handler(request):
+            requests.append(request.read().decode())
+            body = {
+                "id": "chatcmpl-1",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "test-model",
+                "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "{}"}}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+            }
+            return httpx.Response(200, json=body)
+
+        http_client = httpx.Client(transport=httpx.MockTransport(handler))
+        with patch(
+            "asago_policy_mapper.llm.OpenAI",
+            lambda **kw: openai.OpenAI(http_client=http_client, **kw),
+        ):
+            client = create_client(
+                _config(sdk_max_retries=9, sdk_timeout_s=99.0, max_context=0, max_tokens=64),
+            )
+        client.chat.completions.create(
+            model="test-model",
+            messages=[{"role": "user", "content": "hi"}],
+        )
+        (wire,) = requests
+        assert "max_retries" not in wire
+        assert "timeout" not in wire
+
+
+class TestSdkEnvDefaults:
+    def test_sdk_env_defaults_and_constructor_override(self, captured, monkeypatch):
+        """Env vars fill unset fields; a constructor value wins over the env."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "6")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "42.5")
+
+        create_client(_config())
+        (from_env,) = captured.instances
+        assert from_env.kwargs["max_retries"] == 6
+        assert from_env.kwargs["timeout"] == 42.5
+
+        create_client(_config(sdk_max_retries=2, sdk_timeout_s=8.0))
+        override = captured.instances[-1]
+        assert override.kwargs["max_retries"] == 2
+        assert override.kwargs["timeout"] == 8.0
+
+    def test_config_fields_stay_unset_until_client_build(self, monkeypatch):
+        """LLMConfig construction never reads the env; create_client resolves it."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "4")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "17.0")
+        config = _config()
+        assert config.sdk_max_retries is None
+        assert config.sdk_timeout_s is None
+
+    def test_no_client_build_never_parses_env(self, monkeypatch):
+        """A run that needs no LLM never parses the env vars.
+
+        LLM-free runs still build an LLMConfig (with "unused" endpoint
+        values); constructing it must not raise on a malformed env var,
+        because nothing will ever read it.
+        """
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "not-a-number")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "not-a-number")
+        config = _config()
+        assert config.sdk_max_retries is None
+        assert config.sdk_timeout_s is None
+
+    def test_invalid_env_values_name_variable_and_value(self, captured, monkeypatch):
+        """A malformed env value fails at client build, naming the variable and value."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "xyz")
+        with pytest.raises(ValueError, match=r"POLICY_MAPPER_SDK_MAX_RETRIES.*xyz"):
+            create_client(_config())
+
+        monkeypatch.delenv("POLICY_MAPPER_SDK_MAX_RETRIES")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "nope")
+        with pytest.raises(ValueError, match=r"POLICY_MAPPER_SDK_TIMEOUT_S.*nope"):
+            create_client(_config())
+        assert captured.instances == []
+
+    def test_env_vars_do_not_override_validation_retries(self, monkeypatch):
+        """POLICY_MAPPER_SDK_MAX_RETRIES leaves max_retries (validation) alone."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "6")
+        config = _config()
+        assert config.max_retries == 3
+
+    def test_empty_env_values_behave_like_unset(self, captured, monkeypatch):
+        """A set-but-empty env var is unset, not a parse error."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "")
+        create_client(_config())
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == openai.DEFAULT_MAX_RETRIES
+        assert instance.kwargs["timeout"] == openai.DEFAULT_TIMEOUT
+
+    def test_whitespace_env_values_behave_like_unset(self, captured, monkeypatch):
+        """A whitespace-only env var is unset too, for both readers."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "   ")
+        monkeypatch.setenv("POLICY_MAPPER_SDK_TIMEOUT_S", "  ")
+        create_client(_config())
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == openai.DEFAULT_MAX_RETRIES
+        assert instance.kwargs["timeout"] == openai.DEFAULT_TIMEOUT
+
+
+class TestCreateClientStructuredOutputModeEnv:
+    def test_structured_output_mode_env_selects_the_mode(self, monkeypatch):
+        """The mode env var is read inside create_client, JSON_SCHEMA without it."""
+        from asago_policy_mapper.llm import StructuredOutputMode
+
+        monkeypatch.setenv("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE", "json")
+        client = create_client(_config())
+        assert client.mode is StructuredOutputMode.JSON
+
+        monkeypatch.setenv("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE", "json_schema_with_prompt")
+        client = create_client(_config())
+        assert client.mode is StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT
+
+    def test_without_env_the_mode_is_json_schema(self, monkeypatch):
+        from asago_policy_mapper.llm import StructuredOutputMode
+
+        monkeypatch.delenv("POLICY_MAPPER_STRUCTURED_OUTPUT_MODE", raising=False)
+        client = create_client(_config())
+        assert client.mode is StructuredOutputMode.JSON_SCHEMA
+
+    def test_connection_settings_come_from_the_config(self, captured):
+        """base_url and api_key flow from the config into OpenAI(...)."""
+        config = LLMConfig(base_url="http://elsewhere:9000/v1", model="test-model", api_key="secret", sdk_max_retries=0)
+        create_client(config)
+        (instance,) = captured.instances
+        assert instance.kwargs["base_url"] == "http://elsewhere:9000/v1"
+        assert instance.kwargs["api_key"] == "secret"
+
+
+class TestInvalidSdkSettings:
+    def test_invalid_sdk_settings_fail_before_client_creation(self, captured):
+        """Validation rejects bad values without constructing OpenAI(...)."""
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            create_client(_config(sdk_max_retries=-1))
+        with pytest.raises(ValueError, match="sdk_timeout_s"):
+            create_client(_config(sdk_timeout_s=0.0))
+        with pytest.raises(ValueError, match="sdk_timeout_s"):
+            create_client(_config(sdk_timeout_s=-5.0))
+        with pytest.raises(ValueError, match="sdk_timeout_s"):
+            create_client(_config(sdk_timeout_s=float("inf")))
+        with pytest.raises(ValueError, match="sdk_timeout_s"):
+            create_client(_config(sdk_timeout_s=float("nan")))
+        assert captured.instances == []
+
+    def test_timeout_boundary_is_at_zero(self):
+        """Any positive timeout is legal, including fractional ones and 1.0.
+
+        The boundary is at zero, not at one: a 0.5-second timeout is a legal
+        fast-fail setting, and exactly 1.0 seconds passes too.
+        """
+        config = _config(sdk_timeout_s=0.5)
+        assert config.sdk_timeout_s == 0.5
+        config = _config(sdk_timeout_s=1.0)
+        assert config.sdk_timeout_s == 1.0
+
+    def test_zero_sdk_retries_is_valid(self, captured):
+        """Zero transport retries is a legal setting (retry count at least 0)."""
+        create_client(_config(sdk_max_retries=0))
+        (instance,) = captured.instances
+        assert instance.kwargs["max_retries"] == 0
+
+    def test_constructor_rejects_invalid_values_directly(self):
+        """LLMConfig itself validates, so a bad value fails at construction."""
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=-2)
+        with pytest.raises(ValueError, match="sdk_timeout_s"):
+            _config(sdk_timeout_s=0.0)
+
+    def test_constructor_rejects_non_integral_retry_counts(self):
+        """A fractional retry count is a type error, not a valid setting."""
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=2.7)
+
+    def test_constructor_rejects_boolean_retry_counts(self):
+        """True and False are ints in Python but are not retry counts.
+
+        Accepting them would let ``sdk_max_retries=True`` silently mean 1
+        instead of failing a typo'd flag or config parse.
+        """
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=True)
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=False)
+
+    def test_integral_float_retry_count_is_rejected(self):
+        """2.0 is an int-valued float; the retry count must be a real int."""
+        with pytest.raises(ValueError, match="sdk_max_retries"):
+            _config(sdk_max_retries=2.0)
+
+    def test_boolean_timeout_is_rejected(self):
+        """True would silently mean a 1.0-second timeout; reject it."""
+        with pytest.raises(ValueError, match="sdk_timeout_s"):
+            _config(sdk_timeout_s=True)
+
+    def test_env_fractional_retry_count_fails_at_client_build(self, captured, monkeypatch):
+        """A fractional value from the env fails naming the env variable and value."""
+        monkeypatch.setenv("POLICY_MAPPER_SDK_MAX_RETRIES", "2.7")
+        with pytest.raises(ValueError, match=r"POLICY_MAPPER_SDK_MAX_RETRIES.*2\.7"):
+            create_client(_config())
+        assert captured.instances == []

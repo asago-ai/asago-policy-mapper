@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import logging
 from types import SimpleNamespace
@@ -185,21 +186,13 @@ class TestTokenTracker:
 
     def test_record_incident_includes_stage(self):
         tracker = TokenTracker()
-        tracker.set_stage("grounding")
-        tracker.record_incident("error", "something broke")
+        tracker.record_incident("error", "something broke", stage="grounding")
         assert tracker.incidents[0]["stage"] == "grounding"
 
     def test_record_incident_no_stage(self):
         tracker = TokenTracker()
         tracker.record_incident("error", "no stage set")
         assert "stage" not in tracker.incidents[0]
-
-    def test_set_stage(self):
-        tracker = TokenTracker()
-        tracker.set_stage("judge")
-        assert tracker._current_stage == "judge"
-        tracker.set_stage(None)
-        assert tracker._current_stage is None
 
 
 # ---------------------------------------------------------------------------
@@ -358,8 +351,16 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
+        truncated, shortening = result
         # 60% of 2000 = 1200, which is > 500 min
-        assert len(result[1]["content"]) == 1200
+        assert len(truncated[1]["content"]) == 1200
+        assert shortening.message_index == 1
+        assert shortening.chars_before == 2000
+        assert shortening.chars_after == 1200
+        assert shortening.sha256_before == hashlib.sha256(long_content.encode()).hexdigest()
+        assert shortening.sha256_after == hashlib.sha256(truncated[1]["content"].encode()).hexdigest()
+        # The untouched sibling message survives the copy intact.
+        assert truncated[0] == messages[0]
 
     def test_short_user_message_returns_none(self):
         messages = [
@@ -398,16 +399,20 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
+        truncated, shortening = result
         # Longest is index 1 (3000 chars), truncated to 60% = 1800
-        assert len(result[0]["content"]) == 1000  # unchanged
-        assert len(result[1]["content"]) == 1800
+        assert len(truncated[0]["content"]) == 1000  # unchanged
+        assert len(truncated[1]["content"]) == 1800
+        assert shortening.message_index == 1
 
     def test_truncation_respects_minimum(self):
         # 60% of 600 = 360, which is < 500, so clamp to 500
         messages = [{"role": "user", "content": "y" * 600}]
         result = _truncate_messages(messages)
         assert result is not None
-        assert len(result[0]["content"]) == 500
+        truncated, shortening = result
+        assert len(truncated[0]["content"]) == 500
+        assert shortening.chars_after == 500
 
     def test_equal_length_user_messages_truncates_first(self):
         """Two equal-length user messages: the FIRST one is truncated."""
@@ -417,9 +422,11 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
+        truncated, shortening = result
         # The first message keeps its distinct content prefix after truncation.
-        assert result[0]["content"] == "a" * 600
-        assert result[1]["content"] == "b" * 1000
+        assert truncated[0]["content"] == "a" * 600
+        assert truncated[1]["content"] == "b" * 1000
+        assert shortening.message_index == 0
 
     def test_later_longer_user_message_wins(self):
         """A strictly longer later message must override an earlier selection."""
@@ -429,8 +436,10 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
-        assert result[0]["content"] == "a" * 1000
-        assert result[1]["content"] == "b" * 1200
+        truncated, shortening = result
+        assert truncated[0]["content"] == "a" * 1000
+        assert truncated[1]["content"] == "b" * 1200
+        assert shortening.message_index == 1
 
     def test_longest_user_message_before_longer_system_message(self):
         """Only user messages are truncation candidates, regardless of length."""
@@ -440,8 +449,10 @@ class TestTruncateMessages:
         ]
         result = _truncate_messages(messages)
         assert result is not None
-        assert result[0]["content"] == "s" * 5000
-        assert result[1]["content"] == "u" * 600
+        truncated, shortening = result
+        assert truncated[0]["content"] == "s" * 5000
+        assert truncated[1]["content"] == "u" * 600
+        assert shortening.message_index == 1
 
 
 # ---------------------------------------------------------------------------
@@ -538,8 +549,10 @@ class TestCallWithRetry:
         kwargs = {"messages": [{"role": "user", "content": "hello"}], "max_retries": 0}
         config = self._make_config()
 
-        result = _call_with_retry(do_call, kwargs, config)
-        assert result == ("result", "completion")
+        result, completion, shortenings = _call_with_retry(do_call, kwargs, config)
+        assert result == "result"
+        assert completion == "completion"
+        assert shortenings == []
         do_call.assert_called_once()
 
     def test_incomplete_output_with_truncatable_messages_retries(self):
@@ -549,9 +562,12 @@ class TestCallWithRetry:
         kwargs = {"messages": [{"role": "user", "content": long_content}], "max_retries": 0}
         config = self._make_config()
 
-        result = _call_with_retry(do_call, kwargs, config)
-        assert result == ("ok", "comp")
+        result, completion, shortenings = _call_with_retry(do_call, kwargs, config)
+        assert result == "ok"
         assert do_call.call_count == 2
+        assert len(shortenings) == 1
+        assert shortenings[0]["chars_before"] == 2000
+        assert shortenings[0]["chars_after"] == 1200
 
     def test_incomplete_output_short_messages_raises(self):
         cause = IncompleteOutputException()
@@ -583,6 +599,38 @@ class TestCallWithRetry:
 
         _call_with_retry(do_call, kwargs, config, tracker=tracker)
         assert any(i["kind"] == "output_truncated" for i in tracker.incidents)
+
+    def test_failed_call_exception_carries_partial_shortenings(self):
+        """A call that shortens and then dies carries its partials on the exception.
+
+        The truncation budget exhausts after three shortenings, so the
+        escaped IncompleteOutputException must carry all three — a failed
+        call's shortenings reach its record by value, not by reading shared
+        state afterwards.
+        """
+        cause = IncompleteOutputException()
+        do_call = MagicMock(side_effect=_IncompleteOutput(cause))
+        kwargs = {"messages": [{"role": "user", "content": "x" * 5000}], "max_retries": 0}
+        config = self._make_config()
+
+        with pytest.raises(IncompleteOutputException) as exc_info:
+            _call_with_retry(do_call, kwargs, config)
+
+        shortenings = getattr(exc_info.value, "prompt_shortenings", None)
+        assert shortenings is not None
+        assert [s["chars_before"] for s in shortenings] == [5000, 3000, 1800]
+        assert [s["chars_after"] for s in shortenings] == [3000, 1800, 1080]
+
+    def test_failed_call_without_shortenings_carries_no_attribute(self):
+        """No shortening, no attribute: the empty case stays unset, not []."""
+        cause = IncompleteOutputException()
+        do_call = MagicMock(side_effect=_IncompleteOutput(cause))
+        kwargs = {"messages": [{"role": "user", "content": "short"}], "max_retries": 0}
+        config = self._make_config()
+
+        with pytest.raises(IncompleteOutputException) as exc_info:
+            _call_with_retry(do_call, kwargs, config)
+        assert getattr(exc_info.value, "prompt_shortenings", None) is None
 
     def test_messages_shortened_on_retry(self):
         long_content = "x" * 2000
@@ -646,7 +694,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=copy.deepcopy(messages),
             current_messages=messages,
             max_retries=2,
         )
@@ -666,7 +713,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=copy.deepcopy(messages),
                 current_messages=messages,
                 max_retries=2,
             )
@@ -677,7 +723,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -686,7 +731,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -699,7 +743,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
         tracker = TokenTracker()
@@ -709,7 +752,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=tracker,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -719,7 +761,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_completion_tokens": 4096}
         config = LLMConfig(
             base_url="http://test",
@@ -732,7 +773,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -744,7 +784,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("some validation error")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -753,7 +792,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -768,7 +806,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("persistent error")
         do_call = MagicMock(side_effect=[exc, exc, exc, ("late", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -781,7 +818,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=tracker,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=2,
             )
@@ -793,7 +829,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("immediate failure")
         do_call = MagicMock(side_effect=[exc, ("never", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -803,7 +838,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=0,
             )
@@ -827,7 +861,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=copy.deepcopy(messages),
                 current_messages=messages,
                 max_retries=-1,
             )
@@ -838,7 +871,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("some validation error")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -847,7 +879,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -865,7 +896,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("line one of error\nline two of error")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -875,7 +905,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -891,7 +920,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("")
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -901,7 +929,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -914,7 +941,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc(long_summary)
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -924,7 +950,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -934,16 +959,16 @@ class TestRetryWithValidation:
         # The 201st E must not leak into the logged hint.
         assert "E" * 201 not in warning
 
-    def test_context_overflow_retry_resets_messages_to_original(self):
-        """An overflow retry calls the wire with the original messages deep-copied.
+    def test_context_overflow_retry_resets_to_current_messages(self):
+        """An overflow retry calls the wire with the current messages deep-copied.
 
-        Pins that the retry passes ``original_messages`` (not None) through to
-        the budget reducer: the retry conversation must be the caller's
-        original, not the mutated kwargs copy.
+        Pins that the retry resets to ``current_messages`` — the prompt as it
+        stands, shortened after an incomplete output — so a shortening
+        survives the retry.
         """
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
-        original = [{"role": "user", "content": "original prompt"}]
+        current = [{"role": "user", "content": "current prompt"}]
         kwargs = {"messages": [{"role": "user", "content": "grown prompt"}], "max_tokens": 4096}
         config = self._make_config()
 
@@ -952,22 +977,20 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
-            current_messages=[{"role": "user", "content": "current prompt"}],
+            current_messages=current,
             max_retries=1,
         )
 
-        # The retry call used the original messages, and as a deep copy:
+        # The retry call used the current messages, and as a deep copy:
         second_call_messages = do_call.call_args_list[1].args[0]["messages"]
-        assert second_call_messages == [{"role": "user", "content": "original prompt"}]
+        assert second_call_messages == [{"role": "user", "content": "current prompt"}]
         second_call_messages[0]["content"] = "mutated"
-        assert original[0]["content"] == "original prompt"
+        assert current[0]["content"] == "current prompt"
 
     def test_validation_exhausted_incident_carries_message(self):
         exc = _make_retry_exc("persistent validation error")
         do_call = MagicMock(side_effect=exc)
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
         tracker = TokenTracker()
@@ -978,7 +1001,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=tracker,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -990,7 +1012,6 @@ class TestRetryWithValidation:
         exc = _context_overflow_error()
         do_call = MagicMock(side_effect=exc)
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -1000,7 +1021,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=None,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=1,
             )
@@ -1010,7 +1030,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("persistent validation error")
         do_call = MagicMock(side_effect=exc)
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
         tracker = TokenTracker()
@@ -1021,7 +1040,6 @@ class TestRetryWithValidation:
                 kwargs,
                 config,
                 tracker=tracker,
-                original_messages=original,
                 current_messages=messages,
                 max_retries=2,
             )
@@ -1043,7 +1061,6 @@ class TestRetryWithValidation:
         exc = _make_retry_exc("validation error", failed_attempts=[failed_attempt])
         do_call = MagicMock(side_effect=[exc, ("ok", "comp")])
         messages = self._make_messages()
-        original = copy.deepcopy(messages)
         kwargs = {"messages": copy.deepcopy(messages), "max_tokens": 4096}
         config = self._make_config()
 
@@ -1052,7 +1069,6 @@ class TestRetryWithValidation:
             kwargs,
             config,
             tracker=None,
-            original_messages=original,
             current_messages=messages,
             max_retries=1,
         )
@@ -1165,6 +1181,173 @@ class TestApplyBudget:
 
 
 # ---------------------------------------------------------------------------
+# Context overflow after prompt shortening
+# ---------------------------------------------------------------------------
+
+
+def _length_truncated_body():
+    """A vLLM-shaped truncation: finish_reason=length, no content."""
+    return {
+        "id": "chatcmpl-1",
+        "object": "chat.completion",
+        "created": 0,
+        "model": "test-model",
+        "choices": [{"index": 0, "finish_reason": "length", "message": {"role": "assistant", "content": None}}],
+        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+    }
+
+
+def _overflow_body():
+    """A 400 in the shape endpoints report context-length overflow.
+
+    The reduction the client computes is context 8192 - 7500 input - 32 = 660.
+    """
+    return {
+        "error": {
+            "message": "maximum context length is 8192 tokens. However, you requested 4096 output tokens "
+            "and 7500 input tokens",
+            "type": "invalid_request_error",
+            "param": None,
+            "code": None,
+        }
+    }
+
+
+def _stubbed_client_for(config, handler):
+    """Build the production stack over a stubbed transport for an explicit config.
+
+    The config must carry ``sdk_max_retries=0``: the shim forwards every
+    constructor kwarg, so the SDK's transport retries stay off over the mock.
+    """
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+    with patch(
+        "asago_policy_mapper.llm.OpenAI",
+        lambda **kw: openai.OpenAI(http_client=http_client, **kw),
+    ):
+        return create_client(config)
+
+
+class TestOverflowAfterShortening:
+    """An overflow retry resets to the current base prompt, never the original one.
+
+    Resetting to the original full prompt would undo a shortening made after
+    an incomplete output and resend the very tokens that overflowed the
+    context.
+    """
+
+    @pytest.mark.parametrize("parameter", ["max_tokens", "max_completion_tokens"])
+    def test_overflow_after_truncation_keeps_shortened_prompt(self, parameter):
+        """Truncated answer, then context overflow, then success.
+
+        The second and third requests carry the shortened prompt, and the
+        third has the reduced output budget under the configured parameter.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) == 1:
+                return httpx.Response(200, json=_length_truncated_body())
+            if len(requests) == 2:
+                return httpx.Response(400, json=_overflow_body())
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(
+            base_url="http://localhost:8000/v1",
+            model="test-model",
+            output_token_parameter=parameter,
+            sdk_max_retries=0,
+        )
+        client = _stubbed_client_for(config, handler)
+        result = client.chat.completions.create(
+            model="test-model",
+            response_model=_StructuredAnswer,
+            messages=[{"role": "user", "content": "A" * 2000}],
+            **{parameter: 4096},
+        )
+
+        assert result.answer == "ok"
+        assert len(requests) == 3
+        # First request: the full prompt and the caller's budget.
+        assert len(requests[0]["messages"][0]["content"]) == 2000
+        assert requests[0][parameter] == 4096
+        # Second and third requests: the shortened prompt (2000 -> 1200 chars).
+        for body in requests[1:]:
+            assert body["messages"][0]["content"] == "A" * 1200
+        # The overflow retry reduced the budget under the configured parameter.
+        assert requests[2][parameter] == 660
+        other = "max_completion_tokens" if parameter == "max_tokens" else "max_tokens"
+        assert other not in requests[2]
+
+    def test_overflow_without_truncation_unchanged(self):
+        """Without a shortening, the overflow retry resends the same messages."""
+        requests = []
+        messages = [{"role": "user", "content": "short"}]
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) == 1:
+                return httpx.Response(400, json=_overflow_body())
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", sdk_max_retries=0)
+        client = _stubbed_client_for(config, handler)
+        result = client.chat.completions.create(
+            model="test-model",
+            response_model=_StructuredAnswer,
+            messages=messages,
+            max_tokens=4096,
+        )
+
+        assert result.answer == "ok"
+        assert len(requests) == 2
+        assert requests[1]["messages"] == messages
+        assert requests[1]["max_tokens"] == 660
+
+    def test_overflow_discards_repair_hint_without_restoring_full_prompt(self):
+        """An overflow after a validation retry drops the hint pair, not the shortening.
+
+        Request sequence: truncated answer (shorten), invalid JSON (append the
+        failed answer and an error hint), context overflow (reset), success.
+        The overflow retry must resend the shortened base prompt alone.
+        """
+        requests = []
+
+        def handler(request):
+            requests.append(json.loads(request.read()))
+            if len(requests) == 1:
+                return httpx.Response(200, json=_length_truncated_body())
+            if len(requests) == 2:
+                return httpx.Response(200, json=_completion_body('{"items": "not a list"}'))
+            if len(requests) == 3:
+                return httpx.Response(400, json=_overflow_body())
+            return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
+
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=3, sdk_max_retries=0)
+        client = _stubbed_client_for(config, handler)
+        result = client.chat.completions.create(
+            model="test-model",
+            response_model=_StructuredAnswer,
+            messages=[{"role": "user", "content": "A" * 2000}],
+            max_tokens=4096,
+        )
+
+        assert result.answer == "ok"
+        assert len(requests) == 4
+        # Request 3 (the hinted retry) carries the failed answer and the hint.
+        hinted = requests[2]["messages"]
+        assert len(hinted) == 3
+        assert hinted[1]["role"] == "assistant"
+        assert "Validation error:" in hinted[2]["content"]
+        # Request 4 (after the overflow) is the shortened base prompt alone:
+        # no assistant message, no hint, and not the original 2000 chars.
+        reset = requests[3]["messages"]
+        assert len(reset) == 1
+        assert reset[0]["content"] == "A" * 1200
+        assert requests[3]["max_tokens"] == 660
+
+
+# ---------------------------------------------------------------------------
 # _StructuredClient over a stubbed transport (production stack)
 # ---------------------------------------------------------------------------
 
@@ -1175,11 +1358,13 @@ class _StructuredAnswer(SlimModel):
 
 def _stubbed_client(handler, max_retries):
     """Build the full production stack (create_client -> tracking wrapper) over a stubbed transport."""
-    config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_retries=max_retries)
+    config = LLMConfig(
+        base_url="http://localhost:8000/v1", model="test-model", max_retries=max_retries, sdk_max_retries=0
+    )
     http_client = httpx.Client(transport=httpx.MockTransport(handler))
     with patch(
         "asago_policy_mapper.llm.OpenAI",
-        lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+        lambda **kw: openai.OpenAI(http_client=http_client, **kw),
     ):
         return create_client(config)
 
@@ -1418,11 +1603,11 @@ class TestStructuredClientResponseFormat:
             bodies.append(json.loads(request.read()))
             return httpx.Response(200, json=_completion_body('{"answer": "ok"}'))
 
-        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_context=0)
+        config = LLMConfig(base_url="http://localhost:8000/v1", model="test-model", max_context=0, sdk_max_retries=0)
         http_client = httpx.Client(transport=httpx.MockTransport(handler))
         with patch(
             "asago_policy_mapper.llm.OpenAI",
-            lambda **kw: openai.OpenAI(http_client=http_client, max_retries=0, **kw),
+            lambda **kw: openai.OpenAI(http_client=http_client, **kw),
         ):
             client = create_client(config, mode=mode)
             client.chat.completions.create(

@@ -3,6 +3,8 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from conftest import stage_mock_client
+
 from asago_policy_mapper.extract.attribute import ground_variants
 from asago_policy_mapper.extract.index import RiskIndex
 from asago_policy_mapper.extract.models import (
@@ -133,7 +135,7 @@ def _make_chunks(texts):
 class TestGroundVariants:
     def test_selective_grounding(self):
         """LLM grounds 2 of 6 variants; only those 2 are returned."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -210,7 +212,7 @@ class TestGroundVariants:
 
     def test_none_grounded(self):
         """LLM grounds 0 variants; empty result."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -239,7 +241,7 @@ class TestGroundVariants:
 
     def test_empty_variants(self):
         """No variants → no LLM call, empty result."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
 
         result = ground_variants(
             chunk_text="Some text.",
@@ -258,7 +260,7 @@ class TestGroundVariants:
 
     def test_ignores_unknown_variant_ids(self):
         """Verdicts for IDs not in the variant list are ignored."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -286,7 +288,7 @@ class TestGroundVariants:
 
     def test_skips_empty_quotes(self):
         """Grounded verdict with only empty quotes → not included."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -336,7 +338,7 @@ class TestGroundVariants:
             model="test-model",
             document="policy.pdf",
             chunk_index=3,
-            call_collector=collector,
+            records=collector,
         )
 
         assert len(collector) == 1
@@ -384,7 +386,7 @@ class TestGroundVariantsPrompt:
 class TestGroundVariantsOne:
     def test_returns_grounded_variants(self):
         """_ground_variants_one calls ground_variants and returns results."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -413,7 +415,7 @@ class TestGroundVariantsOne:
 
     def test_no_variants_returns_empty(self):
         """Parent with no variants in the map → empty dict."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         parent = _make_parent_match()
         chunks = _make_chunks(["Some text."])
 
@@ -431,7 +433,7 @@ class TestGroundVariantsOne:
 
     def test_no_evidence_returns_empty(self):
         """Parent with no evidence spans → empty dict."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         parent = _make_parent_match()
         parent.evidence = []
         chunks = _make_chunks(["Some text."])
@@ -460,7 +462,7 @@ class TestRunVariantGrounding:
 
     def test_partitions_parent_and_non_parent(self):
         """Parent matches get variant grounding; non-parent pass through."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -492,7 +494,7 @@ class TestRunVariantGrounding:
 
     def test_variant_inherits_parent_scores(self):
         """Variant matches inherit the parent's retrieval scores."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -546,7 +548,7 @@ class TestRunVariantGrounding:
 
     def test_zero_variants_grounded_drops_parent(self):
         """If LLM grounds zero variants, parent is dropped entirely."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -575,7 +577,7 @@ class TestRunVariantGrounding:
 
     def test_uses_chunk_contexts_when_provided(self):
         """When chunk_contexts is provided, uses padded text instead of raw chunk."""
-        mock_client = MagicMock()
+        mock_client = stage_mock_client()
         mock_client.chat.completions.create.return_value = _RiskEvidenceList(
             items=[
                 _RiskEvidence(
@@ -880,7 +882,7 @@ def test_ground_expansion_groups_multi_pass_uses_union_worker():
 
     multi_calls = []
 
-    def fake_multi(group, chunks, documents, client, config, call_collector, passes):
+    def fake_multi(group, chunks, documents, client, config, records, passes):
         multi_calls.append((tuple(group.risk_ids), passes))
         return {"R-005": ([EvidenceSpan(text="q", document="doc.md", chunk_index=0)], "medium")}
 

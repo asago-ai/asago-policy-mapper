@@ -1,16 +1,35 @@
 from __future__ import annotations
 
+import hashlib
 import logging
-import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import spacy
 
-from asago_policy_mapper.extract.models import LLMCallRecord, ScoredCandidate, _JudgeVerdicts
+from asago_policy_mapper.assessors.llm_judge import LlmJudgeAssessor
+from asago_policy_mapper.extract.calllog import next_call_number
+from asago_policy_mapper.extract.models import DecisionItem, DecisionLog, LLMCallRecord, ScoredCandidate
 from asago_policy_mapper.extract.parse import Chunk
-from asago_policy_mapper.prompts import render_prompt
+from asago_policy_mapper.extract.screening import (
+    RELEVANCE_QUESTION_V1,
+    AnswerBatch,
+    Assessor,
+    Decision,
+    DecisionCase,
+    Keep,
+    Question,
+    Rule,
+    answer_payloads,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _counts_judge(record: LLMCallRecord) -> bool:
+    """The ``judge-NNN`` predicate."""
+    return record.stage == "judge"
+
 
 _nlp = spacy.blank("en")
 _nlp.add_pipe("sentencizer")
@@ -231,8 +250,23 @@ def classify_candidates(
     )
 
 
+def _dump_entry(entry: object) -> object:
+    """Return ``entry`` as plain data, if it is not already.
+
+    ``AnswerBatch.exchange`` response entries are plain dicts, matching
+    the call record's ``list[dict]`` response field: assessors serialize
+    their responses at their own boundary. An assessor that still hands
+    back an object with a ``model_dump`` records too; it is dumped here,
+    so both shapes record.
+    """
+    dump = getattr(entry, "model_dump", None)
+    if dump is None:
+        return entry
+    return dump()
+
+
 def _record_judge_call(
-    call_collector: list[LLMCallRecord],
+    records: list[LLMCallRecord],
     *,
     chunk_index: int,
     risk_ids: list[str],
@@ -241,19 +275,23 @@ def _record_judge_call(
     duration_ms: float,
     batch_accepted: int,
     batch_size: int,
+    prompt_shortenings: list[dict],
+    decision_log: DecisionLog | None = None,
 ) -> None:
-    call_id = f"judge-{len([c for c in call_collector if c.stage == 'judge']) + 1:03d}"
-    call_collector.append(
+    number = next_call_number(records, counts=_counts_judge)
+    records.append(
         LLMCallRecord(
-            call_id=call_id,
+            call_id=f"judge-{number:03d}",
             stage="judge",
             chunk_index=chunk_index,
             risk_ids=risk_ids,
             messages=messages,
-            response=[v.model_dump() for v in verdicts],
+            response=[_dump_entry(v) for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{batch_accepted}/{batch_size} accepted",
-        )
+            prompt_shortenings=prompt_shortenings,
+            decision=decision_log,
+        ),
     )
 
 
@@ -263,31 +301,73 @@ def _judge_batch(
     client,
     model: str,
     prompt_name: str,
-) -> tuple[list[ScoredCandidate], list, list, float]:
-    """Judge one batch; return (accepted candidates, messages, verdicts, duration_ms)."""
-    messages = render_prompt(
-        prompt_name,
-        {
-            "chunk_text": chunk_text,
-            "risks": [
-                {"risk_id": c.risk_id, "risk_name": c.risk_name, "risk_description": c.risk_description} for c in batch
-            ],
-        },
-    )
+) -> tuple[list[ScoredCandidate], list, list, float, list[dict], DecisionLog]:
+    """Judge one batch through the assessor/rule seam.
 
-    t0 = time.time()
-    verdicts_resp = client.chat.completions.create(
-        model=model,
-        response_model=_JudgeVerdicts,
-        messages=messages,
-    )
-    verdicts = verdicts_resp.items
-    duration_ms = (time.time() - t0) * 1000
+    Returns (accepted candidates, messages, verdicts, duration_ms,
+    shortenings, decision_log). The messages and verdicts come from the
+    assessor's exchange payload, so the judge call record stays identical
+    to the pre-seam one apart from the decision log; the shortenings ride
+    the same payload, so a shortening made inside the assessor's call
+    reaches the record the way the pre-seam judge's did.
+    """
+    cases = [DecisionCase(risk_id=c.risk_id, name=c.risk_name, description=c.risk_description) for c in batch]
+    assessor = LlmJudgeAssessor(client, model, prompt_name)
+    answers = assessor.assess(RELEVANCE_QUESTION_V1, chunk_text, cases)
 
-    batch_ids = {c.risk_id for c in batch}
-    accepted_ids = {v.risk_id for v in verdicts if v.relevant and v.risk_id in batch_ids}
-    accepted = [c for c in batch if c.risk_id in accepted_ids]
-    return accepted, messages, verdicts, duration_ms
+    rule = Keep()
+    decisions = rule.decide(cases, answers)
+    kept_ids = {d.risk_id for d in decisions if d.keep}
+    accepted = [c for c in batch if c.risk_id in kept_ids]
+
+    # The chat judge always reports its exchange payload; its response
+    # entries are plain dicts, dumped at the assessor boundary.
+    exchange = answers.exchange or {}
+    messages = exchange.get("messages", [])
+    verdicts = list(exchange.get("response", []))
+    shortenings = list(exchange.get("prompt_shortenings", []))
+
+    decision_log = build_decision_log(answers, decisions, assessor, rule, messages)
+    return accepted, messages, verdicts, answers.latency_ms, shortenings, decision_log
+
+
+def build_decision_log(
+    answers: AnswerBatch,
+    decisions: Sequence[Decision],
+    assessor: Assessor,
+    rule: Rule,
+    messages: list,
+    question: Question | None = None,
+) -> DecisionLog:
+    """Assemble the seam's decision log for one assessed batch.
+
+    ``question`` is the question the answers answer; it defaults to the
+    judge's relevance question, so callers with their own question pass it
+    rather than rebuilding this loop.
+    """
+    if question is None:
+        question = RELEVANCE_QUESTION_V1
+    items = [
+        DecisionItem(
+            risk_id=d.risk_id,
+            answers=answer_payloads(answers.answers.get(d.risk_id, ())),
+            keep=d.keep,
+            reason=d.reason,
+        )
+        for d in decisions
+    ]
+    system = next((m["content"] for m in messages if m.get("role") == "system"), "")
+    return DecisionLog(
+        question_id=question.question_id,
+        question_version=question.version,
+        prompt_name=assessor.prompt_name,
+        prompt_sha256=hashlib.sha256(system.encode()).hexdigest(),
+        assessor_id=assessor.assessor_id,
+        rule_id=rule.rule_id,
+        latency_ms=answers.latency_ms,
+        items=items,
+        unmatched_ids=list(answers.unmatched_ids),
+    )
 
 
 def judge_borderline(
@@ -296,7 +376,7 @@ def judge_borderline(
     client,
     model: str,
     *,
-    call_collector: list[LLMCallRecord] | None = None,
+    records: list[LLMCallRecord] | None = None,
     chunk_index: int = 0,
     prompt_name: str = "judge_risk",
     max_batch_size: int = 0,
@@ -312,12 +392,14 @@ def judge_borderline(
     result: list[ScoredCandidate] = []
 
     for batch in batches:
-        accepted, messages, verdicts, duration_ms = _judge_batch(batch, chunk_text, client, model, prompt_name)
+        accepted, messages, verdicts, duration_ms, shortenings, decision_log = _judge_batch(
+            batch, chunk_text, client, model, prompt_name
+        )
         result.extend(accepted)
 
-        if call_collector is not None:
+        if records is not None:
             _record_judge_call(
-                call_collector,
+                records,
                 chunk_index=chunk_index,
                 risk_ids=[c.risk_id for c in batch],
                 messages=messages,
@@ -325,6 +407,8 @@ def judge_borderline(
                 duration_ms=duration_ms,
                 batch_accepted=len(accepted),
                 batch_size=len(batch),
+                prompt_shortenings=shortenings,
+                decision_log=decision_log,
             )
 
     return result

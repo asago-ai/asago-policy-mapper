@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 
+from asago_policy_mapper.extract.calllog import next_call_number
 from asago_policy_mapper.extract.models import (
     EvidenceSpan,
     LLMCallRecord,
@@ -12,10 +13,34 @@ from asago_policy_mapper.extract.models import (
     _CausalChains,
     _RiskEvidenceList,
 )
-from asago_policy_mapper.llm import _OUTPUT_VALIDATION_ERRORS, ValidationRetryExhausted
+from asago_policy_mapper.llm import (
+    _OUTPUT_VALIDATION_ERRORS,
+    ValidationRetryExhausted,
+    _shortenings_of,
+)
 from asago_policy_mapper.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
+
+
+def _counts_grounding(record: LLMCallRecord) -> bool:
+    """The ``ground-NNN`` predicate: every grounding-staged record counts."""
+    return record.stage == "grounding"
+
+
+def _counts_variant(record: LLMCallRecord) -> bool:
+    """The ``ground-variant-NNN`` predicate."""
+    return record.stage == "variant_grounding"
+
+
+def _counts_expansion(record: LLMCallRecord) -> bool:
+    """The ``ground-expand-NNN`` predicate: the id format, not the stage."""
+    return "expand" in record.call_id
+
+
+def _counts_causal(record: LLMCallRecord) -> bool:
+    """The ``causal-NNN`` predicate."""
+    return record.stage == "causal_synthesis"
 
 
 def _verdicts_to_result(
@@ -48,7 +73,7 @@ def _verdicts_to_result(
 
 
 def _record_grounding_call(
-    call_collector: list[LLMCallRecord],
+    records: list[LLMCallRecord],
     *,
     chunk_index: int,
     risk_ids: list[str],
@@ -57,11 +82,12 @@ def _record_grounding_call(
     duration_ms: float,
     grounded_count: int,
     batch_size: int,
+    prompt_shortenings: list[dict],
 ) -> None:
-    call_id = f"ground-{len([c for c in call_collector if c.stage == 'grounding']) + 1:03d}"
-    call_collector.append(
+    number = next_call_number(records, counts=_counts_grounding)
+    records.append(
         LLMCallRecord(
-            call_id=call_id,
+            call_id=f"ground-{number:03d}",
             stage="grounding",
             chunk_index=chunk_index,
             risk_ids=risk_ids,
@@ -69,7 +95,8 @@ def _record_grounding_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{grounded_count}/{batch_size} grounded",
-        )
+            prompt_shortenings=prompt_shortenings,
+        ),
     )
 
 
@@ -83,7 +110,7 @@ def ground_and_extract_evidence(
     page: int | None = None,
     section: str | None = None,
     *,
-    call_collector: list[LLMCallRecord] | None = None,
+    records: list[LLMCallRecord] | None = None,
     max_batch_size: int = 0,
 ) -> dict[str, tuple[list[EvidenceSpan], str]]:
     if not candidates:
@@ -113,7 +140,8 @@ def ground_and_extract_evidence(
         )
 
         t0 = time.time()
-        verdicts_resp = client.chat.completions.create(
+        stage_client = client.for_stage("grounding")
+        verdicts_resp = stage_client.chat.completions.create(
             model=model,
             response_model=_RiskEvidenceList,
             messages=messages,
@@ -124,9 +152,9 @@ def ground_and_extract_evidence(
         batch_ids = {c.risk_id for c in batch}
         result.update(_verdicts_to_result(verdicts, batch_ids, document, chunk_index, page, section))
 
-        if call_collector is not None:
+        if records is not None:
             _record_grounding_call(
-                call_collector,
+                records,
                 chunk_index=chunk_index,
                 risk_ids=[c.risk_id for c in batch],
                 messages=messages,
@@ -134,6 +162,7 @@ def ground_and_extract_evidence(
                 duration_ms=duration_ms,
                 grounded_count=sum(v.grounded and v.risk_id in batch_ids for v in verdicts),
                 batch_size=len(batch),
+                prompt_shortenings=_shortenings_of(verdicts_resp),
             )
 
     return result
@@ -152,7 +181,7 @@ def ground_variants(
     page: int | None = None,
     section: str | None = None,
     *,
-    call_collector: list[LLMCallRecord] | None = None,
+    records: list[LLMCallRecord] | None = None,
 ) -> dict[str, tuple[list[EvidenceSpan], str]]:
     """Ground individual variants after parent-level grounding confirms relevance."""
     if not variants:
@@ -170,7 +199,8 @@ def ground_variants(
     )
 
     t0 = time.time()
-    verdicts_resp = client.chat.completions.create(
+    stage_client = client.for_stage("variant_grounding")
+    verdicts_resp = stage_client.chat.completions.create(
         model=model,
         response_model=_RiskEvidenceList,
         messages=messages,
@@ -181,11 +211,11 @@ def ground_variants(
     variant_ids = {v["risk_id"] for v in variants}
     result = _verdicts_to_result(verdicts, variant_ids, document, chunk_index, page, section)
 
-    if call_collector is not None:
-        call_id = f"ground-variant-{len([c for c in call_collector if c.stage == 'variant_grounding']) + 1:03d}"
-        call_collector.append(
+    if records is not None:
+        number = next_call_number(records, counts=_counts_variant)
+        records.append(
             LLMCallRecord(
-                call_id=call_id,
+                call_id=f"ground-variant-{number:03d}",
                 stage="variant_grounding",
                 chunk_index=chunk_index,
                 risk_ids=[v["risk_id"] for v in variants],
@@ -193,7 +223,8 @@ def ground_variants(
                 response=[v.model_dump() for v in verdicts],
                 duration_ms=duration_ms,
                 result_summary=(f"{len(result)}/{len(variants)} variants grounded (parent: {parent_id})"),
-            )
+                prompt_shortenings=_shortenings_of(verdicts_resp),
+            ),
         )
 
     return result
@@ -225,7 +256,7 @@ def _group_verdicts_to_result(
 
 
 def _record_group_call(
-    call_collector: list[LLMCallRecord],
+    records: list[LLMCallRecord],
     *,
     chunk_indices: list[int],
     risk_ids: list[str],
@@ -234,11 +265,12 @@ def _record_group_call(
     duration_ms: float,
     grounded_count: int,
     risk_count: int,
+    prompt_shortenings: list[dict],
 ) -> None:
-    call_id = f"ground-expand-{len([c for c in call_collector if 'expand' in c.call_id]) + 1:03d}"
-    call_collector.append(
+    number = next_call_number(records, counts=_counts_expansion)
+    records.append(
         LLMCallRecord(
-            call_id=call_id,
+            call_id=f"ground-expand-{number:03d}",
             stage="grounding",
             chunk_index=chunk_indices[0] if chunk_indices else -1,
             risk_ids=risk_ids,
@@ -246,7 +278,8 @@ def _record_group_call(
             response=[v.model_dump() for v in verdicts],
             duration_ms=duration_ms,
             result_summary=f"{grounded_count}/{risk_count} grounded (expansion)",
-        )
+            prompt_shortenings=prompt_shortenings,
+        ),
     )
 
 
@@ -258,7 +291,7 @@ def ground_risk_group(
     model: str,
     document: str,
     *,
-    call_collector: list[LLMCallRecord] | None = None,
+    records: list[LLMCallRecord] | None = None,
 ) -> dict[str, tuple[list[EvidenceSpan], str]]:
     """Ground a group of related risks against multiple document chunks."""
     if not risks or not chunk_indices:
@@ -281,7 +314,8 @@ def ground_risk_group(
     )
 
     t0 = time.time()
-    verdicts_resp = client.chat.completions.create(
+    stage_client = client.for_stage("expansion_grounding")
+    verdicts_resp = stage_client.chat.completions.create(
         model=model,
         response_model=_RiskEvidenceList,
         messages=messages,
@@ -301,9 +335,9 @@ def ground_risk_group(
 
     result = _group_verdicts_to_result(verdicts, risk_ids, document, _find_chunk_for_quote)
 
-    if call_collector is not None:
+    if records is not None:
         _record_group_call(
-            call_collector,
+            records,
             chunk_indices=chunk_indices,
             risk_ids=[r["risk_id"] for r in risks],
             messages=messages,
@@ -311,6 +345,7 @@ def ground_risk_group(
             duration_ms=duration_ms,
             grounded_count=len(result),
             risk_count=len(risks),
+            prompt_shortenings=_shortenings_of(verdicts_resp),
         )
 
     return result
@@ -338,12 +373,15 @@ def _evidence_chunk_texts(risk_match: RiskMatch, chunk_texts: dict[int, str]) ->
 
 def _request_causal_chain(
     risk_match: RiskMatch, combined_text: str, client, model: str
-) -> tuple[list[dict[str, str]], list, bool, float]:
+) -> tuple[list[dict[str, str]], list, bool, float, list[dict]]:
     """Render the prompt and call the causal-synthesis endpoint.
 
-    Returns (messages, results, retry_exhausted, duration_ms). A validation
-    exhaustion caused by unfixable model output downgrades to an empty result
-    with retry_exhausted set; anything else propagates.
+    Returns (messages, results, retry_exhausted, duration_ms, shortenings).
+    A validation exhaustion caused by unfixable model output downgrades to
+    an empty result with retry_exhausted set; anything else propagates. The
+    shortenings come from the call's own outcome — the response on success,
+    the escaped exception on the exhaustion path — so a failed call's
+    partial shortenings reach its record too.
     """
     messages = render_prompt(
         "causal_synthesis",
@@ -357,12 +395,14 @@ def _request_causal_chain(
     t0 = time.time()
     retry_exhausted = False
     try:
-        results_resp = client.chat.completions.create(
+        stage_client = client.for_stage("causal_synthesis")
+        results_resp = stage_client.chat.completions.create(
             model=model,
             response_model=_CausalChains,
             messages=messages,
         )
         results = results_resp.items
+        shortenings = _shortenings_of(results_resp)
     except ValidationRetryExhausted as exc:
         if not _is_output_validation_exhaustion(exc):
             raise
@@ -373,8 +413,9 @@ def _request_causal_chain(
         )
         results = []
         retry_exhausted = True
+        shortenings = _shortenings_of(exc)
     duration_ms = (time.time() - t0) * 1000
-    return messages, results, retry_exhausted, duration_ms
+    return messages, results, retry_exhausted, duration_ms, shortenings
 
 
 def _downgrade_empty_chain(chain: _CausalChain | None, risk_id: str) -> _CausalChain | None:
@@ -393,7 +434,7 @@ def synthesize_causal_chain(
     client,
     model: str,
     *,
-    call_collector: list[LLMCallRecord] | None = None,
+    records: list[LLMCallRecord] | None = None,
 ) -> _CausalChain | None:
     evidence_chunks = _evidence_chunk_texts(risk_match, chunk_texts)
 
@@ -402,16 +443,18 @@ def synthesize_causal_chain(
 
     combined_text = "\n\n---\n\n".join(evidence_chunks)
 
-    messages, results, retry_exhausted, duration_ms = _request_causal_chain(risk_match, combined_text, client, model)
+    messages, results, retry_exhausted, duration_ms, shortenings = _request_causal_chain(
+        risk_match, combined_text, client, model
+    )
 
     chain = _downgrade_empty_chain(results[0] if results else None, risk_match.risk_id)
 
-    if call_collector is not None:
-        call_id = f"causal-{len([c for c in call_collector if c.stage == 'causal_synthesis']) + 1:03d}"
+    if records is not None:
         first_chunk = risk_match.evidence[0].chunk_index if risk_match.evidence else -1
-        call_collector.append(
+        number = next_call_number(records, counts=_counts_causal)
+        records.append(
             LLMCallRecord(
-                call_id=call_id,
+                call_id=f"causal-{number:03d}",
                 stage="causal_synthesis",
                 chunk_index=first_chunk,
                 risk_ids=[risk_match.risk_id],
@@ -419,7 +462,8 @@ def synthesize_causal_chain(
                 response=chain.model_dump() if chain else {},
                 duration_ms=duration_ms,
                 result_summary="synthesized" if chain else "retry_exhausted" if retry_exhausted else "empty",
-            )
+                prompt_shortenings=shortenings,
+            ),
         )
 
     return chain

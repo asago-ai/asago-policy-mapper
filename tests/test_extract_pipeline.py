@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from conftest import stage_mock_client
 from llm_errors import (
     authentication_failure,
     connection_failure,
@@ -24,6 +25,8 @@ from asago_policy_mapper.extract.models import (
     _RiskEvidenceList,
 )
 from asago_policy_mapper.extract.pipeline import (
+    _build_result_metadata,
+    _build_retrieval_stats,
     _cap_accepted_candidates,
     _run_causal_synthesis,
     _run_judge,
@@ -63,7 +66,7 @@ def test_run_extraction_returns_extraction_result(mock_config, tmp_path):
     doc = tmp_path / "test.md"
     doc.write_text("AI systems must avoid bias and protect personal data. Training data integrity is critical.")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -86,7 +89,7 @@ def test_run_extraction_empty_document(mock_config, tmp_path):
     doc = tmp_path / "empty.txt"
     doc.write_text("")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -105,7 +108,7 @@ def test_run_extraction_no_risks(mock_config, tmp_path):
     doc = tmp_path / "test.txt"
     doc.write_text("Some policy text.")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -139,6 +142,240 @@ def test_run_extraction_no_chunks_returns_empty_result(mock_config, tmp_path, mo
     assert isinstance(result, ExtractionResult)
     assert result.risks == []
     assert result.retrieval_stats.total_chunks == 0
+
+
+def test_metadata_records_structured_output_mode(mock_config):
+    """A real structured-output client's resolved mode lands in the metadata."""
+    from asago_policy_mapper.llm import StructuredOutputMode, _StructuredClient
+
+    client = _StructuredClient.__new__(_StructuredClient)
+    client.mode = StructuredOutputMode.JSON_SCHEMA_WITH_PROMPT
+
+    metadata = _build_result_metadata(mock_config, RetrievalConfig(query_gen=False), {}, [], set(), client)
+
+    assert metadata["structured_output_mode"] == "json_schema_with_prompt"
+
+
+def test_metadata_omits_mode_without_real_client(mock_config):
+    """A mocked or absent client leaves the structured_output_mode key out."""
+    for client in (MagicMock(), None, SimpleNamespace(mode="json_schema")):
+        metadata = _build_result_metadata(mock_config, RetrievalConfig(query_gen=False), {}, [], set(), client)
+        assert "structured_output_mode" not in metadata
+
+
+@pytest.mark.slow
+def test_run_extraction_metadata_carries_client_mode(mock_config, tmp_path):
+    """The pipeline passes its client to _build_result_metadata (wiring check)."""
+    from asago_policy_mapper.llm import StructuredOutputMode, _StructuredClient
+
+    doc = tmp_path / "test.md"
+    doc.write_text("AI policy text about bias in model outputs and data governance.")
+
+    client = _StructuredClient.__new__(_StructuredClient)
+    client.mode = StructuredOutputMode.JSON_SCHEMA
+
+    result = run_extraction(
+        documents=[doc],
+        client=client,
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
+        ocr=False,
+    )
+
+    assert result.metadata["structured_output_mode"] == "json_schema"
+
+
+def test_metadata_carries_query_gen_and_service_tier():
+    """Query-gen runs record their queries, fallback chunks and service tier."""
+    from asago_policy_mapper.extract.querygen import QueryResult
+
+    config = SimpleNamespace(model="test-model", service_tier="flex")
+    retrieval = RetrievalConfig(query_gen=True)
+    query_results = [QueryResult(query="q-bias", chunk_indices=[0, 1], section="AI")]
+
+    metadata = _build_result_metadata(config, retrieval, {"expanded_candidates": 2}, query_results, {3, 1})
+
+    assert metadata["model"] == "test-model"
+    assert metadata["service_tier"] == "flex"
+    assert metadata["expansion_stats"] == {"expanded_candidates": 2}
+    # The timestamp is UTC: it carries a +00:00 offset, not a naive one.
+    assert metadata["timestamp"].endswith("+00:00")
+    assert metadata["query_gen_queries"] == [{"query": "q-bias", "chunk_indices": [0, 1], "section": "AI"}]
+    assert metadata["query_gen_fallback_chunks"] == [1, 3]
+
+
+def test_metadata_omits_service_tier_when_unset():
+    """Without a service tier the key stays out of the metadata."""
+    config = SimpleNamespace(model="test-model", service_tier=None)
+
+    metadata = _build_result_metadata(config, RetrievalConfig(query_gen=False), {}, [], set())
+
+    assert "service_tier" not in metadata
+    assert "query_gen_queries" not in metadata
+    assert "query_gen_fallback_chunks" not in metadata
+
+
+def test_run_extraction_passes_every_metadata_argument(mock_config, tmp_path, monkeypatch):
+    """run_extraction forwards config, retrieval, stats, queries, fallbacks and client.
+
+    Fast wiring check: the retrieval index is stubbed out so no embedding
+    model loads; deleting or reordering a _build_result_metadata argument
+    fails here instead of only in the slow suite.
+    """
+    from asago_policy_mapper.extract import pipeline
+    from asago_policy_mapper.llm import StructuredOutputMode, _StructuredClient
+
+    class _StubIndex:
+        variant_map = {}
+        risks = []
+
+        def hybrid_search(self, query, top_k=50, bm25_rescue_rank=0, rrf_min_score=0.0):
+            return []
+
+        def get_taxonomy(self, rid):
+            return "test-taxonomy"
+
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "AI policy text about data governance and risk management. "
+        "The organization commits to bias detection and mitigation strategies "
+        "across all machine learning development activities. "
+        "Training data integrity is critical for model reliability and safety. "
+        "Personal data must be protected during every processing stage. "
+        "Third-party model suppliers undergo security review before deployment."
+    )
+    monkeypatch.setattr(pipeline, "_build_risk_index", lambda risks, retrieval: _StubIndex())
+
+    client = _StructuredClient.__new__(_StructuredClient)
+    client.mode = StructuredOutputMode.JSON_SCHEMA
+
+    result = run_extraction(
+        documents=[doc],
+        client=client,
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(query_gen=False),
+        ocr=False,
+    )
+
+    assert result.metadata["model"] == mock_config.model
+    assert result.metadata["structured_output_mode"] == "json_schema"
+    assert result.metadata["expansion_stats"]["expanded_candidates"] == 0
+    assert result.metadata["no_judge"] is False
+
+
+def _chunk_result_judged_borderline(count=1, retrieved=None, auto_accepted=0):
+    """Build one ChunkResult with `count` borderline candidates that were judged.
+
+    The pipeline fills borderline_judged both when the LLM judge accepts
+    candidates and when --no-judge auto-promotes them, so both counts come
+    from the same field.
+    """
+    borderline = [
+        ScoredCandidate(risk_id=f"R-B{i}", risk_name=f"R-B{i}", risk_description="d", cross_encoder_score=0.5)
+        for i in range(count)
+    ]
+    return ChunkResult(
+        chunk_index=0,
+        source="doc.md",
+        page=None,
+        section=None,
+        accepted=[],
+        borderline=borderline,
+        borderline_judged=list(borderline),
+        stats={
+            "candidates_retrieved": retrieved if retrieved is not None else count,
+            "auto_accepted": auto_accepted,
+            "borderline": count,
+            "discarded": 0,
+        },
+    )
+
+
+def test_retrieval_stats_no_judge_counts_auto_promoted():
+    """Under --no-judge, llm_judged stays 0 and auto_promoted holds the count."""
+    stats = _build_retrieval_stats(
+        [_chunk_result_judged_borderline(2, retrieved=5, auto_accepted=1), _chunk_result_judged_borderline(1)],
+        [object(), object()],
+        {"judge_ms": 1.0},
+        7,
+        no_judge=True,
+    )
+    assert stats.llm_judged == 0
+    assert stats.auto_promoted == 3
+    # The aggregates the run report relies on stay intact.
+    assert stats.total_chunks == 2
+    assert stats.total_candidates_retrieved == 6
+    assert stats.auto_accepted == 1
+    assert stats.grounding_filtered == 7
+    assert stats.timing_ms == {"judge_ms": 1.0}
+
+
+def test_retrieval_stats_defaults_to_normal_mode():
+    """Omitting no_judge keeps the legacy llm_judged count (mutant guard for the default)."""
+    stats = _build_retrieval_stats(
+        [_chunk_result_judged_borderline(2)],
+        [],
+        {},
+        0,
+    )
+    assert stats.llm_judged == 2
+    assert stats.auto_promoted == 0
+
+
+def test_retrieval_stats_missing_stat_keys_count_as_zero():
+    """Chunk results whose stats lack the counters contribute zero, not an error."""
+    cr = _chunk_result_judged_borderline(2)
+    cr.stats = {}
+
+    stats = _build_retrieval_stats([cr], [object()], {}, 0, no_judge=False)
+
+    assert stats.total_candidates_retrieved == 0
+    assert stats.auto_accepted == 0
+
+
+def test_retrieval_stats_normal_mode_keeps_llm_judged():
+    """Normal mode keeps counting borderline_judged as llm_judged; auto_promoted stays 0."""
+    stats = _build_retrieval_stats(
+        [_chunk_result_judged_borderline(2), _chunk_result_judged_borderline(1)],
+        [],
+        {},
+        0,
+        no_judge=False,
+    )
+    assert stats.llm_judged == 3
+    assert stats.auto_promoted == 0
+
+
+@pytest.mark.slow
+def test_run_extraction_no_judge_reports_auto_promoted(mock_config, tmp_path):
+    """An end-to-end --no-judge run reports zero llm_judged and its promotions in auto_promoted."""
+    doc = tmp_path / "test.md"
+    doc.write_text(
+        "AI policy document about data governance and risk management. "
+        "We must ensure bias detection and mitigation strategies are in place. "
+        "Training data integrity is critical for model reliability."
+    )
+
+    # top_n_accept=0 with no score floor sends every retrieved candidate to
+    # the borderline band, which --no-judge then promotes, so the test
+    # exercises a nonzero count.
+    result = run_extraction(
+        documents=[doc],
+        client=MagicMock(),
+        config=mock_config,
+        risks=MOCK_RISKS,
+        retrieval=RetrievalConfig(
+            query_gen=False, no_judge=True, no_grounding=True, top_n_accept=0, min_score_floor=0.0
+        ),
+        ocr=False,
+    )
+
+    borderline_total = sum(cs.borderline for cs in result.chunks)
+    assert borderline_total > 0
+    assert result.retrieval_stats.llm_judged == 0
+    assert result.retrieval_stats.auto_promoted == borderline_total
 
 
 @pytest.mark.slow
@@ -188,7 +425,7 @@ def test_run_extraction_multiple_documents(mock_config, tmp_path):
         doc.write_text(f"Policy document number {i} about AI governance.")
         docs.append(doc)
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -210,7 +447,7 @@ def test_run_extraction_metadata(mock_config, tmp_path):
     doc.write_text("AI risk document.")
     mock_config.service_tier = "flex"
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -233,7 +470,7 @@ def test_run_extraction_populates_chunks(mock_config, tmp_path):
     doc = tmp_path / "test.md"
     doc.write_text("AI systems must avoid bias and protect personal data. Training data integrity is critical.")
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -264,7 +501,7 @@ def test_run_extraction_populates_llm_calls(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -289,7 +526,7 @@ def test_run_extraction_no_judge_no_grounding(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -321,7 +558,7 @@ def test_run_extraction_no_grounding_with_judge(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -352,7 +589,7 @@ def test_run_extraction_no_judge_no_grounding_no_cross_encoder(mock_config, tmp_
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -385,7 +622,7 @@ def test_run_extraction_no_cross_encoder(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -472,7 +709,7 @@ def test_run_extraction_no_judge_with_grounding_accepted_by(mock_config, tmp_pat
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -575,7 +812,7 @@ def test_run_extraction_expand_siblings(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.side_effect = lambda **kwargs: (
         _RiskEvidenceList(
             items=[
@@ -622,7 +859,7 @@ def test_run_extraction_expand_no_siblings_when_no_grounding(mock_config, tmp_pa
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
 
     result = run_extraction(
         documents=[doc],
@@ -650,7 +887,7 @@ def test_run_extraction_judge_with_cross_encoder(mock_config, tmp_path):
         "Training data integrity is critical for model reliability."
     )
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = SimpleNamespace(items=[])
 
     result = run_extraction(
@@ -694,7 +931,7 @@ def test_run_causal_synthesis_populates_fields():
         SimpleNamespace(text="Chunk two about discrimination in lending."),
     ]
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _CausalChains(
         items=[
             _CausalChain(
@@ -741,7 +978,7 @@ def test_run_causal_synthesis_skips_empty_results():
     ]
     chunks = [SimpleNamespace(text="Unrelated text about data retention.")]
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _CausalChains(
         items=[_CausalChain(threat="", threat_source="", vulnerability="", consequence="", impact="")]
     )
@@ -785,7 +1022,7 @@ def _causal_client(failing_risk_id, error):
             ]
         )
 
-    client = MagicMock()
+    client = stage_mock_client()
     client.chat.completions.create.side_effect = _create
     return client
 
@@ -842,7 +1079,7 @@ def test_run_extraction_query_gen_no_judge_no_grounding(mock_config, tmp_path):
 
     from asago_policy_mapper.extract.querygen import GeneratedQueries
 
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = GeneratedQueries(
         queries=["AI bias and fairness risks", "Training data integrity risks"]
     )
@@ -951,7 +1188,7 @@ def test_run_judge_cross_encoder_judges_via_thread_pool(mock_config, monkeypatch
     cr1 = _chunk_result_with_borderline(1, ("R-005",))
     judged_by_chunk = {}
 
-    def fake_judge_one(i, cr, client, model, call_collector, judge_prompt, max_batch_size, context_text):
+    def fake_judge_one(i, cr, client, model, records, judge_prompt, max_batch_size, context_text):
         judged_by_chunk[i] = (judge_prompt, max_batch_size, context_text)
         # judge keeps only the first borderline candidate of each chunk
         return i, [cr.borderline[0]]
