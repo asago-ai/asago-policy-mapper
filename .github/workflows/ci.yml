@@ -58,7 +58,7 @@ jobs:
         # Pin install script to a Git blob SHA (immutable) instead of piping the live URL.
         # To update: find the commit for the new release tag with
         #   gh api repos/ollama/ollama/git/ref/tags/<TAG> --jq '.object.sha'
-        run: curl -fsSL https://raw.githubusercontent.com/ollama/ollama/710292ff4f191d8da9f6a4230804fbc693338d4a/scripts/install.sh | OLLAMA_VERSION=0.31.1 sh
+        run: curl -fsSL https://raw.githubusercontent.com/ollama/ollama/924cc286cc592f49c481fa84e15fa60dbc75989e/scripts/install.sh | OLLAMA_VERSION=0.40.18 sh
       - name: Restore Ollama model cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
