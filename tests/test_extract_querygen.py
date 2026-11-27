@@ -1,5 +1,8 @@
 from unittest.mock import MagicMock
 
+import pytest
+from conftest import stage_mock_client
+
 from asago_policy_mapper.extract.models import RetrievalConfig
 from asago_policy_mapper.extract.parse import Chunk, ParsedDocument, chunk_documents
 from asago_policy_mapper.extract.querygen import (
@@ -126,7 +129,7 @@ def test_group_chunks_none_merges_respects_size_cap():
 
 def _make_mock_client(queries_per_call):
     """Build a mock structured-output client that returns GeneratedQueries."""
-    client = MagicMock()
+    client = stage_mock_client()
 
     def fake_create(**kwargs):
         return GeneratedQueries(queries=queries_per_call.pop(0))
@@ -196,12 +199,12 @@ def test_generate_queries_records_llm_calls():
     ]
     groups = [ChunkGroup(chunk_indices=[0], section="Bias")]
     client = _make_mock_client([["bias query"]])
-    call_collector = []
+    records = []
 
-    generate_queries(chunks, groups, client, "test-model", call_collector=call_collector)
+    generate_queries(chunks, groups, client, "test-model", records=records)
 
-    assert len(call_collector) == 1
-    assert call_collector[0].stage == "query_gen"
+    assert len(records) == 1
+    assert records[0].stage == "query_gen"
 
 
 def test_generate_queries_fallback_on_failure():
@@ -222,7 +225,7 @@ def test_generate_queries_fallback_on_failure():
             raise Exception("LLM timeout")
         return GeneratedQueries(queries=["query for B"])
 
-    client = MagicMock()
+    client = stage_mock_client()
     client.chat.completions.create = MagicMock(side_effect=fail_group_a)
 
     results, fallback_indices = generate_queries(chunks, groups, client, "test-model", return_fallbacks=True)
@@ -232,9 +235,30 @@ def test_generate_queries_fallback_on_failure():
     assert fallback_indices == [0]
 
 
+def test_generate_queries_bad_stage_name_fails_loudly():
+    """A misconfigured stage name raises instead of degrading to the fallback.
+
+    The stage view is acquired outside the worker's try so an invalid name
+    surfaces as an error, never as a silently unqueried group.
+    """
+    chunks = [
+        Chunk(text="Privacy concerns in AI", source="doc.pdf", index=0, section="A"),
+    ]
+    groups = [ChunkGroup(chunk_indices=[0], section="A")]
+
+    def bad_stage(stage):
+        raise ValueError(f"unknown stage {stage!r}")
+
+    client = MagicMock()
+    client.for_stage = bad_stage
+
+    with pytest.raises(ValueError, match="unknown stage"):
+        generate_queries(chunks, groups, client, "test-model")
+
+
 def _make_prompt_echo_client():
     """Return a client whose query names the document markers found in the prompt."""
-    client = MagicMock()
+    client = stage_mock_client()
 
     def fake_create(**kwargs):
         text = "".join(m.get("content", "") for m in kwargs["messages"] if isinstance(m, dict))

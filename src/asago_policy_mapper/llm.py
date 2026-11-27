@@ -158,6 +158,19 @@ class LLMConfig:
             self.max_tokens = self.max_context - _SAFETY_MARGIN - _SCHEMA_OVERHEAD_TOKENS
 
 
+# The pipeline stages a call site can mark its calls with. for_stage rejects
+# names outside this tuple, so a typo or an unregistered stage fails loudly
+# instead of silently splitting token usage into a wrong bucket.
+STAGES = (
+    "query_gen",
+    "judge",
+    "grounding",
+    "variant_grounding",
+    "expansion_grounding",
+    "causal_synthesis",
+)
+
+
 @dataclass
 class TokenTracker:
     prompt_tokens: int = 0
@@ -168,7 +181,6 @@ class TokenTracker:
     incidents: list[dict] = field(default_factory=list)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     _warned_no_usage: bool = field(default=False, repr=False)
-    _current_stage: str | None = field(default=None, repr=False)
     _thread_local: threading.local = field(default_factory=threading.local, repr=False)
 
     @staticmethod
@@ -197,15 +209,11 @@ class TokenTracker:
                 s["total_tokens"] += tt
                 s["calls"] += 1
 
-    def set_stage(self, stage: str | None) -> None:
-        with self._lock:
-            self._current_stage = stage
-
-    def record_incident(self, kind: str, detail: str) -> None:
+    def record_incident(self, kind: str, detail: str, stage: str | None = None) -> None:
         with self._lock:
             incident: dict = {"kind": kind, "detail": detail}
-            if self._current_stage:
-                incident["stage"] = self._current_stage
+            if stage:
+                incident["stage"] = stage
             messages = getattr(self._thread_local, "current_messages", None)
             if messages:
                 incident["messages"] = copy.deepcopy(messages)
@@ -379,13 +387,16 @@ def _reduce_output_budget_and_retry(
     tracker,
     original_messages,
     new_max: int,
+    stage: str | None = None,
 ) -> None:
     """Reset the messages and lower the output budget for an overflow retry."""
     old_max = _get_output_token_budget(kwargs, config)
     parameter = config.output_token_parameter
     logger.info("Context overflow, reducing %s %d -> %d and retrying", parameter, old_max, new_max)
     if tracker:
-        tracker.record_incident("context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}")
+        tracker.record_incident(
+            "context_overflow", f"Context overflow, reducing {parameter} {old_max} -> {new_max}", stage=stage
+        )
     kwargs["messages"] = copy.deepcopy(original_messages)
     _set_output_token_budget(kwargs, config, new_max)
     _apply_budget(kwargs, config)
@@ -409,7 +420,9 @@ def _build_validation_retry_messages(current_messages, exc: ValidationRetryExhau
     return retry_messages
 
 
-def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, current_messages, max_retries):
+def _retry_with_validation(
+    do_call, kwargs, config, tracker, original_messages, current_messages, max_retries, stage=None
+):
     for val_attempt in range(max_retries + 1):
         try:
             return do_call(kwargs)
@@ -421,7 +434,7 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
             new_max = _extract_reduced_max_tokens(e)
             if new_max is None or val_attempt >= max_retries:
                 raise
-            _reduce_output_budget_and_retry(kwargs, config, tracker, original_messages, new_max)
+            _reduce_output_budget_and_retry(kwargs, config, tracker, original_messages, new_max, stage=stage)
             continue
         except ValidationRetryExhausted as e:
             if val_attempt < max_retries:
@@ -440,7 +453,7 @@ def _retry_with_validation(do_call, kwargs, config, tracker, original_messages, 
                 _apply_budget(kwargs, config)
                 continue
             if tracker:
-                tracker.record_incident("validation_exhausted", f"Validation retries exhausted: {e}")
+                tracker.record_incident("validation_exhausted", f"Validation retries exhausted: {e}", stage=stage)
             raise
     raise RuntimeError("_retry_with_validation exhausted retries without returning a completion")
 
@@ -450,6 +463,7 @@ def _call_with_retry(
     kwargs: dict,
     config: LLMConfig,
     tracker: TokenTracker | None = None,
+    stage: str | None = None,
 ) -> tuple:
     original_messages = copy.deepcopy(kwargs.get("messages", []))
     current_messages = kwargs.get("messages", [])
@@ -466,6 +480,7 @@ def _call_with_retry(
                 original_messages,
                 current_messages,
                 max_validation_retries,
+                stage=stage,
             )
         except _IncompleteOutput as e:
             incomplete = e
@@ -473,7 +488,7 @@ def _call_with_retry(
             if shorter is None:
                 if tracker:
                     tracker.record_incident(
-                        "output_truncated", "Output truncated and prompt cannot be shortened further"
+                        "output_truncated", "Output truncated and prompt cannot be shortened further", stage=stage
                     )
                 raise e.cause
             logger.info(
@@ -483,6 +498,7 @@ def _call_with_retry(
                 tracker.record_incident(
                     "output_truncated",
                     f"Output truncated (attempt {attempt + 1}/{_MAX_TRUNCATION_RETRIES}), retrying with shorter prompt",
+                    stage=stage,
                 )
             current_messages = shorter
             kwargs["messages"] = shorter
@@ -494,18 +510,19 @@ def _call_with_retry(
         tracker.record_incident(
             "output_truncated",
             f"Output truncated after {_MAX_TRUNCATION_RETRIES + 1} attempts with progressively shorter prompts",
+            stage=stage,
         )
     assert incomplete is not None
     raise incomplete.cause
 
 
-def _track_completion(tracker: TokenTracker, completion) -> None:
+def _track_completion(tracker: TokenTracker, completion, stage: str | None = None) -> None:
     usage = getattr(completion, "usage", None)
     if usage is None or (getattr(usage, "total_tokens", 0) or 0) == 0:
         if not tracker._warned_no_usage:
             logger.warning("LLM backend returned no token usage — cost tracking unavailable")
             tracker._warned_no_usage = True
-    tracker.add(usage)
+    tracker.add(usage, stage=stage)
 
 
 def _extract_json_span(content: str) -> str:
@@ -537,7 +554,13 @@ class _Completions:
         self._client = client
 
     def create(self, **kwargs: Any):
-        """Return the validated response model for a structured completion."""
+        """Return the validated response model for a structured completion.
+
+        ``stage`` is the tracking wrapper's routing key (a stage view passes
+        it in); it is consumed here so the underlying SDK call never sees it,
+        wrapped client or not.
+        """
+        kwargs.pop("stage", None)
         result, _ = self._client.create_with_completion(**kwargs)
         return result
 
@@ -545,6 +568,37 @@ class _Completions:
 class _Chat:
     def __init__(self, client: "_StructuredClient"):
         self.completions = _Completions(client)
+
+
+class _StageCompletions:
+    """``chat.completions`` of a stage view; delegates with the stage attached."""
+
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self._client = client
+        self._stage = stage
+
+    def create(self, **kwargs: Any):
+        return self._client.chat.completions.create(stage=self._stage, **kwargs)
+
+
+class _StageChat:
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self.completions = _StageCompletions(client, stage)
+
+
+class _StageScopedClient:
+    """Stage-scoped view over a tracked structured client.
+
+    ``_StructuredClient.for_stage`` returns one per pipeline stage. The view
+    keeps the ``chat.completions.create`` API: every call through it carries
+    the stage into token-usage totals and incident records, while calls made
+    directly on the underlying client record no stage.
+    """
+
+    def __init__(self, client: "_StructuredClient", stage: str):
+        self._client = client
+        self._stage = stage
+        self.chat = _StageChat(client, stage)
 
 
 class _StructuredClient:
@@ -566,6 +620,18 @@ class _StructuredClient:
         self._openai = openai_client
         self.mode = mode
         self.chat = _Chat(self)
+
+    def for_stage(self, stage: str) -> _StageScopedClient:
+        """Return a view whose calls are attributed to ``stage``.
+
+        Stage workers call the model through this view; the stage flows
+        explicitly into the token totals and incident records of the call.
+        The name must be one of ``STAGES``; anything else raises
+        ``ValueError``, leaving the client untouched and usable.
+        """
+        if stage not in STAGES:
+            raise ValueError(f"unknown stage {stage!r}: expected one of {', '.join(STAGES)}")
+        return _StageScopedClient(self, stage)
 
     def create_with_completion(self, **kwargs: Any) -> tuple[Any, Any]:
         """Return ``(validated_model, raw_completion)`` for a single attempt.
@@ -650,7 +716,11 @@ def _wrap_with_tracking(client: _StructuredClient, tracker: TokenTracker, config
     def _do_call(kwargs):
         return client.create_with_completion(**kwargs)
 
-    def tracked_create(**kwargs):
+    def tracked_create(*, stage: str | None = None, **kwargs):
+        if stage is not None and stage not in STAGES:
+            # for_stage validates; this guards the wrapped create itself, so
+            # an unregistered name can never split usage into a wrong bucket.
+            raise ValueError(f"unknown stage {stage!r}: expected one of {', '.join(STAGES)}")
         kwargs.setdefault("temperature", config.temperature)
         if config.service_tier is not None:
             kwargs.setdefault("service_tier", config.service_tier)
@@ -662,10 +732,10 @@ def _wrap_with_tracking(client: _StructuredClient, tracker: TokenTracker, config
         _apply_budget(kwargs, config)
         tracker._thread_local.current_messages = kwargs.get("messages")
         try:
-            result, completion = _call_with_retry(_do_call, kwargs, config, tracker=tracker)
+            result, completion = _call_with_retry(_do_call, kwargs, config, tracker=tracker, stage=stage)
         finally:
             tracker._thread_local.current_messages = None
-        _track_completion(tracker, completion)
+        _track_completion(tracker, completion, stage=stage)
         return result
 
     client.chat.completions.create = tracked_create  # type: ignore[method-assign,assignment]

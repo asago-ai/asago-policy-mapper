@@ -8,11 +8,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from asago_policy_mapper.extract.attribute import (
+    _counts_causal,
+    _counts_expansion,
+    _counts_grounding,
+    _counts_variant,
     ground_and_extract_evidence,
     ground_risk_group,
     ground_variants,
     synthesize_causal_chain,
 )
+from asago_policy_mapper.extract.calllog import merge_call_records
 from asago_policy_mapper.extract.index import RiskIndex
 from asago_policy_mapper.extract.merge import merge_matches
 from asago_policy_mapper.extract.models import (
@@ -32,11 +37,12 @@ from asago_policy_mapper.extract.parse import chunk_documents, parse_document
 from asago_policy_mapper.extract.querygen import generate_queries, group_chunks
 from asago_policy_mapper.extract.retrieve import (
     ChunkResult,
+    _counts_judge,
     build_chunk_contexts,
     judge_borderline,
     retrieve_chunk,
 )
-from asago_policy_mapper.llm import LLMConfig
+from asago_policy_mapper.llm import LLMConfig, StructuredOutputMode
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +96,7 @@ def _judge_one(
     cr,
     client,
     model,
-    call_collector,
+    records,
     judge_prompt="judge_risk",
     max_batch_size=0,
     context_text="",
@@ -100,7 +106,7 @@ def _judge_one(
         context_text,
         client,
         model,
-        call_collector=call_collector,
+        records=records,
         chunk_index=i,
         prompt_name=judge_prompt,
         max_batch_size=max_batch_size,
@@ -113,7 +119,7 @@ def _ground_one(
     chunks,
     client,
     model,
-    call_collector,
+    records,
     passes=1,
     max_batch_size=0,
     context_text="",
@@ -131,7 +137,7 @@ def _ground_one(
             chunk_index=cr.chunk_index,
             page=chunk.page,
             section=chunk.section,
-            call_collector=call_collector,
+            records=records,
             max_batch_size=max_batch_size,
         )
         logger.info(
@@ -243,6 +249,11 @@ def _run_grounding(
     )
 
     if ground_tasks:
+        # One records list per task: the worker numbers within it alone, and
+        # the fan-in merge below renumbers across tasks in task order. The
+        # submit and merge loops walk the same list-position pairing, so the
+        # order cannot drift between them.
+        task_records: list[list[LLMCallRecord]] = [[] for _ in ground_tasks]
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             futures = {
                 pool.submit(
@@ -251,12 +262,12 @@ def _run_grounding(
                     chunks,
                     client,
                     config.model,
-                    call_collector,
+                    task_records[pos],
                     grounding_passes,
                     grounding_batch_size,
                     chunk_contexts[cr.chunk_index] if chunk_contexts else "",
                 ): cr
-                for cr in ground_tasks
+                for pos, cr in enumerate(ground_tasks)
             }
             for future in as_completed(futures):
                 cr, grounded = future.result()
@@ -295,6 +306,9 @@ def _run_grounding(
                                 chunk_index=cr.chunk_index,
                             )
                         )
+        if call_collector is not None:
+            for records in task_records:
+                merge_call_records(call_collector, records, counts=_counts_grounding)
 
     grounding_filtered = total_candidates - total_grounded
     return all_matches, all_filtered, grounding_filtered
@@ -306,7 +320,7 @@ def _ground_variants_one(
     variant_map,
     client,
     model,
-    call_collector,
+    records,
     chunk_contexts=None,
 ):
     """Run variant-selective grounding for a single parent-level match."""
@@ -336,7 +350,7 @@ def _ground_variants_one(
         chunk_index=ci,
         page=chunk.page if hasattr(chunk, "page") else None,
         section=chunk.section if hasattr(chunk, "section") else None,
-        call_collector=call_collector,
+        records=records,
     )
     return parent_match, grounded
 
@@ -369,6 +383,9 @@ def _run_variant_grounding(
     )
 
     variant_matches: list[RiskMatch] = []
+    # One records list per parent match; the submit and merge loops walk the
+    # same list-position pairing, so the merge order is the parent order.
+    task_records: list[list[LLMCallRecord]] = [[] for _ in parent_matches]
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
             pool.submit(
@@ -378,10 +395,10 @@ def _run_variant_grounding(
                 variant_map,
                 client,
                 config.model,
-                call_collector,
+                task_records[pos],
                 chunk_contexts,
             ): pm
-            for pm in parent_matches
+            for pos, pm in enumerate(parent_matches)
         }
         for future in as_completed(futures):
             parent_match, grounded = future.result()
@@ -410,6 +427,9 @@ def _run_variant_grounding(
                         evidence=evidence,
                     )
                 )
+    if call_collector is not None:
+        for records in task_records:
+            merge_call_records(call_collector, records, counts=_counts_variant)
 
     return non_parent_matches + variant_matches
 
@@ -437,6 +457,9 @@ def _run_judge(
                 cr.accepted.extend(cr.borderline)
     elif retrieval.use_cross_encoder:
         if judge_tasks:
+            # One records list per chunk; the submit and merge loops walk the
+            # same list-position pairing, so the merge order is the chunk order.
+            task_records: list[list[LLMCallRecord]] = [[] for _ in judge_tasks]
             with ThreadPoolExecutor(max_workers=max_workers) as pool:
                 futures = {
                     pool.submit(
@@ -445,17 +468,20 @@ def _run_judge(
                         cr,
                         client,
                         config.model,
-                        call_collector,
+                        task_records[pos],
                         retrieval.judge_prompt,
                         retrieval.grounding_batch_size,
                         chunk_contexts[i] if chunk_contexts else "",
                     ): i
-                    for i, cr in judge_tasks
+                    for pos, (i, cr) in enumerate(judge_tasks)
                 }
                 for future in as_completed(futures):
                     idx, judged = future.result()
                     chunk_results[idx].borderline_judged = judged
                     chunk_results[idx].accepted.extend(judged)
+            if call_collector is not None:
+                for records in task_records:
+                    merge_call_records(call_collector, records, counts=_counts_judge)
 
 
 def _build_chunk_risk_map(chunk_results, all_matches, no_grounding):
@@ -488,7 +514,7 @@ def _build_found_risk_chunks(merged, chunk_results) -> dict[str, set[int]]:
     return found_risk_chunks
 
 
-def _ground_expansion_group(group, chunks, documents, client, config, call_collector):
+def _ground_expansion_group(group, chunks, documents, client, config, records):
     """Ground one expansion group once against the group's chunk set."""
     return ground_risk_group(
         chunks=chunks,
@@ -497,11 +523,11 @@ def _ground_expansion_group(group, chunks, documents, client, config, call_colle
         client=client,
         model=config.model,
         document=str(documents[0]) if documents else "",
-        call_collector=call_collector,
+        records=records,
     )
 
 
-def _ground_expansion_group_multi(group, chunks, documents, client, config, call_collector, passes):
+def _ground_expansion_group_multi(group, chunks, documents, client, config, records, passes):
     """Ground one group across several passes; the first pass wins per risk id.
 
     A risk grounded by an earlier pass keeps its evidence and confidence even
@@ -509,7 +535,7 @@ def _ground_expansion_group_multi(group, chunks, documents, client, config, call
     """
     merged_results: dict[str, tuple[list[EvidenceSpan], str]] = {}
     for _ in range(passes):
-        grounded = _ground_expansion_group(group, chunks, documents, client, config, call_collector)
+        grounded = _ground_expansion_group(group, chunks, documents, client, config, records)
         for rid, (evidence, confidence) in grounded.items():
             if rid not in merged_results:
                 merged_results[rid] = (evidence, confidence)
@@ -549,7 +575,7 @@ def _ground_expansion_groups(
     Returns the expansion matches and the grounded-risk count.
     """
 
-    def _submit(pool, group):
+    def _submit(pool, group, records):
         if expansion_passes > 1:
             return pool.submit(
                 _ground_expansion_group_multi,
@@ -558,19 +584,25 @@ def _ground_expansion_groups(
                 documents,
                 client,
                 config,
-                call_collector,
+                records,
                 expansion_passes,
             )
-        return pool.submit(_ground_expansion_group, group, chunks, documents, client, config, call_collector)
+        return pool.submit(_ground_expansion_group, group, chunks, documents, client, config, records)
 
     expansion_matches: list[RiskMatch] = []
     expanded_grounded = 0
+    # One records list per group; the submit and merge loops walk the same
+    # list-position pairing, so the merge order is the group order.
+    group_records: list[list[LLMCallRecord]] = [[] for _ in groups]
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures = {_submit(pool, g): g for g in groups}
+        futures = {_submit(pool, g, group_records[pos]): g for pos, g in enumerate(groups)}
         for future in as_completed(futures):
             grounded = future.result()
             expanded_grounded += len(grounded)
             expansion_matches.extend(_build_expansion_matches(grounded, index, risk_lookup))
+    if call_collector is not None:
+        for records in group_records:
+            merge_call_records(call_collector, records, counts=_counts_expansion)
     return expansion_matches, expanded_grounded
 
 
@@ -664,23 +696,30 @@ def _run_expansion(
 def _run_causal_synthesis(merged, chunks, client, config, max_workers, call_collector):
     chunk_texts = {i: chunks[i].text for i in range(len(chunks))}
 
-    def _synthesize_one(risk_match):
+    # One records list per risk; the submit and merge loops walk the same
+    # list-position pairing, so the merge order is the merged order.
+    task_records: list[list[LLMCallRecord]] = [[] for _ in merged]
+
+    def _synthesize_one(risk_match, records):
         return risk_match.risk_id, synthesize_causal_chain(
             risk_match=risk_match,
             chunk_texts=chunk_texts,
             client=client,
             model=config.model,
-            call_collector=call_collector,
+            records=records,
         )
 
     results: dict[str, _CausalChain | None] = {}
     logger.info("Causal synthesis: %d risks", len(merged))
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures = {pool.submit(_synthesize_one, m): m for m in merged}
+        futures = {pool.submit(_synthesize_one, m, task_records[pos]): m for pos, m in enumerate(merged)}
         for future in as_completed(futures):
             risk_id, chain = future.result()
             results[risk_id] = chain
 
+    if call_collector is not None:
+        for records in task_records:
+            merge_call_records(call_collector, records, counts=_counts_causal)
     for m in merged:
         chain = results.get(m.risk_id)
         if chain:
@@ -731,12 +770,15 @@ def _run_query_gen(chunks, client, config, call_collector, max_workers, timing) 
     """
     with timed(timing, "query_gen_ms"):
         groups = group_chunks(chunks)
+        # Query-gen records are unnumbered (querygen-<chunk>) and
+        # generate_queries appends them on the calling thread after its
+        # group-order sort, so the run's collector takes them directly.
         qg_result = generate_queries(
             chunks,
             groups,
             client,
             config.model,
-            call_collector=call_collector,
+            records=call_collector,
             max_workers=max_workers,
             return_fallbacks=True,
         )
@@ -880,19 +922,27 @@ def _run_matches_stage(
     return all_matches, all_filtered, grounding_filtered
 
 
-def _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered) -> RetrievalStats:
-    """Aggregate per-chunk counters into the run's retrieval stats."""
+def _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered, no_judge=False) -> RetrievalStats:
+    """Aggregate per-chunk counters into the run's retrieval stats.
+
+    Under --no-judge the borderline candidates are auto-promoted, not judged,
+    so their count moves from llm_judged to auto_promoted.
+    """
+    judged = sum(len(cr.borderline_judged) for cr in chunk_results)
     return RetrievalStats(
         total_chunks=len(chunks),
         total_candidates_retrieved=sum(cr.stats.get("candidates_retrieved", 0) for cr in chunk_results),
         auto_accepted=sum(cr.stats.get("auto_accepted", 0) for cr in chunk_results),
-        llm_judged=sum(len(cr.borderline_judged) for cr in chunk_results),
+        llm_judged=0 if no_judge else judged,
+        auto_promoted=judged if no_judge else 0,
         grounding_filtered=grounding_filtered,
         timing_ms=timing,
     )
 
 
-def _build_result_metadata(config, retrieval, expansion_stats, query_results, fallback_chunk_indices) -> dict:
+def _build_result_metadata(
+    config, retrieval, expansion_stats, query_results, fallback_chunk_indices, client=None
+) -> dict:
     """Assemble the run metadata recorded alongside the extraction result."""
     metadata = {
         "model": config.model,
@@ -901,6 +951,9 @@ def _build_result_metadata(config, retrieval, expansion_stats, query_results, fa
         "expansion_stats": expansion_stats,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+    mode = getattr(client, "mode", None)
+    if isinstance(mode, StructuredOutputMode):
+        metadata["structured_output_mode"] = mode.value
     if retrieval.query_gen:
         metadata["query_gen_queries"] = [
             {"query": qr.query, "chunk_indices": qr.chunk_indices, "section": qr.section} for qr in query_results
@@ -1111,13 +1164,15 @@ def run_extraction(
 
     merged = _run_causal_synthesis_stage(merged, chunks, client, config, retrieval, call_collector, max_workers, timing)
 
-    total_stats = _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered)
+    total_stats = _build_retrieval_stats(chunk_results, chunks, timing, grounding_filtered, retrieval.no_judge)
 
     return ExtractionResult(
         risks=merged,
         source_documents=[str(d) for d in documents],
         retrieval_stats=total_stats,
-        metadata=_build_result_metadata(config, retrieval, expansion_stats, query_results, fallback_chunk_indices),
+        metadata=_build_result_metadata(
+            config, retrieval, expansion_stats, query_results, fallback_chunk_indices, client
+        ),
         chunks=chunk_summaries,
         llm_calls=call_collector,
         grounding_filtered_candidates=all_filtered,

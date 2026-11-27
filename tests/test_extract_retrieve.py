@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+from conftest import stage_mock_client
+
 from asago_policy_mapper.extract.models import LLMCallRecord, ScoredCandidate, _JudgeVerdict, _JudgeVerdicts
 from asago_policy_mapper.extract.parse import Chunk
 from asago_policy_mapper.extract.retrieve import (
@@ -166,7 +168,7 @@ def test_classify_candidates_bm25_rescue_rank_based():
 
 
 def test_judge_borderline_accepts_relevant():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[MagicMock(risk_id="R-001", relevant=True, justification="Text discusses bias.")]
     )
@@ -189,7 +191,7 @@ def test_judge_borderline_accepts_relevant():
 
 
 def test_judge_borderline_rejects_irrelevant():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[MagicMock(risk_id="R-005", relevant=False, justification="No mention of jobs.")]
     )
@@ -211,14 +213,14 @@ def test_judge_borderline_rejects_irrelevant():
 
 
 def test_judge_borderline_empty_candidates():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     accepted = judge_borderline([], chunk_text="Text.", client=mock_client, model="m")
     assert accepted == []
     mock_client.chat.completions.create.assert_not_called()
 
 
 def test_judge_borderline_captures_call():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _JudgeVerdicts(
         items=[_JudgeVerdict(risk_id="R-001", relevant=True, justification="Relevant")]
     )
@@ -243,7 +245,7 @@ def test_judge_borderline_captures_call():
         "Some chunk text about AI bias.",
         mock_client,
         "test-model",
-        call_collector=collector,
+        records=collector,
         chunk_index=3,
     )
 
@@ -260,7 +262,7 @@ def test_judge_borderline_captures_call():
 
 def test_judge_borderline_no_collector():
     """Existing behavior: no collector arg, no error."""
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _JudgeVerdicts(items=[])
     candidates = [
         ScoredCandidate(

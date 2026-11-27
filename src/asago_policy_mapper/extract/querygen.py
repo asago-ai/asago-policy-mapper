@@ -69,7 +69,7 @@ def generate_queries(
     groups: list[ChunkGroup],
     client,
     model: str,
-    call_collector: list[LLMCallRecord] | None = None,
+    records: list[LLMCallRecord] | None = None,
     *,
     max_workers: int = 32,
     return_fallbacks: bool = False,
@@ -77,13 +77,17 @@ def generate_queries(
     results: list[QueryResult] = []
     fallback_indices: list[int] = []
 
-    def _process_group(group: ChunkGroup) -> tuple[ChunkGroup, GeneratedQueries | None]:
+    def _process_group(group: ChunkGroup) -> tuple[ChunkGroup, GeneratedQueries | None, LLMCallRecord | None]:
         chunk_text = "\n\n".join(chunks[i].text for i in group.chunk_indices)
         messages = render_prompt("generate_queries", {"chunk_text": chunk_text})
 
         t0 = time.time()
+        # The stage view is acquired outside the try so a misconfigured stage
+        # name fails loudly instead of degrading into the query-generation
+        # fallback.
+        stage_client = client.for_stage("query_gen")
         try:
-            response = client.chat.completions.create(
+            response = stage_client.chat.completions.create(
                 model=model,
                 response_model=GeneratedQueries,
                 messages=messages,
@@ -94,35 +98,38 @@ def generate_queries(
                 group.section,
                 group.chunk_indices,
             )
-            return group, None
+            return group, None, None
         duration_ms = (time.time() - t0) * 1000
 
-        if call_collector is not None:
-            call_collector.append(
-                LLMCallRecord(
-                    call_id=f"querygen-{group.chunk_indices[0]}",
-                    stage="query_gen",
-                    chunk_index=group.chunk_indices[0],
-                    risk_ids=[],
-                    messages=messages,
-                    response={"queries": response.queries},
-                    duration_ms=duration_ms,
-                    result_summary=f"{len(response.queries)} queries generated",
-                )
+        record = (
+            LLMCallRecord(
+                call_id=f"querygen-{group.chunk_indices[0]}",
+                stage="query_gen",
+                chunk_index=group.chunk_indices[0],
+                risk_ids=[],
+                messages=messages,
+                response={"queries": response.queries},
+                duration_ms=duration_ms,
+                result_summary=f"{len(response.queries)} queries generated",
             )
+            if records is not None
+            else None
+        )
 
-        return group, response
+        return group, response, record
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {pool.submit(_process_group, g): g for g in groups}
-        group_results: list[tuple[ChunkGroup, GeneratedQueries | None]] = []
+        group_results: list[tuple[ChunkGroup, GeneratedQueries | None, LLMCallRecord | None]] = []
         for future in as_completed(futures):
             group_results.append(future.result())
 
     # Sort by first chunk index to preserve document order
     group_results.sort(key=lambda gr: gr[0].chunk_indices[0])
 
-    for group, response in group_results:
+    for group, response, record in group_results:
+        if record is not None and records is not None:
+            records.append(record)
         if response is None:
             fallback_indices.extend(group.chunk_indices)
             continue

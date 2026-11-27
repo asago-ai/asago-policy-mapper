@@ -1,0 +1,4 @@
+model: gemma-4-26b-a4b-it
+max_context: 16384
+runs:
+  - policy_examples/ars.md

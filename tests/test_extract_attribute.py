@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 import openai
 import pytest
+from conftest import stage_mock_client
 from llm_errors import (
     authentication_failure,
     connection_failure,
@@ -36,7 +37,7 @@ from asago_policy_mapper.prompts import render_prompt
 
 
 def test_ground_and_extract_evidence_returns_grounded():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[
             MagicMock(
@@ -93,7 +94,7 @@ def test_ground_and_extract_evidence_returns_grounded():
 
 
 def test_ground_and_extract_evidence_empty_candidates():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     result = ground_and_extract_evidence(
         chunk_text="Some text.",
         candidates=[],
@@ -107,7 +108,7 @@ def test_ground_and_extract_evidence_empty_candidates():
 
 
 def test_ground_and_extract_evidence_ignores_unknown_risk_ids():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[
             MagicMock(
@@ -140,7 +141,7 @@ def test_ground_and_extract_evidence_ignores_unknown_risk_ids():
 
 
 def test_ground_and_extract_evidence_skips_empty_quotes():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = MagicMock(
         items=[
             MagicMock(
@@ -203,7 +204,7 @@ def test_ground_and_extract_evidence_captures_call(mock_client):
         model="test-model",
         document="policy.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
     )
 
     assert "R-001" in result
@@ -286,7 +287,7 @@ def test_ground_and_extract_evidence_batches_with_sequential_call_ids(mock_clien
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=2,
     )
 
@@ -332,7 +333,7 @@ def test_ground_and_extract_evidence_batches_five_candidates_size_two(mock_clien
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=2,
     )
 
@@ -382,7 +383,7 @@ def test_ground_and_extract_evidence_batch_size_equal_to_count_is_single_call(mo
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=2,
     )
 
@@ -414,7 +415,7 @@ def test_ground_and_extract_evidence_default_batch_size_is_one_call(mock_client)
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
     )
 
     assert mock_client.chat.completions.create.call_count == 1
@@ -515,7 +516,7 @@ def test_ground_and_extract_evidence_batch_size_one_splits_per_candidate(mock_cl
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
         max_batch_size=1,
     )
 
@@ -577,7 +578,7 @@ def test_ground_and_extract_evidence_ungrounded_verdict_counts_zero(mock_client)
         model="test-model",
         document="doc.pdf",
         chunk_index=0,
-        call_collector=collector,
+        records=collector,
     )
 
     assert collector[0].result_summary == "0/1 grounded"
@@ -608,7 +609,7 @@ def test_ground_and_extract_evidence_records_sane_duration(mock_client):
             model="test-model",
             document="doc.pdf",
             chunk_index=0,
-            call_collector=collector,
+            records=collector,
         )
 
     assert collector[0].duration_ms == 250.0
@@ -625,7 +626,7 @@ def _make_chunks(texts: list[str]):
 
 
 def test_ground_risk_group_returns_grounded():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _RiskEvidenceList(
         items=[
             _RiskEvidence(
@@ -668,7 +669,7 @@ def test_ground_risk_group_returns_grounded():
 
 
 def test_ground_risk_group_empty_risks():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     chunks = _make_chunks(["Some text."])
 
     result = ground_risk_group(
@@ -685,7 +686,7 @@ def test_ground_risk_group_empty_risks():
 
 
 def test_ground_risk_group_empty_chunks():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     risks = [
         {"risk_id": "R-001", "risk_name": "Bias", "risk_description": "Bias risk."},
     ]
@@ -704,7 +705,7 @@ def test_ground_risk_group_empty_chunks():
 
 
 def test_ground_risk_group_out_of_range_chunks():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     chunks = _make_chunks(["Only one chunk."])
     risks = [
         {"risk_id": "R-001", "risk_name": "Bias", "risk_description": "Bias risk."},
@@ -724,7 +725,7 @@ def test_ground_risk_group_out_of_range_chunks():
 
 
 def test_ground_risk_group_ignores_unknown_risk_ids():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _RiskEvidenceList(
         items=[
             _RiskEvidence(
@@ -754,7 +755,7 @@ def test_ground_risk_group_ignores_unknown_risk_ids():
 
 
 def test_ground_risk_group_skips_empty_quotes():
-    mock_client = MagicMock()
+    mock_client = stage_mock_client()
     mock_client.chat.completions.create.return_value = _RiskEvidenceList(
         items=[
             _RiskEvidence(
@@ -814,7 +815,7 @@ def test_ground_risk_group_captures_call(mock_client):
         client=mock_client,
         model="test-model",
         document="policy.pdf",
-        call_collector=collector,
+        records=collector,
     )
 
     assert "R-001" in result
@@ -953,7 +954,7 @@ def test_synthesize_causal_chain_validation_exhaustion_returns_none(mock_client,
             chunk_texts={0: "Some text.", 2: "More text."},
             client=mock_client,
             model="test-model",
-            call_collector=collector,
+            records=collector,
         )
 
     assert result is None
@@ -995,7 +996,7 @@ def test_synthesize_causal_chain_api_error_propagates_untouched(mock_client, mak
             chunk_texts={0: "Some text.", 2: "More text."},
             client=mock_client,
             model="test-model",
-            call_collector=collector,
+            records=collector,
         )
 
     assert excinfo.value is error
@@ -1121,7 +1122,7 @@ def test_synthesize_causal_chain_records_call(mock_client):
         chunk_texts=chunk_texts,
         client=mock_client,
         model="test-model",
-        call_collector=collector,
+        records=collector,
     )
 
     assert len(collector) == 1
